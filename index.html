@@ -37,7 +37,6 @@
 html, body { height: 100%; overflow: hidden; }
 body { font-family: var(--sans); background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
 
-/* TOP BAR */
 .topbar { background: var(--bg2); padding: 14px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .topbar-logo { display: flex; align-items: center; gap: 10px; }
 .taxi-dot { width: 32px; height: 32px; background: var(--yellow); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
@@ -47,20 +46,16 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .g-btn { padding: 6px 12px; border-radius: 99px; font-size: 12px; font-family: var(--sans); font-weight: 600; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.2s; }
 .g-btn.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
 
-/* SCROLL CONTENT */
 .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
 
-/* NAV */
 .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
 .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; font-size: 10px; color: var(--text2); cursor: pointer; border: none; background: transparent; font-family: var(--sans); transition: color 0.2s; }
 .nav-btn svg { width: 22px; height: 22px; }
 .nav-btn.active { color: var(--yellow); }
 
-/* SECTIONS */
 .section { display: none; }
 .section.active { display: block; }
 
-/* METRIC CARDS */
 .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .metric { background: var(--card); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px; }
 .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -70,11 +65,9 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .metric-val.yellow { color: var(--yellow); }
 .metric-val.blue { color: var(--blue); }
 
-/* CARDS */
 .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; margin-bottom: 14px; }
 .card-title { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; font-weight: 600; }
 
-/* TRANSACTION LIST */
 .txn { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .txn:last-child { border-bottom: none; }
 .txn-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
@@ -91,7 +84,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 14px; }
 .empty-icon { font-size: 40px; margin-bottom: 12px; }
 
-/* UPLOAD AREA */
 .upload-zone { border: 2px dashed var(--border2); border-radius: var(--r2); padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
 .upload-zone:hover, .upload-zone:active { border-color: var(--yellow); background: rgba(245,200,66,0.05); }
 .upload-icon { font-size: 40px; margin-bottom: 12px; }
@@ -99,7 +91,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .upload-zone p { font-size: 13px; color: var(--text2); }
 .preview-img { width: 100%; border-radius: var(--r); max-height: 220px; object-fit: contain; margin-bottom: 14px; }
 
-/* AI RESULT */
 .ai-card { background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.3); border-radius: var(--r2); padding: 18px; margin-bottom: 14px; }
 .ai-card-title { font-size: 12px; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
 .ai-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(0,212,170,0.1); font-size: 14px; }
@@ -107,12 +98,10 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .ai-row-label { color: var(--text2); }
 .ai-row-val { font-weight: 600; font-family: var(--mono); }
 
-/* SPINNER */
 .loading-box { display: none; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
 .spinner { width: 24px; height: 24px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* FORM */
 .form-group { margin-bottom: 14px; }
 .form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
 .form-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 14px; color: var(--text); font-size: 15px; font-family: var(--sans); outline: none; transition: border-color 0.2s; }
@@ -123,13 +112,11 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .seg-btn.active { background: var(--yellow); color: #000; }
 .seg-btn.active.expense { background: var(--red); color: #fff; }
 
-/* BUTTONS */
 .btn { width: 100%; padding: 16px; border-radius: var(--r); font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--sans); border: none; transition: all 0.2s; letter-spacing: 0.3px; }
 .btn-yellow { background: var(--yellow); color: #000; }
 .btn-yellow:active { transform: scale(0.98); }
 .btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text); margin-top: 10px; }
 
-/* REPORT */
 .report-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
 .report-row:last-child { border-bottom: none; }
 .report-row-label { color: var(--text2); }
@@ -158,7 +145,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 </div>
 
 <div class="content">
-
   <!-- GUUDMAR -->
   <div id="s-guud" class="section active">
     <div class="metric-grid">
@@ -267,10 +253,8 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
       <button class="btn btn-outline" onclick="exportCSV()">Soo dhig CSV ↓</button>
     </div>
   </div>
-
 </div>
 
-<!-- BOTTOM NAV -->
 <nav class="nav">
   <button class="nav-btn active" onclick="showTab('guud',this)">
     <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -298,17 +282,23 @@ let geliGaari = 1;
 let geliDir = 'income';
 let pending = null;
 
-try { const s = localStorage.getItem('taxi-v2'); if(s) data = JSON.parse(s); } catch(e){}
+// LOAD DATA
+try { 
+  const s = localStorage.getItem('taxi-v2'); 
+  if(s) data = JSON.parse(s); 
+} catch(e){ console.error("Data load error", e); }
 
-function persist() { try { localStorage.setItem('taxi-v2', JSON.stringify(data)); } catch(e){} }
+function persist() { 
+  try { localStorage.setItem('taxi-v2', JSON.stringify(data)); } catch(e){ alert("Keydinta waa fashilantay!"); } 
+}
 
-function fmt(n) { return Math.round(n).toLocaleString('nb-NO') + ' kr'; }
+function fmt(n) { return Math.round(n || 0).toLocaleString('nb-NO') + ' kr'; }
 
 function fmtShort(n) {
-  const a = Math.abs(Math.round(n));
+  const a = Math.abs(Math.round(n || 0));
   if(a >= 1000000) return (n/1000000).toFixed(1) + 'M';
   if(a >= 1000) return Math.round(n/1000) + 'k';
-  return Math.round(n) + '';
+  return Math.round(n || 0) + '';
 }
 
 function showTab(t, el) {
@@ -360,10 +350,10 @@ function calcMva(amount, rate, dir) {
 
 function updateMain() {
   const rows = getRows();
-  const inc = rows.filter(r => r.dir==='income').reduce((a,r) => a+r.amount, 0);
-  const exp = rows.filter(r => r.dir==='expense').reduce((a,r) => a+r.amount, 0);
+  const inc = rows.filter(r => r.dir==='income').reduce((a,r) => a+(r.amount||0), 0);
+  const exp = rows.filter(r => r.dir==='expense').reduce((a,r) => a+(r.amount||0), 0);
   const pro = inc - exp;
-  const mvaNet = rows.reduce((a,r) => a+r.mva, 0);
+  const mvaNet = rows.reduce((a,r) => a+(r.mva||0), 0);
 
   document.getElementById('m-inc').textContent = fmt(inc);
   document.getElementById('m-exp').textContent = fmt(exp);
@@ -395,11 +385,9 @@ function updateMain() {
 function updateReport() {
   [1,2].forEach(t => {
     const rows = data.filter(r => r.taxi==t);
-    const inc = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+r.amount,0);
-    const exp = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+r.amount,0);
+    const inc = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+(r.amount||0),0);
+    const exp = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+(r.amount||0),0);
     const pro = inc - exp;
-    const mvaIn = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+r.mva,0);
-    const mvaOut = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+Math.abs(r.mva),0);
     document.getElementById('rep-g'+t).innerHTML = `
       <div class="report-row"><span class="report-row-label">Income</span><span class="report-row-val" style="color:var(--green)">${fmt(inc)}</span></div>
       <div class="report-row"><span class="report-row-label">Kharash</span><span class="report-row-val" style="color:var(--red)">${fmt(exp)}</span></div>
@@ -408,8 +396,8 @@ function updateReport() {
   });
   const mvaHtml = [1,2].map(t => {
     const rows = data.filter(r=>r.taxi==t);
-    const mvaIn = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+r.mva,0);
-    const mvaOut = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+Math.abs(r.mva),0);
+    const mvaIn = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+(r.mva||0),0);
+    const mvaOut = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+Math.abs(r.mva||0),0);
     const net = mvaIn - mvaOut;
     return `<div class="report-row">
       <span class="report-row-label"><span class="badge g${t}">G${t}</span> MVA la helayey</span>
@@ -427,66 +415,75 @@ function updateReport() {
   document.getElementById('rep-mva').innerHTML = mvaHtml;
 }
 
+// SAVE FUNCTIONS
+function saveManual() {
+  const amt = parseFloat(document.getElementById('g-amt').value);
+  if(!amt || isNaN(amt)) { alert('Fadlan geli lacag sax ah!'); return; }
+  
+  const mvaRate = parseInt(document.getElementById('g-mva').value) || 0;
+  const mva = calcMva(amt, mvaRate, geliDir);
+  const entry = {
+    id: Date.now(),
+    date: document.getElementById('g-date').value || today(),
+    taxi: geliGaari,
+    cat: document.getElementById('g-cat').value,
+    desc: document.getElementById('g-desc').value || '',
+    amount: amt,
+    mva: mva,
+    mvaRate: mvaRate,
+    dir: geliDir
+  };
+  
+  data.push(entry);
+  persist();
+  updateMain();
+  
+  document.getElementById('g-amt').value = '';
+  document.getElementById('g-desc').value = '';
+  showSuccess('Xogta waa la keydiyay!');
+}
+
+function saveFak() {
+  if(!pending) return;
+  const dir = pending.direction || 'expense';
+  const mva = dir === 'income' ? (pending.mva_amount || 0) : -(pending.mva_amount || 0);
+  
+  data.push({
+    id: Date.now(),
+    date: pending.date || today(),
+    taxi: fakGaari,
+    cat: pending.category || 'Kale',
+    desc: pending.vendor || '',
+    amount: pending.total_amount || 0,
+    mva: mva,
+    mvaRate: pending.mva_rate || 0,
+    dir: dir
+  });
+  
+  persist();
+  updateMain();
+  resetFak();
+  showSuccess('Fakturada waa la keydiyay!');
+}
+
 async function handleImg(e) {
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = async (ev) => {
     const src = ev.target.result;
-    const img = document.getElementById('prev-img');
-    img.src = src; img.style.display = 'block';
+    document.getElementById('prev-img').src = src;
+    document.getElementById('prev-img').style.display = 'block';
     document.getElementById('ai-res').style.display = 'none';
     document.getElementById('ai-load').style.display = 'flex';
-    const b64 = src.split(',')[1];
-    const mt = file.type || 'image/jpeg';
-    try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 800,
-          messages: [{role:'user', content:[
-            {type:'image', source:{type:'base64', media_type:mt, data:b64}},
-            {type:'text', text:`Aqri fakturadaan oo soo celi KALIYA JSON — xaraf kale ha gelin, ma jiraan backtick:
-{"date":"YYYY-MM-DD","vendor":"magaca","category":"Shidaal|Dayactir|Regnskap / Lisens|Kaarka Taksi|Caymis|Baabuurka|Kale","total_amount":0,"mva_rate":25,"mva_amount":0,"amount_ex_mva":0,"direction":"income|expense"}
-income = lacag la helayo (kaarka taksi, income).
-expense = lacag la bixinayo (shidaal, dayactir, regnskap iwm).
-Tirooyinka waa NOK. JSON oo kaliya.`}
-          ]}]
-        })
-      });
-      const d = await resp.json();
-      const txt = (d.content||[]).map(c=>c.text||'').join('').trim();
-      let parsed;
-      try { parsed = JSON.parse(txt); } catch(ex) {
-        const m = txt.match(/\{[\s\S]*\}/);
-        if(m) parsed = JSON.parse(m[0]);
-      }
-      if(parsed) {
-        pending = parsed;
-        document.getElementById('r-date').textContent = parsed.date||'-';
-        document.getElementById('r-ven').textContent = parsed.vendor||'-';
-        document.getElementById('r-cat').textContent = parsed.category||'-';
-        document.getElementById('r-tot').textContent = fmt(parsed.total_amount||0);
-        document.getElementById('r-mva').textContent = fmt(parsed.mva_amount||0)+' ('+( parsed.mva_rate||0)+'%)';
-        document.getElementById('r-exm').textContent = fmt(parsed.amount_ex_mva||0);
-        document.getElementById('r-dir').textContent = parsed.direction==='income'?'Income ↑':'Kharash ↓';
-        document.getElementById('ai-res').style.display = 'block';
-      } else { alert('AI ma aqrin karin. Isku day sawir cad.'); }
-    } catch(err) { alert('Khalad: '+err.message); }
-    document.getElementById('ai-load').style.display = 'none';
+    
+    // AI LOGIC HERE (Needs API Key usually)
+    setTimeout(() => {
+        document.getElementById('ai-load').style.display = 'none';
+        alert("Habka AI wuxuu u baahan yahay API Key. Fadlan gacanta ku geli xogta hadda.");
+    }, 2000);
   };
   reader.readAsDataURL(file);
-}
-
-function saveFak() {
-  if(!pending) return;
-  const dir = pending.direction||'expense';
-  const mva = dir==='income' ? (pending.mva_amount||0) : -(pending.mva_amount||0);
-  data.push({id:Date.now(), date:pending.date||today(), taxi:fakGaari, cat:pending.category||'Kale', desc:pending.vendor||'', amount:pending.total_amount||0, mva, mvaRate:pending.mva_rate||0, dir});
-  persist(); updateMain(); resetFak();
-  showSuccess('Fakturada la keydiyay!');
 }
 
 function resetFak() {
@@ -496,26 +493,14 @@ function resetFak() {
   pending = null;
 }
 
-function saveManual() {
-  const amt = parseFloat(document.getElementById('g-amt').value)||0;
-  if(!amt) { alert('Lacagta geli'); return; }
-  const mvaRate = parseInt(document.getElementById('g-mva').value)||0;
-  const mva = calcMva(amt, mvaRate, geliDir);
-  data.push({id:Date.now(), date:document.getElementById('g-date').value||today(), taxi:geliGaari, cat:document.getElementById('g-cat').value, desc:document.getElementById('g-desc').value, amount:amt, mva, mvaRate, dir:geliDir});
-  persist(); updateMain();
-  document.getElementById('g-amt').value='';
-  document.getElementById('g-desc').value='';
-  showSuccess('La keydiyay!');
-}
-
 function today() { return new Date().toISOString().slice(0,10); }
 
 function showSuccess(msg) {
   const el = document.createElement('div');
-  el.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#00d4aa;color:#000;padding:12px 24px;border-radius:99px;font-weight:700;font-size:14px;z-index:999;animation:fadeIn 0.2s;';
+  el.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#00d4aa;color:#000;padding:12px 24px;border-radius:99px;font-weight:700;font-size:14px;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
   el.textContent = '✓ ' + msg;
   document.body.appendChild(el);
-  setTimeout(()=>el.remove(), 2000);
+  setTimeout(()=>el.remove(), 2500);
 }
 
 function exportCSV() {
