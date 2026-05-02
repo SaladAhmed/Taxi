@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Taxi Xisaab">
+<meta name="description" content="Taxi xisaabeed — faktura, MVA, faaido">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Taxi Xisaab</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f1a;
+  --bg2: #1a1a2e;
+  --bg3: #16213e;
+  --card: #1e1e3a;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --yellow: #f5c842;
+  --yellow2: #ffd700;
+  --green: #00d4aa;
+  --red: #ff6b6b;
+  --blue: #4facfe;
+  --text: #f0f0f0;
+  --text2: rgba(240,240,240,0.55);
+  --text3: rgba(240,240,240,0.3);
+  --mono: 'DM Mono', monospace;
+  --sans: 'Sora', sans-serif;
+  --r: 14px;
+  --r2: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+/* TOP BAR */
+.topbar { background: var(--bg2); padding: 14px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.topbar-logo { display: flex; align-items: center; gap: 10px; }
+.taxi-dot { width: 32px; height: 32px; background: var(--yellow); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.topbar h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+.topbar p { font-size: 11px; color: var(--text2); }
+.gaari-toggle { display: flex; gap: 6px; }
+.g-btn { padding: 6px 12px; border-radius: 99px; font-size: 12px; font-family: var(--sans); font-weight: 600; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.2s; }
+.g-btn.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
+/* SCROLL CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
+
+/* NAV */
+.nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; font-size: 10px; color: var(--text2); cursor: pointer; border: none; background: transparent; font-family: var(--sans); transition: color 0.2s; }
+.nav-btn svg { width: 22px; height: 22px; }
+.nav-btn.active { color: var(--yellow); }
+
+/* SECTIONS */
+.section { display: none; }
+.section.active { display: block; }
+
+/* METRIC CARDS */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.metric { background: var(--card); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px; }
+.metric-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-val { font-size: 22px; font-weight: 700; font-family: var(--mono); letter-spacing: -1px; }
+.metric-val.green { color: var(--green); }
+.metric-val.red { color: var(--red); }
+.metric-val.yellow { color: var(--yellow); }
+.metric-val.blue { color: var(--blue); }
+
+/* CARDS */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; margin-bottom: 14px; }
+.card-title { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; font-weight: 600; }
+
+/* TRANSACTION LIST */
+.txn { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.txn:last-child { border-bottom: none; }
+.txn-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.txn-icon.in { background: rgba(0,212,170,0.15); }
+.txn-icon.out { background: rgba(255,107,107,0.15); }
+.txn-info { flex: 1; min-width: 0; }
+.txn-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.txn-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.txn-amt { text-align: right; flex-shrink: 0; }
+.txn-amt-val { font-size: 15px; font-weight: 700; font-family: var(--mono); }
+.txn-amt-val.in { color: var(--green); }
+.txn-amt-val.out { color: var(--red); }
+.txn-mva { font-size: 11px; color: var(--text3); }
+.empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 14px; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+/* UPLOAD AREA */
+.upload-zone { border: 2px dashed var(--border2); border-radius: var(--r2); padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+.upload-zone:hover, .upload-zone:active { border-color: var(--yellow); background: rgba(245,200,66,0.05); }
+.upload-icon { font-size: 40px; margin-bottom: 12px; }
+.upload-zone h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.upload-zone p { font-size: 13px; color: var(--text2); }
+.preview-img { width: 100%; border-radius: var(--r); max-height: 220px; object-fit: contain; margin-bottom: 14px; }
+
+/* AI RESULT */
+.ai-card { background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.3); border-radius: var(--r2); padding: 18px; margin-bottom: 14px; }
+.ai-card-title { font-size: 12px; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.ai-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(0,212,170,0.1); font-size: 14px; }
+.ai-row:last-child { border-bottom: none; }
+.ai-row-label { color: var(--text2); }
+.ai-row-val { font-weight: 600; font-family: var(--mono); }
+
+/* SPINNER */
+.loading-box { display: none; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
+.spinner { width: 24px; height: 24px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 14px; color: var(--text); font-size: 15px; font-family: var(--sans); outline: none; transition: border-color 0.2s; }
+.form-input:focus { border-color: var(--yellow); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.seg { display: flex; background: var(--bg3); border-radius: var(--r); padding: 4px; gap: 4px; margin-bottom: 14px; }
+.seg-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--sans); background: transparent; color: var(--text2); transition: all 0.2s; }
+.seg-btn.active { background: var(--yellow); color: #000; }
+.seg-btn.active.expense { background: var(--red); color: #fff; }
+
+/* BUTTONS */
+.btn { width: 100%; padding: 16px; border-radius: var(--r); font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--sans); border: none; transition: all 0.2s; letter-spacing: 0.3px; }
+.btn-yellow { background: var(--yellow); color: #000; }
+.btn-yellow:active { transform: scale(0.98); }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text); margin-top: 10px; }
+
+/* REPORT */
+.report-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.report-row:last-child { border-bottom: none; }
+.report-row-label { color: var(--text2); }
+.report-row-val { font-weight: 700; font-family: var(--mono); }
+.section-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin: 20px 0 10px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.badge.g1 { background: rgba(79,172,254,0.15); color: var(--blue); }
+.badge.g2 { background: rgba(245,200,66,0.15); color: var(--yellow2); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="taxi-dot">🚕</div>
+    <div>
+      <h1>Taxi Xisaab</h1>
+      <p id="topbar-sub">Labada Gaari</p>
+    </div>
+  </div>
+  <div class="gaari-toggle">
+    <button class="g-btn active" onclick="setGaari('all',this)">All</button>
+    <button class="g-btn" onclick="setGaari('1',this)">G1</button>
+    <button class="g-btn" onclick="setGaari('2',this)">G2</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- GUUDMAR -->
+  <div id="s-guud" class="section active">
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-label">Income</div><div class="metric-val green" id="m-inc">0 kr</div></div>
+      <div class="metric"><div class="metric-label">Kharash</div><div class="metric-val red" id="m-exp">0 kr</div></div>
+      <div class="metric"><div class="metric-label">Faaido</div><div class="metric-val" id="m-pro">0 kr</div></div>
+      <div class="metric"><div class="metric-label">MVA Net</div><div class="metric-val yellow" id="m-mva">0 kr</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Xisaabaha Dambe</div>
+      <div id="txn-list"><div class="empty"><div class="empty-icon">📋</div>Wax xog ah ma jiraan</div></div>
+    </div>
+  </div>
+
+  <!-- FAKTURA AI -->
+  <div id="s-fak" class="section">
+    <div class="seg" id="fak-gaari-seg">
+      <button class="seg-btn active" onclick="setFakGaari(1,this)">Gaari 1</button>
+      <button class="seg-btn" onclick="setFakGaari(2,this)">Gaari 2</button>
+    </div>
+    <div class="upload-zone" onclick="document.getElementById('file-in').click()">
+      <div class="upload-icon">📸</div>
+      <h3>Sawir ka qaad faktura</h3>
+      <p>Guji halkan — kaameerada ama galariiga</p>
+    </div>
+    <input type="file" id="file-in" accept="image/*" capture="environment" style="display:none" onchange="handleImg(event)">
+    <img id="prev-img" class="preview-img" style="display:none">
+    <div class="loading-box" id="ai-load">
+      <div class="spinner"></div>
+      <span style="color:var(--text2);font-size:14px">AI waxay aqrinaysaa fakturada...</span>
+    </div>
+    <div id="ai-res" style="display:none">
+      <div class="ai-card">
+        <div class="ai-card-title">✓ AI waa aqriyay</div>
+        <div class="ai-row"><span class="ai-row-label">Taarikh</span><span class="ai-row-val" id="r-date">-</span></div>
+        <div class="ai-row"><span class="ai-row-label">Vendor</span><span class="ai-row-val" id="r-ven">-</span></div>
+        <div class="ai-row"><span class="ai-row-label">Nooc</span><span class="ai-row-val" id="r-cat">-</span></div>
+        <div class="ai-row"><span class="ai-row-label">Lacag guud</span><span class="ai-row-val" id="r-tot">-</span></div>
+        <div class="ai-row"><span class="ai-row-label">MVA</span><span class="ai-row-val" id="r-mva">-</span></div>
+        <div class="ai-row"><span class="ai-row-label">Ex MVA</span><span class="ai-row-val" id="r-exm">-</span></div>
+        <div class="ai-row"><span class="ai-row-label">Income / Kharash</span><span class="ai-row-val" id="r-dir">-</span></div>
+      </div>
+      <button class="btn btn-yellow" onclick="saveFak()">Kaydi Fakturada</button>
+      <button class="btn btn-outline" onclick="resetFak()">Sawir Cusub</button>
+    </div>
+  </div>
+
+  <!-- GELI XOG -->
+  <div id="s-geli" class="section">
+    <div class="seg" id="geli-gaari-seg">
+      <button class="seg-btn active" onclick="setGeliGaari(1,this)">Gaari 1</button>
+      <button class="seg-btn" onclick="setGeliGaari(2,this)">Gaari 2</button>
+    </div>
+    <div class="seg" id="dir-seg">
+      <button class="seg-btn active" id="dir-in" onclick="setDir('income',this)">Income ↑</button>
+      <button class="seg-btn expense" id="dir-out" onclick="setDir('expense',this)">Kharash ↓</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Taarikh</label>
+        <input type="date" class="form-input" id="g-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lacag (kr)</label>
+        <input type="number" class="form-input" id="g-amt" placeholder="0.00" inputmode="decimal">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Qeybta</label>
+      <select class="form-input" id="g-cat">
+        <option>Kaarka Taksi</option>
+        <option>Shidaal</option>
+        <option>Dayactir</option>
+        <option>Regnskap / Lisens</option>
+        <option>Caymis</option>
+        <option>Baabuurka</option>
+        <option>Kale</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">MVA %</label>
+        <select class="form-input" id="g-mva">
+          <option value="25">25%</option>
+          <option value="12">12%</option>
+          <option value="0">0% — Ma jirto</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sharaxaad</label>
+        <input type="text" class="form-input" id="g-desc" placeholder="Tusaale: Statoil">
+      </div>
+    </div>
+    <button class="btn btn-yellow" onclick="saveManual()">Kaydi</button>
+  </div>
+
+  <!-- WARBIXIN -->
+  <div id="s-war" class="section">
+    <div class="section-label">Gaari 1</div>
+    <div class="card" id="rep-g1"></div>
+    <div class="section-label">Gaari 2</div>
+    <div class="card" id="rep-g2"></div>
+    <div class="section-label">MVA Kala-sooc</div>
+    <div class="card" id="rep-mva"></div>
+    <div style="margin-top:16px">
+      <button class="btn btn-outline" onclick="exportCSV()">Soo dhig CSV ↓</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showTab('guud',this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Guudmar
+  </button>
+  <button class="nav-btn" onclick="showTab('fak',this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    Faktura AI
+  </button>
+  <button class="nav-btn" onclick="showTab('geli',this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Geli Xog
+  </button>
+  <button class="nav-btn" onclick="showTab('war',this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Warbixin
+  </button>
+</nav>
+
+<script>
+let data = [];
+let gaari = 'all';
+let fakGaari = 1;
+let geliGaari = 1;
+let geliDir = 'income';
+let pending = null;
+
+try { const s = localStorage.getItem('taxi-v2'); if(s) data = JSON.parse(s); } catch(e){}
+
+function persist() { try { localStorage.setItem('taxi-v2', JSON.stringify(data)); } catch(e){} }
+
+function fmt(n) { return Math.round(n).toLocaleString('nb-NO') + ' kr'; }
+
+function fmtShort(n) {
+  const a = Math.abs(Math.round(n));
+  if(a >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if(a >= 1000) return Math.round(n/1000) + 'k';
+  return Math.round(n) + '';
+}
+
+function showTab(t, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s-'+t).classList.add('active');
+  el.classList.add('active');
+  if(t === 'war') updateReport();
+  if(t === 'guud') updateMain();
+}
+
+function setGaari(v, el) {
+  gaari = v;
+  document.querySelectorAll('.g-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const labels = {'all':'Labada Gaari','1':'Gaari 1','2':'Gaari 2'};
+  document.getElementById('topbar-sub').textContent = labels[v];
+  updateMain();
+}
+
+function setFakGaari(n, el) {
+  fakGaari = n;
+  document.querySelectorAll('#fak-gaari-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function setGeliGaari(n, el) {
+  geliGaari = n;
+  document.querySelectorAll('#geli-gaari-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function setDir(d, el) {
+  geliDir = d;
+  document.querySelectorAll('#dir-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function getRows() {
+  if(gaari === 'all') return data;
+  return data.filter(r => r.taxi == gaari);
+}
+
+function calcMva(amount, rate, dir) {
+  if(!rate) return 0;
+  const mva = Math.round(amount * rate / (100 + rate));
+  return dir === 'income' ? mva : -mva;
+}
+
+function updateMain() {
+  const rows = getRows();
+  const inc = rows.filter(r => r.dir==='income').reduce((a,r) => a+r.amount, 0);
+  const exp = rows.filter(r => r.dir==='expense').reduce((a,r) => a+r.amount, 0);
+  const pro = inc - exp;
+  const mvaNet = rows.reduce((a,r) => a+r.mva, 0);
+
+  document.getElementById('m-inc').textContent = fmt(inc);
+  document.getElementById('m-exp').textContent = fmt(exp);
+  const pEl = document.getElementById('m-pro');
+  pEl.textContent = fmt(pro);
+  pEl.className = 'metric-val ' + (pro>=0?'green':'red');
+  document.getElementById('m-mva').textContent = fmt(mvaNet);
+
+  const list = document.getElementById('txn-list');
+  if(!rows.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Wax xog ah ma jiraan</div>';
+    return;
+  }
+  list.innerHTML = [...rows].reverse().slice(0,30).map(r => `
+    <div class="txn">
+      <div class="txn-icon ${r.dir==='income'?'in':'out'}">${r.dir==='income'?'💰':'💸'}</div>
+      <div class="txn-info">
+        <div class="txn-name">${r.desc||r.cat}</div>
+        <div class="txn-sub">${r.date} · G${r.taxi} · ${r.cat}</div>
+      </div>
+      <div class="txn-amt">
+        <div class="txn-amt-val ${r.dir==='income'?'in':'out'}">${r.dir==='income'?'+':'-'}${fmtShort(r.amount)} kr</div>
+        <div class="txn-mva">${r.mva?'MVA '+fmtShort(Math.abs(r.mva))+' kr':''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateReport() {
+  [1,2].forEach(t => {
+    const rows = data.filter(r => r.taxi==t);
+    const inc = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+r.amount,0);
+    const exp = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+r.amount,0);
+    const pro = inc - exp;
+    const mvaIn = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+r.mva,0);
+    const mvaOut = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+Math.abs(r.mva),0);
+    document.getElementById('rep-g'+t).innerHTML = `
+      <div class="report-row"><span class="report-row-label">Income</span><span class="report-row-val" style="color:var(--green)">${fmt(inc)}</span></div>
+      <div class="report-row"><span class="report-row-label">Kharash</span><span class="report-row-val" style="color:var(--red)">${fmt(exp)}</span></div>
+      <div class="report-row"><span class="report-row-label">Faaido / Qasaaro</span><span class="report-row-val" style="color:${pro>=0?'var(--green)':'var(--red)'}">${fmt(pro)}</span></div>
+    `;
+  });
+  const mvaHtml = [1,2].map(t => {
+    const rows = data.filter(r=>r.taxi==t);
+    const mvaIn = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+r.mva,0);
+    const mvaOut = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+Math.abs(r.mva),0);
+    const net = mvaIn - mvaOut;
+    return `<div class="report-row">
+      <span class="report-row-label"><span class="badge g${t}">G${t}</span> MVA la helayey</span>
+      <span class="report-row-val" style="color:var(--green)">${fmt(mvaIn)}</span>
+    </div>
+    <div class="report-row">
+      <span class="report-row-label"><span class="badge g${t}">G${t}</span> MVA la bixiyey</span>
+      <span class="report-row-val" style="color:var(--red)">${fmt(mvaOut)}</span>
+    </div>
+    <div class="report-row">
+      <span class="report-row-label"><span class="badge g${t}">G${t}</span> Net MVA</span>
+      <span class="report-row-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${fmt(net)}</span>
+    </div>`;
+  }).join('<div style="height:10px"></div>');
+  document.getElementById('rep-mva').innerHTML = mvaHtml;
+}
+
+async function handleImg(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const src = ev.target.result;
+    const img = document.getElementById('prev-img');
+    img.src = src; img.style.display = 'block';
+    document.getElementById('ai-res').style.display = 'none';
+    document.getElementById('ai-load').style.display = 'flex';
+    const b64 = src.split(',')[1];
+    const mt = file.type || 'image/jpeg';
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 800,
+          messages: [{role:'user', content:[
+            {type:'image', source:{type:'base64', media_type:mt, data:b64}},
+            {type:'text', text:`Aqri fakturadaan oo soo celi KALIYA JSON — xaraf kale ha gelin, ma jiraan backtick:
+{"date":"YYYY-MM-DD","vendor":"magaca","category":"Shidaal|Dayactir|Regnskap / Lisens|Kaarka Taksi|Caymis|Baabuurka|Kale","total_amount":0,"mva_rate":25,"mva_amount":0,"amount_ex_mva":0,"direction":"income|expense"}
+income = lacag la helayo (kaarka taksi, income).
+expense = lacag la bixinayo (shidaal, dayactir, regnskap iwm).
+Tirooyinka waa NOK. JSON oo kaliya.`}
+          ]}]
+        })
+      });
+      const d = await resp.json();
+      const txt = (d.content||[]).map(c=>c.text||'').join('').trim();
+      let parsed;
+      try { parsed = JSON.parse(txt); } catch(ex) {
+        const m = txt.match(/\{[\s\S]*\}/);
+        if(m) parsed = JSON.parse(m[0]);
+      }
+      if(parsed) {
+        pending = parsed;
+        document.getElementById('r-date').textContent = parsed.date||'-';
+        document.getElementById('r-ven').textContent = parsed.vendor||'-';
+        document.getElementById('r-cat').textContent = parsed.category||'-';
+        document.getElementById('r-tot').textContent = fmt(parsed.total_amount||0);
+        document.getElementById('r-mva').textContent = fmt(parsed.mva_amount||0)+' ('+( parsed.mva_rate||0)+'%)';
+        document.getElementById('r-exm').textContent = fmt(parsed.amount_ex_mva||0);
+        document.getElementById('r-dir').textContent = parsed.direction==='income'?'Income ↑':'Kharash ↓';
+        document.getElementById('ai-res').style.display = 'block';
+      } else { alert('AI ma aqrin karin. Isku day sawir cad.'); }
+    } catch(err) { alert('Khalad: '+err.message); }
+    document.getElementById('ai-load').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveFak() {
+  if(!pending) return;
+  const dir = pending.direction||'expense';
+  const mva = dir==='income' ? (pending.mva_amount||0) : -(pending.mva_amount||0);
+  data.push({id:Date.now(), date:pending.date||today(), taxi:fakGaari, cat:pending.category||'Kale', desc:pending.vendor||'', amount:pending.total_amount||0, mva, mvaRate:pending.mva_rate||0, dir});
+  persist(); updateMain(); resetFak();
+  showSuccess('Fakturada la keydiyay!');
+}
+
+function resetFak() {
+  document.getElementById('prev-img').style.display='none';
+  document.getElementById('ai-res').style.display='none';
+  document.getElementById('file-in').value='';
+  pending = null;
+}
+
+function saveManual() {
+  const amt = parseFloat(document.getElementById('g-amt').value)||0;
+  if(!amt) { alert('Lacagta geli'); return; }
+  const mvaRate = parseInt(document.getElementById('g-mva').value)||0;
+  const mva = calcMva(amt, mvaRate, geliDir);
+  data.push({id:Date.now(), date:document.getElementById('g-date').value||today(), taxi:geliGaari, cat:document.getElementById('g-cat').value, desc:document.getElementById('g-desc').value, amount:amt, mva, mvaRate, dir:geliDir});
+  persist(); updateMain();
+  document.getElementById('g-amt').value='';
+  document.getElementById('g-desc').value='';
+  showSuccess('La keydiyay!');
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+function showSuccess(msg) {
+  const el = document.createElement('div');
+  el.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#00d4aa;color:#000;padding:12px 24px;border-radius:99px;font-weight:700;font-size:14px;z-index:999;animation:fadeIn 0.2s;';
+  el.textContent = '✓ ' + msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 2000);
+}
+
+function exportCSV() {
+  const h = 'Taarikh,Gaari,Qeybta,Sharaxaad,Nooc,Lacag,MVA Rate,MVA,Net\n';
+  const rows = data.map(r=>`${r.date},Gaari ${r.taxi},${r.cat},"${r.desc||''}",${r.dir},${r.amount},${r.mvaRate}%,${Math.abs(r.mva)},${r.amount-Math.abs(r.mva)}`).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([h+rows],{type:'text/csv;charset=utf-8'}));
+  a.download = 'taxi-xisaab-'+today()+'.csv';
+  a.click();
+}
+
+document.getElementById('g-date').value = today();
+updateMain();
+
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
