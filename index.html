@@ -13,7 +13,6 @@
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; }
         .menu-dropdown { display: none; position: absolute; right: 10px; top: 45px; background: #30355a; border: 1px solid #404677; border-radius: 8px; z-index: 50; min-width: 140px; }
         .menu-dropdown.active { display: block; }
-        .menu-item { padding: 10px 15px; font-size: 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #404677; }
     </style>
 </head>
 <body class="pb-24">
@@ -25,12 +24,12 @@
                 <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400 uppercase">Kharash Guud</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
             </div>
 
-            <div class="card result-card mt-2">
-                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-center text-orange-400">
-                    <div><p class="text-[9px] text-gray-400 uppercase">MVA Refund (Kharashka)</p><p id="mvaTax" class="text-sm font-semibold">0 kr</p></div>
+            <div class="card result-card mt-2 text-center">
+                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-orange-400">
+                    <div><p class="text-[9px] text-gray-400 uppercase">MVA Refund (1/5)</p><p id="mvaTax" class="text-sm font-semibold">0 kr</p></div>
                     <div><p class="text-[9px] text-gray-400 uppercase">Feriepenger (10.2%)</p><p id="ferieTax" class="text-sm font-semibold">0 kr</p></div>
                 </div>
-                <div class="text-center">
+                <div>
                     <p class="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">Lacagta Nadiifka ah (Net)</p>
                     <h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2>
                 </div>
@@ -49,7 +48,7 @@
                     <input type="date" id="dateInput">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
-                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg">KAYDI ONLINE</button>
+                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg shadow-lg">KAYDI ONLINE</button>
                 </div>
             </div>
         </div>
@@ -79,7 +78,7 @@
 
         const categories = {
             income: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'],
-            expense: ['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Mushaar (Lønn)', 'Forsikring', 'Faktura (Kharash)', 'Wax kale']
+            expense: ['Mushaar (Lønn)', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
         };
 
         window.setMode = (m) => {
@@ -100,7 +99,7 @@
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            if(!amt || !date) return alert("Buuxi xogta!");
+            if(!amt || !date) return alert("Fadlan buuxi lacagta!");
             await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode, createdAt: Date.now() });
             document.getElementById('amountInput').value = '';
             showSection('dashboard');
@@ -111,7 +110,7 @@
         const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('transactionList'); list.innerHTML = '';
-            let ti=0, te=0, totalLonn=0, mvaSum=0;
+            let ti=0, te=0, totalFP=0, mvaSum=0;
 
             snapshot.forEach((docSnap) => {
                 const d = docSnap.data();
@@ -119,29 +118,27 @@
                     ti += d.amount;
                 } else {
                     te += d.amount;
-                    if(d.type === 'Mushaar (Lønn)') totalLonn += d.amount;
-                    // MVA Xisaabteeda (Qaybi 5 ama 20% si aad u hesho MVA-da ku dhex jirta lacag la bixiyay)
+                    if(d.type === 'Mushaar (Lønn)') totalFP += (d.amount * 0.102);
                     if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
                         mvaSum += (d.amount / 5); 
                     }
                 }
                 list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                    <div><p class="text-sm font-bold text-gray-200">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                    <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
                     <div class="flex items-center gap-4">
                         <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${Math.round(d.amount).toLocaleString()} kr</p>
-                        <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-400"><i class="fas fa-ellipsis-v"></i></button>
-                        <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600"><div class="menu-item text-red-500" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash"></i> Tirtir</div></div>
+                        <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-400 p-2"><i class="fas fa-ellipsis-v"></i></button>
+                        <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600"><div class="menu-item text-red-500 p-3" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash mr-2"></i> Tirtir</div></div>
                     </div>
                 </div>`;
             });
 
-            const ferie = totalLonn * 0.102;
-            const net = ti - te - ferie;
+            const net = ti - te - totalFP;
 
             document.getElementById('totalIncome').innerText = Math.round(ti).toLocaleString() + ' kr';
             document.getElementById('totalExpense').innerText = Math.round(te).toLocaleString() + ' kr';
             document.getElementById('mvaTax').innerText = Math.round(mvaSum).toLocaleString() + ' kr';
-            document.getElementById('ferieTax').innerText = Math.round(ferie).toLocaleString() + ' kr';
+            document.getElementById('ferieTax').innerText = Math.round(totalFP).toLocaleString() + ' kr';
             const netEl = document.getElementById('netResult');
             netEl.innerText = Math.round(net).toLocaleString() + ' kr';
             netEl.style.color = net >= 0 ? '#4ade80' : '#f87171';
