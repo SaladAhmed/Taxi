@@ -79,7 +79,7 @@
 
         const categories = {
             income: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'],
-            expense: ['Mushaar (Lønn)', 'Bankuttak (Owner)', 'Skatt', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
+            expense: ['Mushaar (Lønn)', 'Bankuttak (Owner)', 'Skatt', 'Transaksjonsgebyr', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
         };
 
         window.setMode = (m) => {
@@ -130,14 +130,12 @@
                     ti += d.amount;
                 } else {
                     te += d.amount;
-                    // Kaliya Mushaar (Lønn) ayaa leh Feriepenger
                     if(d.type === 'Mushaar (Lønn)') totalFP += (d.amount * 0.102);
                     
-                    // Kaliya waxyaabahan ayaa MVA laga soo celinayaa
+                    // Transaksjonsgebyr ma laha MVA
                     if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
                         mvaSum += (d.amount / 5); 
                     }
-                    // Bankuttak iyo Skatt wax MVA ah ma lahan
                 }
                 list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
                     <div>
