@@ -19,7 +19,7 @@
 <body class="pb-24">
     <div id="app" class="p-4">
         <div class="mb-6 text-center">
-            <h1 class="text-xl font-bold text-yellow-400">MOHAMED SALAD TRANSPORT</h1>
+            <h1 class="text-xl font-bold text-yellow-400 uppercase">Mohamed Salad Transport</h1>
             <div class="grid grid-cols-2 gap-3 mt-4 text-left">
                 <div class="card border-l-4 border-green-500"><p class="text-[10px] text-gray-400">TOTAL INCOME</p><h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2></div>
                 <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400">TOTAL KHARASH</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
@@ -27,11 +27,11 @@
 
             <div class="card result-card mt-2">
                 <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-center">
-                    <div><p class="text-[9px] text-gray-400">MVA (NET)</p><p id="mvaTax" class="text-sm font-semibold text-orange-400">0 kr</p></div>
+                    <div><p class="text-[9px] text-gray-400">MVA EE LAGU SOO CELINAYO</p><p id="mvaTax" class="text-sm font-semibold text-green-400">0 kr</p></div>
                     <div><p class="text-[9px] text-gray-400">FERIEPENGER (10.2%)</p><p id="ferieTax" class="text-sm font-semibold text-orange-400">0 kr</p></div>
                 </div>
                 <div class="text-center">
-                    <p class="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">Natiijada (Profit After Taxes)</p>
+                    <p class="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">Lacagta kuu soo hartay (Net)</p>
                     <h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2>
                 </div>
             </div>
@@ -46,12 +46,10 @@
                     <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl font-bold bg-gray-700">Kharash ↓</button>
                 </div>
                 <div class="space-y-4">
-                    <input type="hidden" id="editId">
                     <input type="date" id="dateInput">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
-                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4">KAYDI ONLINE</button>
-                    <button onclick="showSection('dashboard')" id="cancelBtn" class="hidden w-full bg-gray-600 text-white py-3 rounded-2xl font-bold mt-2">KA NOQO</button>
+                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg shadow-lg">KAYDI ONLINE</button>
                 </div>
             </div>
         </div>
@@ -81,13 +79,13 @@
 
         const categories = {
             income: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'],
-            expense: ['Regnskap', 'Forsikring', 'Shidaal', 'Mushaar (Lønn)', 'Sentral Avgifter', 'Faktura (Kharash)', 'Dayactir', 'Wax kale']
+            expense: ['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Mushaar (Lønn)', 'Forsikring', 'Faktura (Kharash)', 'Wax kale']
         };
 
         window.setMode = (m) => {
             mode = m;
-            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
-            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold bg-red-500 text-white' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
+            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700 text-white';
+            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold bg-red-500 text-white' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700 text-white';
             const select = document.getElementById('typeInput');
             select.innerHTML = categories[m].map(c => `<option value="${c}">${c}</option>`).join('');
         };
@@ -102,59 +100,53 @@
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            if(!amt || !date) return alert("Buuxi xogta!");
-            const payload = { amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode };
+            if(!amt || !date) return alert("Fadlan buuxi lacagta iyo taariikhda!");
+            const payload = { amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode, createdAt: Date.now() };
             await addDoc(collection(db, "xisaabaadka"), payload);
+            document.getElementById('amountInput').value = '';
             showSection('dashboard');
         };
 
-        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa xogtan?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
 
         const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('transactionList'); list.innerHTML = '';
-            let ti=0, te=0, totalLonn=0, mvaDeductibleExpense=0;
+            let ti=0, te=0, totalLonn=0, mvaRefundable=0;
 
-            snapshot.forEach((doc) => {
-                const d = doc.data();
+            snapshot.forEach((docSnap) => {
+                const d = docSnap.data();
                 if(d.mode === 'income') {
                     ti += d.amount;
                 } else {
                     te += d.amount;
-                    if(d.type === 'Mushaar (Lønn)') totalLonn += d.amount;
-                    // Qaybaha MVA laga goyn karo (Input MVA)
-                    if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
-                        mvaDeductibleExpense += d.amount;
+                    if(d.type === 'Mushaar (Lønn)') {
+                        totalLonn += d.amount;
+                    } else if (['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
+                        mvaRefundable += (d.amount * 0.25); // 25% MVA oo kharashka ku dhex jirta
                     }
                 }
-                list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                    <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
-                    <div class="flex items-center gap-4">
-                        <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
-                        <button onclick="toggleMenu('${doc.id}')" class="text-gray-400"><i class="fas fa-ellipsis-v"></i></button>
-                        <div id="menu-${doc.id}" class="menu-dropdown shadow-xl border"><div class="menu-item text-red-500" onclick="deleteItem('${doc.id}')"><i class="fas fa-trash"></i> Tirtir</div></div>
-                    </div>
-                </div>`;
+                list.innerHTML += `
+                    <div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
+                        <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                        <div class="flex items-center gap-4">
+                            <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
+                            <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-400 p-2"><i class="fas fa-ellipsis-v"></i></button>
+                            <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600">
+                                <div class="menu-item text-red-500" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash"></i> Tirtir</div>
+                            </div>
+                        </div>
+                    </div>`;
             });
 
-            // XISAABTA SAXDA AH:
-            // 1. MVA aad macaamiisha ka qaaday (25% of Income)
-            const mvaFromIncome = ti * 0.25;
-            // 2. MVA aad bixisay markaad wax iibsatay (25% of Shidaal, Dayactir, etc.)
-            const mvaFromExpenses = mvaDeductibleExpense * 0.25;
-            // 3. MVA-ga dowladda ku sugaya (Net MVA)
-            const netMva = mvaFromIncome - mvaFromExpenses;
-            
-            // 4. Feriepenger (10.2% of Mushaar oo kaliya)
             const feriepenger = totalLonn * 0.102;
-            
-            // 5. Natiijada: Income - Kharashka dhamaantiis - Net MVA - Feriepenger
-            const finalProfit = ti - te - netMva - feriepenger;
+            const finalProfit = ti - te - feriepenger; // MVA-da kharashka dib ayay kuugu soo dhacaysaa (Benefit)
 
             document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
             document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-            document.getElementById('mvaTax').innerText = netMva.toLocaleString() + ' kr';
+            document.getElementById('mvaTax').innerText = mvaRefundable.toLocaleString() + ' kr';
             document.getElementById('ferieTax').innerText = feriepenger.toLocaleString() + ' kr';
+            
             const netEl = document.getElementById('netResult');
             netEl.innerText = finalProfit.toLocaleString() + ' kr';
             netEl.style.color = finalProfit >= 0 ? '#4ade80' : '#f87171';
