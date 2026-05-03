@@ -8,51 +8,64 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #1a1c2c; color: white; font-family: -apple-system, sans-serif; }
-        .card { background: #252945; border-radius: 15px; padding: 15px; margin-bottom: 10px; border: 1px solid #30355a; }
+        .card { background: #252945; border-radius: 15px; padding: 15px; margin-bottom: 10px; border: 1px solid #30355a; position: relative; }
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; }
-        .btn-income { background-color: #facc15; color: black; }
-        .btn-expense { background-color: #ef4444; color: white; }
+        .menu-dropdown { display: none; position: absolute; right: 10px; top: 45px; background: #30355a; border: 1px solid #404677; border-radius: 8px; z-index: 50; min-width: 120px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .menu-dropdown.active { display: block; }
+        .menu-item { padding: 10px 15px; font-size: 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #404677; }
+        .menu-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body class="pb-24">
-
     <div id="app" class="p-4">
         <div class="mb-6 text-center">
-            <h1 class="text-xl font-bold text-yellow-400">TAXI XISAAB PRO</h1>
+            <h1 class="text-xl font-bold text-yellow-400">TAXI XISAAB ONLINE</h1>
             <div class="grid grid-cols-2 gap-3 mt-4 text-left">
                 <div class="card border-l-4 border-green-500"><p class="text-[9px] text-gray-400">TOTAL INCOME</p><h2 id="totalIncome" class="text-lg font-bold">0 kr</h2></div>
                 <div class="card border-l-4 border-red-500"><p class="text-[9px] text-gray-400">TOTAL KHARASH</p><h2 id="totalExpense" class="text-lg font-bold">0 kr</h2></div>
-                <div class="card border-l-4 border-blue-500"><p class="text-[9px] text-gray-400">MVA (25%)</p><h2 id="totalMVA" class="text-lg font-bold">0 kr</h2></div>
-                <div class="card border-l-4 border-orange-500"><p class="text-[9px] text-gray-400">FERIEPENGER (10.2%)</p><h2 id="totalFerie" class="text-lg font-bold">0 kr</h2></div>
             </div>
         </div>
-
+        
         <div id="dashboardSection"><div id="transactionList" class="space-y-3"></div></div>
 
         <div id="inputSection" class="hidden">
             <div class="card">
                 <div class="flex gap-2 mb-6">
-                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl font-bold btn-income">Income ↑</button>
+                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black">Income ↑</button>
                     <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl font-bold bg-gray-700">Kharash ↓</button>
                 </div>
                 <div class="space-y-4">
+                    <input type="hidden" id="editId">
                     <input type="date" id="dateInput">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
-                    <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4">KAYDI XOGTA</button>
+                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4">KAYDI ONLINE</button>
+                    <button onclick="showSection('dashboard')" id="cancelBtn" class="hidden w-full bg-gray-600 text-white py-3 rounded-2xl font-bold mt-2">KA NOQO</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 shadow-2xl">
-        <button onclick="showSection('dashboard')" id="navDash" class="flex flex-col items-center text-yellow-400"><i class="fas fa-home text-xl mb-1"></i><span class="text-[10px]">Guudmar</span></button>
-        <button onclick="showSection('input')" id="navInput" class="flex flex-col items-center text-gray-500"><i class="fas fa-plus-circle text-xl mb-1"></i><span class="text-[10px]">Geli Xog</span></button>
-        <button onclick="clearAll()" class="flex flex-col items-center text-red-500"><i class="fas fa-trash-alt text-xl mb-1"></i><span class="text-[10px]">Tirtir Bisha</span></button>
+    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3">
+        <button onclick="showSection('dashboard')" class="flex flex-col items-center text-yellow-400"><i class="fas fa-home text-xl"></i><span class="text-[10px]">Guudmar</span></button>
+        <button onclick="showSection('input')" class="flex flex-col items-center text-gray-400"><i class="fas fa-plus-circle text-xl"></i><span class="text-[10px]">Geli Xog</span></button>
     </nav>
 
-    <script>
-        let data = JSON.parse(localStorage.getItem('taxi_v5_final')) || [];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYNLmT JEV2_WWNhIbpwbUCXZAMiN",
+            authDomain: "mohamed-salad-transport.firebaseapp.com",
+            projectId: "mohamed-salad-transport",
+            storageBucket: "mohamed-salad-transport.firebasestorage.app",
+            messagingSenderId: "608716442795",
+            appId: "1:608716442795:web:ea17e2c3f26d3103"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         let mode = 'income';
 
         const categories = {
@@ -60,65 +73,90 @@
             expense: ['Regnskap', 'Forsikring', 'Shidaal', 'Mushaar (Lønn)', 'Sentral Avgifter', 'Faktura (Kharash)', 'Dayactir', 'Wax kale']
         };
 
-        function showSection(s) {
-            document.getElementById('dashboardSection').classList.toggle('hidden', s !== 'dashboard');
-            document.getElementById('inputSection').classList.toggle('hidden', s !== 'input');
-            document.getElementById('navDash').className = s === 'dashboard' ? 'flex flex-col items-center text-yellow-400' : 'flex flex-col items-center text-gray-500';
-            document.getElementById('navInput').className = s === 'input' ? 'flex flex-col items-center text-yellow-400' : 'flex flex-col items-center text-gray-500';
-        }
-
-        function setMode(m) {
+        window.setMode = (m) => {
             mode = m;
-            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold btn-income' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
-            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold btn-expense' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
+            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
+            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold bg-red-500 text-white' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
             const select = document.getElementById('typeInput');
             select.innerHTML = categories[m].map(c => `<option value="${c}">${c}</option>`).join('');
-        }
+        };
 
-        function saveEntry() {
+        window.showSection = (s) => {
+            document.getElementById('dashboardSection').classList.toggle('hidden', s !== 'dashboard');
+            document.getElementById('inputSection').classList.toggle('hidden', s !== 'input');
+            if(s === 'dashboard') resetForm();
+        };
+
+        window.toggleMenu = (id) => {
+            document.querySelectorAll('.menu-dropdown').forEach(m => {
+                if(m.id !== 'menu-'+id) m.classList.remove('active');
+            });
+            document.getElementById('menu-'+id).classList.toggle('active');
+        };
+
+        window.editItem = (id, data) => {
+            document.getElementById('editId').value = id;
+            document.getElementById('amountInput').value = data.amount;
+            document.getElementById('dateInput').value = data.date;
+            setMode(data.mode);
+            document.getElementById('typeInput').value = data.type;
+            document.getElementById('saveBtn').innerText = "CUSBOONAYSI ONLINE";
+            document.getElementById('cancelBtn').classList.remove('hidden');
+            showSection('input');
+        };
+
+        window.resetForm = () => {
+            document.getElementById('editId').value = '';
+            document.getElementById('amountInput').value = '';
+            document.getElementById('saveBtn').innerText = "KAYDI ONLINE";
+            document.getElementById('cancelBtn').classList.add('hidden');
+        };
+
+        window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            if(!amt || !date) return alert("Fadlan buuxi xogta!");
-            data.push({
-                id: Date.now(), amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode,
-                ferie: document.getElementById('typeInput').value === 'Mushaar (Lønn)' ? amt * 0.102 : 0,
-                mva: mode === 'income' ? amt * 0.25 : 0
-            });
-            localStorage.setItem('taxi_v5_final', JSON.stringify(data));
-            document.getElementById('amountInput').value = '';
-            showSection('dashboard'); render();
-        }
+            const editId = document.getElementById('editId').value;
+            if(!amt || !date) return alert("Fadlan buuxi!");
+            
+            document.getElementById('saveBtn').innerText = "Xogtu way socotaa...";
+            const payload = { amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode };
 
-        function deleteItem(id) {
-            if(confirm("Ma tirtirnaa?")) { data = data.filter(d => d.id !== id); localStorage.setItem('taxi_v5_final', JSON.stringify(data)); render(); }
-        }
+            if(editId) {
+                await updateDoc(doc(db, "xisaabaadka", editId), payload);
+            } else {
+                await addDoc(collection(db, "xisaabaadka"), { ...payload, createdAt: Date.now() });
+            }
+            showSection('dashboard');
+        };
 
-        function clearAll() {
-            if(confirm("Ma tirtirnaa dhammaan xogta bisha?")) { data = []; localStorage.removeItem('taxi_v5_final'); render(); }
-        }
+        window.deleteItem = async (id) => { if(confirm("Ma hubtaa inaad tirtirto?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
 
-        function render() {
+        const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
+        onSnapshot(q, (snapshot) => {
             const list = document.getElementById('transactionList'); list.innerHTML = '';
-            let ti=0, te=0, tm=0, tf=0;
-            data.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(d => {
+            let ti=0, te=0;
+            snapshot.forEach((doc) => {
+                const d = doc.data();
                 if(d.mode === 'income') ti += d.amount; else te += d.amount;
-                tm += (d.mva || 0); tf += (d.ferie || 0);
                 list.innerHTML += `
                     <div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
                         <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
                         <div class="flex items-center gap-4">
-                            <div class="text-right"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p></div>
-                            <button onclick="deleteItem(${d.id})" class="text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>
+                            <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
+                            <button onclick="toggleMenu('${doc.id}')" class="text-gray-400 p-2"><i class="fas fa-ellipsis-v"></i></button>
+                            <div id="menu-${doc.id}" class="menu-dropdown">
+                                <div class="menu-item text-blue-400" onclick='editItem("${doc.id}", ${JSON.stringify(d)})'><i class="fas fa-edit"></i> Wax ka bedel</div>
+                                <div class="menu-item text-red-500" onclick="deleteItem('${doc.id}')"><i class="fas fa-trash"></i> Tirtir</div>
+                            </div>
                         </div>
                     </div>`;
             });
             document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
             document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-            document.getElementById('totalMVA').innerText = tm.toLocaleString() + ' kr';
-            document.getElementById('totalFerie').innerText = tf.toLocaleString() + ' kr';
-        }
+        });
+
         document.getElementById('dateInput').valueAsDate = new Date();
-        setMode('income'); render();
+        setMode('income');
     </script>
 </body>
 </html>
