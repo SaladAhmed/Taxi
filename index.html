@@ -20,19 +20,18 @@
     <div id="app" class="p-4">
         <div class="mb-6 text-center">
             <h1 class="text-xl font-bold text-yellow-400">MOHAMED SALAD TRANSPORT</h1>
-            
             <div class="grid grid-cols-2 gap-3 mt-4 text-left">
                 <div class="card border-l-4 border-green-500"><p class="text-[10px] text-gray-400">TOTAL INCOME</p><h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2></div>
                 <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400">TOTAL KHARASH</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
             </div>
 
             <div class="card result-card mt-2">
-                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2">
-                    <div><p class="text-[9px] text-gray-400">MVA (25%)</p><p id="mvaTax" class="text-sm font-semibold text-orange-400">0 kr</p></div>
+                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-center">
+                    <div><p class="text-[9px] text-gray-400">MVA (NET)</p><p id="mvaTax" class="text-sm font-semibold text-orange-400">0 kr</p></div>
                     <div><p class="text-[9px] text-gray-400">FERIEPENGER (10.2%)</p><p id="ferieTax" class="text-sm font-semibold text-orange-400">0 kr</p></div>
                 </div>
                 <div class="text-center">
-                    <p class="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">Natiijada u dambaysa (Net Profit/Loss)</p>
+                    <p class="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">Natiijada (Profit After Taxes)</p>
                     <h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2>
                 </div>
             </div>
@@ -65,7 +64,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYNLmT JEV2_WWNhIbpwbUCXZAMiN",
@@ -98,9 +97,7 @@
             document.getElementById('inputSection').classList.toggle('hidden', s !== 'input');
         };
 
-        window.toggleMenu = (id) => {
-            document.getElementById('menu-'+id).classList.toggle('active');
-        };
+        window.toggleMenu = (id) => { document.getElementById('menu-'+id).classList.toggle('active'); };
 
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
@@ -116,36 +113,51 @@
         const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('transactionList'); list.innerHTML = '';
-            let ti=0, te=0;
+            let ti=0, te=0, totalLonn=0, mvaDeductibleExpense=0;
+
             snapshot.forEach((doc) => {
                 const d = doc.data();
-                if(d.mode === 'income') ti += d.amount; else te += d.amount;
-                list.innerHTML += `
-                    <div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                        <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
-                        <div class="flex items-center gap-4">
-                            <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
-                            <button onclick="toggleMenu('${doc.id}')" class="text-gray-400"><i class="fas fa-ellipsis-v"></i></button>
-                            <div id="menu-${doc.id}" class="menu-dropdown shadow-xl border">
-                                <div class="menu-item text-red-500" onclick="deleteItem('${doc.id}')"><i class="fas fa-trash"></i> Tirtir</div>
-                            </div>
-                        </div>
-                    </div>`;
+                if(d.mode === 'income') {
+                    ti += d.amount;
+                } else {
+                    te += d.amount;
+                    if(d.type === 'Mushaar (Lønn)') totalLonn += d.amount;
+                    // Qaybaha MVA laga goyn karo (Input MVA)
+                    if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
+                        mvaDeductibleExpense += d.amount;
+                    }
+                }
+                list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
+                    <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                    <div class="flex items-center gap-4">
+                        <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
+                        <button onclick="toggleMenu('${doc.id}')" class="text-gray-400"><i class="fas fa-ellipsis-v"></i></button>
+                        <div id="menu-${doc.id}" class="menu-dropdown shadow-xl border"><div class="menu-item text-red-500" onclick="deleteItem('${doc.id}')"><i class="fas fa-trash"></i> Tirtir</div></div>
+                    </div>
+                </div>`;
             });
 
-            // XISAABTA NET-KA
-            const mva = ti * 0.25;
-            const ferie = ti * 0.102;
-            const finalNet = ti - te - mva - ferie;
+            // XISAABTA SAXDA AH:
+            // 1. MVA aad macaamiisha ka qaaday (25% of Income)
+            const mvaFromIncome = ti * 0.25;
+            // 2. MVA aad bixisay markaad wax iibsatay (25% of Shidaal, Dayactir, etc.)
+            const mvaFromExpenses = mvaDeductibleExpense * 0.25;
+            // 3. MVA-ga dowladda ku sugaya (Net MVA)
+            const netMva = mvaFromIncome - mvaFromExpenses;
+            
+            // 4. Feriepenger (10.2% of Mushaar oo kaliya)
+            const feriepenger = totalLonn * 0.102;
+            
+            // 5. Natiijada: Income - Kharashka dhamaantiis - Net MVA - Feriepenger
+            const finalProfit = ti - te - netMva - feriepenger;
 
             document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
             document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-            document.getElementById('mvaTax').innerText = mva.toLocaleString() + ' kr';
-            document.getElementById('ferieTax').innerText = ferie.toLocaleString() + ' kr';
-            
+            document.getElementById('mvaTax').innerText = netMva.toLocaleString() + ' kr';
+            document.getElementById('ferieTax').innerText = feriepenger.toLocaleString() + ' kr';
             const netEl = document.getElementById('netResult');
-            netEl.innerText = finalNet.toLocaleString() + ' kr';
-            netEl.style.color = finalNet >= 0 ? '#4ade80' : '#f87171'; // Green hadduu faa'iido yahay, Red hadduu qasaaro yahay
+            netEl.innerText = finalProfit.toLocaleString() + ' kr';
+            netEl.style.color = finalProfit >= 0 ? '#4ade80' : '#f87171';
         });
 
         document.getElementById('dateInput').valueAsDate = new Date();
