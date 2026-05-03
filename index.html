@@ -1,523 +1,219 @@
 <!DOCTYPE html>
-<html lang="no">
+<html lang="so">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#1a1a2e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Taxi Xisaab">
-<meta name="description" content="Taxi xisaabeed — faktura, MVA, faaido">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>Taxi Xisaab</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #0f0f1a;
-  --bg2: #1a1a2e;
-  --bg3: #16213e;
-  --card: #1e1e3a;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.15);
-  --yellow: #f5c842;
-  --yellow2: #ffd700;
-  --green: #00d4aa;
-  --red: #ff6b6b;
-  --blue: #4facfe;
-  --text: #f0f0f0;
-  --text2: rgba(240,240,240,0.55);
-  --text3: rgba(240,240,240,0.3);
-  --mono: 'DM Mono', monospace;
-  --sans: 'Sora', sans-serif;
-  --r: 14px;
-  --r2: 20px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
-body { font-family: var(--sans); background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
-
-.topbar { background: var(--bg2); padding: 14px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-.topbar-logo { display: flex; align-items: center; gap: 10px; }
-.taxi-dot { width: 32px; height: 32px; background: var(--yellow); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.topbar h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
-.topbar p { font-size: 11px; color: var(--text2); }
-.gaari-toggle { display: flex; gap: 6px; }
-.g-btn { padding: 6px 12px; border-radius: 99px; font-size: 12px; font-family: var(--sans); font-weight: 600; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.2s; }
-.g-btn.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
-
-.content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
-
-.nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; font-size: 10px; color: var(--text2); cursor: pointer; border: none; background: transparent; font-family: var(--sans); transition: color 0.2s; }
-.nav-btn svg { width: 22px; height: 22px; }
-.nav-btn.active { color: var(--yellow); }
-
-.section { display: none; }
-.section.active { display: block; }
-
-.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-.metric { background: var(--card); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px; }
-.metric-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.metric-val { font-size: 22px; font-weight: 700; font-family: var(--mono); letter-spacing: -1px; }
-.metric-val.green { color: var(--green); }
-.metric-val.red { color: var(--red); }
-.metric-val.yellow { color: var(--yellow); }
-.metric-val.blue { color: var(--blue); }
-
-.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; margin-bottom: 14px; }
-.card-title { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; font-weight: 600; }
-
-.txn { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.txn:last-child { border-bottom: none; }
-.txn-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.txn-icon.in { background: rgba(0,212,170,0.15); }
-.txn-icon.out { background: rgba(255,107,107,0.15); }
-.txn-info { flex: 1; min-width: 0; }
-.txn-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.txn-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
-.txn-amt { text-align: right; flex-shrink: 0; }
-.txn-amt-val { font-size: 15px; font-weight: 700; font-family: var(--mono); }
-.txn-amt-val.in { color: var(--green); }
-.txn-amt-val.out { color: var(--red); }
-.txn-mva { font-size: 11px; color: var(--text3); }
-.empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 14px; }
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-
-.upload-zone { border: 2px dashed var(--border2); border-radius: var(--r2); padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
-.upload-zone:hover, .upload-zone:active { border-color: var(--yellow); background: rgba(245,200,66,0.05); }
-.upload-icon { font-size: 40px; margin-bottom: 12px; }
-.upload-zone h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-.upload-zone p { font-size: 13px; color: var(--text2); }
-.preview-img { width: 100%; border-radius: var(--r); max-height: 220px; object-fit: contain; margin-bottom: 14px; }
-
-.ai-card { background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.3); border-radius: var(--r2); padding: 18px; margin-bottom: 14px; }
-.ai-card-title { font-size: 12px; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
-.ai-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(0,212,170,0.1); font-size: 14px; }
-.ai-row:last-child { border-bottom: none; }
-.ai-row-label { color: var(--text2); }
-.ai-row-val { font-weight: 600; font-family: var(--mono); }
-
-.loading-box { display: none; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
-.spinner { width: 24px; height: 24px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.form-group { margin-bottom: 14px; }
-.form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
-.form-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 14px; color: var(--text); font-size: 15px; font-family: var(--sans); outline: none; transition: border-color 0.2s; }
-.form-input:focus { border-color: var(--yellow); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.seg { display: flex; background: var(--bg3); border-radius: var(--r); padding: 4px; gap: 4px; margin-bottom: 14px; }
-.seg-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--sans); background: transparent; color: var(--text2); transition: all 0.2s; }
-.seg-btn.active { background: var(--yellow); color: #000; }
-.seg-btn.active.expense { background: var(--red); color: #fff; }
-
-.btn { width: 100%; padding: 16px; border-radius: var(--r); font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--sans); border: none; transition: all 0.2s; letter-spacing: 0.3px; }
-.btn-yellow { background: var(--yellow); color: #000; }
-.btn-yellow:active { transform: scale(0.98); }
-.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text); margin-top: 10px; }
-
-.report-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-.report-row:last-child { border-bottom: none; }
-.report-row-label { color: var(--text2); }
-.report-row-val { font-weight: 700; font-family: var(--mono); }
-.section-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin: 20px 0 10px; }
-.badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-.badge.g1 { background: rgba(79,172,254,0.15); color: var(--blue); }
-.badge.g2 { background: rgba(245,200,66,0.15); color: var(--yellow2); }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Taxi Xisaab Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #1a1c2c; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card { background: #252945; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8e94b9; }
+        .nav-item.active { color: #facc15; }
+        input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 8px; padding: 10px; width: 100%; }
+        .delete-btn { color: #ff4d4d; padding: 5px; cursor: pointer; }
+    </style>
 </head>
-<body>
+<body class="pb-20">
 
-<div class="topbar">
-  <div class="topbar-logo">
-    <div class="taxi-dot">🚕</div>
-    <div>
-      <h1>Taxi Xisaab</h1>
-      <p id="topbar-sub">Labada Gaari</p>
+    <div id="app" class="p-4">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-xl font-bold">Taxi Xisaab <span class="text-yellow-400 text-sm">Pro</span></h1>
+                <p id="carDisplay" class="text-xs text-gray-400">Labada Gaari</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="setFilter('All')" id="btnAll" class="bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold">All</button>
+                <button onclick="setFilter('G1')" id="btnG1" class="bg-gray-700 px-3 py-1 rounded-full text-xs font-bold">G1</button>
+                <button onclick="setFilter('G2')" id="btnG2" class="bg-gray-700 px-3 py-1 rounded-full text-xs font-bold">G2</button>
+            </div>
+        </div>
+
+        <div id="dashboardSection">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="card border-l-4 border-green-500">
+                    <p class="text-xs text-gray-400 uppercase">Total Income</p>
+                    <h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2>
+                </div>
+                <div class="card border-l-4 border-red-500">
+                    <p class="text-xs text-gray-400 uppercase">Kharash</p>
+                    <h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2>
+                </div>
+                <div class="card border-l-4 border-blue-500">
+                    <p class="text-xs text-gray-400 uppercase">MVA (Canshuur)</p>
+                    <h2 id="totalMVA" class="text-lg font-bold text-blue-400">0 kr</h2>
+                </div>
+                <div class="card border-l-4 border-yellow-500">
+                    <p class="text-xs text-gray-400 uppercase">Feriepenger (10.2%)</p>
+                    <h2 id="totalFerie" class="text-lg font-bold text-yellow-400">0 kr</h2>
+                </div>
+            </div>
+
+            <h3 class="text-sm font-bold mb-3 text-gray-400 uppercase mt-4">Xisaabaha Dambe</h3>
+            <div id="transactionList" class="space-y-3">
+                </div>
+        </div>
+
+        <div id="inputSection" class="hidden">
+            <div class="card">
+                <div class="flex gap-2 mb-4">
+                    <button id="modeIncome" onclick="setEntryMode('income')" class="flex-1 bg-yellow-400 text-black py-2 rounded-lg font-bold">Income ↑</button>
+                    <button id="modeExpense" onclick="setEntryMode('expense')" class="flex-1 bg-gray-700 py-2 rounded-lg font-bold">Kharash ↓</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-400">Taariikhda</label>
+                        <input type="date" id="dateInput">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Lacagta (Kr)</label>
+                        <input type="number" id="amountInput" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Nooca/Qeybta</label>
+                        <select id="typeInput">
+                            <option value="Kaarka Taksi">Kaarka Taksi (Income)</option>
+                            <option value="Caddaan">Caddaan (Income)</option>
+                            <option value="Lønn">Mushaar (Lønn + Feriepenger)</option>
+                            <option value="Shidaal">Shidaal</option>
+                            <option value="Dayactir">Dayactir</option>
+                        </select>
+                    </div>
+                    <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold text-lg mt-4 shadow-lg active:scale-95 transition">Kaydi Xogta</button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="gaari-toggle">
-    <button class="g-btn active" onclick="setGaari('all',this)">All</button>
-    <button class="g-btn" onclick="setGaari('1',this)">G1</button>
-    <button class="g-btn" onclick="setGaari('2',this)">G2</button>
-  </div>
-</div>
 
-<div class="content">
-  <!-- GUUDMAR -->
-  <div id="s-guud" class="section active">
-    <div class="metric-grid">
-      <div class="metric"><div class="metric-label">Income</div><div class="metric-val green" id="m-inc">0 kr</div></div>
-      <div class="metric"><div class="metric-label">Kharash</div><div class="metric-val red" id="m-exp">0 kr</div></div>
-      <div class="metric"><div class="metric-label">Faaido</div><div class="metric-val" id="m-pro">0 kr</div></div>
-      <div class="metric"><div class="metric-label">MVA Net</div><div class="metric-val yellow" id="m-mva">0 kr</div></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Xisaabaha Dambe</div>
-      <div id="txn-list"><div class="empty"><div class="empty-icon">📋</div>Wax xog ah ma jiraan</div></div>
-    </div>
-  </div>
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#252945] border-t border-[#30355a] flex justify-around py-3">
+        <button onclick="showSection('dashboard')" class="nav-item active" id="navDash">
+            <i class="fas fa-th-large text-xl mb-1"></i>
+            <span>Guudmar</span>
+        </button>
+        <button onclick="showSection('input')" class="nav-item" id="navInput">
+            <i class="fas fa-plus-circle text-xl mb-1"></i>
+            <span>Geli Xog</span>
+        </button>
+        <button onclick="clearAllData()" class="nav-item text-red-400">
+            <i class="fas fa-trash text-xl mb-1"></i>
+            <span>Tirtir Dhammaan</span>
+        </button>
+    </nav>
 
-  <!-- FAKTURA AI -->
-  <div id="s-fak" class="section">
-    <div class="seg" id="fak-gaari-seg">
-      <button class="seg-btn active" onclick="setFakGaari(1,this)">Gaari 1</button>
-      <button class="seg-btn" onclick="setFakGaari(2,this)">Gaari 2</button>
-    </div>
-    <div class="upload-zone" onclick="document.getElementById('file-in').click()">
-      <div class="upload-icon">📸</div>
-      <h3>Sawir ka qaad faktura</h3>
-      <p>Guji halkan — kaameerada ama galariiga</p>
-    </div>
-    <input type="file" id="file-in" accept="image/*" capture="environment" style="display:none" onchange="handleImg(event)">
-    <img id="prev-img" class="preview-img" style="display:none">
-    <div class="loading-box" id="ai-load">
-      <div class="spinner"></div>
-      <span style="color:var(--text2);font-size:14px">AI waxay aqrinaysaa fakturada...</span>
-    </div>
-    <div id="ai-res" style="display:none">
-      <div class="ai-card">
-        <div class="ai-card-title">✓ AI waa aqriyay</div>
-        <div class="ai-row"><span class="ai-row-label">Taarikh</span><span class="ai-row-val" id="r-date">-</span></div>
-        <div class="ai-row"><span class="ai-row-label">Vendor</span><span class="ai-row-val" id="r-ven">-</span></div>
-        <div class="ai-row"><span class="ai-row-label">Nooc</span><span class="ai-row-val" id="r-cat">-</span></div>
-        <div class="ai-row"><span class="ai-row-label">Lacag guud</span><span class="ai-row-val" id="r-tot">-</span></div>
-        <div class="ai-row"><span class="ai-row-label">MVA</span><span class="ai-row-val" id="r-mva">-</span></div>
-        <div class="ai-row"><span class="ai-row-label">Ex MVA</span><span class="ai-row-val" id="r-exm">-</span></div>
-        <div class="ai-row"><span class="ai-row-label">Income / Kharash</span><span class="ai-row-val" id="r-dir">-</span></div>
-      </div>
-      <button class="btn btn-yellow" onclick="saveFak()">Kaydi Fakturada</button>
-      <button class="btn btn-outline" onclick="resetFak()">Sawir Cusub</button>
-    </div>
-  </div>
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('taxi_data')) || [];
+        let currentFilter = 'All';
+        let entryMode = 'income';
 
-  <!-- GELI XOG -->
-  <div id="s-geli" class="section">
-    <div class="seg" id="geli-gaari-seg">
-      <button class="seg-btn active" onclick="setGeliGaari(1,this)">Gaari 1</button>
-      <button class="seg-btn" onclick="setGeliGaari(2,this)">Gaari 2</button>
-    </div>
-    <div class="seg" id="dir-seg">
-      <button class="seg-btn active" id="dir-in" onclick="setDir('income',this)">Income ↑</button>
-      <button class="seg-btn expense" id="dir-out" onclick="setDir('expense',this)">Kharash ↓</button>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Taarikh</label>
-        <input type="date" class="form-input" id="g-date">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Lacag (kr)</label>
-        <input type="number" class="form-input" id="g-amt" placeholder="0.00" inputmode="decimal">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Qeybta</label>
-      <select class="form-input" id="g-cat">
-        <option>Kaarka Taksi</option>
-        <option>Shidaal</option>
-        <option>Dayactir</option>
-        <option>Regnskap / Lisens</option>
-        <option>Caymis</option>
-        <option>Baabuurka</option>
-        <option>Kale</option>
-      </select>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">MVA %</label>
-        <select class="form-input" id="g-mva">
-          <option value="25">25%</option>
-          <option value="12">12%</option>
-          <option value="0">0% — Ma jirto</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Sharaxaad</label>
-        <input type="text" class="form-input" id="g-desc" placeholder="Tusaale: Statoil">
-      </div>
-    </div>
-    <button class="btn btn-yellow" onclick="saveManual()">Kaydi</button>
-  </div>
+        function showSection(name) {
+            document.getElementById('dashboardSection').classList.toggle('hidden', name !== 'dashboard');
+            document.getElementById('inputSection').classList.toggle('hidden', name !== 'input');
+            document.getElementById('navDash').classList.toggle('active', name === 'dashboard');
+            document.getElementById('navInput').classList.toggle('active', name === 'input');
+        }
 
-  <!-- WARBIXIN -->
-  <div id="s-war" class="section">
-    <div class="section-label">Gaari 1</div>
-    <div class="card" id="rep-g1"></div>
-    <div class="section-label">Gaari 2</div>
-    <div class="card" id="rep-g2"></div>
-    <div class="section-label">MVA Kala-sooc</div>
-    <div class="card" id="rep-mva"></div>
-    <div style="margin-top:16px">
-      <button class="btn btn-outline" onclick="exportCSV()">Soo dhig CSV ↓</button>
-    </div>
-  </div>
-</div>
+        function setEntryMode(mode) {
+            entryMode = mode;
+            document.getElementById('modeIncome').className = mode === 'income' ? 'flex-1 bg-yellow-400 text-black py-2 rounded-lg font-bold' : 'flex-1 bg-gray-700 py-2 rounded-lg font-bold';
+            document.getElementById('modeExpense').className = mode === 'expense' ? 'flex-1 bg-red-500 py-2 rounded-lg font-bold' : 'flex-1 bg-gray-700 py-2 rounded-lg font-bold';
+        }
 
-<nav class="nav">
-  <button class="nav-btn active" onclick="showTab('guud',this)">
-    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    Guudmar
-  </button>
-  <button class="nav-btn" onclick="showTab('fak',this)">
-    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    Faktura AI
-  </button>
-  <button class="nav-btn" onclick="showTab('geli',this)">
-    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Geli Xog
-  </button>
-  <button class="nav-btn" onclick="showTab('war',this)">
-    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    Warbixin
-  </button>
-</nav>
+        function setFilter(car) {
+            currentFilter = car;
+            ['btnAll', 'btnG1', 'btnG2'].forEach(id => {
+                document.getElementById(id).className = id === 'btn' + car ? 'bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold' : 'bg-gray-700 px-3 py-1 rounded-full text-xs font-bold';
+            });
+            renderData();
+        }
 
-<script>
-let data = [];
-let gaari = 'all';
-let fakGaari = 1;
-let geliGaari = 1;
-let geliDir = 'income';
-let pending = null;
+        function saveEntry() {
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const date = document.getElementById('dateInput').value;
+            const type = document.getElementById('typeInput').value;
 
-// LOAD DATA
-try { 
-  const s = localStorage.getItem('taxi-v2'); 
-  if(s) data = JSON.parse(s); 
-} catch(e){ console.error("Data load error", e); }
+            if (!amount || !date) return alert("Fadlan buuxi xogta!");
 
-function persist() { 
-  try { localStorage.setItem('taxi-v2', JSON.stringify(data)); } catch(e){ alert("Keydinta waa fashilantay!"); } 
-}
+            const entry = {
+                id: Date.now(),
+                amount: amount,
+                date: date,
+                type: type,
+                mode: entryMode,
+                car: currentFilter === 'All' ? 'G1' : currentFilter,
+                mva: entryMode === 'income' ? (amount * 0.25) : 0, // Tusaale 25% MVA
+                ferie: type === 'Lønn' ? (amount * 0.102) : 0 // 10.2% Feriepenger
+            };
 
-function fmt(n) { return Math.round(n || 0).toLocaleString('nb-NO') + ' kr'; }
+            transactions.push(entry);
+            localStorage.setItem('taxi_data', JSON.stringify(transactions));
+            
+            document.getElementById('amountInput').value = '';
+            showSection('dashboard');
+            renderData();
+        }
 
-function fmtShort(n) {
-  const a = Math.abs(Math.round(n || 0));
-  if(a >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if(a >= 1000) return Math.round(n/1000) + 'k';
-  return Math.round(n || 0) + '';
-}
+        function deleteEntry(id) {
+            if(confirm("Ma hubtaa inaad tirtirto xogtan?")) {
+                transactions = transactions.filter(t => t.id !== id);
+                localStorage.setItem('taxi_data', JSON.stringify(transactions));
+                renderData();
+            }
+        }
 
-function showTab(t, el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('s-'+t).classList.add('active');
-  el.classList.add('active');
-  if(t === 'war') updateReport();
-  if(t === 'guud') updateMain();
-}
+        function clearAllData() {
+            if(confirm("Ma hubtaa inaad tirtirto DHAMMAAN xogta bishan?")) {
+                transactions = [];
+                localStorage.clear();
+                renderData();
+            }
+        }
 
-function setGaari(v, el) {
-  gaari = v;
-  document.querySelectorAll('.g-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  const labels = {'all':'Labada Gaari','1':'Gaari 1','2':'Gaari 2'};
-  document.getElementById('topbar-sub').textContent = labels[v];
-  updateMain();
-}
+        function renderData() {
+            const filtered = transactions.filter(t => currentFilter === 'All' || t.car === currentFilter);
+            const list = document.getElementById('transactionList');
+            list.innerHTML = '';
 
-function setFakGaari(n, el) {
-  fakGaari = n;
-  document.querySelectorAll('#fak-gaari-seg .seg-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-}
+            let inc = 0, exp = 0, mvaTotal = 0, ferieTotal = 0;
 
-function setGeliGaari(n, el) {
-  geliGaari = n;
-  document.querySelectorAll('#geli-gaari-seg .seg-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-}
+            filtered.forEach(t => {
+                if (t.mode === 'income') inc += t.amount;
+                else exp += t.amount;
+                
+                mvaTotal += (t.mva || 0);
+                ferieTotal += (t.ferie || 0);
 
-function setDir(d, el) {
-  geliDir = d;
-  document.querySelectorAll('#dir-seg .seg-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-}
+                const item = document.createElement('div');
+                item.className = 'card flex justify-between items-center';
+                item.innerHTML = `
+                    <div>
+                        <p class="font-bold text-sm">${t.type} (${t.car})</p>
+                        <p class="text-[10px] text-gray-400">${t.date}</p>
+                    </div>
+                    <div class="text-right flex items-center gap-3">
+                        <span class="${t.mode === 'income' ? 'text-green-400' : 'text-red-400'} font-bold">
+                            ${t.mode === 'income' ? '+' : '-'}${t.amount} kr
+                        </span>
+                        <i onclick="deleteEntry(${t.id})" class="fas fa-trash-alt delete-btn"></i>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
 
-function getRows() {
-  if(gaari === 'all') return data;
-  return data.filter(r => r.taxi == gaari);
-}
+            document.getElementById('totalIncome').innerText = inc.toLocaleString() + ' kr';
+            document.getElementById('totalExpense').innerText = exp.toLocaleString() + ' kr';
+            document.getElementById('totalMVA').innerText = mvaTotal.toLocaleString() + ' kr';
+            document.getElementById('totalFerie').innerText = ferieTotal.toLocaleString() + ' kr';
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500 py-10">Wax xog ah ma jiraan</p>';
+            }
+        }
 
-function calcMva(amount, rate, dir) {
-  if(!rate) return 0;
-  const mva = Math.round(amount * rate / (100 + rate));
-  return dir === 'income' ? mva : -mva;
-}
-
-function updateMain() {
-  const rows = getRows();
-  const inc = rows.filter(r => r.dir==='income').reduce((a,r) => a+(r.amount||0), 0);
-  const exp = rows.filter(r => r.dir==='expense').reduce((a,r) => a+(r.amount||0), 0);
-  const pro = inc - exp;
-  const mvaNet = rows.reduce((a,r) => a+(r.mva||0), 0);
-
-  document.getElementById('m-inc').textContent = fmt(inc);
-  document.getElementById('m-exp').textContent = fmt(exp);
-  const pEl = document.getElementById('m-pro');
-  pEl.textContent = fmt(pro);
-  pEl.className = 'metric-val ' + (pro>=0?'green':'red');
-  document.getElementById('m-mva').textContent = fmt(mvaNet);
-
-  const list = document.getElementById('txn-list');
-  if(!rows.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Wax xog ah ma jiraan</div>';
-    return;
-  }
-  list.innerHTML = [...rows].reverse().slice(0,30).map(r => `
-    <div class="txn">
-      <div class="txn-icon ${r.dir==='income'?'in':'out'}">${r.dir==='income'?'💰':'💸'}</div>
-      <div class="txn-info">
-        <div class="txn-name">${r.desc||r.cat}</div>
-        <div class="txn-sub">${r.date} · G${r.taxi} · ${r.cat}</div>
-      </div>
-      <div class="txn-amt">
-        <div class="txn-amt-val ${r.dir==='income'?'in':'out'}">${r.dir==='income'?'+':'-'}${fmtShort(r.amount)} kr</div>
-        <div class="txn-mva">${r.mva?'MVA '+fmtShort(Math.abs(r.mva))+' kr':''}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function updateReport() {
-  [1,2].forEach(t => {
-    const rows = data.filter(r => r.taxi==t);
-    const inc = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+(r.amount||0),0);
-    const exp = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+(r.amount||0),0);
-    const pro = inc - exp;
-    document.getElementById('rep-g'+t).innerHTML = `
-      <div class="report-row"><span class="report-row-label">Income</span><span class="report-row-val" style="color:var(--green)">${fmt(inc)}</span></div>
-      <div class="report-row"><span class="report-row-label">Kharash</span><span class="report-row-val" style="color:var(--red)">${fmt(exp)}</span></div>
-      <div class="report-row"><span class="report-row-label">Faaido / Qasaaro</span><span class="report-row-val" style="color:${pro>=0?'var(--green)':'var(--red)'}">${fmt(pro)}</span></div>
-    `;
-  });
-  const mvaHtml = [1,2].map(t => {
-    const rows = data.filter(r=>r.taxi==t);
-    const mvaIn = rows.filter(r=>r.dir==='income').reduce((a,r)=>a+(r.mva||0),0);
-    const mvaOut = rows.filter(r=>r.dir==='expense').reduce((a,r)=>a+Math.abs(r.mva||0),0);
-    const net = mvaIn - mvaOut;
-    return `<div class="report-row">
-      <span class="report-row-label"><span class="badge g${t}">G${t}</span> MVA la helayey</span>
-      <span class="report-row-val" style="color:var(--green)">${fmt(mvaIn)}</span>
-    </div>
-    <div class="report-row">
-      <span class="report-row-label"><span class="badge g${t}">G${t}</span> MVA la bixiyey</span>
-      <span class="report-row-val" style="color:var(--red)">${fmt(mvaOut)}</span>
-    </div>
-    <div class="report-row">
-      <span class="report-row-label"><span class="badge g${t}">G${t}</span> Net MVA</span>
-      <span class="report-row-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${fmt(net)}</span>
-    </div>`;
-  }).join('<div style="height:10px"></div>');
-  document.getElementById('rep-mva').innerHTML = mvaHtml;
-}
-
-// SAVE FUNCTIONS
-function saveManual() {
-  const amt = parseFloat(document.getElementById('g-amt').value);
-  if(!amt || isNaN(amt)) { alert('Fadlan geli lacag sax ah!'); return; }
-  
-  const mvaRate = parseInt(document.getElementById('g-mva').value) || 0;
-  const mva = calcMva(amt, mvaRate, geliDir);
-  const entry = {
-    id: Date.now(),
-    date: document.getElementById('g-date').value || today(),
-    taxi: geliGaari,
-    cat: document.getElementById('g-cat').value,
-    desc: document.getElementById('g-desc').value || '',
-    amount: amt,
-    mva: mva,
-    mvaRate: mvaRate,
-    dir: geliDir
-  };
-  
-  data.push(entry);
-  persist();
-  updateMain();
-  
-  document.getElementById('g-amt').value = '';
-  document.getElementById('g-desc').value = '';
-  showSuccess('Xogta waa la keydiyay!');
-}
-
-function saveFak() {
-  if(!pending) return;
-  const dir = pending.direction || 'expense';
-  const mva = dir === 'income' ? (pending.mva_amount || 0) : -(pending.mva_amount || 0);
-  
-  data.push({
-    id: Date.now(),
-    date: pending.date || today(),
-    taxi: fakGaari,
-    cat: pending.category || 'Kale',
-    desc: pending.vendor || '',
-    amount: pending.total_amount || 0,
-    mva: mva,
-    mvaRate: pending.mva_rate || 0,
-    dir: dir
-  });
-  
-  persist();
-  updateMain();
-  resetFak();
-  showSuccess('Fakturada waa la keydiyay!');
-}
-
-async function handleImg(e) {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const src = ev.target.result;
-    document.getElementById('prev-img').src = src;
-    document.getElementById('prev-img').style.display = 'block';
-    document.getElementById('ai-res').style.display = 'none';
-    document.getElementById('ai-load').style.display = 'flex';
-    
-    // AI LOGIC HERE (Needs API Key usually)
-    setTimeout(() => {
-        document.getElementById('ai-load').style.display = 'none';
-        alert("Habka AI wuxuu u baahan yahay API Key. Fadlan gacanta ku geli xogta hadda.");
-    }, 2000);
-  };
-  reader.readAsDataURL(file);
-}
-
-function resetFak() {
-  document.getElementById('prev-img').style.display='none';
-  document.getElementById('ai-res').style.display='none';
-  document.getElementById('file-in').value='';
-  pending = null;
-}
-
-function today() { return new Date().toISOString().slice(0,10); }
-
-function showSuccess(msg) {
-  const el = document.createElement('div');
-  el.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#00d4aa;color:#000;padding:12px 24px;border-radius:99px;font-weight:700;font-size:14px;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-  el.textContent = '✓ ' + msg;
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(), 2500);
-}
-
-function exportCSV() {
-  const h = 'Taarikh,Gaari,Qeybta,Sharaxaad,Nooc,Lacag,MVA Rate,MVA,Net\n';
-  const rows = data.map(r=>`${r.date},Gaari ${r.taxi},${r.cat},"${r.desc||''}",${r.dir},${r.amount},${r.mvaRate}%,${Math.abs(r.mva)},${r.amount-Math.abs(r.mva)}`).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([h+rows],{type:'text/csv;charset=utf-8'}));
-  a.download = 'taxi-xisaab-'+today()+'.csv';
-  a.click();
-}
-
-document.getElementById('g-date').value = today();
-updateMain();
-
-if('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-</script>
+        // Initialize
+        document.getElementById('dateInput').valueAsDate = new Date();
+        renderData();
+    </script>
 </body>
 </html>
