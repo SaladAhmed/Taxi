@@ -21,17 +21,17 @@
         <div class="mb-6 text-center">
             <h1 class="text-xl font-bold text-yellow-400 uppercase">Mohamed Salad Transport</h1>
             <div class="grid grid-cols-2 gap-3 mt-4 text-left">
-                <div class="card border-l-4 border-green-500"><p class="text-[10px] text-gray-400">TOTAL INCOME</p><h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2></div>
-                <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400">TOTAL KHARASH</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
+                <div class="card border-l-4 border-green-500"><p class="text-[10px] text-gray-400 uppercase">Income Guud</p><h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2></div>
+                <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400 uppercase">Kharash Guud</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
             </div>
 
             <div class="card result-card mt-2">
-                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-center">
-                    <div><p class="text-[9px] text-gray-400">MVA EE LAGU SOO CELINAYO</p><p id="mvaTax" class="text-sm font-semibold text-green-400">0 kr</p></div>
-                    <div><p class="text-[9px] text-gray-400">FERIEPENGER (10.2%)</p><p id="ferieTax" class="text-sm font-semibold text-orange-400">0 kr</p></div>
+                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-center text-orange-400">
+                    <div><p class="text-[9px] text-gray-400 uppercase">MVA Refund (Kharashka)</p><p id="mvaTax" class="text-sm font-semibold">0 kr</p></div>
+                    <div><p class="text-[9px] text-gray-400 uppercase">Feriepenger (10.2%)</p><p id="ferieTax" class="text-sm font-semibold">0 kr</p></div>
                 </div>
                 <div class="text-center">
-                    <p class="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">Lacagta kuu soo hartay (Net)</p>
+                    <p class="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">Lacagta Nadiifka ah (Net)</p>
                     <h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2>
                 </div>
             </div>
@@ -43,13 +43,13 @@
             <div class="card">
                 <div class="flex gap-2 mb-6">
                     <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black">Income ↑</button>
-                    <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl font-bold bg-gray-700">Kharash ↓</button>
+                    <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl font-bold bg-gray-700 text-white">Kharash ↓</button>
                 </div>
                 <div class="space-y-4">
                     <input type="date" id="dateInput">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
-                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg shadow-lg">KAYDI ONLINE</button>
+                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg">KAYDI ONLINE</button>
                 </div>
             </div>
         </div>
@@ -100,19 +100,18 @@
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            if(!amt || !date) return alert("Fadlan buuxi lacagta iyo taariikhda!");
-            const payload = { amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode, createdAt: Date.now() };
-            await addDoc(collection(db, "xisaabaadka"), payload);
+            if(!amt || !date) return alert("Buuxi xogta!");
+            await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode, createdAt: Date.now() });
             document.getElementById('amountInput').value = '';
             showSection('dashboard');
         };
 
-        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa xogtan?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
 
         const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('transactionList'); list.innerHTML = '';
-            let ti=0, te=0, totalLonn=0, mvaRefundable=0;
+            let ti=0, te=0, totalLonn=0, mvaSum=0;
 
             snapshot.forEach((docSnap) => {
                 const d = docSnap.data();
@@ -120,36 +119,32 @@
                     ti += d.amount;
                 } else {
                     te += d.amount;
-                    if(d.type === 'Mushaar (Lønn)') {
-                        totalLonn += d.amount;
-                    } else if (['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
-                        mvaRefundable += (d.amount * 0.25); // 25% MVA oo kharashka ku dhex jirta
+                    if(d.type === 'Mushaar (Lønn)') totalLonn += d.amount;
+                    // MVA Xisaabteeda (Qaybi 5 ama 20% si aad u hesho MVA-da ku dhex jirta lacag la bixiyay)
+                    if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
+                        mvaSum += (d.amount / 5); 
                     }
                 }
-                list.innerHTML += `
-                    <div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                        <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
-                        <div class="flex items-center gap-4">
-                            <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
-                            <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-400 p-2"><i class="fas fa-ellipsis-v"></i></button>
-                            <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600">
-                                <div class="menu-item text-red-500" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash"></i> Tirtir</div>
-                            </div>
-                        </div>
-                    </div>`;
+                list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
+                    <div><p class="text-sm font-bold text-gray-200">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                    <div class="flex items-center gap-4">
+                        <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${Math.round(d.amount).toLocaleString()} kr</p>
+                        <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-400"><i class="fas fa-ellipsis-v"></i></button>
+                        <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600"><div class="menu-item text-red-500" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash"></i> Tirtir</div></div>
+                    </div>
+                </div>`;
             });
 
-            const feriepenger = totalLonn * 0.102;
-            const finalProfit = ti - te - feriepenger; // MVA-da kharashka dib ayay kuugu soo dhacaysaa (Benefit)
+            const ferie = totalLonn * 0.102;
+            const net = ti - te - ferie;
 
-            document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
-            document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-            document.getElementById('mvaTax').innerText = mvaRefundable.toLocaleString() + ' kr';
-            document.getElementById('ferieTax').innerText = feriepenger.toLocaleString() + ' kr';
-            
+            document.getElementById('totalIncome').innerText = Math.round(ti).toLocaleString() + ' kr';
+            document.getElementById('totalExpense').innerText = Math.round(te).toLocaleString() + ' kr';
+            document.getElementById('mvaTax').innerText = Math.round(mvaSum).toLocaleString() + ' kr';
+            document.getElementById('ferieTax').innerText = Math.round(ferie).toLocaleString() + ' kr';
             const netEl = document.getElementById('netResult');
-            netEl.innerText = finalProfit.toLocaleString() + ' kr';
-            netEl.style.color = finalProfit >= 0 ? '#4ade80' : '#f87171';
+            netEl.innerText = Math.round(net).toLocaleString() + ' kr';
+            netEl.style.color = net >= 0 ? '#4ade80' : '#f87171';
         });
 
         document.getElementById('dateInput').valueAsDate = new Date();
