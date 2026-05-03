@@ -46,7 +46,7 @@
                 </div>
                 <div class="space-y-4">
                     <input type="date" id="dateInput">
-                    <input type="text" id="nameInput" placeholder="Halkan ku qor magaca darawalka...">
+                    <input type="text" id="nameInput" placeholder="Magaca (Hadii uu jiro)">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
                     <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg shadow-lg">KAYDI ONLINE</button>
@@ -79,7 +79,7 @@
 
         const categories = {
             income: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'],
-            expense: ['Mushaar (Lønn)', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
+            expense: ['Mushaar (Lønn)', 'Skatt', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
         };
 
         window.setMode = (m) => {
@@ -101,7 +101,7 @@
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
             const name = document.getElementById('nameInput').value;
-            if(!amt || !date) return alert("Fadlan geli lacagta iyo taariikhda!");
+            if(!amt || !date) return alert("Fadlan geli lacagta!");
             
             await addDoc(collection(db, "xisaabaadka"), { 
                 amount: amt, 
@@ -117,7 +117,7 @@
             showSection('dashboard');
         };
 
-        window.deleteItem = async (id) => { if(confirm("Ma hubtaa inaad tirtirto?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa xogtan?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
 
         const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
@@ -130,7 +130,10 @@
                     ti += d.amount;
                 } else {
                     te += d.amount;
+                    // Mushaarka kaliya ayaa Feriepenger leh
                     if(d.type === 'Mushaar (Lønn)') totalFP += (d.amount * 0.102);
+                    
+                    // Skatt ma laha MVA. Waxyaabahan kaliya ayaa MVA leh:
                     if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
                         mvaSum += (d.amount / 5); 
                     }
