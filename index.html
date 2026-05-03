@@ -19,15 +19,15 @@
 </head>
 <body class="pb-24">
 
-    <!-- AUTH SECTION -->
+    <!-- LOGIN SCREEN -->
     <div id="authSection">
         <div class="w-full max-w-sm text-center">
             <h1 class="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-widest">M. Salad Transport</h1>
             <div class="card p-6 border-t-4 border-yellow-400">
-                <p class="text-gray-400 mb-4 text-sm font-bold uppercase">Gali E-mailkaaga</p>
+                <p class="text-gray-400 mb-4 text-sm font-bold uppercase">Gali Emailkaaga</p>
                 <input type="email" id="emailInput" placeholder="Email" class="mb-3">
                 <input type="password" id="passInput" placeholder="Password" class="mb-4">
-                <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg shadow-yellow-900/20">Login</button>
+                <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg">Login</button>
                 <p id="authError" class="text-red-500 mt-3 text-xs hidden"></p>
             </div>
         </div>
@@ -36,20 +36,20 @@
     <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="mb-4 text-center">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-[9px] bg-gray-700 px-2 py-1 rounded text-gray-300" id="userDisplay"></span>
-                <button onclick="logout()" class="text-red-400 text-[10px] font-bold border border-red-900/30 px-2 py-1 rounded uppercase">Logout</button>
+            <div class="flex justify-between items-center mb-4 text-[10px]">
+                <span class="bg-gray-700 px-2 py-1 rounded text-gray-300" id="userDisplay"></span>
+                <button onclick="logout()" class="text-red-400 font-bold border border-red-900/30 px-2 py-1 rounded uppercase">Ka Bax</button>
             </div>
             
             <h1 class="text-lg font-black text-yellow-400 uppercase tracking-tighter">Mohamed Salad Transport</h1>
             
-            <div class="grid grid-cols-3 gap-2 mt-4">
+            <div class="grid grid-cols-3 gap-2 mt-4 text-center">
                 <div class="card border-l-4 border-green-500 p-2"><p class="text-[8px] text-gray-400 uppercase font-bold">Income</p><h2 id="totalIncome" class="text-xs font-bold text-green-400">0 kr</h2></div>
                 <div class="card border-l-4 border-red-500 p-2"><p class="text-[8px] text-gray-400 uppercase font-bold">Kharash</p><h2 id="totalExpense" class="text-xs font-bold text-red-400">0 kr</h2></div>
                 <div class="card border-l-4 border-blue-400 p-2"><p class="text-[8px] text-gray-400 uppercase font-bold text-blue-400">Owner</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2></div>
             </div>
 
-            <div class="card result-card mt-2 text-center">
+            <div class="card result-card mt-2">
                 <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-orange-400 font-bold">
                     <div><p class="text-[9px] text-gray-400 uppercase">MVA Refund (1/5)</p><p id="mvaTax" class="text-sm">0 kr</p></div>
                     <div><p class="text-[9px] text-gray-400 uppercase">Feriepenger (10.2%)</p><p id="ferieTax" class="text-sm">0 kr</p></div>
@@ -69,7 +69,7 @@
                 </div>
                 <div class="space-y-4">
                     <input type="date" id="dateInput">
-                    <input type="text" id="nameInput" placeholder="Faahfaahin (Tusaale: Circle K)">
+                    <input type="text" id="nameInput" placeholder="Magaca (Tusaale: Circle K)">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
                     <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-black mt-4 uppercase">Kaydi Xogta</button>
@@ -90,13 +90,15 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // CONFIG-GAAGII SAXDA AHAA
         const firebaseConfig = {
-            apiKey: "AIzaSyCYNLmT JEV2_WWNhIbpwbUCXZAMiN",
+            apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
             authDomain: "mohamed-salad-transport.firebaseapp.com",
             projectId: "mohamed-salad-transport",
             storageBucket: "mohamed-salad-transport.firebasestorage.app",
             messagingSenderId: "608716442795",
-            appId: "1:608716442795:web:ea17e2c3f26d3103"
+            appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
+            measurementId: "G-VJTX0THFK5"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -152,7 +154,7 @@
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            const name = document.getElementById('nameInput').value || "Info";
+            const name = document.getElementById('nameInput').value || "Xog";
             if(!amt || !date) return alert("Fadlan buuxi!");
             await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, name: name, type: document.getElementById('typeInput').value, mode: mode });
             document.getElementById('amountInput').value = ''; document.getElementById('nameInput').value = '';
@@ -173,7 +175,7 @@
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
                     let displayType = d.type === 'Shidaal' ? 'Drivstoff' : d.type;
-                    let displayName = (d.name && d.name !== "undefined") ? d.name : "Xog";
+                    let displayName = (d.name && d.name !== "undefined") ? d.name : "Info";
                     
                     if(d.mode === 'income') { ti += d.amount; } 
                     else { 
