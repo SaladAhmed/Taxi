@@ -20,8 +20,8 @@
         <div class="mb-6 text-center">
             <h1 class="text-xl font-bold text-yellow-400 uppercase">Mohamed Salad Transport</h1>
             <div class="grid grid-cols-2 gap-3 mt-4 text-left">
-                <div class="card border-l-4 border-green-500"><p class="text-[10px] text-gray-400 uppercase">Income Guud</p><h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2></div>
-                <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400 uppercase">Kharash Guud</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
+                <div class="card border-l-4 border-green-500"><p class="text-[10px] text-gray-400 uppercase font-bold text-green-500">Income Guud</p><h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2></div>
+                <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400 uppercase font-bold text-red-500">Kharash Guud</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
             </div>
 
             <div class="card result-card mt-2 text-center">
@@ -46,6 +46,7 @@
                 </div>
                 <div class="space-y-4">
                     <input type="date" id="dateInput">
+                    <input type="text" id="nameInput" placeholder="Halkan ku qor magaca darawalka...">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
                     <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg shadow-lg">KAYDI ONLINE</button>
@@ -99,13 +100,24 @@
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            if(!amt || !date) return alert("Fadlan buuxi lacagta!");
-            await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode, createdAt: Date.now() });
+            const name = document.getElementById('nameInput').value;
+            if(!amt || !date) return alert("Fadlan geli lacagta iyo taariikhda!");
+            
+            await addDoc(collection(db, "xisaabaadka"), { 
+                amount: amt, 
+                date: date, 
+                name: name || "General",
+                type: document.getElementById('typeInput').value, 
+                mode: mode, 
+                createdAt: Date.now() 
+            });
+            
             document.getElementById('amountInput').value = '';
+            document.getElementById('nameInput').value = '';
             showSection('dashboard');
         };
 
-        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.deleteItem = async (id) => { if(confirm("Ma hubtaa inaad tirtirto?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
 
         const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
@@ -124,11 +136,17 @@
                     }
                 }
                 list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                    <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                    <div>
+                        <p class="text-[10px] text-yellow-400 font-black uppercase mb-1">${d.name || ''}</p>
+                        <p class="text-sm font-bold text-gray-200">${d.type}</p>
+                        <p class="text-[10px] text-gray-500">${d.date}</p>
+                    </div>
                     <div class="flex items-center gap-4">
                         <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${Math.round(d.amount).toLocaleString()} kr</p>
                         <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-400 p-2"><i class="fas fa-ellipsis-v"></i></button>
-                        <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600"><div class="menu-item text-red-500 p-3" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash mr-2"></i> Tirtir</div></div>
+                        <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600">
+                            <div class="menu-item text-red-500 p-3" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash mr-2"></i> Tirtir</div>
+                        </div>
                     </div>
                 </div>`;
             });
