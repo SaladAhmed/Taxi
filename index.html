@@ -3,69 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Taxi Xisaab Pro V4</title>
+    <title>Taxi Xisaab Pro V5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #1a1c2c; color: white; font-family: -apple-system, sans-serif; }
         .card { background: #252945; border-radius: 15px; padding: 15px; margin-bottom: 10px; border: 1px solid #30355a; }
-        input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 8px; padding: 12px; width: 100%; font-size: 16px; }
+        input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; }
+        .btn-income { background-color: #facc15; color: black; }
+        .btn-expense { background-color: #ef4444; color: white; }
     </style>
 </head>
 <body class="pb-24">
 
     <div id="app" class="p-4">
-        <!-- Dashboard Summary -->
         <div class="mb-6 text-center">
-            <h1 class="text-xl font-bold text-yellow-400">Taxi Xisaab Pro</h1>
-            <p class="text-[10px] text-gray-400 uppercase tracking-widest">Nidaamka Dhammaystiran</p>
-            
+            <h1 class="text-xl font-bold text-yellow-400">TAXI XISAAB PRO</h1>
             <div class="grid grid-cols-2 gap-3 mt-4 text-left">
-                <div class="card border-l-4 border-green-500"><p class="text-[9px] text-gray-400 uppercase">Total Income</p><h2 id="totalIncome" class="text-lg font-bold">0 kr</h2></div>
-                <div class="card border-l-4 border-red-500"><p class="text-[9px] text-gray-400 uppercase">Total Kharash</p><h2 id="totalExpense" class="text-lg font-bold">0 kr</h2></div>
-                <div class="card border-l-4 border-blue-500"><p class="text-[9px] text-gray-400 uppercase">MVA (25%)</p><h2 id="totalMVA" class="text-lg font-bold">0 kr</h2></div>
-                <div class="card border-l-4 border-orange-500"><p class="text-[9px] text-gray-400 uppercase">Feriepenger (10.2%)</p><h2 id="totalFerie" class="text-lg font-bold">0 kr</h2></div>
+                <div class="card border-l-4 border-green-500"><p class="text-[9px] text-gray-400">INCOME</p><h2 id="totalIncome" class="text-lg font-bold">0 kr</h2></div>
+                <div class="card border-l-4 border-red-500"><p class="text-[9px] text-gray-400">KHARASH</p><h2 id="totalExpense" class="text-lg font-bold">0 kr</h2></div>
+                <div class="card border-l-4 border-blue-500"><p class="text-[9px] text-gray-400">MVA (25%)</p><h2 id="totalMVA" class="text-lg font-bold">0 kr</h2></div>
+                <div class="card border-l-4 border-orange-500"><p class="text-[9px] text-gray-400">FERIEPENGER (10.2%)</p><h2 id="totalFerie" class="text-lg font-bold">0 kr</h2></div>
             </div>
         </div>
 
-        <!-- Section: Guudmar -->
         <div id="dashboardSection">
-            <h3 class="text-xs font-bold mb-3 text-gray-500 uppercase">Xisaabaadka</h3>
+            <h3 class="text-xs font-bold mb-3 text-gray-500">LIISKA XISAABTA</h3>
             <div id="transactionList" class="space-y-3"></div>
         </div>
 
-        <!-- Section: Geli Xog -->
         <div id="inputSection" class="hidden">
             <div class="card">
                 <div class="flex gap-2 mb-6">
-                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black">Income ↑</button>
+                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl font-bold btn-income">Income ↑</button>
                     <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl font-bold bg-gray-700">Kharash ↓</button>
                 </div>
-                
                 <div class="space-y-4">
-                    <div><label class="text-[10px] text-gray-400 ml-1">Taariikhda</label><input type="date" id="dateInput"></div>
-                    <div><label class="text-[10px] text-gray-400 ml-1">Lacagta (Kr)</label><input type="number" id="amountInput" placeholder="0.00"></div>
-                    <div><label class="text-[10px] text-gray-400 ml-1">Nooca</label><select id="typeInput"></select></div>
+                    <input type="date" id="dateInput">
+                    <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
+                    <select id="typeInput"></select>
                     <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 shadow-lg active:scale-95 transition-transform">KAYDI XOGTA</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Navigation -->
     <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3">
-        <button onclick="showSection('dashboard')" id="navDash" class="flex flex-col items-center text-yellow-400"><i class="fas fa-chart-line text-xl mb-1"></i><span class="text-[10px]">Guudmar</span></button>
+        <button onclick="showSection('dashboard')" id="navDash" class="flex flex-col items-center text-yellow-400"><i class="fas fa-home text-xl mb-1"></i><span class="text-[10px]">Guudmar</span></button>
         <button onclick="showSection('input')" id="navInput" class="flex flex-col items-center text-gray-500"><i class="fas fa-plus-circle text-xl mb-1"></i><span class="text-[10px]">Geli Xog</span></button>
-        <button onclick="clearAll()" class="flex flex-col items-center text-red-500"><i class="fas fa-trash-alt text-xl mb-1"></i><span class="text-[10px]">Tirtir bisha</span></button>
+        <button onclick="clearAll()" class="flex flex-col items-center text-red-500"><i class="fas fa-trash-alt text-xl mb-1"></i><span class="text-[10px]">Tirtir Bisha</span></button>
     </nav>
 
     <script>
-        let data = JSON.parse(localStorage.getItem('taxi_v4_data')) || [];
+        let data = JSON.parse(localStorage.getItem('taxi_v5_final')) || [];
         let mode = 'income';
 
-        const cats = {
+        const categories = {
             income: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'],
-            expense: ['Regnskap', 'Forsikring', 'Shidaal', 'Mushaar (Lønn)', 'Dayactir', 'Faktura (Kharash)', 'Wax kale']
+            expense: ['Regnskap', 'Forsikring', 'Shidaal', 'Mushaar (Lønn)', 'Sentral Avgifter', 'Dayactir', 'Wax kale']
         };
 
         function showSection(s) {
@@ -77,19 +72,19 @@
 
         function setMode(m) {
             mode = m;
-            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
-            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold bg-red-600 text-white' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
+            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold btn-income' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
+            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold btn-expense' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700';
             const select = document.getElementById('typeInput');
-            select.innerHTML = cats[m].map(c => `<option value="${c}">${c}</option>`).join('');
+            select.innerHTML = categories[m].map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
         function saveEntry() {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
             const type = document.getElementById('typeInput').value;
-            if(!amt || !date) return alert("Fadlan buuxi xogta!");
+            if(!amt || !date) return alert("Fadlan geli lacagta!");
 
-            const entry = {
+            data.push({
                 id: Date.now(),
                 amount: amt,
                 date: date,
@@ -97,10 +92,9 @@
                 mode: mode,
                 ferie: type === 'Mushaar (Lønn)' ? amt * 0.102 : 0,
                 mva: mode === 'income' ? amt * 0.25 : 0
-            };
+            });
 
-            data.push(entry);
-            localStorage.setItem('taxi_v4_data', JSON.stringify(data));
+            localStorage.setItem('taxi_v5_final', JSON.stringify(data));
             document.getElementById('amountInput').value = '';
             showSection('dashboard');
             render();
@@ -109,14 +103,14 @@
         function deleteItem(id) {
             if(confirm("Ma tirtirnaa?")) {
                 data = data.filter(d => d.id !== id);
-                localStorage.setItem('taxi_v4_data', JSON.stringify(data));
+                localStorage.setItem('taxi_v5_final', JSON.stringify(data));
                 render();
             }
         }
 
         function clearAll() {
-            if(confirm("Ma tirtirnaa dhammaan xogta?")) {
-                data = []; localStorage.removeItem('taxi_v4_data'); render();
+            if(confirm("Ma tirtirnaa dhammaan xogta bisha?")) {
+                data = []; localStorage.removeItem('taxi_v5_final'); render();
             }
         }
 
@@ -124,17 +118,12 @@
             const list = document.getElementById('transactionList');
             list.innerHTML = '';
             let ti=0, te=0, tm=0, tf=0;
-
-            data.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(d => {
+            data.forEach(d => {
                 if(d.mode === 'income') ti += d.amount; else te += d.amount;
                 tm += (d.mva || 0); tf += (d.ferie || 0);
-
                 list.innerHTML += `
                     <div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                        <div>
-                            <p class="text-sm font-bold">${d.type}</p>
-                            <p class="text-[10px] text-gray-500">${d.date}</p>
-                        </div>
+                        <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
                         <div class="flex items-center gap-4">
                             <div class="text-right">
                                 <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
@@ -142,19 +131,15 @@
                             </div>
                             <button onclick="deleteItem(${d.id})" class="text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-
             document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
             document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
             document.getElementById('totalMVA').innerText = tm.toLocaleString() + ' kr';
             document.getElementById('totalFerie').innerText = tf.toLocaleString() + ' kr';
         }
-
         document.getElementById('dateInput').valueAsDate = new Date();
-        setMode('income');
-        render();
+        setMode('income'); render();
     </script>
 </body>
 </html>
