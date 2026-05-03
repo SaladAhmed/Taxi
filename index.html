@@ -20,17 +20,14 @@
         <div class="mb-6 text-center">
             <h1 class="text-xl font-bold text-yellow-400">TAXI XISAAB PRO</h1>
             <div class="grid grid-cols-2 gap-3 mt-4 text-left">
-                <div class="card border-l-4 border-green-500"><p class="text-[9px] text-gray-400">INCOME</p><h2 id="totalIncome" class="text-lg font-bold">0 kr</h2></div>
-                <div class="card border-l-4 border-red-500"><p class="text-[9px] text-gray-400">KHARASH</p><h2 id="totalExpense" class="text-lg font-bold">0 kr</h2></div>
+                <div class="card border-l-4 border-green-500"><p class="text-[9px] text-gray-400">TOTAL INCOME</p><h2 id="totalIncome" class="text-lg font-bold">0 kr</h2></div>
+                <div class="card border-l-4 border-red-500"><p class="text-[9px] text-gray-400">TOTAL KHARASH</p><h2 id="totalExpense" class="text-lg font-bold">0 kr</h2></div>
                 <div class="card border-l-4 border-blue-500"><p class="text-[9px] text-gray-400">MVA (25%)</p><h2 id="totalMVA" class="text-lg font-bold">0 kr</h2></div>
                 <div class="card border-l-4 border-orange-500"><p class="text-[9px] text-gray-400">FERIEPENGER (10.2%)</p><h2 id="totalFerie" class="text-lg font-bold">0 kr</h2></div>
             </div>
         </div>
 
-        <div id="dashboardSection">
-            <h3 class="text-xs font-bold mb-3 text-gray-500">LIISKA XISAABTA</h3>
-            <div id="transactionList" class="space-y-3"></div>
-        </div>
+        <div id="dashboardSection"><div id="transactionList" class="space-y-3"></div></div>
 
         <div id="inputSection" class="hidden">
             <div class="card">
@@ -42,13 +39,13 @@
                     <input type="date" id="dateInput">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
-                    <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 shadow-lg active:scale-95 transition-transform">KAYDI XOGTA</button>
+                    <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4">KAYDI XOGTA</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3">
+    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 shadow-2xl">
         <button onclick="showSection('dashboard')" id="navDash" class="flex flex-col items-center text-yellow-400"><i class="fas fa-home text-xl mb-1"></i><span class="text-[10px]">Guudmar</span></button>
         <button onclick="showSection('input')" id="navInput" class="flex flex-col items-center text-gray-500"><i class="fas fa-plus-circle text-xl mb-1"></i><span class="text-[10px]">Geli Xog</span></button>
         <button onclick="clearAll()" class="flex flex-col items-center text-red-500"><i class="fas fa-trash-alt text-xl mb-1"></i><span class="text-[10px]">Tirtir Bisha</span></button>
@@ -60,7 +57,7 @@
 
         const categories = {
             income: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'],
-            expense: ['Regnskap', 'Forsikring', 'Shidaal', 'Mushaar (Lønn)', 'Sentral Avgifter', 'Dayactir', 'Wax kale']
+            expense: ['Regnskap', 'Forsikring', 'Shidaal', 'Mushaar (Lønn)', 'Sentral Avgifter', 'Faktura (Kharash)', 'Dayactir', 'Wax kale']
         };
 
         function showSection(s) {
@@ -81,54 +78,36 @@
         function saveEntry() {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            const type = document.getElementById('typeInput').value;
-            if(!amt || !date) return alert("Fadlan geli lacagta!");
-
+            if(!amt || !date) return alert("Fadlan buuxi xogta!");
             data.push({
-                id: Date.now(),
-                amount: amt,
-                date: date,
-                type: type,
-                mode: mode,
-                ferie: type === 'Mushaar (Lønn)' ? amt * 0.102 : 0,
+                id: Date.now(), amount: amt, date: date, type: document.getElementById('typeInput').value, mode: mode,
+                ferie: document.getElementById('typeInput').value === 'Mushaar (Lønn)' ? amt * 0.102 : 0,
                 mva: mode === 'income' ? amt * 0.25 : 0
             });
-
             localStorage.setItem('taxi_v5_final', JSON.stringify(data));
             document.getElementById('amountInput').value = '';
-            showSection('dashboard');
-            render();
+            showSection('dashboard'); render();
         }
 
         function deleteItem(id) {
-            if(confirm("Ma tirtirnaa?")) {
-                data = data.filter(d => d.id !== id);
-                localStorage.setItem('taxi_v5_final', JSON.stringify(data));
-                render();
-            }
+            if(confirm("Ma tirtirnaa?")) { data = data.filter(d => d.id !== id); localStorage.setItem('taxi_v5_final', JSON.stringify(data)); render(); }
         }
 
         function clearAll() {
-            if(confirm("Ma tirtirnaa dhammaan xogta bisha?")) {
-                data = []; localStorage.removeItem('taxi_v5_final'); render();
-            }
+            if(confirm("Ma tirtirnaa dhammaan xogta bisha?")) { data = []; localStorage.removeItem('taxi_v5_final'); render(); }
         }
 
         function render() {
-            const list = document.getElementById('transactionList');
-            list.innerHTML = '';
+            const list = document.getElementById('transactionList'); list.innerHTML = '';
             let ti=0, te=0, tm=0, tf=0;
-            data.forEach(d => {
+            data.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(d => {
                 if(d.mode === 'income') ti += d.amount; else te += d.amount;
                 tm += (d.mva || 0); tf += (d.ferie || 0);
                 list.innerHTML += `
                     <div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
                         <div><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
                         <div class="flex items-center gap-4">
-                            <div class="text-right">
-                                <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p>
-                                ${d.ferie > 0 ? `<p class="text-[8px] text-orange-400">FP: ${d.ferie.toFixed(1)}</p>` : ''}
-                            </div>
+                            <div class="text-right"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${d.amount.toLocaleString()} kr</p></div>
                             <button onclick="deleteItem(${d.id})" class="text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>`;
