@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #1a1c2c; color: white; font-family: -apple-system, sans-serif; }
-        .card { background: #252945; border-radius: 15px; padding: 12px; margin-bottom: 10px; border: 1px solid #30355a; position: relative; }
+        .card { background: #252945; border-radius: 12px; padding: 10px; margin-bottom: 8px; border: 1px solid #30355a; position: relative; }
         .result-card { background: linear-gradient(135deg, #30355a 0%, #1a1c2c 100%); border: 2px solid #fbbf24; }
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; }
         .menu-dropdown { display: none; position: absolute; right: 10px; top: 45px; background: #30355a; border: 1px solid #404677; border-radius: 8px; z-index: 50; min-width: 140px; }
@@ -17,11 +17,22 @@
 </head>
 <body class="pb-24">
     <div id="app" class="p-4">
-        <div class="mb-6 text-center">
-            <h1 class="text-xl font-bold text-yellow-400 uppercase">Mohamed Salad Transport</h1>
-            <div class="grid grid-cols-2 gap-3 mt-4 text-left">
-                <div class="card border-l-4 border-green-500"><p class="text-[10px] text-gray-400 uppercase font-bold text-green-500">Income Guud</p><h2 id="totalIncome" class="text-lg font-bold text-green-400">0 kr</h2></div>
-                <div class="card border-l-4 border-red-500"><p class="text-[10px] text-gray-400 uppercase font-bold text-red-500">Kharash Guud</p><h2 id="totalExpense" class="text-lg font-bold text-red-400">0 kr</h2></div>
+        <div class="mb-4 text-center">
+            <h1 class="text-lg font-bold text-yellow-400 uppercase">Mohamed Salad Transport</h1>
+            
+            <div class="grid grid-cols-3 gap-2 mt-4 text-left">
+                <div class="card border-l-4 border-green-500 p-2">
+                    <p class="text-[8px] text-gray-400 uppercase font-bold">Income</p>
+                    <h2 id="totalIncome" class="text-xs font-bold text-green-400">0 kr</h2>
+                </div>
+                <div class="card border-l-4 border-red-500 p-2">
+                    <p class="text-[8px] text-gray-400 uppercase font-bold">Kharash</p>
+                    <h2 id="totalExpense" class="text-xs font-bold text-red-400">0 kr</h2>
+                </div>
+                <div class="card border-l-4 border-blue-400 p-2">
+                    <p class="text-[8px] text-gray-400 uppercase font-bold text-blue-400">U-baxay (Me)</p>
+                    <h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2>
+                </div>
             </div>
 
             <div class="card result-card mt-2 text-center">
@@ -36,7 +47,7 @@
             </div>
         </div>
         
-        <div id="dashboardSection"><div id="transactionList" class="space-y-3"></div></div>
+        <div id="dashboardSection"><div id="transactionList" class="space-y-2"></div></div>
 
         <div id="inputSection" class="hidden">
             <div class="card">
@@ -49,7 +60,7 @@
                     <input type="text" id="nameInput" placeholder="Magaca/Faahfaahin">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
-                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg shadow-lg">KAYDI ONLINE</button>
+                    <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg">KAYDI ONLINE</button>
                 </div>
             </div>
         </div>
@@ -102,27 +113,21 @@
             const date = document.getElementById('dateInput').value;
             const name = document.getElementById('nameInput').value;
             if(!amt || !date) return alert("Fadlan geli lacagta!");
-            
             await addDoc(collection(db, "xisaabaadka"), { 
-                amount: amt, 
-                date: date, 
-                name: name || "General",
-                type: document.getElementById('typeInput').value, 
-                mode: mode, 
-                createdAt: Date.now() 
+                amount: amt, date: date, name: name || "General",
+                type: document.getElementById('typeInput').value, mode: mode, createdAt: Date.now() 
             });
-            
             document.getElementById('amountInput').value = '';
             document.getElementById('nameInput').value = '';
             showSection('dashboard');
         };
 
-        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa xogtan?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
 
         const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('transactionList'); list.innerHTML = '';
-            let ti=0, te=0, totalFP=0, mvaSum=0;
+            let ti=0, te=0, totalFP=0, mvaSum=0, ownerSum=0;
 
             snapshot.forEach((docSnap) => {
                 const d = docSnap.data();
@@ -131,15 +136,14 @@
                 } else {
                     te += d.amount;
                     if(d.type === 'Mushaar (Lønn)') totalFP += (d.amount * 0.102);
-                    
-                    // Transaksjonsgebyr ma laha MVA
+                    if(d.type === 'Bankuttak (Owner)') ownerSum += d.amount;
                     if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
                         mvaSum += (d.amount / 5); 
                     }
                 }
                 list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
                     <div>
-                        <p class="text-[10px] text-yellow-400 font-black uppercase mb-1">${d.name || ''}</p>
+                        <p class="text-[9px] text-yellow-400 font-bold mb-1">${d.name}</p>
                         <p class="text-sm font-bold text-gray-200">${d.type}</p>
                         <p class="text-[10px] text-gray-500">${d.date}</p>
                     </div>
@@ -147,7 +151,7 @@
                         <p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${Math.round(d.amount).toLocaleString()} kr</p>
                         <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-400 p-2"><i class="fas fa-ellipsis-v"></i></button>
                         <div id="menu-${docSnap.id}" class="menu-dropdown shadow-2xl border border-gray-600">
-                            <div class="menu-item text-red-500 p-3" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash mr-2"></i> Tirtir</div>
+                            <div class="menu-item text-red-500 p-3" onclick="deleteItem('${docSnap.id}')">Tirtir</div>
                         </div>
                     </div>
                 </div>`;
@@ -157,6 +161,7 @@
 
             document.getElementById('totalIncome').innerText = Math.round(ti).toLocaleString() + ' kr';
             document.getElementById('totalExpense').innerText = Math.round(te).toLocaleString() + ' kr';
+            document.getElementById('totalOwner').innerText = Math.round(ownerSum).toLocaleString() + ' kr';
             document.getElementById('mvaTax').innerText = Math.round(mvaSum).toLocaleString() + ' kr';
             document.getElementById('ferieTax').innerText = Math.round(totalFP).toLocaleString() + ' kr';
             const netEl = document.getElementById('netResult');
