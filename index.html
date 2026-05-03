@@ -46,7 +46,7 @@
                 </div>
                 <div class="space-y-4">
                     <input type="date" id="dateInput">
-                    <input type="text" id="nameInput" placeholder="Magaca (Hadii uu jiro)">
+                    <input type="text" id="nameInput" placeholder="Magaca/Faahfaahin">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
                     <button onclick="saveEntry()" id="saveBtn" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4 text-lg shadow-lg">KAYDI ONLINE</button>
@@ -79,7 +79,7 @@
 
         const categories = {
             income: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'],
-            expense: ['Mushaar (Lønn)', 'Skatt', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
+            expense: ['Mushaar (Lønn)', 'Bankuttak (Owner)', 'Skatt', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
         };
 
         window.setMode = (m) => {
@@ -130,13 +130,14 @@
                     ti += d.amount;
                 } else {
                     te += d.amount;
-                    // Mushaarka kaliya ayaa Feriepenger leh
+                    // Kaliya Mushaar (Lønn) ayaa leh Feriepenger
                     if(d.type === 'Mushaar (Lønn)') totalFP += (d.amount * 0.102);
                     
-                    // Skatt ma laha MVA. Waxyaabahan kaliya ayaa MVA leh:
+                    // Kaliya waxyaabahan ayaa MVA laga soo celinayaa
                     if(['Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter'].includes(d.type)) {
                         mvaSum += (d.amount / 5); 
                     }
+                    // Bankuttak iyo Skatt wax MVA ah ma lahan
                 }
                 list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
                     <div>
