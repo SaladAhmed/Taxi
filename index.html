@@ -13,21 +13,46 @@
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; }
         .menu-dropdown { display: none; position: absolute; right: 10px; top: 45px; background: #30355a; border: 1px solid #404677; border-radius: 8px; z-index: 50; min-width: 140px; }
         .menu-dropdown.active { display: block; }
+        #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="pb-24">
-    <div id="app" class="p-4">
+
+    <!-- AUTH SECTION -->
+    <div id="authSection">
+        <div class="w-full max-w-sm text-center">
+            <h1 class="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-widest">M. Salad Transport</h1>
+            <div class="card p-6 border-t-4 border-yellow-400">
+                <p class="text-gray-400 mb-4 text-sm font-bold uppercase">Gali E-mailkaaga</p>
+                <input type="email" id="emailInput" placeholder="Email" class="mb-3">
+                <input type="password" id="passInput" placeholder="Password" class="mb-4">
+                <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg shadow-yellow-900/20">Login</button>
+                <p id="authError" class="text-red-500 mt-3 text-xs hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden p-4">
         <div class="mb-4 text-center">
-            <h1 class="text-lg font-bold text-yellow-400 uppercase">Mohamed Salad Transport</h1>
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[9px] bg-gray-700 px-2 py-1 rounded text-gray-300" id="userDisplay"></span>
+                <button onclick="logout()" class="text-red-400 text-[10px] font-bold border border-red-900/30 px-2 py-1 rounded uppercase">Logout</button>
+            </div>
+            
+            <h1 class="text-lg font-black text-yellow-400 uppercase tracking-tighter">Mohamed Salad Transport</h1>
+            
             <div class="grid grid-cols-3 gap-2 mt-4">
                 <div class="card border-l-4 border-green-500 p-2"><p class="text-[8px] text-gray-400 uppercase font-bold">Income</p><h2 id="totalIncome" class="text-xs font-bold text-green-400">0 kr</h2></div>
                 <div class="card border-l-4 border-red-500 p-2"><p class="text-[8px] text-gray-400 uppercase font-bold">Kharash</p><h2 id="totalExpense" class="text-xs font-bold text-red-400">0 kr</h2></div>
-                <div class="card border-l-4 border-blue-400 p-2"><p class="text-[8px] text-gray-400 uppercase font-bold text-blue-400">U-baxay (Me)</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2></div>
+                <div class="card border-l-4 border-blue-400 p-2"><p class="text-[8px] text-gray-400 uppercase font-bold text-blue-400">Owner</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2></div>
             </div>
+
             <div class="card result-card mt-2 text-center">
-                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-orange-400">
-                    <div><p class="text-[9px] text-gray-400 uppercase">MVA Refund (1/5)</p><p id="mvaTax" class="text-sm font-semibold">0 kr</p></div>
-                    <div><p class="text-[9px] text-gray-400 uppercase">Feriepenger (10.2%)</p><p id="ferieTax" class="text-sm font-semibold">0 kr</p></div>
+                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-orange-400 font-bold">
+                    <div><p class="text-[9px] text-gray-400 uppercase">MVA Refund (1/5)</p><p id="mvaTax" class="text-sm">0 kr</p></div>
+                    <div><p class="text-[9px] text-gray-400 uppercase">Feriepenger (10.2%)</p><p id="ferieTax" class="text-sm">0 kr</p></div>
                 </div>
                 <div><p class="text-[10px] text-yellow-400 uppercase font-bold">Net Result</p><h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2></div>
             </div>
@@ -37,23 +62,24 @@
         <div id="statsSection" class="section hidden"><div id="categoryTotals" class="space-y-2"></div></div>
 
         <div id="inputSection" class="section hidden">
-            <div class="card">
-                <div class="flex gap-2 mb-6">
-                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black">Income ↑</button>
-                    <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl font-bold bg-gray-700 text-white">Kharash ↓</button>
+            <div class="card p-4">
+                <div class="flex gap-2 mb-6 font-bold uppercase text-xs">
+                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl bg-yellow-400 text-black">Income ↑</button>
+                    <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl bg-gray-700 text-white">Kharash ↓</button>
                 </div>
                 <div class="space-y-4">
                     <input type="date" id="dateInput">
-                    <input type="text" id="nameInput" placeholder="Magaca (Tusaale: Circle K)">
+                    <input type="text" id="nameInput" placeholder="Faahfaahin (Tusaale: Circle K)">
                     <input type="number" id="amountInput" placeholder="Lacagta (Kr)">
                     <select id="typeInput"></select>
-                    <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-bold mt-4">KAYDI XOGTA</button>
+                    <button onclick="saveEntry()" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-black mt-4 uppercase">Kaydi Xogta</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 z-50">
+    <!-- Navigation -->
+    <nav id="bottomNav" class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 z-50 hidden">
         <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center text-yellow-400"><i class="fas fa-list-ul text-xl"></i><span class="text-[10px]">Guudmar</span></button>
         <button onclick="showSection('stats')" id="nav-stats" class="nav-btn flex flex-col items-center text-gray-400"><i class="fas fa-chart-pie text-xl"></i><span class="text-[10px]">Warbixin</span></button>
         <button onclick="showSection('input')" id="nav-input" class="nav-btn flex flex-col items-center text-gray-400"><i class="fas fa-plus-circle text-xl"></i><span class="text-[10px]">Geli Xog</span></button>
@@ -61,6 +87,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -73,6 +100,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
         let mode = 'income';
 
@@ -81,10 +109,36 @@
             expense: ['Mushaar (Lønn)', 'Bankuttak (Owner)', 'Skatt', 'Transaksjonsgebyr', 'Drivstoff', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale']
         };
 
+        window.handleAuth = () => {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            signInWithEmailAndPassword(auth, email, pass).catch(err => {
+                const errEl = document.getElementById('authError');
+                errEl.innerText = "Email ama Password waa khalad!";
+                errEl.classList.remove('hidden');
+            });
+        };
+
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('bottomNav').classList.remove('hidden');
+                document.getElementById('userDisplay').innerText = user.email;
+                loadData();
+            } else {
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('bottomNav').classList.add('hidden');
+            }
+        });
+
         window.setMode = (m) => {
             mode = m;
-            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold bg-yellow-400 text-black' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700 text-white';
-            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold bg-red-500 text-white' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700 text-white';
+            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl bg-yellow-400 text-black' : 'flex-1 py-3 rounded-xl bg-gray-700 text-white';
+            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl bg-red-500 text-white' : 'flex-1 py-3 rounded-xl bg-gray-700 text-white';
             document.getElementById('typeInput').innerHTML = categories[m].map(c => `<option value="${c}">${c}</option>`).join('');
         };
 
@@ -98,7 +152,7 @@
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            const name = document.getElementById('nameInput').value || "General";
+            const name = document.getElementById('nameInput').value || "Info";
             if(!amt || !date) return alert("Fadlan buuxi!");
             await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, name: name, type: document.getElementById('typeInput').value, mode: mode });
             document.getElementById('amountInput').value = ''; document.getElementById('nameInput').value = '';
@@ -108,52 +162,51 @@
         window.deleteItem = async (id) => { if(confirm("Ma tirtirtaa?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
         window.toggleMenu = (id) => { document.getElementById('menu-'+id).classList.toggle('active'); };
 
-        onSnapshot(query(collection(db, "xisaabaadka"), orderBy("date", "desc")), (snapshot) => {
-            const list = document.getElementById('transactionList');
-            const statsList = document.getElementById('categoryTotals');
-            list.innerHTML = ''; statsList.innerHTML = '';
-            let ti=0, te=0, ownerSum=0, mvaSum=0, totalFP=0;
-            let catTotals = {};
+        function loadData() {
+            onSnapshot(query(collection(db, "xisaabaadka"), orderBy("date", "desc")), (snapshot) => {
+                const list = document.getElementById('transactionList');
+                const statsList = document.getElementById('categoryTotals');
+                list.innerHTML = ''; statsList.innerHTML = '';
+                let ti=0, te=0, ownerSum=0, mvaSum=0, totalFP=0;
+                let catTotals = {};
 
-            snapshot.forEach((docSnap) => {
-                const d = docSnap.data();
-                // FIX: Haddii xogta hore 'Shidaal' ku qornayd, u tusi 'Drivstoff'
-                let displayType = d.type === 'Shidaal' ? 'Drivstoff' : d.type;
-                
-                if(d.mode === 'income') { ti += d.amount; } 
-                else { 
-                    te += d.amount; 
-                    if(displayType === 'Bankuttak (Owner)') ownerSum += d.amount;
-                    if(displayType === 'Mushaar (Lønn)') totalFP += (d.amount * 0.102);
-                    if(['Drivstoff', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Shidaal'].includes(displayType)) mvaSum += (d.amount / 5);
+                snapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    let displayType = d.type === 'Shidaal' ? 'Drivstoff' : d.type;
+                    let displayName = (d.name && d.name !== "undefined") ? d.name : "Xog";
+                    
+                    if(d.mode === 'income') { ti += d.amount; } 
+                    else { 
+                        te += d.amount; 
+                        if(displayType === 'Bankuttak (Owner)') ownerSum += d.amount;
+                        if(displayType === 'Mushaar (Lønn)') totalFP += (d.amount * 0.102);
+                        if(['Drivstoff', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Shidaal'].includes(displayType)) mvaSum += (d.amount / 5);
+                    }
+                    catTotals[displayType] = (catTotals[displayType] || 0) + d.amount;
+                    list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
+                        <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${displayName}</p><p class="text-sm font-bold">${displayType}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                        <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${Math.round(d.amount).toLocaleString()} kr</p>
+                        <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-600"><i class="fas fa-ellipsis-v"></i></button>
+                        <div id="menu-${docSnap.id}" class="menu-dropdown"><div class="p-3 text-red-500 text-sm font-bold" onclick="deleteItem('${docSnap.id}')">TIRTIR</div></div></div></div>`;
+                });
+
+                for (const [cat, total] of Object.entries(catTotals)) {
+                    const isInc = categories.income.includes(cat) && cat !== 'Wax kale';
+                    statsList.innerHTML += `<div class="card flex justify-between border-r-4 ${isInc?'border-green-500':'border-red-500'}">
+                        <span class="text-sm">${cat}</span><span class="font-bold ${isInc?'text-green-400':'text-red-400'}">${Math.round(total).toLocaleString()} kr</span></div>`;
                 }
-                
-                catTotals[displayType] = (catTotals[displayType] || 0) + d.amount;
 
-                list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                    <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p>
-                    <p class="text-sm font-bold">${displayType}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
-                    <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${Math.round(d.amount).toLocaleString()} kr</p>
-                    <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-600"><i class="fas fa-ellipsis-v"></i></button>
-                    <div id="menu-${docSnap.id}" class="menu-dropdown"><div class="p-3 text-red-500" onclick="deleteItem('${docSnap.id}')">Tirtir</div></div></div></div>`;
+                document.getElementById('totalIncome').innerText = Math.round(ti).toLocaleString() + ' kr';
+                document.getElementById('totalExpense').innerText = Math.round(te).toLocaleString() + ' kr';
+                document.getElementById('totalOwner').innerText = Math.round(ownerSum).toLocaleString() + ' kr';
+                document.getElementById('mvaTax').innerText = Math.round(mvaSum).toLocaleString() + ' kr';
+                document.getElementById('ferieTax').innerText = Math.round(totalFP).toLocaleString() + ' kr';
+                const net = ti - te - totalFP;
+                const netEl = document.getElementById('netResult');
+                netEl.innerText = Math.round(net).toLocaleString() + ' kr';
+                netEl.style.color = net < 0 ? '#f87171' : '#4ade80';
             });
-
-            for (const [cat, total] of Object.entries(catTotals)) {
-                const isIncomeCat = categories.income.includes(cat) && cat !== 'Wax kale';
-                statsList.innerHTML += `<div class="card flex justify-between border-r-4 ${isIncomeCat?'border-green-500':'border-red-500'}">
-                    <span>${cat}</span><span class="font-bold ${isIncomeCat?'text-green-400':'text-red-400'}">${Math.round(total).toLocaleString()} kr</span></div>`;
-            }
-
-            document.getElementById('totalIncome').innerText = Math.round(ti).toLocaleString() + ' kr';
-            document.getElementById('totalExpense').innerText = Math.round(te).toLocaleString() + ' kr';
-            document.getElementById('totalOwner').innerText = Math.round(ownerSum).toLocaleString() + ' kr';
-            document.getElementById('mvaTax').innerText = Math.round(mvaSum).toLocaleString() + ' kr';
-            document.getElementById('ferieTax').innerText = Math.round(totalFP).toLocaleString() + ' kr';
-            const net = ti - te - totalFP;
-            const netEl = document.getElementById('netResult');
-            netEl.innerText = Math.round(net).toLocaleString() + ' kr';
-            netEl.style.color = net < 0 ? '#f87171' : '#4ade80';
-        });
+        }
 
         document.getElementById('dateInput').valueAsDate = new Date();
         setMode('income');
