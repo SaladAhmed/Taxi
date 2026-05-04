@@ -1,40 +1,51 @@
-// Qaybtan ka baddal koodhkii hore ee loadData()
 function loadData() {
-    if(!currentUser) return;
-    
-    // Koodhkan wuxuu soo jiidayaa xogtaada cusub iyo middii horeba
-    onSnapshot(collection(db, "xisaabaadka"), (snapshot) => {
-        const list = document.getElementById('transactionList');
-        const statsList = document.getElementById('categoryTotals');
-        list.innerHTML = ''; statsList.innerHTML = '';
-        let ti=0, te=0, ownerSum=0, mvaSum=0, totalFP=0;
-        let catTotals = {};
+            if(!currentUser) return;
+            const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('transactionList');
+                const statsList = document.getElementById('categoryTotals');
+                list.innerHTML = ''; statsList.innerHTML = '';
+                let ti=0, te=0, ownerSum=0, mvaSum=0, totalFP=0;
+                let catTotals = {};
 
-        snapshot.forEach((docSnap) => {
-            const d = docSnap.data();
+                snapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    
+                    // SHURUDDA: I tusi haddii ay userId-kayga leedahay AMA haddii aysan haba yaraatee userId lahayn (Xogtii hore)
+                    if (!d.userId || d.userId === currentUser.uid) {
+                        if(d.mode === 'income') ti += d.amount;
+                        else {
+                            te += d.amount;
+                            if(d.type.includes('Owner') || d.type.includes('Eier')) ownerSum += d.amount;
+                            if(d.type.includes('Lønn') || d.type.includes('Salary')) totalFP += (d.amount * 0.102);
+                            if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap','Accounting'].some(v => d.type.includes(v))) mvaSum += (d.amount / 5);
+                        }
+                        catTotals[d.type] = (catTotals[d.type] || 0) + d.amount;
+                        
+                        const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
+                        list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
+                            <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                            <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${displayAmt}</p>
+                            <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-500"><i class="fas fa-ellipsis-v"></i></button>
+                            <div id="menu-${docSnap.id}" class="menu-dropdown"><div class="p-3 text-red-500 text-sm font-bold" onclick="deleteItem('${docSnap.id}')">TIRTIR</div></div></div></div>`;
+                    }
+                });
 
-            // SHURUDDA: I tusi haddii ay userId-kayga leedahay AMA haddii aysan haba yaraatee userId lahayn (Xogtii hore)
-            if (!d.userId || d.userId === currentUser.uid) {
-                
-                if(d.mode === 'income') ti += d.amount;
-                else {
-                    te += d.amount;
-                    if(d.type.includes('Owner') || d.type.includes('Eier')) ownerSum += d.amount;
-                    if(d.type.includes('Lønn') || d.type.includes('Salary')) totalFP += (d.amount * 0.102);
-                    if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap','Accounting'].some(v => d.type.includes(v))) mvaSum += (d.amount / 5);
+                for (const [cat, total] of Object.entries(catTotals)) {
+                    const displayTotal = isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr";
+                    statsList.innerHTML += `<div class="card flex justify-between border-r-4 border-yellow-500">
+                        <span class="text-sm">${cat}</span><span class="font-bold">${displayTotal}</span></div>`;
                 }
-                catTotals[d.type] = (catTotals[d.type] || 0) + d.amount;
-                
-                const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
-                list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                    <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
-                    <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${displayAmt}</p>
-                    <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-500"><i class="fas fa-ellipsis-v"></i></button>
-                    <div id="menu-${docSnap.id}" class="menu-dropdown"><div class="p-3 text-red-500 text-sm font-bold" onclick="deleteItem('${docSnap.id}')">TIRTIR</div></div></div></div>`;
-            }
-        });
-        
-        // Qaybtii kale ee xisaabinta (Income, Expense, etc.) halkan sidiisii u daa...
-        updateUI(ti, te, ownerSum, mvaSum, totalFP, catTotals);
-    });
-}
+
+                const format = (v) => isHidden ? "**** kr" : Math.round(v).toLocaleString() + " kr";
+                document.getElementById('totalIncome').innerText = format(ti);
+                document.getElementById('totalExpense').innerText = format(te);
+                document.getElementById('totalOwner').innerText = format(ownerSum);
+                document.getElementById('mvaTax').innerText = format(mvaSum);
+                document.getElementById('ferieTax').innerText = format(totalFP);
+                const net = ti - te - totalFP;
+                document.getElementById('netResult').innerText = format(net);
+                document.getElementById('netResult').style.color = net < 0 ? '#f87171' : '#4ade80';
+            });
+        }
