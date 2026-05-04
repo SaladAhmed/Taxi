@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M. Salad Transport - Live</title>
+    <!-- Magaca halkan ayaan ku saxay si uu u soo baxo -->
+    <title>M. Salad Transport</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #1a1c2c; color: white; font-family: -apple-system, sans-serif; overflow-x: hidden; }
-        .card { background: #252945; border-radius: 12px; padding: 10px; margin-bottom: 8px; border: 1px solid #30355a; }
-        .lang-btn { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; background: #374151; color: white; border:none; }
+        .card { background: #252945; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid #30355a; transition: 0.3s; }
+        .lang-btn { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; background: #374151; color: white; border:none; }
         .active-lang { background: #fbbf24 !important; color: black !important; }
         .nav-active { color: #fbbf24 !important; opacity: 1 !important; }
         .hidden { display: none !important; }
-        input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 8px; padding: 10px; width: 100%; margin-bottom: 8px; font-size: 14px; outline: none; }
+        input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 8px; padding: 12px; width: 100%; margin-bottom: 10px; font-size: 15px; outline: none; }
         #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .auth-card { background: #252945; padding: 25px; border-radius: 15px; width: 100%; max-width: 280px; border-top: 3px solid #fbbf24; }
-        nav button { opacity: 0.5; transition: 0.3s; background: none; border: none; color: white; }
+        .auth-card { background: #252945; padding: 30px; border-radius: 20px; width: 100%; max-width: 320px; border-top: 4px solid #fbbf24; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+        nav button { opacity: 0.6; transition: 0.3s; background: none; border: none; color: white; }
     </style>
 </head>
 <body class="pb-24">
@@ -24,68 +25,85 @@
     <!-- LOGIN SCREEN -->
     <div id="authSection">
         <div class="auth-card text-center">
-            <h1 class="text-yellow-400 font-black text-sm mb-2 uppercase">M. Salad Transport</h1>
-            <h2 class="text-white text-[10px] font-bold mb-5 uppercase tracking-widest">Login</h2>
-            <input type="email" id="emailInput" placeholder="Email">
-            <input type="password" id="passInput" placeholder="Password">
-            <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-2.5 rounded-lg font-black text-xs uppercase mt-2">Login</button>
+            <h1 class="text-yellow-400 font-black text-lg mb-1 uppercase tracking-tighter">M. Salad Transport</h1>
+            <p class="text-gray-400 text-[10px] mb-6 tracking-widest uppercase">Maamulka Xisaabaadka</p>
+            <input type="email" id="emailInput" placeholder="Email kaaga">
+            <input type="password" id="passInput" placeholder="Password kaaga">
+            <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-3 rounded-xl font-black text-sm uppercase mt-4 shadow-lg active:scale-95 transition-transform">Gubniyey (Login)</button>
         </div>
     </div>
 
     <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="flex justify-between items-center mb-6">
-            <div class="flex gap-1">
+            <div class="flex gap-2">
                 <button onclick="changeLang('so')" id="btn-so" class="lang-btn">SO</button>
                 <button onclick="changeLang('en')" id="btn-en" class="lang-btn">EN</button>
                 <button onclick="changeLang('no')" id="btn-no" class="lang-btn">NO</button>
             </div>
-            <button onclick="logout()" class="text-red-500 text-[9px] font-bold border border-red-500/30 px-2 py-1 rounded">LOGOUT</button>
+            <div class="flex items-center gap-4">
+                <button onclick="togglePrivacy()" class="text-yellow-400 text-xl"><i id="eyeIcon" class="fas fa-eye"></i></button>
+                <button onclick="logout()" class="text-red-500 text-[10px] font-bold border border-red-500/40 px-3 py-1.5 rounded-lg uppercase">Ka Bax</button>
+            </div>
         </div>
 
-        <h1 class="text-center font-black text-yellow-400 tracking-tighter mb-6 uppercase">M. Salad Transport</h1>
+        <h1 class="text-center font-black text-yellow-400 text-xl tracking-tight mb-6 uppercase">M. Salad Transport</h1>
 
+        <!-- Top Stats -->
         <div class="grid grid-cols-3 gap-2 mb-4">
             <div class="card border-l-4 border-green-500 text-center">
-                <p id="label-inc" class="text-[7px] text-gray-400 font-bold">DAKHLI</p>
-                <h2 id="totalIncome" class="text-[10px] font-bold text-green-400">0 kr</h2>
+                <p id="label-inc" class="text-[8px] text-gray-400 font-bold uppercase">Inntekter</p>
+                <h2 id="totalIncome" class="text-[11px] font-black text-green-400">0 kr</h2>
             </div>
             <div class="card border-l-4 border-red-500 text-center">
-                <p id="label-exp" class="text-[7px] text-gray-400 font-bold">KHARASH</p>
-                <h2 id="totalExpense" class="text-[10px] font-bold text-red-400">0 kr</h2>
+                <p id="label-exp" class="text-[8px] text-gray-400 font-bold uppercase">Utgifter</p>
+                <h2 id="totalExpense" class="text-[11px] font-black text-red-400">0 kr</h2>
             </div>
             <div class="card border-l-4 border-blue-400 text-center">
-                <p id="label-own" class="text-[7px] text-gray-400 font-bold">EIER</p>
-                <h2 id="totalOwner" class="text-[10px] font-bold text-blue-400">0 kr</h2>
+                <p id="label-own" class="text-[8px] text-gray-400 font-bold uppercase">Eieruttak</p>
+                <h2 id="totalOwner" class="text-[11px] font-black text-blue-400">0 kr</h2>
             </div>
         </div>
 
-        <div id="dashboardSection" class="section mt-4 space-y-2"></div>
-        <div id="reportSection" class="section hidden mt-4 space-y-2"></div>
+        <!-- Net Result -->
+        <div class="card border-2 border-yellow-400/20 bg-gradient-to-br from-[#2a2e4d] to-[#1a1c2c] text-center py-6">
+            <div class="flex justify-around mb-4 opacity-80">
+                <div><p id="label-mva" class="text-[8px] text-gray-400 uppercase">MVA Refusjon</p><p id="mvaTax" class="text-orange-400 text-xs font-bold">0 kr</p></div>
+                <div><p id="label-fer" class="text-[8px] text-gray-400 uppercase">Feriepenger</p><p id="ferieTax" class="text-orange-400 text-xs font-bold">0 kr</p></div>
+            </div>
+            <p id="label-net" class="text-[10px] text-yellow-400 font-bold uppercase tracking-widest">Netto Resultat</p>
+            <h2 id="netResult" class="text-2xl font-black text-white">0 kr</h2>
+        </div>
+
+        <!-- Dynamic Sections -->
+        <div id="dashboardSection" class="section mt-4 space-y-3"></div>
+        <div id="reportSection" class="section hidden mt-4 space-y-3"></div>
+        
         <div id="inputSection" class="section hidden mt-4">
-            <div class="card p-4">
-                <div class="flex gap-2 mb-4">
-                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl font-bold bg-green-600 text-xs">INCOME ↑</button>
-                    <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl font-bold bg-gray-700 text-xs">EXPENSE ↓</button>
+            <div class="card p-5">
+                <div class="flex gap-3 mb-5">
+                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-4 rounded-2xl font-black bg-green-600 text-xs shadow-lg uppercase">Dakhli ↑</button>
+                    <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-4 rounded-2xl font-black bg-gray-700 text-xs shadow-lg uppercase">Kharash ↓</button>
                 </div>
                 <input type="date" id="dateInput">
-                <input type="text" id="nameInput" placeholder="Name">
-                <input type="number" id="amountInput" placeholder="Amount (kr)">
+                <input type="text" id="nameInput" placeholder="Navn">
+                <input type="number" id="amountInput" placeholder="Beløp (kr)">
                 <select id="typeInput"></select>
-                <button onclick="saveData()" id="btn-save" class="w-full bg-yellow-400 text-black py-3 rounded-xl font-black uppercase text-sm">LAGRE</button>
+                <button onclick="saveData()" id="btn-save" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-black uppercase mt-3 text-sm shadow-xl active:scale-95 transition-transform">Kaydi (Save)</button>
             </div>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3">
+    <!-- Navigation -->
+    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-4 shadow-2xl">
         <button onclick="showSection('dashboard')" id="nav-dash" class="nav-active flex flex-col items-center gap-1">
-            <i class="fas fa-list-ul"></i><span class="text-[9px]">Oversikt</span>
+            <i class="fas fa-list-ul text-lg"></i><span id="nav-text-1" class="text-[10px] font-bold">Oversikt</span>
         </button>
         <button onclick="showSection('report')" id="nav-rep" class="flex flex-col items-center gap-1">
-            <i class="fas fa-chart-pie"></i><span class="text-[9px]">Rapport</span>
+            <i class="fas fa-chart-bar text-lg"></i><span id="nav-text-2" class="text-[10px] font-bold">Rapport</span>
         </button>
         <button onclick="showSection('input')" id="nav-inp" class="flex flex-col items-center gap-1">
-            <i class="fas fa-plus-circle"></i><span class="text-[9px]">Legg til</span>
+            <i class="fas fa-plus-circle text-lg"></i><span id="nav-text-3" class="text-[10px] font-bold">Legg til</span>
         </button>
     </nav>
 
@@ -94,7 +112,6 @@
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // *** KAN WAAYE SETUP-KAADII (CONFIG) ***
         const firebaseConfig = {
             apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
             authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -108,60 +125,58 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let user = null, currentLang = 'no', currentMode = 'income';
+        let user = null, currentLang = localStorage.getItem('lang') || 'no', currentMode = 'income', isHidden = false;
+
+        const langData = {
+            so: { inc: "DAKHLI", exp: "KHARASH", own: "EIER", mva: "MVA CELIS", fer: "LACAG FASAX", net: "FAA'IIDO", n1: "Liiska", n2: "Warbixin", n3: "Geli Xog", save: "KAYDI", name: "Magaca", amt: "Lacagta" },
+            en: { inc: "INCOME", exp: "EXPENSE", own: "OWNER", mva: "VAT REFUND", fer: "HOLIDAY PAY", net: "NET PROFIT", n1: "List", n2: "Stats", n3: "Add New", save: "SAVE", name: "Name", amt: "Amount" },
+            no: { inc: "INNTEKT", exp: "UTGIFT", own: "EIER", mva: "MVA REFUND", fer: "FERIEPENGER", net: "NETTO RESULTAT", n1: "Oversikt", n2: "Rapport", n3: "Legg til", save: "LAGRE", name: "Navn", amt: "Beløp" }
+        };
+
+        const categories = {
+            income: { TaxiCard: {so:'Kaarka', en:'Taxi Card', no:'Taxi Kort'}, Cash: {so:'Caddaan', en:'Cash', no:'Kontanter'}, Invoice: {so:'Faktura', en:'Invoice', no:'Faktura'}, Other: {so:'Kale', en:'Other', no:'Annet'} },
+            expense: { Salary: {so:'Mushaar', en:'Salary', no:'Lønn'}, Withdrawal: {so:'Eieruttak', en:'Withdrawal', no:'Eieruttak'}, Tax: {so:'Skatt', en:'Tax', no:'Skatt'}, Fuel: {so:'Shidaal', en:'Fuel', no:'Drivstoff'}, Repair: {so:'Dayactir', en:'Repair', no:'Reparasjon'}, Insurance: {so:'Forsikring', en:'Insurance', no:'Forsikring'}, Other: {so:'Kale', en:'Other', no:'Annet'} }
+        };
 
         onAuthStateChanged(auth, u => {
             user = u;
             if(u) { 
                 document.getElementById('authSection').classList.add('hidden'); 
                 document.getElementById('mainApp').classList.remove('hidden');
-                loadData(); 
+                changeLang(currentLang); loadData(); 
             } else { 
                 document.getElementById('authSection').classList.remove('hidden'); 
                 document.getElementById('mainApp').classList.add('hidden');
             }
         });
 
-        window.handleAuth = () => {
-            const e = document.getElementById('emailInput').value, p = document.getElementById('passInput').value;
-            signInWithEmailAndPassword(auth, e, p).catch(err => alert("Login Khaldan!"));
+        window.changeLang = (l) => {
+            currentLang = l; localStorage.setItem('lang', l);
+            const d = langData[l];
+            document.getElementById('label-inc').innerText = d.inc;
+            document.getElementById('label-exp').innerText = d.exp;
+            document.getElementById('label-own').innerText = d.own;
+            document.getElementById('label-mva').innerText = d.mva;
+            document.getElementById('label-fer').innerText = d.fer;
+            document.getElementById('label-net').innerText = d.net;
+            document.getElementById('nav-text-1').innerText = d.n1;
+            document.getElementById('nav-text-2').innerText = d.n2;
+            document.getElementById('nav-text-3').innerText = d.n3;
+            document.getElementById('btn-save').innerText = d.save;
+            document.getElementById('nameInput').placeholder = d.name;
+            document.getElementById('amountInput').placeholder = d.amt;
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
+            document.getElementById('btn-'+l).classList.add('active-lang');
+            setMode(currentMode);
         };
 
-        window.logout = () => signOut(auth);
-
-        window.saveData = async () => {
-            const amt = parseFloat(document.getElementById('amountInput').value);
-            const name = document.getElementById('nameInput').value || "Xog";
-            const type = document.getElementById('typeInput').value;
-            const date = document.getElementById('dateInput').value;
-            if(!amt || !date) return alert("Buuxi dhamaan!");
-            await addDoc(collection(db, "xisaabaadka"), { userId: user.uid, amount: amt, name, typeKey: type, mode: currentMode, date });
-            document.getElementById('amountInput').value = '';
-            showSection('dashboard');
-        };
-
-        window.loadData = () => {
-            const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
-            onSnapshot(q, snap => {
-                let ti=0, te=0, to=0;
-                const list = document.getElementById('dashboardSection');
-                list.innerHTML = '';
-                snap.forEach(docSnap => {
-                    const d = docSnap.data();
-                    if(d.userId !== user.uid) return;
-                    const amt = Number(d.amount);
-                    if(d.mode === 'income') ti += amt; else te += amt;
-                    if(d.typeKey === 'Withdrawal') to += amt;
-                    
-                    list.innerHTML += `<div class="card flex justify-between border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'}">
-                        <div><p class="text-xs font-bold">${d.name}</p><p class="text-[8px] text-gray-500">${d.date}</p></div>
-                        <p class="text-xs font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                    </div>`;
-                });
-                document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
-                document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-                document.getElementById('totalOwner').innerText = to.toLocaleString() + ' kr';
-            });
+        window.setMode = (m) => {
+            currentMode = m;
+            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-4 rounded-2xl font-black bg-green-600 text-xs shadow-lg' : 'flex-1 py-4 rounded-2xl font-black bg-gray-700 text-xs';
+            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-4 rounded-2xl font-black bg-red-600 text-xs shadow-lg' : 'flex-1 py-4 rounded-2xl font-black bg-gray-700 text-xs';
+            let opts = '';
+            for(let key in categories[m]) { opts += `<option value="${key}">${categories[m][key][currentLang]}</option>`; }
+            document.getElementById('typeInput').innerHTML = opts;
         };
 
         window.showSection = (s) => {
@@ -172,16 +187,81 @@
             document.getElementById(activeNav[s]).classList.add('nav-active');
         };
 
-        window.setMode = (m) => {
-            currentMode = m;
-            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl font-bold bg-green-600 text-xs' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700 text-xs';
-            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl font-bold bg-red-600 text-xs' : 'flex-1 py-3 rounded-xl font-bold bg-gray-700 text-xs';
-            const opts = m === 'income' ? ['TaxiCard', 'Cash', 'Invoice'] : ['Salary', 'Fuel', 'Withdrawal', 'Repair'];
-            document.getElementById('typeInput').innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
+        window.saveData = async () => {
+            const amt = parseFloat(document.getElementById('amountInput').value);
+            const name = document.getElementById('nameInput').value || "Xog";
+            const type = document.getElementById('typeInput').value;
+            const date = document.getElementById('dateInput').value;
+            if(!amt || !date) return alert("Fadlan buuxi xogta!");
+            // Waxaan u isticmaalaynaa magaca 'transfers' si aan u hubino in xogtii hore loo helo
+            await addDoc(collection(db, "transfers"), { userId: user.uid, amount: amt, name, typeKey: type, mode: currentMode, date });
+            document.getElementById('amountInput').value = '';
+            showSection('dashboard');
         };
 
+        window.loadData = () => {
+            if(!user) return;
+            // HALKAN AYAA U MUHIIM AH: Waxaan raadinaynaa collection-kii 'transfers'
+            const q = query(collection(db, "transfers"), orderBy("date", "desc"));
+            onSnapshot(q, snap => {
+                let ti=0, te=0, to=0, mva=0, ferie=0;
+                let reports = {}; let reportModes = {};
+                const list = document.getElementById('dashboardSection');
+                list.innerHTML = '';
+
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
+                    if(d.userId !== user.uid) return;
+                    const amt = Number(d.amount);
+                    const typeLabel = categories[d.mode][d.typeKey] ? categories[d.mode][d.typeKey][currentLang] : d.typeKey;
+
+                    if(d.mode === 'income') {
+                        ti += amt; if(d.typeKey === 'Invoice' || d.typeKey === 'Other') mva += (amt * 0.25);
+                    } else {
+                        te += amt; if(d.typeKey === 'Withdrawal') to += amt; if(d.typeKey === 'Salary') ferie += (amt * 0.102); if(['Fuel','Repair','Insurance'].includes(d.typeKey)) mva += (amt / 5);
+                    }
+
+                    reports[typeLabel] = (reports[typeLabel] || 0) + amt;
+                    reportModes[typeLabel] = d.mode;
+
+                    list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'}">
+                        <div>
+                            <p class="text-[10px] text-yellow-400 font-bold uppercase">${d.name}</p>
+                            <p class="text-xs font-bold">${typeLabel}</p>
+                            <p class="text-[9px] text-gray-500">${d.date}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <p class="text-sm font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${isHidden ? '***' : amt.toLocaleString()} kr</p>
+                            <button onclick="handleDelete('${docSnap.id}')" class="text-red-500/50 hover:text-red-500 transition-colors"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>`;
+                });
+
+                const repList = document.getElementById('reportSection');
+                repList.innerHTML = '';
+                for(let label in reports) {
+                    const mColor = reportModes[label] === 'income' ? 'border-green-500 text-green-400' : 'border-red-500 text-red-400';
+                    repList.innerHTML += `<div class="card flex justify-between font-bold text-xs border-l-4 ${mColor}"><span>${label}</span><span class="font-black">${isHidden ? '***' : reports[label].toLocaleString()} kr</span></div>`;
+                }
+
+                const fmt = (v) => isHidden ? '*** kr' : Math.round(v).toLocaleString() + ' kr';
+                document.getElementById('totalIncome').innerText = fmt(ti);
+                document.getElementById('totalExpense').innerText = fmt(te);
+                document.getElementById('totalOwner').innerText = fmt(to);
+                document.getElementById('mvaTax').innerText = fmt(mva);
+                document.getElementById('ferieTax').innerText = fmt(ferie);
+                document.getElementById('netResult').innerText = fmt(ti - te - ferie);
+            });
+        };
+
+        window.handleDelete = async (id) => { if(confirm("Ma hubtaa inaad tirtirto?")) await deleteDoc(doc(db, "transfers", id)); };
+        window.handleAuth = () => {
+            const e = document.getElementById('emailInput').value, p = document.getElementById('passInput').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("Email ama Password-ka waa khalad!"));
+        };
+        window.logout = () => signOut(auth);
+        window.togglePrivacy = () => { isHidden = !isHidden; loadData(); document.getElementById('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'; };
         document.getElementById('dateInput').valueAsDate = new Date();
-        setMode('income');
     </script>
 </body>
 </html>
