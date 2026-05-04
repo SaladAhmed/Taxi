@@ -9,19 +9,19 @@
     <style>
         body { background-color: #1a1c2c; color: white; font-family: sans-serif; }
         .card { background: #252945; border-radius: 15px; padding: 15px; border: 1px solid #30355a; position: relative; }
-        .nav-active { color: #fbbf24 !important; }
         .hidden { display: none !important; }
-        input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; margin-bottom: 10px; outline: none; }
+        input { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; margin-bottom: 10px; outline: none; }
+        #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 2000; display: flex; align-items: center; justify-content: center; p: 20px; }
     </style>
 </head>
 <body class="pb-24">
 
-    <div id="authSection" class="fixed inset-0 bg-[#1a1c2c] z-[2000] flex items-center justify-center p-6">
+    <div id="authSection">
         <div class="bg-[#252945] p-8 rounded-3xl w-full max-w-sm border-t-4 border-yellow-400 text-center">
             <h1 class="text-yellow-400 font-black text-2xl mb-6">M. SALAD LOGIN</h1>
             <input type="email" id="emailInput" placeholder="Email">
             <input type="password" id="passInput" placeholder="Password">
-            <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-black mt-4 uppercase">Gali</button>
+            <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-black mt-4 uppercase">LOGIN</button>
         </div>
     </div>
 
@@ -31,61 +31,38 @@
                 <button onclick="changeLang('so')" class="bg-gray-700 px-3 py-1 rounded text-xs font-bold">SO</button>
                 <button onclick="changeLang('no')" class="bg-yellow-400 text-black px-3 py-1 rounded text-xs font-bold">NO</button>
             </div>
-            <button onclick="logout()" class="text-red-500 font-bold border border-red-500/30 px-3 py-1.5 rounded-lg text-[10px]">LOGOUT</button>
+            <button onclick="logout()" class="text-red-500 font-bold border border-red-500/30 px-3 py-1.5 rounded-lg text-[10px]">KA BAX</button>
         </div>
 
         <h2 class="text-center font-black text-yellow-400 text-xl mb-6 uppercase">M. Salad Transport</h2>
 
         <div class="grid grid-cols-3 gap-2 mb-4">
             <div class="card border-l-4 border-green-500 text-center">
-                <p id="l-inc" class="text-[8px] text-gray-400 font-bold uppercase">Inntekt</p>
+                <p class="text-[8px] text-gray-400 font-bold uppercase">INNTEKT</p>
                 <h3 id="totalIncome" class="text-xs font-black text-green-400">0 kr</h3>
             </div>
             <div class="card border-l-4 border-red-500 text-center">
-                <p id="l-exp" class="text-[8px] text-gray-400 font-bold uppercase">Utgift</p>
+                <p class="text-[8px] text-gray-400 font-bold uppercase">UTGIFT</p>
                 <h3 id="totalExpense" class="text-xs font-black text-red-400">0 kr</h3>
             </div>
             <div class="card border-l-4 border-blue-400 text-center">
-                <p id="l-own" class="text-[8px] text-gray-400 font-bold uppercase">Eier</p>
+                <p class="text-[8px] text-gray-400 font-bold uppercase">EIER</p>
                 <h3 id="totalOwner" class="text-xs font-black text-blue-400">0 kr</h3>
             </div>
         </div>
 
         <div class="card border-2 border-yellow-400/20 text-center py-6 mb-6">
-            <p id="l-net" class="text-[10px] text-yellow-400 font-bold uppercase tracking-widest mb-1">Netto Resultat</p>
+            <p class="text-[10px] text-yellow-400 font-bold uppercase tracking-widest mb-1">NETTO RESULTAT</p>
             <h2 id="netResult" class="text-3xl font-black">0 kr</h2>
         </div>
 
         <div id="dashboardSection" class="section space-y-3"></div>
-        
-        <div id="inputSection" class="section hidden">
-            <div class="card p-6">
-                <div class="flex gap-2 mb-4">
-                    <button onclick="setMode('income')" id="m-inc" class="flex-1 py-3 rounded-lg font-black bg-green-600 text-xs">DAKHLI</button>
-                    <button onclick="setMode('expense')" id="m-exp" class="flex-1 py-3 rounded-lg font-black bg-gray-700 text-xs">KHARASH</button>
-                </div>
-                <input type="date" id="dateInput">
-                <input type="text" id="nameInput" placeholder="Navn / Magaca">
-                <input type="number" id="amountInput" placeholder="Beløp (kr)">
-                <select id="typeInput"></select>
-                <button onclick="saveData()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-black uppercase mt-2">Kaydi (Save)</button>
-            </div>
-        </div>
     </div>
-
-    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-4">
-        <button onclick="showSection('dashboard')" id="n-dash" class="nav-active flex flex-col items-center gap-1">
-            <i class="fas fa-list-ul"></i><span class="text-[10px] font-bold">Oversikt</span>
-        </button>
-        <button onclick="showSection('input')" id="n-inp" class="flex flex-col items-center gap-1">
-            <i class="fas fa-plus-circle"></i><span class="text-[10px] font-bold">Legg til</span>
-        </button>
-    </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
@@ -100,100 +77,51 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let user = null, mode = 'income';
-
         onAuthStateChanged(auth, u => {
-            user = u;
             if(u) {
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                loadData();
+                loadData(u.uid);
             } else {
                 document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
             }
         });
 
-        window.loadData = () => {
-            if(!user) return;
-            const collections = ['transfers', 'xisaabaadka', 'data'];
-            collections.forEach(c => {
-                const q = query(collection(db, c), where("userId", "==", user.uid));
-                onSnapshot(q, snap => render(snap, c));
+        window.loadData = (uid) => {
+            // Wuxuu isku mar raadinayaa transfers iyo xogtaada kale
+            const colls = ['transfers', 'data', 'xisaabaadka'];
+            colls.forEach(c => {
+                const q = query(collection(db, c), where("userId", "==", uid));
+                onSnapshot(q, snap => {
+                    let ti=0, te=0, to=0;
+                    const list = document.getElementById('dashboardSection');
+                    list.innerHTML = '';
+                    snap.forEach(dDoc => {
+                        const d = dDoc.data();
+                        const amt = Number(d.amount);
+                        if(d.mode === 'income') ti += amt; else te += amt;
+                        list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'}">
+                            <div><p class="font-bold text-xs uppercase">${d.name || 'Salad'}</p><p class="text-[9px] text-gray-500">${d.date}</p></div>
+                            <div class="flex items-center gap-4">
+                                <p class="font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
+                                <button onclick="deleteItem('${c}', '${dDoc.id}')" class="text-gray-600"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>`;
+                    });
+                    document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
+                    document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
+                    document.getElementById('netResult').innerText = (ti - te).toLocaleString() + ' kr';
+                });
             });
-        };
-
-        function render(snap, collectionName) {
-            let ti=0, te=0, to=0;
-            const list = document.getElementById('dashboardSection');
-            list.innerHTML = '';
-            snap.forEach(dDoc => {
-                const d = dDoc.data();
-                const amt = Number(d.amount);
-                if(d.mode === 'income') ti += amt; else te += amt;
-                if(d.typeKey === 'Withdrawal' || d.typeKey === 'Eieruttak') to += amt;
-                
-                list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'}">
-                    <div>
-                        <p class="font-bold text-xs uppercase">${d.name || 'Xog'}</p>
-                        <p class="text-[9px] text-gray-500">${d.date}</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <p class="font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                        <button onclick="deleteItem('${collectionName}', '${dDoc.id}')" class="text-gray-600 hover:text-red-500"><i class="fas fa-trash-alt text-xs"></i></button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
-            document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-            document.getElementById('totalOwner').innerText = to.toLocaleString() + ' kr';
-            document.getElementById('netResult').innerText = (ti - te).toLocaleString() + ' kr';
-        }
-
-        window.deleteItem = async (coll, id) => {
-            if(confirm("Ma hubtaa inaad tirtirto?")) {
-                await deleteDoc(doc(db, coll, id));
-            }
         };
 
         window.handleAuth = () => {
             const e = document.getElementById('emailInput').value, p = document.getElementById('passInput').value;
             signInWithEmailAndPassword(auth, e, p).catch(err => alert("Email ama Password khaldan!"));
         };
-
         window.logout = () => signOut(auth);
-
-        window.saveData = async () => {
-            const amt = parseFloat(document.getElementById('amountInput').value);
-            if(!amt) return;
-            await addDoc(collection(db, "transfers"), {
-                userId: user.uid,
-                amount: amt,
-                name: document.getElementById('nameInput').value,
-                mode: mode,
-                typeKey: document.getElementById('typeInput').value,
-                date: document.getElementById('dateInput').value
-            });
-            document.getElementById('amountInput').value = '';
-            showSection('dashboard');
-        };
-
-        window.setMode = (m) => {
-            mode = m;
-            document.getElementById('m-inc').className = m === 'income' ? 'flex-1 py-3 rounded-lg font-black bg-green-600 text-xs' : 'flex-1 py-3 rounded-lg font-black bg-gray-700 text-xs';
-            document.getElementById('m-exp').className = m === 'expense' ? 'flex-1 py-3 rounded-lg font-black bg-red-600 text-xs' : 'flex-1 py-3 rounded-lg font-black bg-gray-700 text-xs';
-            const opts = m === 'income' ? ['TaxiCard', 'Cash', 'Invoice'] : ['Salary', 'Fuel', 'Withdrawal', 'Repair'];
-            document.getElementById('typeInput').innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
-        };
-
-        window.showSection = (s) => {
-            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(s+'Section').classList.remove('hidden');
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById('n-' + (s === 'dashboard' ? 'dash' : 'inp')).classList.add('nav-active');
-        };
-
-        document.getElementById('dateInput').valueAsDate = new Date();
-        setMode('income');
+        window.deleteItem = async (c, id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, c, id)); };
     </script>
 </body>
 </html>
