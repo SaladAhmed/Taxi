@@ -17,6 +17,7 @@
         .hidden { display: none !important; }
         .lang-btn { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.3s; }
         .lang-active { background: #fbbf24 !important; color: black !important; }
+        .blur-val { filter: blur(5px); }
     </style>
 </head>
 <body class="pb-24">
@@ -40,27 +41,30 @@
         <div class="mb-4">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex gap-2">
-                    <button onclick="changeLang('so')" id="btn-so" class="lang-btn bg-gray-700">SO</button>
-                    <button onclick="changeLang('en')" id="btn-en" class="lang-btn bg-gray-700">EN</button>
-                    <button onclick="changeLang('no')" id="btn-no" class="lang-btn bg-gray-700">NO</button>
+                    <button onclick="changeLang('so')" id="btn-so" class="lang-btn bg-gray-700 text-white">SO</button>
+                    <button onclick="changeLang('en')" id="btn-en" class="lang-btn bg-gray-700 text-white">EN</button>
+                    <button onclick="changeLang('no')" id="btn-no" class="lang-btn bg-gray-700 text-white">NO</button>
                 </div>
-                <button onclick="logout()" data-i18n="logout" class="text-red-400 font-bold border border-red-900/30 px-3 py-1 rounded text-xs uppercase">Ka Bax</button>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleVisibility()" class="text-yellow-400 text-xl"><i id="eyeIcon" class="fas fa-eye"></i></button>
+                    <button onclick="logout()" data-i18n="logout" class="text-red-400 font-bold border border-red-900/30 px-3 py-1 rounded text-xs uppercase">Ka Bax</button>
+                </div>
             </div>
             
             <h1 class="text-lg font-black text-yellow-400 uppercase tracking-tighter text-center">Mohamed Salad Transport</h1>
             
             <div class="grid grid-cols-3 gap-2 mt-4 text-center">
-                <div class="card border-l-4 border-green-500 p-2"><p data-i18n="income" class="text-[8px] text-gray-400 uppercase font-bold">Income</p><h2 id="totalIncome" class="text-xs font-bold text-green-400">0 kr</h2></div>
-                <div class="card border-l-4 border-red-500 p-2"><p data-i18n="expense" class="text-[8px] text-gray-400 uppercase font-bold">Kharash</p><h2 id="totalExpense" class="text-xs font-bold text-red-400">0 kr</h2></div>
-                <div class="card border-l-4 border-blue-400 p-2"><p data-i18n="owner" class="text-[8px] text-gray-400 uppercase font-bold text-blue-400">Owner</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2></div>
+                <div class="card border-l-4 border-green-500 p-2"><p data-i18n="income" class="text-[8px] text-gray-400 uppercase font-bold">Income</p><h2 id="totalIncome" class="text-xs font-bold text-green-400 money-val">0 kr</h2></div>
+                <div class="card border-l-4 border-red-500 p-2"><p data-i18n="expense" class="text-[8px] text-gray-400 uppercase font-bold">Kharash</p><h2 id="totalExpense" class="text-xs font-bold text-red-400 money-val">0 kr</h2></div>
+                <div class="card border-l-4 border-blue-400 p-2"><p data-i18n="owner" class="text-[8px] text-gray-400 uppercase font-bold text-blue-400">Owner</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400 money-val">0 kr</h2></div>
             </div>
 
             <div class="card result-card mt-2">
                 <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-orange-400 font-bold text-center">
-                    <div><p data-i18n="mva_refund" class="text-[9px] text-gray-400 uppercase">MVA Refund (1/5)</p><p id="mvaTax" class="text-sm">0 kr</p></div>
-                    <div><p data-i18n="feriepenger" class="text-[9px] text-gray-400 uppercase">Feriepenger</p><p id="ferieTax" class="text-sm">0 kr</p></div>
+                    <div><p data-i18n="mva_refund" class="text-[9px] text-gray-400 uppercase">MVA Refund (1/5)</p><p id="mvaTax" class="text-sm money-val">0 kr</p></div>
+                    <div><p data-i18n="feriepenger" class="text-[9px] text-gray-400 uppercase">Feriepenger</p><p id="ferieTax" class="text-sm money-val">0 kr</p></div>
                 </div>
-                <div class="text-center"><p data-i18n="net_result" class="text-[10px] text-yellow-400 uppercase font-bold">Net Result</p><h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2></div>
+                <div class="text-center"><p data-i18n="net_result" class="text-[10px] text-yellow-400 uppercase font-bold">Net Result</p><h2 id="netResult" class="text-2xl font-black mt-1 money-val">0 kr</h2></div>
             </div>
         </div>
         
@@ -111,6 +115,7 @@
         const db = getFirestore(app);
         let mode = 'income';
         let currentLang = localStorage.getItem('appLang') || 'so';
+        let isHidden = false;
 
         const i18n = {
             so: { income: "Dakhli", expense: "Kharash", owner: "Owner", mva_refund: "MVA Refund (1/5)", feriepenger: "Feriepenger", net_result: "Net Result", logout: "Ka Bax", nav_summary: "Guudmar", nav_report: "Warbixin", nav_add: "Geli Xog", enter_email: "Gali Emailkaaga", placeholder_name: "Magaca", placeholder_amt: "Lacagta (Kr)", btn_save: "Kaydi Xogta" },
@@ -136,6 +141,13 @@
             };
             if (currentLang === 'so') return catName;
             return (map[catName] && map[catName][currentLang]) ? map[catName][currentLang] : catName;
+        };
+
+        window.toggleVisibility = () => {
+            isHidden = !isHidden;
+            const icon = document.getElementById('eyeIcon');
+            icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+            loadData();
         };
 
         window.changeLang = (lang) => {
@@ -217,26 +229,30 @@
                         if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap','Accounting'].some(v => d.type.includes(v))) mvaSum += (d.amount / 5);
                     }
                     catTotals[translatedType] = (catTotals[translatedType] || 0) + d.amount;
+                    
+                    const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
                     list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
                         <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p><p class="text-sm font-bold">${translatedType}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
-                        <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${Math.round(d.amount).toLocaleString()} kr</p>
+                        <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${displayAmt}</p>
                         <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-500"><i class="fas fa-ellipsis-v"></i></button>
                         <div id="menu-${docSnap.id}" class="menu-dropdown"><div class="p-3 text-red-500 text-sm font-bold" onclick="deleteItem('${docSnap.id}')">TIRTIR</div></div></div></div>`;
                 });
 
                 for (const [cat, total] of Object.entries(catTotals)) {
                     const isInc = snapshot.docs.find(doc => translateCat(doc.data().type) === cat)?.data().mode === 'income';
+                    const displayTotal = isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr";
                     statsList.innerHTML += `<div class="card flex justify-between border-r-4 ${isInc?'border-green-500':'border-red-500'}">
-                        <span class="text-sm">${cat}</span><span class="font-bold ${isInc?'text-green-400':'text-red-400'}">${Math.round(total).toLocaleString()} kr</span></div>`;
+                        <span class="text-sm">${cat}</span><span class="font-bold ${isInc?'text-green-400':'text-red-400'}">${displayTotal}</span></div>`;
                 }
 
-                document.getElementById('totalIncome').innerText = Math.round(ti).toLocaleString() + ' kr';
-                document.getElementById('totalExpense').innerText = Math.round(te).toLocaleString() + ' kr';
-                document.getElementById('totalOwner').innerText = Math.round(ownerSum).toLocaleString() + ' kr';
-                document.getElementById('mvaTax').innerText = Math.round(mvaSum).toLocaleString() + ' kr';
-                document.getElementById('ferieTax').innerText = Math.round(totalFP).toLocaleString() + ' kr';
+                const format = (v) => isHidden ? "**** kr" : Math.round(v).toLocaleString() + " kr";
+                document.getElementById('totalIncome').innerText = format(ti);
+                document.getElementById('totalExpense').innerText = format(te);
+                document.getElementById('totalOwner').innerText = format(ownerSum);
+                document.getElementById('mvaTax').innerText = format(mvaSum);
+                document.getElementById('ferieTax').innerText = format(totalFP);
                 const net = ti - te - totalFP;
-                document.getElementById('netResult').innerText = Math.round(net).toLocaleString() + ' kr';
+                document.getElementById('netResult').innerText = format(net);
                 document.getElementById('netResult').style.color = net < 0 ? '#f87171' : '#4ade80';
             });
         }
