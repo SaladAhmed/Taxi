@@ -13,7 +13,7 @@
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; }
         .menu-dropdown { display: none; position: absolute; right: 10px; top: 45px; background: #30355a; border: 1px solid #404677; border-radius: 8px; z-index: 50; min-width: 140px; }
         .menu-dropdown.active { display: block; }
-        #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .hidden { display: none !important; }
         .lang-btn { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.3s; }
         .lang-active { background: #fbbf24 !important; color: black !important; }
@@ -21,25 +21,22 @@
 </head>
 <body class="pb-24">
 
-    <!-- LOGIN SCREEN -->
     <div id="authSection">
         <div class="w-full max-w-sm text-center">
             <h1 class="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-widest">M. Salad Transport</h1>
             <div class="card p-6 border-t-4 border-yellow-400">
-                <p data-i18n="enter_email" class="text-gray-400 mb-4 text-sm font-bold uppercase">Gali Emailkaaga</p>
+                <h2 id="authTitle" class="text-white font-bold mb-4 uppercase">Login</h2>
                 <input type="email" id="emailInput" placeholder="Email" class="mb-3">
                 <input type="password" id="passInput" placeholder="Password" class="mb-4">
-                <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg mb-4">Login</button>
-                
-                <!-- Reset Password Button -->
-                <button onclick="resetPassword()" class="text-yellow-400 text-xs font-bold uppercase hover:underline">Forgot Password?</button>
-                
-                <p id="authError" class="text-red-500 mt-3 text-xs hidden"></p>
+                <button id="mainAuthBtn" onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg mb-4">Login</button>
+                <div class="flex flex-col gap-3">
+                    <button id="toggleAuthBtn" onclick="toggleAuthMode()" class="text-gray-400 text-xs font-bold uppercase">Ma haysatid Account? Sign Up</button>
+                    <button onclick="resetPassword()" class="text-yellow-400 text-[10px] font-bold uppercase hover:underline">Forgot Password?</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="mb-4">
             <div class="flex justify-between items-center mb-4">
@@ -50,8 +47,12 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <button onclick="toggleVisibility()" class="text-yellow-400 text-xl"><i id="eyeIcon" class="fas fa-eye"></i></button>
-                    <button onclick="logout()" data-i18n="logout" class="text-red-400 font-bold border border-red-900/30 px-3 py-1 rounded text-xs uppercase">Ka Bax</button>
+                    <button onclick="logout()" class="text-red-400 font-bold border border-red-900/30 px-3 py-1 rounded text-xs uppercase">Ka Bax</button>
                 </div>
+            </div>
+
+            <div id="profileSection" class="mb-4 text-right">
+                <button onclick="confirmDeleteUser()" class="text-[9px] text-gray-500 uppercase border border-gray-700 px-2 py-1 rounded hover:text-red-500 transition">Tirtir Akoonkayga</button>
             </div>
             
             <h1 class="text-lg font-black text-yellow-400 uppercase tracking-tighter text-center">Mohamed Salad Transport</h1>
@@ -91,7 +92,6 @@
         </div>
     </div>
 
-    <!-- Navigation -->
     <nav id="bottomNav" class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 z-50 hidden">
         <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center"><i class="fas fa-list-ul text-xl"></i><span data-i18n="nav_summary" class="text-[10px]">Guudmar</span></button>
         <button onclick="showSection('stats')" id="nav-stats" class="nav-btn flex flex-col items-center"><i class="fas fa-chart-pie text-xl"></i><span data-i18n="nav_report" class="text-[10px]">Warbixin</span></button>
@@ -100,8 +100,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
@@ -116,81 +116,61 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
+        let isSignUpMode = false;
+        let currentUser = null;
         let mode = 'income';
         let currentLang = localStorage.getItem('appLang') || 'so';
         let isHidden = false;
 
-        // Reset Password Function
-        window.resetPassword = () => {
-            const email = document.getElementById('emailInput').value;
-            if (!email) {
-                alert("Fadlan marka hore email-kaaga ku qor meesha sare!");
-                return;
-            }
-            sendPasswordResetEmail(auth, email)
-                .then(() => {
-                    alert("Link-ga password-ka lagu beddelo waxaa loo diray: " + email + ". Fadlan fiiri email-kaaga (Inbox ama Spam).");
-                })
-                .catch((error) => {
-                    alert("Khalad: " + error.message);
-                });
-        };
-
-        const i18n = {
-            so: { income: "Dakhli", expense: "Kharash", owner: "Owner", mva_refund: "MVA Refund (1/5)", feriepenger: "Feriepenger", net_result: "Net Result", logout: "Ka Bax", nav_summary: "Guudmar", nav_report: "Warbixin", nav_add: "Geli Xog", enter_email: "Gali Emailkaaga", placeholder_name: "Magaca", placeholder_amt: "Lacagta (Kr)", btn_save: "Kaydi Xogta" },
-            en: { income: "Income", expense: "Expense", owner: "Owner", mva_refund: "VAT Refund", feriepenger: "Holiday Pay", net_result: "Net Profit", logout: "Logout", nav_summary: "Summary", nav_report: "Report", nav_add: "Add Entry", enter_email: "Enter Email", placeholder_name: "Name", placeholder_amt: "Amount (Kr)", btn_save: "Save Data" },
-            no: { income: "Inntekt", expense: "Utgift", owner: "Eier", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Netto Resultat", logout: "Logg ut", nav_summary: "Oversikt", nav_report: "Rapport", nav_add: "Legg til", enter_email: "Skriv e-post", placeholder_name: "Navn", placeholder_amt: "Beløp (Kr)", btn_save: "Lagre" }
-        };
-
-        const categories = {
-            income: { so: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'], en: ['Taxi Card', 'Cash', 'Invoice', 'Other'], no: ['Taxi Kort', 'Kontanter', 'Faktura', 'Annet'] },
-            expense: { so: ['Mushaar (Lønn)', 'Bankuttak (Owner)', 'Skatt', 'Transaksjonsgebyr', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale'], en: ['Salary', 'Withdrawal', 'Tax', 'Fee', 'Fuel', 'Repair', 'Accounting', 'Base Fees', 'Insurance', 'Other'], no: ['Lønn', 'Eieruttak', 'Skatt', 'Gebyr', 'Drivstoff', 'Reparasjon', 'Regnskap', 'Avgifter', 'Forsikring', 'Annet'] }
-        };
-
-        const translateCat = (catName) => {
-            const map = {
-                'Shidaal': { en: 'Fuel', no: 'Drivstoff' },
-                'Drivstoff': { so: 'Shidaal', en: 'Fuel' },
-                'Dayactir': { en: 'Repair', no: 'Reparasjon' },
-                'Mushaar (Lønn)': { en: 'Salary', no: 'Lønn' },
-                'Bankuttak (Owner)': { en: 'Withdrawal', no: 'Eieruttak' },
-                'Regnskap': { en: 'Accounting', no: 'Regnskap' },
-                'Forsikring': { en: 'Insurance', no: 'Forsikring' },
-                'Wax kale': { en: 'Other', no: 'Annet' }
-            };
-            if (currentLang === 'so') return catName;
-            return (map[catName] && map[catName][currentLang]) ? map[catName][currentLang] : catName;
-        };
-
-        window.toggleVisibility = () => {
-            isHidden = !isHidden;
-            const icon = document.getElementById('eyeIcon');
-            icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
-            loadData();
-        };
-
-        window.changeLang = (lang) => {
-            currentLang = lang;
-            localStorage.setItem('appLang', lang);
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                el.innerText = i18n[lang][el.getAttribute('data-i18n')];
-            });
-            document.getElementById('nameInput').placeholder = i18n[lang].placeholder_name;
-            document.getElementById('amountInput').placeholder = i18n[lang].placeholder_amt;
-            document.getElementById('btnSave').innerText = i18n[lang].btn_save;
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('lang-active'));
-            document.getElementById('btn-' + lang).classList.add('lang-active');
-            setMode(mode);
-            loadData();
+        window.toggleAuthMode = () => {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('authTitle').innerText = isSignUpMode ? 'Sign Up' : 'Login';
+            document.getElementById('mainAuthBtn').innerText = isSignUpMode ? 'Create Account' : 'Login';
+            document.getElementById('toggleAuthBtn').innerText = isSignUpMode ? 'Haysataa Account? Login' : 'Ma haysatid Account? Sign Up';
         };
 
         window.handleAuth = () => {
-            signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value).catch(() => alert("Email ama Password kaaga ayaa khaldan!"));
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            if(!email || !pass) return alert("Buuxi meelaha banaan");
+            if(isSignUpMode) createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
+            else signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email/Password khaldan"));
+        };
+
+        window.resetPassword = () => {
+            const email = document.getElementById('emailInput').value;
+            if (!email) return alert("Qor emailkaaga");
+            sendPasswordResetEmail(auth, email).then(() => alert("Link waa la diray")).catch(e => alert(e.message));
         };
 
         window.logout = () => signOut(auth);
 
+        // --- NEW: DELETE USER & DATA ---
+        window.confirmDeleteUser = async () => {
+            const confirmed = confirm("DIGNIN: Ma hubtaa inaad tirtirto akoonkaaga iyo dhammaan xogtaada? Lama soo celin karo!");
+            if (!confirmed) return;
+
+            try {
+                const user = auth.currentUser;
+                // 1. Tirtir dhammaan xogta xisaabaadka ee Firestore u taal qofkan
+                const q = query(collection(db, "xisaabaadka"), where("userId", "==", user.uid));
+                const querySnapshot = await getDocs(q);
+                const batch = writeBatch(db);
+                querySnapshot.forEach((doc) => batch.delete(doc.ref));
+                await batch.commit();
+
+                // 2. Tirtir qofka naftiisa (Authentication)
+                await deleteUser(user);
+                alert("Akoonkaagii waa la tirtiray.");
+            } catch (error) {
+                console.error(error);
+                alert("Khalad ayaa dhacay. Waxaa laga yaabaa inaad u baahan tahay inaad dib u gasho (Re-login) ka hor intaanan tirtirin akoonka.");
+            }
+        };
+
         onAuthStateChanged(auth, (user) => {
+            currentUser = user;
             if (user) {
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
@@ -203,6 +183,27 @@
             }
         });
 
+        const i18n = {
+            so: { income: "Dakhli", expense: "Kharash", owner: "Owner", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Net Result", placeholder_name: "Magaca", placeholder_amt: "Lacagta (Kr)", btn_save: "Kaydi" },
+            en: { income: "Income", expense: "Expense", owner: "Owner", mva_refund: "VAT Refund", feriepenger: "Holiday Pay", net_result: "Net Profit", placeholder_name: "Name", placeholder_amt: "Amount (Kr)", btn_save: "Save" },
+            no: { income: "Inntekt", expense: "Utgift", owner: "Eier", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Netto Resultat", placeholder_name: "Navn", placeholder_amt: "Beløp (Kr)", btn_save: "Lagre" }
+        };
+
+        const categories = {
+            income: { so: ['Kaarka Taksi', 'Caddaan', 'Faktura (Income)', 'Wax kale'], en: ['Taxi Card', 'Cash', 'Invoice', 'Other'], no: ['Taxi Kort', 'Kontanter', 'Faktura', 'Annet'] },
+            expense: { so: ['Mushaar (Lønn)', 'Bankuttak (Owner)', 'Skatt', 'Shidaal', 'Dayactir', 'Regnskap', 'Sentral Avgifter', 'Forsikring', 'Wax kale'], en: ['Salary', 'Withdrawal', 'Tax', 'Fuel', 'Repair', 'Accounting', 'Base Fees', 'Insurance', 'Other'], no: ['Lønn', 'Eieruttak', 'Skatt', 'Drivstoff', 'Reparasjon', 'Regnskap', 'Avgifter', 'Forsikring', 'Annet'] }
+        };
+
+        window.toggleVisibility = () => { isHidden = !isHidden; loadData(); document.getElementById('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'; };
+        window.changeLang = (lang) => {
+            currentLang = lang; localStorage.setItem('appLang', lang);
+            document.querySelectorAll('[data-i18n]').forEach(el => el.innerText = i18n[lang][el.getAttribute('data-i18n')]);
+            document.getElementById('nameInput').placeholder = i18n[lang].placeholder_name;
+            document.getElementById('amountInput').placeholder = i18n[lang].placeholder_amt;
+            document.getElementById('btnSave').innerText = i18n[lang].btn_save;
+            setMode(mode); loadData();
+        };
+
         window.setMode = (m) => {
             mode = m;
             document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl bg-green-500 text-white' : 'flex-1 py-3 rounded-xl bg-gray-700';
@@ -213,24 +214,27 @@
         window.showSection = (s) => {
             document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
             document.getElementById(s + 'Section').classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.className = "nav-btn flex flex-col items-center text-gray-400");
-            document.getElementById('nav-' + s).className = "nav-btn flex flex-col items-center text-yellow-400";
         };
 
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
-            if(!amt || !date) return;
-            await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, name: document.getElementById('nameInput').value || "Info", type: document.getElementById('typeInput').value, mode: mode });
-            document.getElementById('amountInput').value = '';
-            showSection('dashboard');
+            if(!amt || !date || !currentUser) return;
+            await addDoc(collection(db, "xisaabaadka"), { 
+                amount: amt, date: date, name: document.getElementById('nameInput').value || "Info", 
+                type: document.getElementById('typeInput').value, mode: mode, 
+                userId: currentUser.uid 
+            });
+            document.getElementById('amountInput').value = ''; showSection('dashboard');
         };
 
-        window.deleteItem = async (id) => { if(confirm("Ma hubtaa inaad tirtirto?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.deleteItem = async (id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
         window.toggleMenu = (id) => document.getElementById('menu-'+id).classList.toggle('active');
 
         function loadData() {
-            onSnapshot(query(collection(db, "xisaabaadka"), orderBy("date", "desc")), (snapshot) => {
+            if(!currentUser) return;
+            const q = query(collection(db, "xisaabaadka"), where("userId", "==", currentUser.uid), orderBy("date", "desc"));
+            onSnapshot(q, (snapshot) => {
                 const list = document.getElementById('transactionList');
                 const statsList = document.getElementById('categoryTotals');
                 list.innerHTML = ''; statsList.innerHTML = '';
@@ -239,7 +243,6 @@
 
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
-                    const translatedType = translateCat(d.type);
                     if(d.mode === 'income') ti += d.amount;
                     else {
                         te += d.amount;
@@ -247,21 +250,20 @@
                         if(d.type.includes('Lønn') || d.type.includes('Salary')) totalFP += (d.amount * 0.102);
                         if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap','Accounting'].some(v => d.type.includes(v))) mvaSum += (d.amount / 5);
                     }
-                    catTotals[translatedType] = (catTotals[translatedType] || 0) + d.amount;
+                    catTotals[d.type] = (catTotals[d.type] || 0) + d.amount;
                     
                     const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
                     list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
-                        <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p><p class="text-sm font-bold">${translatedType}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                        <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
                         <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${displayAmt}</p>
                         <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-500"><i class="fas fa-ellipsis-v"></i></button>
                         <div id="menu-${docSnap.id}" class="menu-dropdown"><div class="p-3 text-red-500 text-sm font-bold" onclick="deleteItem('${docSnap.id}')">TIRTIR</div></div></div></div>`;
                 });
 
                 for (const [cat, total] of Object.entries(catTotals)) {
-                    const isInc = snapshot.docs.find(doc => translateCat(doc.data().type) === cat)?.data().mode === 'income';
                     const displayTotal = isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr";
-                    statsList.innerHTML += `<div class="card flex justify-between border-r-4 ${isInc?'border-green-500':'border-red-500'}">
-                        <span class="text-sm">${cat}</span><span class="font-bold ${isInc?'text-green-400':'text-red-400'}">${displayTotal}</span></div>`;
+                    statsList.innerHTML += `<div class="card flex justify-between border-r-4 border-yellow-500">
+                        <span class="text-sm">${cat}</span><span class="font-bold">${displayTotal}</span></div>`;
                 }
 
                 const format = (v) => isHidden ? "**** kr" : Math.round(v).toLocaleString() + " kr";
