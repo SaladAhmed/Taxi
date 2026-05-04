@@ -1,7 +1,160 @@
-function loadData() {
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mohamed Salad Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #1a1c2c; color: white; font-family: -apple-system, sans-serif; }
+        .card { background: #252945; border-radius: 12px; padding: 10px; margin-bottom: 8px; border: 1px solid #30355a; position: relative; }
+        .result-card { background: linear-gradient(135deg, #30355a 0%, #1a1c2c 100%); border: 2px solid #fbbf24; }
+        input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; }
+        .menu-dropdown { display: none; position: absolute; right: 10px; top: 45px; background: #30355a; border: 1px solid #404677; border-radius: 8px; z-index: 50; min-width: 140px; }
+        .menu-dropdown.active { display: block; }
+        #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .hidden { display: none !important; }
+        .lang-btn { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.3s; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- AUTH SCREEN -->
+    <div id="authSection">
+        <div class="w-full max-w-sm text-center">
+            <h1 class="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-widest">M. Salad Transport</h1>
+            <div class="card p-6 border-t-4 border-yellow-400">
+                <h2 id="authTitle" class="text-white font-bold mb-4 uppercase">Login</h2>
+                <input type="email" id="emailInput" placeholder="Email" class="mb-3">
+                <input type="password" id="passInput" placeholder="Password" class="mb-4">
+                <button id="mainAuthBtn" onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg mb-4">Login</button>
+                <div class="flex flex-col gap-3">
+                    <button id="toggleAuthBtn" onclick="toggleAuthMode()" class="text-gray-400 text-xs font-bold uppercase">Ma haysatid Account? Sign Up</button>
+                    <button onclick="resetPassword()" class="text-yellow-400 text-[10px] font-bold uppercase hover:underline">Forgot Password?</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden p-4">
+        <div class="mb-4">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex gap-2">
+                    <button onclick="changeLang('so')" id="btn-so" class="lang-btn bg-gray-700 text-white">SO</button>
+                    <button onclick="changeLang('en')" id="btn-en" class="lang-btn bg-gray-700 text-white">EN</button>
+                    <button onclick="changeLang('no')" id="btn-no" class="lang-btn bg-gray-700 text-white">NO</button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleVisibility()" class="text-yellow-400 text-xl"><i id="eyeIcon" class="fas fa-eye"></i></button>
+                    <button onclick="logout()" class="text-red-400 font-bold border border-red-900/30 px-3 py-1 rounded text-xs uppercase">Ka Bax</button>
+                </div>
+            </div>
+            <div id="profileSection" class="mb-4 text-right">
+                <button onclick="confirmDeleteUser()" class="text-[9px] text-gray-500 uppercase border border-gray-700 px-2 py-1 rounded">Tirtir Akoonkayga</button>
+            </div>
+            <h1 class="text-lg font-black text-yellow-400 uppercase tracking-tighter text-center">Mohamed Salad Transport</h1>
+            <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+                <div class="card border-l-4 border-green-500 p-2"><p data-i18n="income" class="text-[8px] text-gray-400 uppercase font-bold">Income</p><h2 id="totalIncome" class="text-xs font-bold text-green-400">0 kr</h2></div>
+                <div class="card border-l-4 border-red-500 p-2"><p data-i18n="expense" class="text-[8px] text-gray-400 uppercase font-bold">Kharash</p><h2 id="totalExpense" class="text-xs font-bold text-red-400">0 kr</h2></div>
+                <div class="card border-l-4 border-blue-400 p-2"><p data-i18n="owner" class="text-[8px] text-gray-400 uppercase font-bold text-blue-400">Owner</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2></div>
+            </div>
+            <div class="card result-card mt-2">
+                <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-orange-400 font-bold text-center">
+                    <div><p data-i18n="mva_refund" class="text-[9px] text-gray-400 uppercase">MVA Refund</p><p id="mvaTax" class="text-sm">0 kr</p></div>
+                    <div><p data-i18n="feriepenger" class="text-[9px] text-gray-400 uppercase">Feriepenger</p><p id="ferieTax" class="text-sm">0 kr</p></div>
+                </div>
+                <div class="text-center"><p data-i18n="net_result" class="text-[10px] text-yellow-400 uppercase font-bold">Net Result</p><h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2></div>
+            </div>
+        </div>
+        <div id="dashboardSection" class="section"><div id="transactionList" class="space-y-2"></div></div>
+        <div id="statsSection" class="section hidden"><div id="categoryTotals" class="space-y-2"></div></div>
+        <div id="inputSection" class="section hidden">
+            <div class="card p-4">
+                <div class="flex gap-2 mb-6 font-bold uppercase text-xs">
+                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl">Income ↑</button>
+                    <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl">Kharash ↓</button>
+                </div>
+                <div class="space-y-4">
+                    <input type="date" id="dateInput">
+                    <input type="text" id="nameInput">
+                    <input type="number" id="amountInput">
+                    <select id="typeInput"></select>
+                    <button onclick="saveEntry()" id="btnSave" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-black mt-4 uppercase">Kaydi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav id="bottomNav" class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 z-50 hidden">
+        <button onclick="showSection('dashboard')" class="flex flex-col items-center"><i class="fas fa-list-ul"></i><span data-i18n="nav_summary" class="text-[10px]">Guudmar</span></button>
+        <button onclick="showSection('stats')" class="flex flex-col items-center"><i class="fas fa-chart-pie"></i><span data-i18n="nav_report" class="text-[10px]">Warbixin</span></button>
+        <button onclick="showSection('input')" class="flex flex-col items-center"><i class="fas fa-plus-circle"></i><span data-i18n="nav_add" class="text-[10px]">Geli Xog</span></button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
+            authDomain: "mohamed-salad-transport.firebaseapp.com",
+            projectId: "mohamed-salad-transport",
+            storageBucket: "mohamed-salad-transport.firebasestorage.app",
+            messagingSenderId: "608716442795",
+            appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
+            measurementId: "G-VJTX0THFK5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUser = null;
+        let mode = 'income';
+        let currentLang = localStorage.getItem('appLang') || 'so';
+        let isHidden = false;
+
+        window.toggleAuthMode = () => {
+            const isSignUp = document.getElementById('authTitle').innerText === 'Login';
+            document.getElementById('authTitle').innerText = isSignUp ? 'Sign Up' : 'Login';
+            document.getElementById('mainAuthBtn').innerText = isSignUp ? 'Create Account' : 'Login';
+            document.getElementById('toggleAuthBtn').innerText = isSignUp ? 'Haysataa Account? Login' : 'Ma haysatid Account? Sign Up';
+        };
+
+        window.handleAuth = () => {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            const isSignUp = document.getElementById('authTitle').innerText === 'Sign Up';
+            if(isSignUp) createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
+            else signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email/Password khaldan"));
+        };
+
+        window.resetPassword = () => {
+            const email = document.getElementById('emailInput').value;
+            if (email) sendPasswordResetEmail(auth, email).then(() => alert("Link waa la diray")).catch(e => alert(e.message));
+        };
+
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('bottomNav').classList.remove('hidden');
+                loadData();
+            } else {
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('bottomNav').classList.add('hidden');
+            }
+        });
+
+        window.loadData = function() {
             if(!currentUser) return;
             const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
-            
             onSnapshot(q, (snapshot) => {
                 const list = document.getElementById('transactionList');
                 const statsList = document.getElementById('categoryTotals');
@@ -11,8 +164,6 @@ function loadData() {
 
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
-                    
-                    // SHURUDDA: I tusi haddii ay userId-kayga leedahay AMA haddii aysan haba yaraatee userId lahayn (Xogtii hore)
                     if (!d.userId || d.userId === currentUser.uid) {
                         if(d.mode === 'income') ti += d.amount;
                         else {
@@ -22,20 +173,16 @@ function loadData() {
                             if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap','Accounting'].some(v => d.type.includes(v))) mvaSum += (d.amount / 5);
                         }
                         catTotals[d.type] = (catTotals[d.type] || 0) + d.amount;
-                        
                         const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
                         list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
                             <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
                             <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${displayAmt}</p>
-                            <button onclick="toggleMenu('${docSnap.id}')" class="text-gray-500"><i class="fas fa-ellipsis-v"></i></button>
-                            <div id="menu-${docSnap.id}" class="menu-dropdown"><div class="p-3 text-red-500 text-sm font-bold" onclick="deleteItem('${docSnap.id}')">TIRTIR</div></div></div></div>`;
+                            <button onclick="deleteItem('${docSnap.id}')" class="text-red-500 text-xs">Tirtir</button></div></div>`;
                     }
                 });
 
                 for (const [cat, total] of Object.entries(catTotals)) {
-                    const displayTotal = isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr";
-                    statsList.innerHTML += `<div class="card flex justify-between border-r-4 border-yellow-500">
-                        <span class="text-sm">${cat}</span><span class="font-bold">${displayTotal}</span></div>`;
+                    statsList.innerHTML += `<div class="card flex justify-between border-r-4 border-yellow-500"><span>${cat}</span><span class="font-bold">${isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr"}</span></div>`;
                 }
 
                 const format = (v) => isHidden ? "**** kr" : Math.round(v).toLocaleString() + " kr";
@@ -44,8 +191,38 @@ function loadData() {
                 document.getElementById('totalOwner').innerText = format(ownerSum);
                 document.getElementById('mvaTax').innerText = format(mvaSum);
                 document.getElementById('ferieTax').innerText = format(totalFP);
-                const net = ti - te - totalFP;
-                document.getElementById('netResult').innerText = format(net);
-                document.getElementById('netResult').style.color = net < 0 ? '#f87171' : '#4ade80';
+                document.getElementById('netResult').innerText = format(ti - te - totalFP);
             });
-        }
+        };
+
+        window.saveEntry = async () => {
+            const amt = parseFloat(document.getElementById('amountInput').value);
+            const date = document.getElementById('dateInput').value;
+            if(amt && date) {
+                await addDoc(collection(db, "xisaabaadka"), { 
+                    amount: amt, date: date, name: document.getElementById('nameInput').value || "Info", 
+                    type: document.getElementById('typeInput').value, mode: mode, userId: currentUser.uid 
+                });
+                document.getElementById('amountInput').value = '';
+                showSection('dashboard');
+            }
+        };
+
+        window.deleteItem = async (id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.showSection = (s) => {
+            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(s + 'Section').classList.remove('hidden');
+        };
+        window.setMode = (m) => {
+            mode = m;
+            const cats = { income: ['Kaarka Taksi', 'Caddaan', 'Faktura', 'Wax kale'], expense: ['Mushaar', 'Bankuttak', 'Skatt', 'Shidaal', 'Dayactir', 'Regnskap', 'Forsikring', 'Wax kale'] };
+            document.getElementById('typeInput').innerHTML = cats[m].map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('modeInc').style.background = m === 'income' ? '#22c55e' : '#374151';
+            document.getElementById('modeExp').style.background = m === 'expense' ? '#ef4444' : '#374151';
+        };
+        window.toggleVisibility = () => { isHidden = !isHidden; loadData(); document.getElementById('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'; };
+        document.getElementById('dateInput').valueAsDate = new Date();
+        setMode('income');
+    </script>
+</body>
+</html>
