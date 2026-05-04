@@ -21,6 +21,7 @@
 </head>
 <body class="pb-24">
 
+    <!-- LOGIN SCREEN -->
     <div id="authSection">
         <div class="w-full max-w-sm text-center">
             <h1 class="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-widest">M. Salad Transport</h1>
@@ -37,6 +38,7 @@
         </div>
     </div>
 
+    <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="mb-4">
             <div class="flex justify-between items-center mb-4">
@@ -73,7 +75,7 @@
         <div id="inputSection" class="section hidden">
             <div class="card p-4">
                 <div class="flex gap-2 mb-6 font-bold uppercase text-xs">
-                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl bg-green-500 text-white">Income ↑</button>
+                    <button onclick="setMode('income')" id="modeInc" class="flex-1 py-3 rounded-xl bg-green-600 text-white shadow-lg">Income ↑</button>
                     <button onclick="setMode('expense')" id="modeExp" class="flex-1 py-3 rounded-xl bg-gray-700">Kharash ↓</button>
                 </div>
                 <div class="space-y-2">
@@ -83,9 +85,6 @@
                     <select id="typeInput"></select>
                     <button onclick="saveEntry()" id="btnSave" class="w-full bg-yellow-400 text-black py-4 rounded-2xl font-black mt-4 uppercase">Kaydi</button>
                 </div>
-            </div>
-            <div class="text-center mt-8">
-                <button onclick="confirmDeleteUser()" class="text-[10px] text-red-500 border border-red-900/30 px-4 py-2 rounded uppercase">Tirtir Akoonkayga</button>
             </div>
         </div>
     </div>
@@ -98,8 +97,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
@@ -107,23 +106,18 @@
             projectId: "mohamed-salad-transport",
             storageBucket: "mohamed-salad-transport.firebasestorage.app",
             messagingSenderId: "608716442795",
-            appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
-            measurementId: "G-VJTX0THFK5"
+            appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        let currentUser = null;
-        let mode = 'income';
-        let isHidden = false;
-        let currentLang = localStorage.getItem('appLang') || 'so';
+        let currentUser = null, mode = 'income', isHidden = false, currentLang = localStorage.getItem('appLang') || 'so';
 
         const i18n = {
-            so: { income: "Dakhli", expense: "Kharash", owner: "Owner", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Net Result", nav_summary: "Guudmar", nav_report: "Warbixin", nav_add: "Geli Xog", p_name: "Magaca", p_amt: "Lacagta (Kr)", btn_s: "Kaydi" },
-            en: { income: "Income", expense: "Expense", owner: "Owner", mva_refund: "VAT Refund", feriepenger: "Holiday Pay", net_result: "Net Profit", nav_summary: "Summary", nav_report: "Report", nav_add: "Add Entry", p_name: "Name", p_amt: "Amount (Kr)", btn_s: "Save" },
-            no: { income: "Inntekt", expense: "Utgift", owner: "Eier", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Netto Resultat", nav_summary: "Oversikt", nav_report: "Rapport", nav_add: "Legg til", p_name: "Navn", p_amt: "Beløp (Kr)", btn_s: "Lagre" }
+            so: { income: "Dakhli", expense: "Kharash", owner: "Owner", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Net Result", nav_summary: "Guudmar", nav_report: "Warbixin", nav_add: "Geli Xog" },
+            en: { income: "Income", expense: "Expense", owner: "Owner", mva_refund: "VAT Refund", feriepenger: "Holiday Pay", net_result: "Net Profit", nav_summary: "Summary", nav_report: "Report", nav_add: "Add Entry" },
+            no: { income: "Inntekt", expense: "Utgift", owner: "Eier", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Netto Resultat", nav_summary: "Oversikt", nav_report: "Rapport", nav_add: "Legg til" }
         };
 
         const cats = {
@@ -139,20 +133,9 @@
         };
 
         window.handleAuth = () => {
-            const email = document.getElementById('emailInput').value;
-            const pass = document.getElementById('passInput').value;
-            if(!email || !pass) return alert("Fadlan buuxi!");
-            if(document.getElementById('authTitle').innerText === 'Sign Up') {
-                createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
-            } else {
-                signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email ama Password khaldan!"));
-            }
-        };
-
-        window.resetPassword = () => {
-            const email = document.getElementById('emailInput').value;
-            if(email) sendPasswordResetEmail(auth, email).then(() => alert("Link-ga password-ka waa lagu soo diray!")).catch(e => alert(e.message));
-            else alert("Qor Email-kaaga marka hore");
+            const email = document.getElementById('emailInput').value, pass = document.getElementById('passInput').value;
+            if(document.getElementById('authTitle').innerText === 'Sign Up') createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
+            else signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email/Pass khaldan"));
         };
 
         window.logout = () => signOut(auth);
@@ -172,44 +155,6 @@
             }
         });
 
-        window.changeLang = (lang) => {
-            currentLang = lang;
-            localStorage.setItem('appLang', lang);
-            document.querySelectorAll('[data-i18n]').forEach(el => el.innerText = i18n[lang][el.getAttribute('data-i18n')]);
-            document.getElementById('nameInput').placeholder = i18n[lang].p_name;
-            document.getElementById('amountInput').placeholder = i18n[lang].p_amt;
-            document.getElementById('btnSave').innerText = i18n[lang].btn_s;
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
-            document.getElementById('btn-' + lang).classList.add('active-lang');
-            setMode(mode);
-        };
-
-        window.setMode = (m) => {
-            mode = m;
-            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl bg-green-500 text-white' : 'flex-1 py-3 rounded-xl bg-gray-700';
-            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl bg-red-500 text-white' : 'flex-1 py-3 rounded-xl bg-gray-700';
-            document.getElementById('typeInput').innerHTML = cats[m][currentLang].map(c => `<option value="${c}">${c}</option>`).join('');
-        };
-
-        window.showSection = (s) => {
-            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(s + 'Section').classList.remove('hidden');
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById('nav-' + s).classList.add('active');
-        };
-
-        window.saveEntry = async () => {
-            const amt = parseFloat(document.getElementById('amountInput').value);
-            const date = document.getElementById('dateInput').value;
-            if(!amt || !date || !currentUser) return;
-            await addDoc(collection(db, "xisaabaadka"), {
-                amount: amt, date: date, name: document.getElementById('nameInput').value || "Info",
-                type: document.getElementById('typeInput').value, mode: mode, userId: currentUser.uid
-            });
-            document.getElementById('amountInput').value = '';
-            showSection('dashboard');
-        };
-
         window.loadData = () => {
             if(!currentUser) return;
             const q = query(collection(db, "xisaabaadka"), orderBy("date", "desc"));
@@ -223,18 +168,33 @@
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
                     if (!d.userId || d.userId === currentUser.uid) {
-                        if(d.mode === 'income') ti += d.amount;
-                        else {
+                        const entryDate = new Date(d.date);
+                        const mvaThreshold = new Date("2026-05-04"); // Maanta wixii ka dambeeya
+
+                        if(d.mode === 'income') {
+                            ti += d.amount;
+                            // SHARDIGA CUSUB EE MVA-ga 
+                            if(entryDate >= mvaThreshold) {
+                                if(d.type.includes('Faktura') || d.type.includes('Annet') || d.type.includes('Wax kale')) {
+                                    mvaSum += (d.amount * 0.25); // 25% Refund ah
+                                }
+                            }
+                        } else {
                             te += d.amount;
-                            if(d.type.includes('Owner') || d.type.includes('Eier') || d.type.includes('Withdrawal')) ownerSum += d.amount;
-                            if(d.type.includes('Mushaar') || d.type.includes('Lønn') || d.type.includes('Salary')) totalFP += (d.amount * 0.102);
+                            if(d.type.includes('Owner') || d.type.includes('Eier')) ownerSum += d.amount;
+                            if(d.type.includes('Lønn') || d.type.includes('Salary') || d.type.includes('Mushaar')) totalFP += (d.amount * 0.102);
+                            // MVA-ga dhinaca kharashka (Shidaalka etc)
                             if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap'].some(v => d.type.includes(v))) mvaSum += (d.amount / 5);
                         }
+                        
                         catTotals[d.type] = (catTotals[d.type] || 0) + d.amount;
                         const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
-                        list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode==='income'?'border-green-500':'border-red-500'}">
+                        const borderColor = d.mode === 'income' ? 'border-green-500' : 'border-red-500';
+                        const textColor = d.mode === 'income' ? 'text-green-400' : 'text-red-400';
+
+                        list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${borderColor}">
                             <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${d.name}</p><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
-                            <div class="flex items-center gap-3"><p class="font-bold ${d.mode==='income'?'text-green-400':'text-red-400'}">${displayAmt}</p>
+                            <div class="flex items-center gap-3"><p class="font-bold ${textColor}">${displayAmt}</p>
                             <button onclick="deleteItem('${docSnap.id}')" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button></div></div>`;
                     }
                 });
@@ -253,21 +213,38 @@
             });
         };
 
-        window.deleteItem = async (id) => { if(confirm("Ma hubtaa inaad tirtirto?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
-        window.toggleVisibility = () => { isHidden = !isHidden; loadData(); document.getElementById('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'; };
-        
-        window.confirmDeleteUser = async () => {
-            if(confirm("DIGNIN: Dhammaan xogtaada ayaa tirtirmaysa. Ma hubtaa?")) {
-                const q = query(collection(db, "xisaabaadka"), where("userId", "==", currentUser.uid));
-                const snap = await getDocs(q);
-                const batch = writeBatch(db);
-                snap.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-                await deleteUser(currentUser);
-                alert("Akoonki waa la tirtiray.");
+        window.saveEntry = async () => {
+            const amt = parseFloat(document.getElementById('amountInput').value), date = document.getElementById('dateInput').value;
+            if(amt && date) {
+                await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, name: document.getElementById('nameInput').value || "Info", type: document.getElementById('typeInput').value, mode: mode, userId: currentUser.uid });
+                document.getElementById('amountInput').value = ''; showSection('dashboard');
             }
         };
 
+        window.setMode = (m) => {
+            mode = m;
+            document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl bg-green-600 text-white shadow-lg' : 'flex-1 py-3 rounded-xl bg-gray-700';
+            document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl bg-red-600 text-white shadow-lg' : 'flex-1 py-3 rounded-xl bg-gray-700';
+            document.getElementById('typeInput').innerHTML = cats[m][currentLang].map(c => `<option value="${c}">${c}</option>`).join('');
+        };
+
+        window.changeLang = (lang) => {
+            currentLang = lang; localStorage.setItem('appLang', lang);
+            document.querySelectorAll('[data-i18n]').forEach(el => el.innerText = i18n[lang][el.getAttribute('data-i18n')]);
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
+            document.getElementById('btn-' + lang).classList.add('active-lang');
+            setMode(mode);
+        };
+
+        window.showSection = (s) => {
+            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(s + 'Section').classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-' + s).classList.add('active');
+        };
+
+        window.deleteItem = async (id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.toggleVisibility = () => { isHidden = !isHidden; loadData(); document.getElementById('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'; };
         document.getElementById('dateInput').valueAsDate = new Date();
         setMode('income');
     </script>
