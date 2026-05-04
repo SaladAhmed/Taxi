@@ -7,7 +7,7 @@ window.loadData = () => {
                 list.innerHTML = ''; statsList.innerHTML = '';
                 let ti=0, te=0, ownerSum=0, mvaSum=0, totalFP=0;
                 let catTotals = {};
-                let catModes = {}; // Midabka qaybta Rapport loogu talagalay
+                let catModes = {}; 
 
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
@@ -30,7 +30,7 @@ window.loadData = () => {
                         }
                         
                         catTotals[d.type] = (catTotals[d.type] || 0) + d.amount;
-                        catModes[d.type] = d.mode; // Kaydi haddii ay tahay income ama expense
+                        catModes[d.type] = d.mode;
 
                         const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
                         const borderColor = d.mode === 'income' ? 'border-green-500' : 'border-red-500';
@@ -43,16 +43,11 @@ window.loadData = () => {
                     }
                 });
 
-                // QAYBTA RAPPORT OO MIDAB LEH (Halkan ayaa muhiim ah!)
                 for (const [cat, total] of Object.entries(catTotals)) {
                     const isInc = catModes[cat] === 'income';
                     const bCol = isInc ? 'border-green-500' : 'border-red-500';
                     const tCol = isInc ? 'text-green-400' : 'text-red-400';
-
-                    statsList.innerHTML += `<div class="card flex justify-between border-l-4 ${bCol}">
-                        <span class="font-bold text-sm text-gray-200">${cat}</span>
-                        <span class="font-bold ${tCol}">${isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr"}</span>
-                    </div>`;
+                    statsList.innerHTML += `<div class="card flex justify-between border-l-4 ${bCol}"><span class="font-bold text-sm text-gray-200">${cat}</span><span class="font-bold ${tCol}">${isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr"}</span></div>`;
                 }
 
                 const format = (v) => isHidden ? "**** kr" : Math.round(v).toLocaleString() + " kr";
