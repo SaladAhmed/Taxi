@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mohamed Salad Transport</title>
+    <title>M. Salad Transport</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -12,8 +12,8 @@
         #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 15px; }
         .auth-card { background: #252945; border-radius: 15px; padding: 20px; width: 100%; max-width: 320px; border-top: 4px solid #fbbf24; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .auth-input { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 8px; padding: 10px; width: 100%; font-size: 14px; margin-bottom: 8px; outline: none; }
-        .auth-btn { width: 100%; background-color: #fbbf24; color: black; padding: 12px; border-radius: 10px; font-weight: bold; text-transform: uppercase; font-size: 14px; margin-top: 10px; transition: 0.2s; border: none; cursor: pointer; }
-        .lang-btn { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.3s; background: #374151; border: none; color: white !important; cursor: pointer; }
+        .auth-btn { width: 100%; background-color: #fbbf24; color: black; padding: 12px; border-radius: 10px; font-weight: bold; text-transform: uppercase; font-size: 14px; margin-top: 10px; border: none; cursor: pointer; }
+        .lang-btn { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.3s; background: #374151; color: white !important; border: none; cursor: pointer; }
         .active-lang { background: #fbbf24 !important; color: black !important; }
         .result-card { background: linear-gradient(135deg, #30355a 0%, #1a1c2c 100%); border: 2px solid #fbbf24; }
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 10px; }
@@ -24,10 +24,9 @@
 </head>
 <body class="pb-24">
 
-    <!-- LOGIN SCREEN -->
     <div id="authSection">
         <div class="w-full flex flex-col items-center">
-            <h1 class="text-xl font-black text-yellow-400 mb-4 uppercase tracking-wider text-center">M. Salad Transport</h1>
+            <h1 class="text-xl font-black text-yellow-400 mb-4 uppercase tracking-wider">M. Salad Transport</h1>
             <div class="auth-card text-center">
                 <h2 id="authTitle" class="text-white text-sm font-bold mb-4 uppercase tracking-widest">Login</h2>
                 <input type="email" id="emailInput" class="auth-input" placeholder="Email">
@@ -41,7 +40,6 @@
         </div>
     </div>
 
-    <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="mb-4">
             <div class="flex justify-between items-center mb-4">
@@ -56,20 +54,20 @@
                 </div>
             </div>
             
-            <h1 class="text-lg font-black text-yellow-400 uppercase tracking-tighter text-center mb-4">Mohamed Salad Transport</h1>
+            <h1 class="text-lg font-black text-yellow-400 uppercase tracking-tighter text-center mb-4">M. Salad Transport</h1>
             
             <div class="grid grid-cols-3 gap-2 text-center">
-                <div class="card border-l-4 border-green-500 p-2"><p data-i18n="income" class="text-[8px] text-gray-400 uppercase font-bold">Dakhli</p><h2 id="totalIncome" class="text-xs font-bold text-green-400">0 kr</h2></div>
-                <div class="card border-l-4 border-red-500 p-2"><p data-i18n="expense" class="text-[8px] text-gray-400 uppercase font-bold">Kharash</p><h2 id="totalExpense" class="text-xs font-bold text-red-400">0 kr</h2></div>
-                <div class="card border-l-4 border-blue-400 p-2"><p data-i18n="owner" class="text-[8px] text-gray-400 uppercase font-bold">Owner</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2></div>
+                <div class="card border-l-4 border-green-500 p-2"><p id="label-income" class="text-[8px] text-gray-400 uppercase font-bold">DAKHLI</p><h2 id="totalIncome" class="text-xs font-bold text-green-400">0 kr</h2></div>
+                <div class="card border-l-4 border-red-500 p-2"><p id="label-expense" class="text-[8px] text-gray-400 uppercase font-bold">KHARASH</p><h2 id="totalExpense" class="text-xs font-bold text-red-400">0 kr</h2></div>
+                <div class="card border-l-4 border-blue-400 p-2"><p id="label-owner" class="text-[8px] text-gray-400 uppercase font-bold">EIER</p><h2 id="totalOwner" class="text-xs font-bold text-blue-400">0 kr</h2></div>
             </div>
 
             <div class="card result-card mt-2">
                 <div class="grid grid-cols-2 border-b border-gray-600 pb-2 mb-2 text-orange-400 font-bold text-center">
-                    <div><p data-i18n="mva_refund" class="text-[9px] text-gray-400 uppercase">MVA Refund</p><p id="mvaTax" class="text-sm">0 kr</p></div>
-                    <div><p data-i18n="feriepenger" class="text-[9px] text-gray-400 uppercase">Feriepenger</p><p id="ferieTax" class="text-sm">0 kr</p></div>
+                    <div><p id="label-mva" class="text-[9px] text-gray-400 uppercase">MVA REFUND</p><p id="mvaTax" class="text-sm">0 kr</p></div>
+                    <div><p id="label-ferie" class="text-[9px] text-gray-400 uppercase">FERIEPENGER</p><p id="ferieTax" class="text-sm">0 kr</p></div>
                 </div>
-                <div class="text-center"><p data-i18n="net_result" class="text-[10px] text-yellow-400 uppercase font-bold">Net Result</p><h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2></div>
+                <div class="text-center"><p id="label-net" class="text-[10px] text-yellow-400 uppercase font-bold">NETTO RESULTAT</p><h2 id="netResult" class="text-2xl font-black mt-1">0 kr</h2></div>
             </div>
         </div>
         
@@ -93,9 +91,9 @@
     </div>
 
     <nav id="bottomNav" class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 z-50 hidden">
-        <button onclick="showSection('dashboard')" id="nav-dashboard" class="active flex flex-col items-center"><i class="fas fa-list-ul"></i><span data-i18n="nav_summary" class="text-[10px]">Guudmar</span></button>
-        <button onclick="showSection('stats')" id="nav-stats" class="flex flex-col items-center"><i class="fas fa-chart-pie"></i><span data-i18n="nav_report" class="text-[10px]">Warbixin</span></button>
-        <button onclick="showSection('input')" id="nav-input" class="flex flex-col items-center"><i class="fas fa-plus-circle"></i><span data-i18n="nav_add" class="text-[10px]">Geli Xog</span></button>
+        <button onclick="showSection('dashboard')" id="nav-dashboard" class="active flex flex-col items-center"><i class="fas fa-list-ul"></i><span id="nav-text-dashboard" class="text-[10px]">Oversikt</span></button>
+        <button onclick="showSection('stats')" id="nav-stats" class="flex flex-col items-center"><i class="fas fa-chart-pie"></i><span id="nav-text-stats" class="text-[10px]">Rapport</span></button>
+        <button onclick="showSection('input')" id="nav-input" class="flex flex-col items-center"><i class="fas fa-plus-circle"></i><span id="nav-text-input" class="text-[10px]">Legg til</span></button>
     </nav>
 
     <script type="module">
@@ -115,12 +113,12 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentUser = null, mode = 'income', isHidden = false, currentLang = localStorage.getItem('appLang') || 'so';
+        let currentUser = null, mode = 'income', isHidden = false, currentLang = localStorage.getItem('appLang') || 'no';
 
         const i18n = {
-            so: { income: "Dakhli", expense: "Kharash", owner: "Owner", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Net Result", nav_summary: "Guudmar", nav_report: "Warbixin", nav_add: "Geli Xog" },
-            en: { income: "Income", expense: "Expense", owner: "Owner", mva_refund: "VAT Refund", feriepenger: "Holiday Pay", net_result: "Net Profit", nav_summary: "Summary", nav_report: "Report", nav_add: "Add Entry" },
-            no: { income: "Inntekt", expense: "Utgift", owner: "Eier", mva_refund: "MVA Refund", feriepenger: "Feriepenger", net_result: "Netto Resultat", nav_summary: "Oversikt", nav_report: "Rapport", nav_add: "Legg til" }
+            so: { income: "DAKHLI", expense: "KHARASH", owner: "OWNER", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NETTO RESULTAT", nav1: "Guudmar", nav2: "Warbixin", nav3: "Geli Xog", placeholder_name: "Magaca", placeholder_amt: "Lacagta", btn_save: "KAYDI" },
+            en: { income: "INCOME", expense: "EXPENSE", owner: "OWNER", mva: "VAT REFUND", ferie: "HOLIDAY PAY", net: "NET PROFIT", nav1: "Summary", nav2: "Report", nav3: "Add Entry", placeholder_name: "Name", placeholder_amt: "Amount", btn_save: "SAVE" },
+            no: { income: "INNTEKT", expense: "UTGIFT", owner: "EIER", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NETTO RESULTAT", nav1: "Oversikt", nav2: "Rapport", nav3: "Legg til", placeholder_name: "Navn", placeholder_amt: "Beløp", btn_save: "LAGRE" }
         };
 
         const cats = {
@@ -193,7 +191,7 @@
                             }
                         } else {
                             te += amt;
-                            if(['Owner', 'Eier'].some(v => d.type.includes(v))) ownerSum += amt;
+                            if(['Owner', 'Eier', 'Bankuttak'].some(v => d.type.includes(v))) ownerSum += amt;
                             if(['Lønn', 'Salary', 'Mushaar'].some(v => d.type.includes(v))) totalFP += (amt * 0.102);
                             if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap'].some(v => d.type.includes(v))) mvaSum += (amt / 5);
                         }
@@ -246,10 +244,30 @@
 
         window.changeLang = (lang) => {
             currentLang = lang; localStorage.setItem('appLang', lang);
-            document.querySelectorAll('[data-i18n]').forEach(el => el.innerText = i18n[lang][el.getAttribute('data-i18n')]);
+            const t = i18n[lang];
+            
+            // UI Labels
+            document.getElementById('label-income').innerText = t.income;
+            document.getElementById('label-expense').innerText = t.expense;
+            document.getElementById('label-owner').innerText = t.owner;
+            document.getElementById('label-mva').innerText = t.mva;
+            document.getElementById('label-ferie').innerText = t.ferie;
+            document.getElementById('label-net').innerText = t.net;
+            
+            // Navigation
+            document.getElementById('nav-text-dashboard').innerText = t.nav1;
+            document.getElementById('nav-text-stats').innerText = t.nav2;
+            document.getElementById('nav-text-input').innerText = t.nav3;
+            
+            // Inputs
+            document.getElementById('nameInput').placeholder = t.placeholder_name;
+            document.getElementById('amountInput').placeholder = t.placeholder_amt;
+            document.getElementById('btnSave').innerText = t.btn_save;
+
+            // Buttons
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
-            const activeBtn = document.getElementById('btn-' + lang);
-            if(activeBtn) activeBtn.classList.add('active-lang');
+            document.getElementById('btn-' + lang).classList.add('active-lang');
+            
             setMode(mode);
         };
 
@@ -263,7 +281,6 @@
         window.deleteItem = async (id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
         window.toggleVisibility = () => { isHidden = !isHidden; loadData(); document.getElementById('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'; };
         document.getElementById('dateInput').valueAsDate = new Date();
-        changeLang(currentLang);
     </script>
 </body>
 </html>
