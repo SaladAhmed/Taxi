@@ -24,6 +24,7 @@
 </head>
 <body class="pb-24">
 
+    <!-- LOGIN SCREEN -->
     <div id="authSection">
         <div class="w-full flex flex-col items-center">
             <h1 class="text-xl font-black text-yellow-400 mb-4 uppercase tracking-wider">M. Salad Transport</h1>
@@ -33,13 +34,14 @@
                 <input type="password" id="passInput" class="auth-input" placeholder="Password">
                 <button id="mainAuthBtn" onclick="handleAuth()" class="auth-btn shadow-lg mb-4">Login</button>
                 <div class="flex flex-col gap-2">
-                    <button id="toggleAuthBtn" onclick="toggleAuthMode()" class="text-gray-400 text-[10px] font-bold uppercase transition">Ma haysatid Account? Sign Up</button>
+                    <button id="toggleAuthBtn" onclick="toggleAuthMode()" class="text-gray-400 text-[10px] font-bold uppercase transition">Sign Up</button>
                     <button onclick="resetPassword()" class="text-yellow-400 text-[9px] font-bold uppercase hover:underline">Forgot Password?</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="mb-4">
             <div class="flex justify-between items-center mb-4">
@@ -90,6 +92,7 @@
         </div>
     </div>
 
+    <!-- Navigation -->
     <nav id="bottomNav" class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-3 z-50 hidden">
         <button onclick="showSection('dashboard')" id="nav-dashboard" class="active flex flex-col items-center"><i class="fas fa-list-ul"></i><span id="nav-text-dashboard" class="text-[10px]">Oversikt</span></button>
         <button onclick="showSection('stats')" id="nav-stats" class="flex flex-col items-center"><i class="fas fa-chart-pie"></i><span id="nav-text-stats" class="text-[10px]">Rapport</span></button>
@@ -121,29 +124,37 @@
             no: { income: "INNTEKT", expense: "UTGIFT", owner: "EIER", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NETTO RESULTAT", nav1: "Oversikt", nav2: "Rapport", nav3: "Legg til", placeholder_name: "Navn", placeholder_amt: "Beløp", btn_save: "LAGRE" }
         };
 
-        const cats = {
-            income: { so: ['Kaarka Taksi', 'Caddaan', 'Faktura', 'Wax kale'], en: ['Taxi Card', 'Cash', 'Invoice', 'Other'], no: ['Taxi Kort', 'Kontanter', 'Faktura', 'Annet'] },
-            expense: { so: ['Mushaar', 'Bankuttak', 'Skatt', 'Shidaal', 'Dayactir', 'Regnskap', 'Forsikring', 'Wax kale'], en: ['Salary', 'Withdrawal', 'Tax', 'Fuel', 'Repair', 'Accounting', 'Insurance', 'Other'], no: ['Lønn', 'Eieruttak', 'Skatt', 'Drivstoff', 'Reparasjon', 'Regnskap', 'Forsikring', 'Annet'] }
+        // Furaha (Key) caalami ah oo aan luuqad ku xirnayn
+        const masterCats = {
+            income: ['TaxiCard', 'Cash', 'Invoice', 'Other'],
+            expense: ['Salary', 'Withdrawal', 'Tax', 'Fuel', 'Repair', 'Accounting', 'Insurance', 'Other']
+        };
+
+        const catLabels = {
+            TaxiCard: { so: 'Kaarka Taksi', en: 'Taxi Card', no: 'Taxi Kort' },
+            Cash: { so: 'Caddaan', en: 'Cash', no: 'Kontanter' },
+            Invoice: { so: 'Faktura', en: 'Invoice', no: 'Faktura' },
+            Other: { so: 'Wax kale', en: 'Other', no: 'Annet' },
+            Salary: { so: 'Mushaar', en: 'Salary', no: 'Lønn' },
+            Withdrawal: { so: 'Eieruttak', en: 'Withdrawal', no: 'Eieruttak' },
+            Tax: { so: 'Skatt', en: 'Tax', no: 'Skatt' },
+            Fuel: { so: 'Shidaal', en: 'Fuel', no: 'Drivstoff' },
+            Repair: { so: 'Dayactir', en: 'Repair', no: 'Reparasjon' },
+            Accounting: { so: 'Regnskap', en: 'Accounting', no: 'Regnskap' },
+            Insurance: { so: 'Forsikring', en: 'Insurance', no: 'Forsikring' }
         };
 
         window.toggleAuthMode = () => {
             const isLogin = document.getElementById('authTitle').innerText === 'Login';
             document.getElementById('authTitle').innerText = isLogin ? 'Sign Up' : 'Login';
             document.getElementById('mainAuthBtn').innerText = isLogin ? 'Create Account' : 'Login';
-            document.getElementById('toggleAuthBtn').innerText = isLogin ? 'Haysataa Account? Login' : 'Ma haysatid Account? Sign Up';
         };
 
         window.handleAuth = () => {
             const email = document.getElementById('emailInput').value, pass = document.getElementById('passInput').value;
-            if(!email || !pass) return alert("Fadlan buuxi Email iyo Password");
+            if(!email || !pass) return alert("Fadlan buuxi");
             if(document.getElementById('authTitle').innerText === 'Sign Up') createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
-            else signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email/Pass khaldan"));
-        };
-
-        window.resetPassword = () => {
-            const email = document.getElementById('emailInput').value;
-            if(email) sendPasswordResetEmail(auth, email).then(() => alert("Link-ga password-ka waa lagu soo diray!")).catch(e => alert(e.message));
-            else alert("Qor Email-kaaga marka hore");
+            else signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Cillad!"));
         };
 
         window.logout = () => signOut(auth);
@@ -159,7 +170,6 @@
             } else {
                 document.getElementById('authSection').classList.remove('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
-                document.getElementById('bottomNav').classList.add('hidden');
             }
         });
 
@@ -172,49 +182,43 @@
                 list.innerHTML = ''; statsList.innerHTML = '';
                 let ti=0, te=0, ownerSum=0, mvaSum=0, totalFP=0;
                 let catTotals = {};
-                let catModes = {};
 
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
                     if (!d.userId || d.userId === currentUser.uid) {
-                        const entryDate = new Date(d.date);
-                        const mvaThreshold = new Date("2026-05-04");
                         const amt = Number(d.amount) || 0;
                         const dName = d.name || "Xog";
+                        const typeKey = d.typeKey || d.type; // Aqoonsi ku salaysan furaha
+
+                        // Luuqadda isbedbedesha ee list-ka
+                        const displayType = catLabels[typeKey] ? catLabels[typeKey][currentLang] : typeKey;
 
                         if(d.mode === 'income') {
                             ti += amt;
-                            if(entryDate >= mvaThreshold) {
-                                if(['Faktura', 'Wax kale', 'Annet'].some(v => d.type.includes(v))) {
-                                    mvaSum += (amt * 0.25);
-                                }
-                            }
+                            if(typeKey === 'Invoice' || typeKey === 'Other') mvaSum += (amt * 0.25);
                         } else {
                             te += amt;
-                            if(['Owner', 'Eier', 'Bankuttak'].some(v => d.type.includes(v))) ownerSum += amt;
-                            if(['Lønn', 'Salary', 'Mushaar'].some(v => d.type.includes(v))) totalFP += (amt * 0.102);
-                            if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap'].some(v => d.type.includes(v))) mvaSum += (amt / 5);
+                            if(typeKey === 'Withdrawal') ownerSum += amt;
+                            if(typeKey === 'Salary') totalFP += (amt * 0.102);
+                            if(['Fuel', 'Repair', 'Accounting'].includes(typeKey)) mvaSum += (amt / 5);
                         }
                         
-                        catTotals[d.type] = (catTotals[d.type] || 0) + amt;
-                        catModes[d.type] = d.mode;
+                        catTotals[typeKey] = (catTotals[typeKey] || 0) + amt;
 
                         const displayAmt = isHidden ? "**** kr" : Math.round(amt).toLocaleString() + " kr";
                         const borderColor = d.mode === 'income' ? 'border-green-500' : 'border-red-500';
                         const textColor = d.mode === 'income' ? 'text-green-400' : 'text-red-400';
 
                         list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${borderColor}">
-                            <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${dName}</p><p class="text-sm font-bold">${d.type}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
+                            <div><p class="text-[9px] text-yellow-400 font-bold uppercase">${dName}</p><p class="text-sm font-bold">${displayType}</p><p class="text-[10px] text-gray-500">${d.date}</p></div>
                             <div class="flex items-center gap-3"><p class="font-bold ${textColor}">${displayAmt}</p>
                             <button onclick="deleteItem('${docSnap.id}')" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button></div></div>`;
                     }
                 });
 
-                for (const [cat, total] of Object.entries(catTotals)) {
-                    const isInc = catModes[cat] === 'income';
-                    const bCol = isInc ? 'border-green-500' : 'border-red-500';
-                    const tCol = isInc ? 'text-green-400' : 'text-red-400';
-                    statsList.innerHTML += `<div class="card flex justify-between border-l-4 ${bCol}"><span class="font-bold text-sm text-gray-200">${cat}</span><span class="font-bold ${tCol}">${isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr"}</span></div>`;
+                for (const [key, total] of Object.entries(catTotals)) {
+                    const label = catLabels[key] ? catLabels[key][currentLang] : key;
+                    statsList.innerHTML += `<div class="card flex justify-between border-l-4 border-gray-500"><span class="font-bold text-sm text-gray-200">${label}</span><span class="font-bold">${isHidden ? "**** kr" : Math.round(total).toLocaleString() + " kr"}</span></div>`;
                 }
 
                 const format = (v) => isHidden ? "**** kr" : Math.round(v).toLocaleString() + " kr";
@@ -229,8 +233,12 @@
 
         window.saveEntry = async () => {
             const amt = parseFloat(document.getElementById('amountInput').value), date = document.getElementById('dateInput').value;
+            const typeKey = document.getElementById('typeInput').value;
             if(amt && date) {
-                await addDoc(collection(db, "xisaabaadka"), { amount: amt, date: date, name: document.getElementById('nameInput').value || "Xog", type: document.getElementById('typeInput').value, mode: mode, userId: currentUser.uid });
+                await addDoc(collection(db, "xisaabaadka"), { 
+                    amount: amt, date: date, name: document.getElementById('nameInput').value || "Xog", 
+                    typeKey: typeKey, mode: mode, userId: currentUser.uid 
+                });
                 document.getElementById('amountInput').value = ''; showSection('dashboard');
             }
         };
@@ -239,36 +247,34 @@
             mode = m;
             document.getElementById('modeInc').className = m === 'income' ? 'flex-1 py-3 rounded-xl bg-green-600 text-white shadow-lg' : 'flex-1 py-3 rounded-xl bg-gray-700';
             document.getElementById('modeExp').className = m === 'expense' ? 'flex-1 py-3 rounded-xl bg-red-600 text-white shadow-lg' : 'flex-1 py-3 rounded-xl bg-gray-700';
-            document.getElementById('typeInput').innerHTML = cats[m][currentLang].map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            let options = '';
+            masterCats[m].forEach(key => {
+                const label = catLabels[key] ? catLabels[key][currentLang] : key;
+                options += `<option value="${key}">${label}</option>`;
+            });
+            document.getElementById('typeInput').innerHTML = options;
         };
 
         window.changeLang = (lang) => {
             currentLang = lang; localStorage.setItem('appLang', lang);
             const t = i18n[lang];
-            
-            // UI Labels
             document.getElementById('label-income').innerText = t.income;
             document.getElementById('label-expense').innerText = t.expense;
             document.getElementById('label-owner').innerText = t.owner;
             document.getElementById('label-mva').innerText = t.mva;
             document.getElementById('label-ferie').innerText = t.ferie;
             document.getElementById('label-net').innerText = t.net;
-            
-            // Navigation
             document.getElementById('nav-text-dashboard').innerText = t.nav1;
             document.getElementById('nav-text-stats').innerText = t.nav2;
             document.getElementById('nav-text-input').innerText = t.nav3;
-            
-            // Inputs
             document.getElementById('nameInput').placeholder = t.placeholder_name;
             document.getElementById('amountInput').placeholder = t.placeholder_amt;
             document.getElementById('btnSave').innerText = t.btn_save;
-
-            // Buttons
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
             document.getElementById('btn-' + lang).classList.add('active-lang');
-            
             setMode(mode);
+            loadData();
         };
 
         window.showSection = (s) => {
@@ -279,7 +285,7 @@
         };
 
         window.deleteItem = async (id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
-        window.toggleVisibility = () => { isHidden = !isHidden; loadData(); document.getElementById('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'; };
+        window.toggleVisibility = () => { isHidden = !isHidden; loadData(); };
         document.getElementById('dateInput').valueAsDate = new Date();
     </script>
 </body>
