@@ -17,7 +17,6 @@
         .hidden { display: none !important; }
         .lang-btn { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.3s; }
         .lang-active { background: #fbbf24 !important; color: black !important; }
-        .blur-val { filter: blur(5px); }
     </style>
 </head>
 <body class="pb-24">
@@ -30,7 +29,11 @@
                 <p data-i18n="enter_email" class="text-gray-400 mb-4 text-sm font-bold uppercase">Gali Emailkaaga</p>
                 <input type="email" id="emailInput" placeholder="Email" class="mb-3">
                 <input type="password" id="passInput" placeholder="Password" class="mb-4">
-                <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg">Login</button>
+                <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg mb-4">Login</button>
+                
+                <!-- Reset Password Button -->
+                <button onclick="resetPassword()" class="text-yellow-400 text-xs font-bold uppercase hover:underline">Forgot Password?</button>
+                
                 <p id="authError" class="text-red-500 mt-3 text-xs hidden"></p>
             </div>
         </div>
@@ -97,7 +100,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -116,6 +119,22 @@
         let mode = 'income';
         let currentLang = localStorage.getItem('appLang') || 'so';
         let isHidden = false;
+
+        // Reset Password Function
+        window.resetPassword = () => {
+            const email = document.getElementById('emailInput').value;
+            if (!email) {
+                alert("Fadlan marka hore email-kaaga ku qor meesha sare!");
+                return;
+            }
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    alert("Link-ga password-ka lagu beddelo waxaa loo diray: " + email + ". Fadlan fiiri email-kaaga (Inbox ama Spam).");
+                })
+                .catch((error) => {
+                    alert("Khalad: " + error.message);
+                });
+        };
 
         const i18n = {
             so: { income: "Dakhli", expense: "Kharash", owner: "Owner", mva_refund: "MVA Refund (1/5)", feriepenger: "Feriepenger", net_result: "Net Result", logout: "Ka Bax", nav_summary: "Guudmar", nav_report: "Warbixin", nav_add: "Geli Xog", enter_email: "Gali Emailkaaga", placeholder_name: "Magaca", placeholder_amt: "Lacagta (Kr)", btn_save: "Kaydi Xogta" },
@@ -166,7 +185,7 @@
         };
 
         window.handleAuth = () => {
-            signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value).catch(() => alert("Error!"));
+            signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value).catch(() => alert("Email ama Password kaaga ayaa khaldan!"));
         };
 
         window.logout = () => signOut(auth);
@@ -207,7 +226,7 @@
             showSection('dashboard');
         };
 
-        window.deleteItem = async (id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
+        window.deleteItem = async (id) => { if(confirm("Ma hubtaa inaad tirtirto?")) await deleteDoc(doc(db, "xisaabaadka", id)); };
         window.toggleMenu = (id) => document.getElementById('menu-'+id).classList.toggle('active');
 
         function loadData() {
