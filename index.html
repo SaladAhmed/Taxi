@@ -9,9 +9,15 @@
     <style>
         body { background-color: #1a1c2c; color: white; font-family: -apple-system, sans-serif; overflow-x: hidden; }
         .card { background: #252945; border-radius: 12px; padding: 10px; margin-bottom: 8px; border: 1px solid #30355a; position: relative; }
+        /* Qaybta Login-ka oo la sifeeyay */
+        #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 15px; }
+        .auth-card { background: #252945; border-radius: 15px; padding: 20px; width: 100%; max-width: 320px; border-top: 4px solid #fbbf24; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .auth-input { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 8px; padding: 10px; width: 100%; font-size: 14px; margin-bottom: 8px; outline: none; }
+        .auth-btn { width: 100%; bg-yellow-400; background-color: #fbbf24; color: black; py-3; padding: 12px; rounded-lg; border-radius: 10px; font-weight: bold; text-transform: uppercase; font-size: 14px; margin-top: 10px; transition: 0.2s; }
+        .auth-btn:active { transform: scale(0.98); opacity: 0.9; }
+        
         .result-card { background: linear-gradient(135deg, #30355a 0%, #1a1c2c 100%); border: 2px solid #fbbf24; }
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 10px; }
-        #authSection { position: fixed; inset: 0; background: #1a1c2c; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .hidden { display: none !important; }
         .lang-btn { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.3s; background: #374151; }
         .active-lang { background: #fbbf24 !important; color: black !important; }
@@ -21,24 +27,22 @@
 </head>
 <body class="pb-24">
 
-    <!-- LOGIN SCREEN -->
     <div id="authSection">
-        <div class="w-full max-w-sm text-center">
-            <h1 class="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-widest">M. Salad Transport</h1>
-            <div class="card p-6 border-t-4 border-yellow-400">
-                <h2 id="authTitle" class="text-white font-bold mb-4 uppercase">Login</h2>
-                <input type="email" id="emailInput" placeholder="Email">
-                <input type="password" id="passInput" placeholder="Password">
-                <button id="mainAuthBtn" onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold uppercase shadow-lg mb-4">Login</button>
-                <div class="flex flex-col gap-3">
-                    <button id="toggleAuthBtn" onclick="toggleAuthMode()" class="text-gray-400 text-xs font-bold uppercase">Ma haysatid Account? Sign Up</button>
-                    <button onclick="resetPassword()" class="text-yellow-400 text-[10px] font-bold uppercase hover:underline">Forgot Password?</button>
+        <div class="w-full flex flex-col items-center">
+            <h1 class="text-xl font-black text-yellow-400 mb-4 uppercase tracking-wider text-center">M. Salad Transport</h1>
+            <div class="auth-card text-center">
+                <h2 id="authTitle" class="text-white text-sm font-bold mb-4 uppercase tracking-widest">Login</h2>
+                <input type="email" id="emailInput" class="auth-input" placeholder="Email">
+                <input type="password" id="passInput" class="auth-input" placeholder="Password">
+                <button id="mainAuthBtn" onclick="handleAuth()" class="auth-btn shadow-lg mb-4">Login</button>
+                <div class="flex flex-col gap-2">
+                    <button id="toggleAuthBtn" onclick="toggleAuthMode()" class="text-gray-400 text-[10px] font-bold uppercase hover:text-white transition">Ma haysatid Account? Sign Up</button>
+                    <button onclick="resetPassword()" class="text-yellow-400 text-[9px] font-bold uppercase hover:underline">Forgot Password?</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="mb-4">
             <div class="flex justify-between items-center mb-4">
@@ -49,7 +53,7 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <button onclick="toggleVisibility()" class="text-yellow-400 text-xl"><i id="eyeIcon" class="fas fa-eye"></i></button>
-                    <button onclick="logout()" class="text-red-400 font-bold border border-red-900/30 px-3 py-1 rounded text-xs uppercase">Ka Bax</button>
+                    <button onclick="logout()" class="text-red-400 font-bold border border-red-900/30 px-3 py-1 rounded text-[10px] uppercase">Ka Bax</button>
                 </div>
             </div>
             
@@ -134,8 +138,15 @@
 
         window.handleAuth = () => {
             const email = document.getElementById('emailInput').value, pass = document.getElementById('passInput').value;
+            if(!email || !pass) return alert("Fadlan buuxi Email iyo Password");
             if(document.getElementById('authTitle').innerText === 'Sign Up') createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
             else signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email/Pass khaldan"));
+        };
+
+        window.resetPassword = () => {
+            const email = document.getElementById('emailInput').value;
+            if(email) sendPasswordResetEmail(auth, email).then(() => alert("Link-ga password-ka waa lagu soo diray!")).catch(e => alert(e.message));
+            else alert("Qor Email-kaaga marka hore");
         };
 
         window.logout = () => signOut(auth);
@@ -169,24 +180,21 @@
                     const d = docSnap.data();
                     if (!d.userId || d.userId === currentUser.uid) {
                         const entryDate = new Date(d.date);
-                        const mvaThreshold = new Date("2026-05-04"); // Maanta wixii ka dambeeya
+                        const mvaThreshold = new Date("2026-05-04");
 
                         if(d.mode === 'income') {
                             ti += d.amount;
-                            // SHARDIGA CUSUB EE MVA-ga 
                             if(entryDate >= mvaThreshold) {
                                 if(d.type.includes('Faktura') || d.type.includes('Annet') || d.type.includes('Wax kale')) {
-                                    mvaSum += (d.amount * 0.25); // 25% Refund ah
+                                    mvaSum += (d.amount * 0.25);
                                 }
                             }
                         } else {
                             te += d.amount;
                             if(d.type.includes('Owner') || d.type.includes('Eier')) ownerSum += d.amount;
                             if(d.type.includes('Lønn') || d.type.includes('Salary') || d.type.includes('Mushaar')) totalFP += (d.amount * 0.102);
-                            // MVA-ga dhinaca kharashka (Shidaalka etc)
                             if(['Shidaal','Drivstoff','Fuel','Dayactir','Repair','Regnskap'].some(v => d.type.includes(v))) mvaSum += (d.amount / 5);
                         }
-                        
                         catTotals[d.type] = (catTotals[d.type] || 0) + d.amount;
                         const displayAmt = isHidden ? "**** kr" : Math.round(d.amount).toLocaleString() + " kr";
                         const borderColor = d.mode === 'income' ? 'border-green-500' : 'border-red-500';
