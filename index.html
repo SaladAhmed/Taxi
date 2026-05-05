@@ -21,110 +21,114 @@
 <body class="pb-24">
 
     <!-- AUTH SECTION -->
-    <div id="authSection" class="fixed inset-0 bg-[#0f172a] z-[5000] flex items-center justify-center p-6">
+    <div id="authSection" class="fixed inset-0 bg-[#0f172a] z-[5000] flex items-center justify-center p-6 overflow-y-auto">
         <div class="bg-[#1e293b] p-8 rounded-[35px] w-full max-w-md shadow-2xl border-t-8 border-yellow-500 text-center">
             <i class="fas fa-truck-fast text-5xl text-yellow-500 mb-3"></i>
             <h1 class="text-2xl font-black mb-6 uppercase">M. Salad <span class="text-yellow-500">PRO</span></h1>
-            <input type="email" id="emailInput" class="input-pro mb-3" placeholder="E-post">
-            <input type="password" id="passInput" class="input-pro mb-6" placeholder="Passord">
-            <button onclick="handleAuth()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black shadow-lg uppercase">Logg Inn</button>
+            
+            <div id="authInputs" class="space-y-3">
+                <input type="email" id="emailInput" class="input-pro" placeholder="E-post / Email">
+                <input type="password" id="passInput" class="input-pro" placeholder="Passord / Password">
+            </div>
+
+            <button id="mainAuthBtn" onclick="handleAuth()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black shadow-lg uppercase mt-6 mb-4">Logg Inn</button>
+            
+            <div class="flex flex-col gap-3 text-[10px] font-bold uppercase text-gray-400">
+                <button onclick="toggleAuthMode('forgot')" id="btnForgot">Glemt passord?</button>
+                <button onclick="toggleAuthMode('signup')" id="btnToggle" class="text-yellow-500">Opprett ny konto (Sign Up)</button>
+            </div>
         </div>
     </div>
 
     <!-- MAIN APP -->
     <div id="mainApp" class="hidden">
-        <header class="p-6 flex justify-between items-center sticky top-0 z-[1000] bg-[#0f172a]/80 backdrop-blur-md">
+        <header class="p-4 flex justify-between items-center sticky top-0 z-[1000] bg-[#0f172a]/80 backdrop-blur-md">
             <div>
-                <h2 class="text-xl font-black text-yellow-500 uppercase tracking-tighter">M. SALAD</h2>
-                <p id="userDisplay" class="text-[9px] text-gray-500 font-mono"></p>
+                <h2 class="text-lg font-black text-yellow-500 uppercase">M. SALAD</h2>
+                <p id="userDisplay" class="text-[8px] text-gray-500 font-mono"></p>
             </div>
             <div class="flex gap-2 items-center">
-                <button onclick="togglePrivacy()" class="bg-gray-800 p-2.5 rounded-xl text-yellow-500"><i id="eyeIcon" class="fas fa-eye"></i></button>
-                <button onclick="logout()" class="bg-red-500/10 text-red-500 p-2.5 rounded-xl text-xs font-bold"><i class="fas fa-power-off"></i></button>
+                <!-- Language Selector -->
+                <select onchange="updateLanguage(this.value)" class="bg-gray-800 text-[10px] border border-gray-600 rounded px-1 py-1 text-white">
+                    <option value="no">🇳🇴 NO</option>
+                    <option value="so">🇸🇴 SO</option>
+                    <option value="en">🇺🇸 EN</option>
+                </select>
+                <button onclick="togglePrivacy()" class="bg-gray-800 p-2 rounded-lg text-yellow-500"><i id="eyeIcon" class="fas fa-eye"></i></button>
+                <button onclick="logout()" class="bg-red-500/10 text-red-500 p-2 rounded-lg"><i class="fas fa-power-off"></i></button>
             </div>
         </header>
 
         <main class="p-4 space-y-4">
-            <!-- Summary Stats -->
+            <!-- Stats -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="card-pro p-4 border-l-4 border-green-500">
-                    <p class="text-[10px] text-gray-400 font-black uppercase">Inntekt</p>
+                    <p class="text-[10px] text-gray-400 font-black uppercase" id="lbl-income">Inntekt</p>
                     <h3 id="totalIncome" class="text-xl font-black text-green-400 balance-text">0 kr</h3>
                 </div>
                 <div class="card-pro p-4 border-l-4 border-red-500">
-                    <p class="text-[10px] text-gray-400 font-black uppercase">Utgift</p>
+                    <p class="text-[10px] text-gray-400 font-black uppercase" id="lbl-expense">Utgift</p>
                     <h3 id="totalExpense" class="text-xl font-black text-red-400 balance-text">0 kr</h3>
                 </div>
             </div>
 
-            <!-- Personnel Tracking Section -->
+            <!-- Employee Payroll -->
             <div class="card-pro p-4">
-                <p class="text-[10px] text-yellow-500 font-black uppercase mb-3"><i class="fas fa-users mr-2"></i>Lønn & Feriepenger per ansatt</p>
-                <div id="employeeStats" class="space-y-2 text-[11px]">
-                    <!-- Stats per employee will appear here -->
-                    <p class="text-gray-500 italic">Ingen lønn registrert ennå...</p>
-                </div>
+                <p class="text-[10px] text-yellow-500 font-black uppercase mb-3" id="lbl-payroll-title"><i class="fas fa-users mr-2"></i>Lønn & Feriepenger</p>
+                <div id="employeeStats" class="space-y-2 text-[11px]"></div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-center">
-                <div class="card-pro p-3 bg-blue-500/10 border border-blue-500/20">
-                    <p class="text-[8px] text-blue-400 font-bold uppercase">MVA Refusjon (25%)</p>
+                <div class="card-pro p-3">
+                    <p class="text-[8px] text-blue-400 font-bold uppercase" id="lbl-mva">MVA (25%)</p>
                     <p id="stat-mva" class="text-[10px] font-black balance-text text-blue-400">0 kr</p>
                 </div>
-                <div class="card-pro p-3 bg-purple-500/10 border border-purple-500/20">
-                    <p class="text-[8px] text-purple-400 font-bold uppercase">Owner Draw</p>
+                <div class="card-pro p-3">
+                    <p class="text-[8px] text-purple-400 font-bold uppercase" id="lbl-owner">Owner Draw</p>
                     <p id="stat-owner" class="text-[10px] font-black balance-text text-purple-400">0 kr</p>
                 </div>
             </div>
 
-            <!-- Net Result -->
-            <div class="card-pro p-6 bg-gradient-to-br from-yellow-500 to-amber-600 text-black text-center shadow-2xl">
-                <p class="text-xs font-black uppercase opacity-60">Netto Resultat (Efter skatt/mva)</p>
+            <div class="card-pro p-6 bg-gradient-to-br from-yellow-500 to-amber-600 text-black text-center shadow-xl">
+                <p class="text-xs font-black uppercase opacity-60" id="lbl-net">Netto Resultat</p>
                 <h2 id="totalNet" class="text-4xl font-black tracking-tighter balance-text">0 kr</h2>
             </div>
 
-            <!-- List Section -->
             <div id="listSection" class="section space-y-2 pb-16"></div>
 
-            <!-- Add New -->
             <div id="addSection" class="section hidden">
-                <div class="card-pro p-6 shadow-2xl">
+                <div class="card-pro p-6">
                     <div class="flex gap-2 mb-6">
-                        <button onclick="setMode('income')" id="btn-inc" class="flex-1 py-4 rounded-xl font-black bg-green-600 text-xs">INNTEKT</button>
-                        <button onclick="setMode('expense')" id="btn-exp" class="flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs">UTGIFT</button>
+                        <button onclick="setMode('income')" id="btn-inc" class="flex-1 py-4 rounded-xl font-black bg-green-600 text-xs uppercase" id="lbl-btn-inc">INNTEKT</button>
+                        <button onclick="setMode('expense')" id="btn-exp" class="flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs uppercase" id="lbl-btn-exp">UTGIFT</button>
                     </div>
                     <div class="space-y-3">
                         <input type="date" id="inDate" class="input-pro">
-                        <input type="text" id="inName" class="input-pro" placeholder="Beskrivelse (f.eks. Kjøring)">
-                        
-                        <!-- Employee Name (Only shows for Lønn) -->
+                        <input type="text" id="inName" class="input-pro" placeholder="Beskrivelse / Description">
                         <div id="employeeField" class="hidden">
-                            <input type="text" id="inEmployee" class="input-pro border-yellow-500/50" placeholder="Navn på ansatt (Employee Name)">
+                            <input type="text" id="inEmployee" class="input-pro border-yellow-500/50" placeholder="Navn på ansatt / Employee">
                         </div>
-
-                        <input type="number" id="inAmount" class="input-pro" placeholder="Beløp (Amount)">
+                        <input type="number" id="inAmount" class="input-pro" placeholder="Beløp / Amount">
                         <select id="inType" class="input-pro" onchange="checkType(this.value)"></select>
-                        
-                        <button onclick="saveEntry()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black mt-4 uppercase">Lagre</button>
+                        <button onclick="saveEntry()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black mt-4 uppercase" id="lbl-save">Lagre</button>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Navbar -->
         <nav class="fixed bottom-0 w-full bg-[#1e293b] border-t border-white/5 flex justify-around py-5 z-[4000]">
             <button onclick="showPage('list')" id="nav-list" class="nav-tab active flex flex-col items-center gap-1 opacity-40">
-                <i class="fas fa-home text-xl"></i><span class="text-[10px] font-bold">Hjem</span>
+                <i class="fas fa-home text-xl"></i><span class="text-[10px] font-bold" id="lbl-nav-home">Hjem</span>
             </button>
             <button onclick="showPage('add')" id="nav-add" class="nav-tab flex flex-col items-center gap-1 opacity-40">
-                <i class="fas fa-plus-circle text-xl"></i><span class="text-[10px] font-bold">Legg til</span>
+                <i class="fas fa-plus-circle text-xl"></i><span class="text-[10px] font-bold" id="lbl-nav-add">Legg til</span>
             </button>
         </nav>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -139,17 +143,63 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentMode = 'income', isPrivate = false;
+
+        let currentLang = 'no';
+        const langData = {
+            no: { income: "Inntekt", expense: "Utgift", payroll: "Lønn & Feriepenger", mva: "MVA (25%)", owner: "Owner Draw", net: "Netto Resultat", home: "Hjem", add: "Legg til", save: "Lagre", desc: "Beskrivelse", amt: "Beløp", emp: "Navn på ansatt", deleteMsg: "Vil du slette?", editMsg: "Endre beskrivelse:" },
+            so: { income: "Dakhli", expense: "Kharash", payroll: "Mushahar & Fasax", mva: "Cansuur (25%)", owner: "Owner Draw", net: "Faa'ido", home: "Guudmar", add: "Geli Xog", save: "Kaydi", desc: "Sharaxaad", amt: "Lacagta", emp: "Magaca Shaqaalaha", deleteMsg: "Ma hubtaa inaad tirtirto?", editMsg: "Bedel sharaxaadda:" },
+            en: { income: "Income", expense: "Expense", payroll: "Payroll & Vacation", mva: "VAT (25%)", owner: "Owner Draw", net: "Net Profit", home: "Home", add: "Add New", save: "Save", desc: "Description", amt: "Amount", emp: "Employee Name", deleteMsg: "Are you sure?", editMsg: "Edit description:" }
+        };
+
+        window.updateLanguage = (lang) => {
+            currentLang = lang;
+            const d = langData[lang];
+            document.getElementById('lbl-income').innerText = d.income;
+            document.getElementById('lbl-expense').innerText = d.expense;
+            document.getElementById('lbl-payroll-title').innerHTML = `<i class="fas fa-users mr-2"></i>${d.payroll}`;
+            document.getElementById('lbl-mva').innerText = d.mva;
+            document.getElementById('lbl-owner').innerText = d.owner;
+            document.getElementById('lbl-net').innerText = d.net;
+            document.getElementById('lbl-nav-home').innerText = d.home;
+            document.getElementById('lbl-nav-add').innerText = d.add;
+            document.getElementById('lbl-save').innerText = d.save;
+            document.getElementById('inName').placeholder = d.desc;
+            document.getElementById('inAmount').placeholder = d.amt;
+            document.getElementById('inEmployee').placeholder = d.emp;
+            fetchData(); // Refresh list to update employee labels if needed
+        };
+
+        // UI & AUTH Logic
+        let authMode = 'login', currentMode = 'income', isPrivate = false;
+
+        window.toggleAuthMode = (mode) => {
+            authMode = mode;
+            const btnMain = document.getElementById('mainAuthBtn');
+            const passInput = document.getElementById('passInput');
+            if(mode === 'signup') { btnMain.innerText = 'Registrer deg'; passInput.classList.remove('hidden'); }
+            else if(mode === 'forgot') { btnMain.innerText = 'Reset Password'; passInput.classList.add('hidden'); }
+            else { btnMain.innerText = 'Logg Inn'; passInput.classList.remove('hidden'); }
+        };
+
+        window.handleAuth = async () => {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            try {
+                if(authMode === 'login') await signInWithEmailAndPassword(auth, email, pass);
+                else if(authMode === 'signup') await createUserWithEmailAndPassword(auth, email, pass);
+                else if(authMode === 'forgot') { await sendPasswordResetEmail(auth, email); alert("Email sent!"); toggleAuthMode('login'); }
+            } catch (e) { alert(e.message); }
+        };
 
         onAuthStateChanged(auth, user => {
-            if(user) {
-                document.getElementById('authSection').classList.add('hidden');
+            if(user) { 
+                document.getElementById('authSection').classList.add('hidden'); 
                 document.getElementById('mainApp').classList.remove('hidden');
                 document.getElementById('userDisplay').innerText = user.email;
-                fetchData();
-            } else {
-                document.getElementById('authSection').classList.remove('hidden');
-                document.getElementById('mainApp').classList.add('hidden');
+                updateLanguage('no');
+            } else { 
+                document.getElementById('authSection').classList.remove('hidden'); 
+                document.getElementById('mainApp').classList.add('hidden'); 
             }
         });
 
@@ -159,31 +209,24 @@
                 const list = document.getElementById('listSection');
                 const empStatsDiv = document.getElementById('employeeStats');
                 list.innerHTML = '';
-                let ti=0, te=0, to=0, tmva=0;
+                let ti=0, te=0, tmva=0, to=0;
                 let employees = {};
 
                 snap.forEach(docSnap => {
                     const d = docSnap.data();
                     const amt = Number(d.amount);
-                    
-                    if(d.mode === 'income') {
-                        ti += amt;
-                    } else {
+                    if(d.mode === 'income') ti += amt;
+                    else {
                         te += amt;
                         if(d.type !== 'Bank / MVA-fri' && d.type !== 'Bankuttak (Owner)') tmva += (amt * 0.25);
-                        
-                        // Track employee payroll
-                        if(d.type === 'Lønn' && d.employee) {
-                            if(!employees[d.employee]) employees[d.employee] = 0;
-                            employees[d.employee] += amt;
-                        }
+                        if(d.type === 'Lønn' && d.employee) employees[d.employee] = (employees[d.employee] || 0) + amt;
                     }
                     if(d.type === 'Bankuttak (Owner)') to += amt;
 
                     list.innerHTML += `
-                        <div class="card-pro p-4 flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2 relative">
+                        <div class="card-pro p-4 flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
                             <div>
-                                <p class="text-xs font-black uppercase">${d.name} ${d.employee ? ' - ('+d.employee+')' : ''}</p>
+                                <p class="text-xs font-black uppercase">${d.name} ${d.employee ? '('+d.employee+')' : ''}</p>
                                 <p class="text-[9px] text-gray-500">${d.date} • ${d.type}</p>
                             </div>
                             <div class="flex items-center gap-3">
@@ -191,23 +234,20 @@
                                 <div class="dropdown">
                                     <button class="text-gray-500 p-2"><i class="fas fa-ellipsis-v"></i></button>
                                     <div class="dropdown-content">
-                                        <button onclick="editEntry('${docSnap.id}', '${d.name}', ${amt})" class="w-full text-left p-3 text-blue-400 text-xs border-b border-gray-700 hover:bg-gray-800"><i class="fas fa-edit mr-2"></i>Change</button>
-                                        <button onclick="deleteEntry('${docSnap.id}')" class="w-full text-left p-3 text-red-500 text-xs hover:bg-gray-800"><i class="fas fa-trash-alt mr-2"></i>Delete</button>
+                                        <button onclick="editEntry('${docSnap.id}', '${d.name}', ${amt})" class="w-full text-left p-3 text-blue-400 text-xs border-b border-gray-700 hover:bg-gray-800">Edit</button>
+                                        <button onclick="deleteEntry('${docSnap.id}')" class="w-full text-left p-3 text-red-500 text-xs hover:bg-gray-800">Delete</button>
                                     </div>
                                 </div>
                             </div>
                         </div>`;
                 });
 
-                // Update Employee Stats UI
-                empStatsDiv.innerHTML = Object.keys(employees).length ? '' : '<p class="text-gray-500 italic">Ingen lønn registrert ennå...</p>';
+                empStatsDiv.innerHTML = Object.keys(employees).length ? '' : '<p class="text-gray-500 italic">No payroll found.</p>';
                 for (let name in employees) {
-                    let totalPaid = employees[name];
-                    let feriepenger = totalPaid * 0.102;
                     empStatsDiv.innerHTML += `
-                        <div class="flex justify-between border-b border-white/5 pb-1 mb-1">
+                        <div class="flex justify-between border-b border-white/5 pb-1">
                             <span class="font-bold text-gray-300">${name}:</span>
-                            <span>Total Lønn: <b class="text-white">${totalPaid.toLocaleString()} kr</b> | Ferie: <b class="text-orange-400">${feriepenger.toLocaleString()} kr</b></span>
+                            <span>Lønn: <b>${employees[name].toLocaleString()} kr</b> | Ferie: <b class="text-orange-400">${(employees[name]*0.102).toLocaleString()} kr</b></span>
                         </div>`;
                 }
 
@@ -216,68 +256,49 @@
                 document.getElementById('stat-mva').innerText = tmva.toLocaleString() + ' kr';
                 document.getElementById('stat-owner').innerText = to.toLocaleString() + ' kr';
                 document.getElementById('totalNet').innerText = (ti - te).toLocaleString() + ' kr';
-                if(isPrivate) applyPrivacy(true);
             });
-        };
-
-        window.checkType = (val) => {
-            const field = document.getElementById('employeeField');
-            val === 'Lønn' ? field.classList.remove('hidden') : field.classList.add('hidden');
         };
 
         window.saveEntry = async () => {
             const amt = document.getElementById('inAmount').value;
             const name = document.getElementById('inName').value;
             const date = document.getElementById('inDate').value;
-            const type = document.getElementById('inType').value;
-            const employee = document.getElementById('inEmployee').value;
-
-            if(!amt || !name || !date) return alert("Fyll ut alle felt!");
-            
+            if(!amt || !name || !date) return;
             await addDoc(collection(db, "pro_records"), {
-                amount: parseFloat(amt),
-                name,
-                date,
-                type,
-                employee: type === 'Lønn' ? employee : '',
-                mode: currentMode,
-                user: auth.currentUser.email
+                amount: parseFloat(amt), name, date,
+                type: document.getElementById('inType').value,
+                employee: document.getElementById('inEmployee').value,
+                mode: currentMode, user: auth.currentUser.email
             });
-
-            document.getElementById('inAmount').value = '';
-            document.getElementById('inName').value = '';
-            document.getElementById('inEmployee').value = '';
-            showPage('list');
+            document.getElementById('inAmount').value = ''; document.getElementById('inName').value = ''; showPage('list');
         };
 
-        window.editEntry = async (id, oldName, oldAmt) => {
-            const newName = prompt("Endre beskrivelse:", oldName);
-            const newAmt = prompt("Endre beløp:", oldAmt);
-            if(newName && newAmt) await updateDoc(doc(db, "pro_records", id), { name: newName, amount: parseFloat(newAmt) });
-        };
-
-        window.deleteEntry = async (id) => { if(confirm("Er du sikker?")) await deleteDoc(doc(db, "pro_records", id)); };
-        window.togglePrivacy = () => { isPrivate = !isPrivate; applyPrivacy(isPrivate); document.getElementById('eyeIcon').className = isPrivate ? 'fas fa-eye-slash' : 'fas fa-eye'; };
-        function applyPrivacy(active) { document.querySelectorAll('.balance-text').forEach(el => active ? el.classList.add('privacy-blur') : el.classList.remove('privacy-blur')); }
-
+        window.checkType = (val) => { document.getElementById('employeeField').className = (val === 'Lønn' ? '' : 'hidden'); };
         window.setMode = (m) => {
             currentMode = m;
-            document.getElementById('btn-inc').className = m === 'income' ? 'flex-1 py-4 rounded-xl font-black bg-green-600 text-xs shadow-lg' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
-            document.getElementById('btn-exp').className = m === 'expense' ? 'flex-1 py-4 rounded-xl font-black bg-red-600 text-xs shadow-lg' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
+            document.getElementById('btn-inc').className = m === 'income' ? 'flex-1 py-4 rounded-xl font-black bg-green-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
+            document.getElementById('btn-exp').className = m === 'expense' ? 'flex-1 py-4 rounded-xl font-black bg-red-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
             const opts = m === 'income' ? ['Faktura', 'Kontanter'] : ['Shidaal', 'Lønn', 'Forsikring', 'Bank / MVA-fri', 'Bankuttak (Owner)'];
             document.getElementById('inType').innerHTML = opts.map(o => `<option value="${o}" class="bg-[#1e293b]">${o}</option>`).join('');
             checkType(document.getElementById('inType').value);
         };
 
-        window.showPage = (p) => {
-            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+        window.editEntry = async (id, oldName, oldAmt) => {
+            const newName = prompt(langData[currentLang].editMsg, oldName);
+            const newAmt = prompt("New Amount:", oldAmt);
+            if(newName && newAmt) await updateDoc(doc(db, "pro_records", id), { name: newName, amount: parseFloat(newAmt) });
+        };
+
+        window.deleteEntry = async (id) => { if(confirm(langData[currentLang].deleteMsg)) await deleteDoc(doc(db, "pro_records", id)); };
+        window.showPage = (p) => { 
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden')); 
             document.getElementById(p + 'Section').classList.remove('hidden');
             document.getElementById('nav-list').classList.toggle('active', p === 'list');
             document.getElementById('nav-add').classList.toggle('active', p === 'add');
         };
-
-        window.handleAuth = () => signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
         window.logout = () => signOut(auth);
+        window.togglePrivacy = () => { isPrivate = !isPrivate; document.querySelectorAll('.balance-text').forEach(el => isPrivate ? el.classList.add('privacy-blur') : el.classList.remove('privacy-blur')); document.getElementById('eyeIcon').className = isPrivate ? 'fas fa-eye-slash' : 'fas fa-eye'; };
+
         document.getElementById('inDate').valueAsDate = new Date();
         setMode('income');
     </script>
