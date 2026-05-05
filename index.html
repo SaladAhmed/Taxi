@@ -3,74 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taxi Salaad App</title>
+    <title>Mohamed Salad Transport</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --blue: #3b82f6; --red: #ef4444; --green: #22c55e; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 10px; }
-        .box { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #334155; max-width: 450px; margin: 15px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        h1 { text-align: center; color: var(--yellow); font-size: 28px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-main { background: var(--blue); color: white; }
+        :root { --bg: #1a1c2c; --card: #242745; --yellow: #f1c40f; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
+        
+        /* Dashboard Styles */
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 20px; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 15px; }
+        .stat-box { background: var(--card); border: 1px solid; border-radius: 12px; padding: 10px; text-align: center; }
+        .stat-box small { font-size: 10px; display: block; margin-bottom: 5px; opacity: 0.8; }
+        .stat-box span { font-weight: bold; font-size: 14px; }
+        
+        .main-result { background: var(--card); border: 2px solid var(--yellow); border-radius: 15px; margin: 15px; padding: 15px; text-align: center; position: relative; }
+        .eye-icon { position: absolute; right: 15px; top: 15px; cursor: pointer; color: var(--yellow); }
+        .sub-stats { display: flex; justify-content: space-around; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
+        .sub-stats div small { font-size: 10px; color: #aaa; }
+        .sub-stats div span { display: block; color: var(--yellow); font-weight: bold; }
+
+        /* List Styles */
+        .entry-list { padding: 0 15px; }
+        .entry-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 5px solid var(--red); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .entry-info h4 { margin: 0; font-size: 16px; }
+        .entry-info small { color: #888; font-size: 12px; }
+        .entry-amount { color: var(--red); font-weight: bold; font-size: 18px; display: flex; align-items: center; }
+        
+        /* Three Dots Menu */
+        .menu-dots { cursor: pointer; padding: 5px; margin-left: 10px; color: #666; }
+        .dropdown { position: absolute; right: 10px; top: 40px; background: white; color: black; border-radius: 5px; display: none; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .dropdown div { padding: 10px 20px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; }
+        .dropdown div:hover { background: #f5f5f5; }
+
+        /* Navigation Bar */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #444; }
+        .nav-item { text-align: center; color: #888; cursor: pointer; font-size: 12px; }
+        .nav-item.active { color: var(--yellow); }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 5px; }
+
+        /* Form Page */
+        .page { display: none; padding: 20px; }
+        .page.active { display: block; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #1a1c2c; color: white; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-save { background: var(--green); color: white; }
-        .btn-logout { background: var(--red); color: white; }
-        .total-box { background: #334155; padding: 20px; border-radius: 15px; text-align: center; border: 2px solid var(--yellow); margin-bottom: 20px; }
-        .total-box h3 { margin: 0; font-size: 18px; color: #cbd5e1; }
-        .total-box span { font-size: 32px; font-weight: bold; color: var(--yellow); }
-        .item { background: #0f172a; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--blue); }
-        .item-info { display: flex; justify-content: space-between; align-items: center; }
-        .item-name { color: var(--yellow); font-size: 14px; margin-top: 5px; display: block; }
-        .hidden { display: none; }
+        
+        .hidden-val { filter: blur(5px); }
     </style>
 </head>
 <body>
 
-<!-- 1. LOGIN & REGISTER -->
-<div id="auth-page" class="box">
-    <h1>🚖 Taxi Salaad</h1>
-    <p style="text-align:center; color:#94a3b8;">Login (Giriş) / Create Account</p>
-    <input type="email" id="email" placeholder="Email (Somali/Norsk/Eng)">
-    <input type="password" id="pass" placeholder="Password (Min 6)">
-    <button class="btn-main" onclick="handleAuth('login')">LOGIN / LOGG INN</button>
-    <button style="background:#475569; color:white;" onclick="handleAuth('reg')">REGISTER / REGISTRER</button>
+<div id="auth-page" style="padding: 50px 20px; text-align: center;">
+    <h1 style="color:var(--yellow)">🚖 LOGIN</h1>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Password">
+    <button class="btn btn-save" onclick="handleAuth('login')">GELI APP-KA</button>
 </div>
 
-<!-- 2. MAIN APP PAGE -->
-<div id="app-page" class="hidden">
-    <div class="box">
-        <h2 id="u-name" style="text-align:center; color:white; font-size:18px;"></h2>
+<div id="app-content" style="display:none;">
+    <!-- PAGE 1: GUUDMAR (DASHBOARD) -->
+    <div id="page-guudmar" class="page active">
+        <div class="header-title">Mohamed Salad Transport</div>
         
-        <div class="total-box">
-            <h3>TOTAL / ISKU DAR</h3>
-            <span id="total-amount">0</span> <small>kr</small>
+        <div class="stats-grid">
+            <div class="stat-box" style="border-color: var(--green);"><small>INCOME</small><span class="val-text" style="color:var(--green)">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red);"><small>KHARASH</small><span class="val-text" style="color:var(--red)">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue);"><small>U-BAXAY (ME)</small><span class="val-text" style="color:var(--blue)">0 kr</span></div>
         </div>
 
-        <label>Kharashka / Utgifter:</label>
-        <select id="cat" onchange="toggleLonnField()">
-            <option value="Faktura inCom (Fra Sentral)">Faktura inCom (Fra Sentral)</option>
-            <option value="Drivstoff">Drivstoff (Fuel)</option>
-            <option value="Lønn + feriepenger">Lønn + feriepenger (Salary)</option>
-            <option value="Bank transaction ute MVA">Bank transaction ute MVA</option>
-            <option value="Bompenger med MVA">Bompenger med MVA</option>
-            <option value="Fixed bil MVA">Fixed bil MVA</option>
-            <option value="Annet uten MVA">Annet / Other</option>
-        </select>
-
-        <!-- Magaca Shaqaalaha (Kaliya haddii Lonn la doorto) -->
-        <div id="lonn-name-div" class="hidden">
-            <input type="text" id="staff-name" placeholder="Navn på ansatt / Magaca qofka">
+        <div class="main-result">
+            <i class="fas fa-eye eye-icon" onclick="toggleVisibility()"></i>
+            <div class="sub-stats">
+                <div><small>MVA REFUND (1/5)</small><span class="val-text" id="mva-val">0 kr</span></div>
+                <div><small>FERIEPENGER (10.2%)</small><span class="val-text" id="ferie-val">0 kr</span></div>
+            </div>
+            <small style="color:var(--yellow)">NET RESULT</small>
+            <h1 class="val-text" id="net-result" style="color:var(--green); margin: 5px 0;">0 kr</h1>
         </div>
 
-        <input type="number" id="amount" placeholder="Beløp / Lacagta (kr)">
-        
-        <button class="btn-save" onclick="saveData()">SAVE / KEYDI XOGTA</button>
-        <button class="btn-logout" onclick="logout()">LOGOUT / LOGG UT</button>
+        <div class="entry-list" id="entry-list">
+            <!-- Xogta halkan ayay kusoo bixi doontaa -->
+        </div>
     </div>
 
-    <div id="list" style="max-width: 450px; margin: auto;"></div>
+    <!-- PAGE 2: GELI XOG (FORM) -->
+    <div id="page-add" class="page">
+        <h2 style="text-align:center">Geli Xog Cusub</h2>
+        <select id="type">
+            <option value="Kharash">Kharash (Expense)</option>
+            <option value="Income">Income (Dakhli)</option>
+        </select>
+        <input type="text" id="cat" placeholder="Maxay tahay? (Tusaale: Drivstoff)">
+        <input type="number" id="amount" placeholder="Lacagta (kr)">
+        <button class="btn btn-save" onclick="saveData()">KEYDI XOGTA</button>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchPage('guudmar')"><i class="fas fa-list-ul"></i>Guudmar</div>
+        <div class="nav-item" onclick="switchPage('add')"><i class="fas fa-plus-circle"></i>Geli Xog</div>
+        <div class="nav-item" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i>Logout</div>
+    </div>
 </div>
 
 <script>
@@ -81,93 +117,100 @@
       projectId: "mohamed-salad-transport",
       storageBucket: "mohamed-salad-transport.firebasestorage.app",
       messagingSenderId: "608716442795",
-      appId: "1:608716442795:web:34cafc1a23316664717bee",
-      measurementId: "G-YN3RKFE194"
+      appId: "1:608716442795:web:34cafc1a23316664717bee"
     };
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+    let isHidden = false;
 
     function handleAuth(type) {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        if(!e || !p) return alert("Fill all fields!");
-
-        if(type === 'reg') {
-            auth.createUserWithEmailAndPassword(e,p).then(() => showApp()).catch(err => alert(err.message));
-        } else {
-            auth.signInWithEmailAndPassword(e,p).then(() => showApp()).catch(err => alert("Error: Login failed"));
-        }
+        auth.signInWithEmailAndPassword(e,p).then(() => {
+            document.getElementById('auth-page').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            loadData();
+        }).catch(err => alert(err.message));
     }
 
-    function showApp() {
-        document.getElementById('auth-page').classList.add('hidden');
-        document.getElementById('app-page').classList.remove('hidden');
-        document.getElementById('u-name').innerText = "Velkommen, " + auth.currentUser.email;
-        loadData();
+    function switchPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
     }
 
-    function toggleLonnField() {
-        const cat = document.getElementById('cat').value;
-        const lonnDiv = document.getElementById('lonn-name-div');
-        if(cat === "Lønn + feriepenger") lonnDiv.classList.remove('hidden');
-        else lonnDiv.classList.add('hidden');
+    function toggleVisibility() {
+        isHidden = !isHidden;
+        document.querySelectorAll('.val-text').forEach(el => {
+            isHidden ? el.classList.add('hidden-val') : el.classList.remove('hidden-val');
+        });
     }
 
     function saveData() {
+        const t = document.getElementById('type').value;
         const c = document.getElementById('cat').value;
         const a = parseFloat(document.getElementById('amount').value);
-        const name = document.getElementById('staff-name').value;
-        
-        if(!a) return alert("Please enter amount!");
+        if(!c || !a) return alert("Fadlan buuxi xogta");
 
-        const data = {
-            category: c,
-            amount: a,
-            date: new Date().toLocaleString('no-NO'),
-            staffName: (c === "Lønn + feriepenger") ? name : ""
-        };
-
-        db.ref('user_data/' + auth.currentUser.uid).push(data);
-        document.getElementById('amount').value = "";
-        document.getElementById('staff-name').value = "";
+        db.ref('user_data/' + auth.currentUser.uid).push({
+            type: t, category: c, amount: a, date: new Date().toISOString().split('T')[0]
+        });
+        alert("Waa la keydiyey!");
+        switchPage('guudmar');
     }
 
     function loadData() {
         db.ref('user_data/' + auth.currentUser.uid).on('value', snap => {
-            const listDiv = document.getElementById('list');
-            const totalSpan = document.getElementById('total-amount');
-            listDiv.innerHTML = "";
-            let total = 0;
+            const list = document.getElementById('entry-list');
+            list.innerHTML = "";
+            let income = 0, kharash = 0;
 
             snap.forEach(child => {
                 const d = child.val();
-                total += d.amount;
-                listDiv.innerHTML += `
-                    <div class="item">
-                        <div class="item-info">
-                            <strong>${d.category}</strong>
-                            <b>${d.amount} kr</b>
+                const id = child.key;
+                if(d.type === "Income") income += d.amount; else kharash += d.amount;
+
+                list.innerHTML += `
+                    <div class="entry-card" style="border-left-color: ${d.type === "Income" ? '#2ecc71' : '#e74c3c'}">
+                        <div class="entry-info">
+                            <small>UNDEFINED</small>
+                            <h4>${d.category}</h4>
+                            <small>${d.date}</small>
                         </div>
-                        ${d.staffName ? `<span class="item-name">Navn: ${d.staffName}</span>` : ''}
-                        <small style="color:#64748b; font-size:11px;">${d.date}</small>
+                        <div class="entry-amount" style="color: ${d.type === "Income" ? '#2ecc71' : '#e74c3c'}">
+                            <span class="val-text">${d.amount.toLocaleString()} kr</span>
+                            <i class="fas fa-ellipsis-v menu-dots" onclick="toggleMenu('${id}')"></i>
+                            <div id="drop-${id}" class="dropdown">
+                                <div onclick="deleteEntry('${id}')"><i class="fas fa-trash"></i> Delete</div>
+                                <div onclick="alert('Update soon!')"><i class="fas fa-edit"></i> Edit</div>
+                            </div>
+                        </div>
                     </div>`;
             });
-            totalSpan.innerText = total.toLocaleString();
+
+            // Isku darka Dashboard-ka
+            const net = income - kharash;
+            document.querySelectorAll('.val-text')[0].innerText = income.toLocaleString() + " kr";
+            document.querySelectorAll('.val-text')[1].innerText = kharash.toLocaleString() + " kr";
+            document.getElementById('mva-val').innerText = Math.floor(kharash / 5).toLocaleString() + " kr";
+            document.getElementById('ferie-val').innerText = Math.floor(income * 0.102).toLocaleString() + " kr";
+            document.getElementById('net-result').innerText = net.toLocaleString() + " kr";
         });
     }
 
-    function logout() {
-        auth.signOut().then(() => {
-            location.reload();
-        });
+    function toggleMenu(id) {
+        const d = document.getElementById('drop-' + id);
+        d.style.display = d.style.display === 'block' ? 'none' : 'block';
     }
 
-    // Hubi haddii qofku hore u galay (Stay logged in)
-    auth.onAuthStateChanged(user => {
-        if (user) showApp();
-    });
+    function deleteEntry(id) {
+        if(confirm("Ma hubtaa inaad tirtirto?")) {
+            db.ref('user_data/' + auth.currentUser.uid + '/' + id).remove();
+        }
+    }
 </script>
 </body>
 </html>
