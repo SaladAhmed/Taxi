@@ -1,210 +1,61 @@
-<!DOCTYPE html>
-<html lang="no">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mohamed Salad Transport</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root { --bg: #1a1c2c; --card: #242745; --yellow: #f1c40f; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; --text: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
-        
-        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 20px; text-transform: uppercase; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 15px; }
-        .stat-box { background: var(--card); border: 1px solid; border-radius: 12px; padding: 10px; text-align: center; }
-        .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; opacity: 0.8; }
-        .stat-box span { font-weight: bold; font-size: 13px; }
-        
-        .main-result { background: var(--card); border: 2px solid var(--yellow); border-radius: 15px; margin: 15px; padding: 15px; text-align: center; position: relative; }
-        .eye-icon { position: absolute; right: 15px; top: 15px; cursor: pointer; color: var(--yellow); }
-        .sub-stats { display: flex; justify-content: space-around; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
-        .sub-stats div small { font-size: 10px; color: #aaa; }
-        .sub-stats div span { display: block; color: var(--yellow); font-weight: bold; }
-
-        .entry-list { padding: 0 15px; }
-        .entry-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 5px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
-        .entry-info h4 { margin: 0; font-size: 15px; }
-        .entry-info small { color: #888; font-size: 11px; }
-        .entry-amount { font-weight: bold; font-size: 16px; display: flex; align-items: center; }
-        
-        .dropdown { position: absolute; right: 10px; top: 40px; background: white; color: black; border-radius: 5px; display: none; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .dropdown div { padding: 10px 20px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; }
-
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #444; }
-        .nav-item { text-align: center; color: #888; cursor: pointer; font-size: 12px; }
-        .nav-item.active { color: var(--yellow); }
-        .nav-item i { display: block; font-size: 20px; margin-bottom: 5px; }
-
-        .page { display: none; padding: 20px; }
-        .page.active { display: block; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #1a1c2c; color: white; font-size: 16px; }
-        .btn-save { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: var(--green); color: white; }
-        .hidden-val { filter: blur(6px); }
-    </style>
-</head>
-<body>
-
-<div id="auth-page" style="padding: 50px 20px; text-align: center;">
-    <h1 style="color:var(--yellow)">🚖 LOGIN</h1>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="pass" placeholder="Password">
-    <button class="btn-save" onclick="handleAuth()">GELI APP-KA</button>
-</div>
-
-<div id="app-content" style="display:none;">
-    <div id="page-guudmar" class="page active">
-        <div class="header-title">Mohamed Salad Transport</div>
-        
-        <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green);"><small>SENTRAL (MVA)</small><span class="val-text" id="total-sentral" style="color:var(--green)">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue);"><small>OWN (NO MVA)</small><span class="val-text" id="total-own" style="color:var(--blue)">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red);"><small>KHARASH</small><span class="val-text" id="total-kharash" style="color:var(--red)">0 kr</span></div>
-        </div>
-
-        <div class="main-result">
-            <i class="fas fa-eye eye-icon" onclick="toggleVisibility()"></i>
-            <div class="sub-stats">
-                <div><small>MVA REFUND (1/5)</small><span class="val-text" id="mva-val">0 kr</span></div>
-                <div><small>FERIEPENGER (10.2%)</small><span class="val-text" id="ferie-val">0 kr</span></div>
-            </div>
-            <small style="color:var(--yellow)">NET RESULT (AFTER KHARASH)</small>
-            <h1 class="val-text" id="net-result" style="color:var(--green); margin: 5px 0;">0 kr</h1>
-        </div>
-
-        <div class="entry-list" id="entry-list"></div>
-    </div>
-
-    <div id="page-add" class="page">
-        <h2 style="text-align:center">Geli Xog Cusub</h2>
-        <select id="type">
-            <option value="Income-Sentral">Income: Sentral (Med MVA)</option>
-            <option value="Income-Own">Income: Own (Uten MVA)</option>
-            <option value="Kharash">Kharash (Expense)</option>
-        </select>
-        <input type="text" id="cat" placeholder="Maxay tahay? (Tusaale: Drivstoff)">
-        <input type="number" id="amount" placeholder="Lacagta (kr)">
-        <button class="btn-save" onclick="saveData()">KEYDI XOGTA</button>
-    </div>
-
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="switchPage('guudmar')"><i class="fas fa-list-ul"></i>Guudmar</div>
-        <div class="nav-item" onclick="switchPage('add')"><i class="fas fa-plus-circle"></i>Geli Xog</div>
-        <div class="nav-item" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i>Logout</div>
-    </div>
-</div>
-
-<script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-      authDomain: "mohamed-salad-transport.firebaseapp.com",
-      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "mohamed-salad-transport",
-      storageBucket: "mohamed-salad-transport.firebasestorage.app",
-      messagingSenderId: "608716442795",
-      appId: "1:608716442795:web:34cafc1a23316664717bee"
-    };
-
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-    let isHidden = false;
-
-    function handleAuth() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pass').value;
-        auth.signInWithEmailAndPassword(e,p).then(() => {
-            document.getElementById('auth-page').style.display = 'none';
-            document.getElementById('app-content').style.display = 'block';
-            loadData();
-        }).catch(err => alert("Email ama Password khaldan"));
-    }
-
-    function switchPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-    }
-
-    function toggleVisibility() {
-        isHidden = !isHidden;
-        document.querySelectorAll('.val-text').forEach(el => {
-            isHidden ? el.classList.add('hidden-val') : el.classList.remove('hidden-val');
-        });
-    }
-
-    function saveData() {
-        const t = document.getElementById('type').value;
-        const c = document.getElementById('cat').value;
-        const a = parseFloat(document.getElementById('amount').value);
-        if(!c || !a) return alert("Fadlan buuxi xogta");
-
-        db.ref('user_data/' + auth.currentUser.uid).push({
-            type: t, category: c, amount: a, date: new Date().toISOString().split('T')[0]
-        });
-        alert("Waa la keydiyey!");
-        document.getElementById('cat').value = "";
-        document.getElementById('amount').value = "";
-        switchPage('guudmar');
-    }
-
-    function loadData() {
+function loadData() {
         db.ref('user_data/' + auth.currentUser.uid).on('value', snap => {
             const list = document.getElementById('entry-list');
             list.innerHTML = "";
-            let sentral = 0, own = 0, kharash = 0;
+            let sentral = 0, own = 0, kharash_total = 0, mva_refund = 0;
 
             snap.forEach(child => {
                 const d = child.val();
                 const id = child.key;
                 
-                if(d.type === "Income-Sentral") sentral += d.amount;
-                else if(d.type === "Income-Own") own += d.amount;
-                else kharash += d.amount;
+                // 1. Dakhliga (Income)
+                if(d.type === "Income-Sentral") {
+                    sentral += d.amount;
+                    // Taxi MVA waa 12% (12/112)
+                    mva_refund += (d.amount * 12 / 112); 
+                } 
+                else if(d.type === "Income-Own") {
+                    own += d.amount;
+                }
+                // 2. Kharashka (Expenses)
+                else {
+                    kharash_total += d.amount;
+                    
+                    // Kharashyada leh MVA 25% (Regnskap, Biler, Bom)
+                    // Xisaabta: (Amount * 25 / 125) ama si fudud (Amount / 5)
+                    if(d.type === "Kharash-Biler" || d.type === "Kharash-Bom" || d.type === "Kharash-Regn") {
+                        mva_refund += (d.amount / 5); 
+                    }
+                }
 
-                let color = d.type.includes("Income") ? '#2ecc71' : '#e74c3c';
-                if(d.type === "Income-Own") color = '#3498db';
+                // Naqshadda Card-ka
+                let borderColor = d.type.includes('Income') ? '#2ecc71' : '#ef4444';
+                if(d.type === "Income-Own") borderColor = '#3b82f6';
 
                 list.innerHTML += `
-                    <div class="entry-card" style="border-left-color: ${color}">
+                    <div class="entry-card" style="border-left-color: ${borderColor}">
                         <div class="entry-info">
-                            <small>${d.type.replace('Income-', '').toUpperCase()}</small>
+                            <small>${d.type.split('-')[1].toUpperCase()}</small>
                             <h4>${d.category}</h4>
-                            <small>${d.date}</small>
+                            <small><i class="far fa-calendar-alt"></i> ${d.date}</small>
                         </div>
-                        <div class="entry-amount" style="color: ${color}">
+                        <div class="entry-amount" style="color: ${borderColor}">
                             <span class="val-text">${d.amount.toLocaleString()} kr</span>
-                            <i class="fas fa-ellipsis-v menu-dots" style="margin-left:10px; cursor:pointer" onclick="toggleMenu('${id}')"></i>
+                            <i class="fas fa-ellipsis-v" style="margin-left:12px; color:#475569; cursor:pointer" onclick="toggleMenu('${id}')"></i>
                             <div id="drop-${id}" class="dropdown">
-                                <div onclick="deleteEntry('${id}')">Delete</div>
+                                <div onclick="deleteEntry('${id}')" style="color:red">Delete</div>
                             </div>
                         </div>
                     </div>`;
             });
 
-            const net = (sentral + own) - kharash;
+            // Isku darka Dashboard-ka
+            const net = (sentral + own) - kharash_total;
             document.getElementById('total-sentral').innerText = sentral.toLocaleString() + " kr";
             document.getElementById('total-own').innerText = own.toLocaleString() + " kr";
-            document.getElementById('total-kharash').innerText = kharash.toLocaleString() + " kr";
-            document.getElementById('mva-val').innerText = Math.floor(sentral / 5).toLocaleString() + " kr";
+            document.getElementById('total-kharash').innerText = kharash_total.toLocaleString() + " kr";
+            document.getElementById('mva-val').innerText = Math.floor(mva_refund).toLocaleString() + " kr";
             document.getElementById('ferie-val').innerText = Math.floor((sentral + own) * 0.102).toLocaleString() + " kr";
             document.getElementById('net-result').innerText = net.toLocaleString() + " kr";
         });
     }
-
-    function toggleMenu(id) {
-        const d = document.getElementById('drop-' + id);
-        d.style.display = d.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function deleteEntry(id) {
-        if(confirm("Ma hubtaa inaad tirtirto?")) {
-            db.ref('user_data/' + auth.currentUser.uid + '/' + id).remove();
-        }
-    }
-</script>
-</body>
-</html>
