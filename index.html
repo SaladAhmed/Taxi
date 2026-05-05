@@ -8,869 +8,296 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#0d0f1a;--bg2:#141726;--bg3:#1c2035;--bg4:#242840;
-  --acc:#4f8ef7;--acc2:#34d399; /* Green */
-  --acc3:#fb923c; /* Orange MVA */
-  --acc4:#f87171; /* Red */
+  --acc:#4f8ef7;
+  --acc2:#10b981; /* Cagaar - Dakhli */
+  --acc3:#f97316; /* Oranjo - MVA */
+  --acc4:#ef4444; /* Guduud - Kharash */
   --txt:#eef0ff;--txt2:#8b93bc;--txt3:#555e80;
   --brd:#2a2f4a;--rad:12px;--rad2:8px;--rad3:20px;
 }
 html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;overflow-x:hidden}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--brd);border-radius:4px}
 .screen{display:none;min-height:100vh;flex-direction:column}
 .screen.active{display:flex}
 #scr-auth{align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1a2050 0%,var(--bg) 60%)}
-.auth-logo{text-align:center;margin-bottom:28px}
-.auth-logo .ico{font-size:48px;display:block;margin-bottom:8px}
-.auth-logo h1{font-size:22px;font-weight:700;color:var(--acc);letter-spacing:1px}
-.auth-logo p{font-size:12px;color:var(--txt2);margin-top:3px}
 .auth-card{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:28px 24px;width:100%;max-width:380px}
-.auth-tabs{display:flex;gap:0;margin-bottom:22px;border-radius:var(--rad2);overflow:hidden;border:1px solid var(--brd)}
-.auth-tab{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt2);background:transparent;border:none;transition:.15s}
 .auth-tab.active{background:var(--acc);color:#fff}
-.field-group{margin-bottom:12px}
-.field-group label{display:block;font-size:11px;color:var(--txt2);margin-bottom:5px;font-weight:500}
-.field-wrap{position:relative}
-.field-wrap input{width:100%;padding:10px 36px 10px 12px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--txt);font-size:13px;transition:.15s}
-.field-wrap input:focus{outline:none;border-color:var(--acc)}
-.eye-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt3);cursor:pointer;font-size:15px;padding:2px}
-.btn-primary{width:100%;padding:11px;background:var(--acc);color:#fff;border:none;border-radius:var(--rad2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;margin-top:4px}
-.btn-primary:hover{background:#3a7de8}
-.btn-primary:active{transform:scale(.98)}
-.err-msg{color:var(--acc4);font-size:11px;margin-top:6px;min-height:16px}
-.lang-strip{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
-.lang-pill{padding:5px 14px;border-radius:var(--rad3);border:1px solid var(--brd);background:transparent;color:var(--txt2);font-size:12px;cursor:pointer;transition:.15s}
-.lang-pill.active{background:var(--acc);color:#fff;border-color:var(--acc)}
-.link-txt{background:none;border:none;color:var(--acc);font-size:11px;cursor:pointer;text-decoration:underline;margin-top:10px;display:block;text-align:center}
-#scr-app{background:var(--bg)}
+.field-wrap input{width:100%;padding:10px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--txt)}
+.btn-primary{width:100%;padding:12px;background:var(--acc);color:#fff;border:none;border-radius:var(--rad2);cursor:pointer;font-weight:600}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:50}
-.topbar-brand{display:flex;align-items:center;gap:8px}
-.topbar-brand span{font-size:15px;font-weight:700;color:var(--acc)}
-.topbar-right{display:flex;align-items:center;gap:6px}
-.user-chip{font-size:11px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad3);padding:4px 10px;color:var(--txt2)}
-.icon-btn{background:none;border:1px solid var(--brd);border-radius:var(--rad2);padding:5px 9px;color:var(--txt2);font-size:13px;cursor:pointer}
-.icon-btn:hover{background:var(--bg3);color:var(--txt)}
-.tab-bar{display:flex;padding:0 8px;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto;gap:0;position:sticky;top:49px;z-index:40}
-.tab-bar::-webkit-scrollbar{height:0}
-.tab-item{flex-shrink:0;padding:10px 14px;font-size:12px;font-weight:500;color:var(--txt2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.15s}
-.tab-item.active{color:var(--acc);border-bottom-color:var(--acc)}
-.tab-item:hover:not(.active){color:var(--txt)}
-.page{display:none;padding:14px}
+.tab-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto}
+.tab-item{padding:12px 16px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--txt2)}
+.tab-item.active{color:var(--acc);border-bottom:2px solid var(--acc)}
+.page{display:none;padding:15px}
 .page.active{display:block}
-.sum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
-.sum-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:12px}
-.sum-card .s-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-.sum-card .s-val{font-size:17px;font-weight:700}
+.sum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px}
+.sum-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:15px}
 .sum-card.inc .s-val{color:var(--acc2)}
 .sum-card.exp .s-val{color:var(--acc4)}
 .sum-card.mva .s-val{color:var(--acc3)}
-.sum-card.net .s-val{color:var(--acc)}
-.totals-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1a2a50,#1a3a50);border:1px solid var(--acc);border-radius:var(--rad);font-size:13px;font-weight:600;color:var(--acc);cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
-.totals-btn:hover{background:linear-gradient(135deg,#1f3060,#1f4060)}
-.card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:14px;margin-bottom:12px}
-.card-head{font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:15px;margin-bottom:15px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.fg label{display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;font-weight:500}
-.fg input,.fg select{width:100%;padding:9px 10px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--txt);font-size:13px}
-.fg input:focus,.fg select:focus{outline:none;border-color:var(--acc)}
-.fg select option{background:var(--bg3)}
-.form-actions{display:flex;gap:8px;margin-top:12px}
-.btn-add{flex:1;padding:10px;background:var(--acc);color:#fff;border:none;border-radius:var(--rad2);font-size:13px;font-weight:600;cursor:pointer}
-.btn-add:active{transform:scale(.98)}
-.btn-clear{padding:10px 16px;background:transparent;border:1px solid var(--brd);color:var(--txt2);border-radius:var(--rad2);font-size:12px;cursor:pointer}
-.btn-clear:hover{background:var(--bg3)}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
-th{padding:8px;text-align:left;color:var(--txt3);font-weight:500;border-bottom:1px solid var(--brd);white-space:nowrap;font-size:11px}
-td{padding:8px;border-bottom:1px solid var(--brd);color:var(--txt);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,.02)}
-.tfoot-total td{background:var(--bg4);font-weight:700;border-top:2px solid var(--brd);color:var(--txt)}
-.tfoot-total td.pos{color:var(--acc2)}
-.tfoot-total td.neg{color:var(--acc4)}
-.tfoot-total td.mva{color:var(--acc3)}
-.badge{display:inline-block;padding:2px 8px;border-radius:var(--rad3);font-size:10px;font-weight:600;white-space:nowrap}
-.b-inc{background:#064e3b;color:#6ee7b7}
-.b-drv{background:#1c1150;color:#a78bfa}
-.b-lon{background:#1c1917;color:#a8a29e;border:1px solid #44403c}
-.b-bank{background:#0c2340;color:#60a5fa}
-.b-bon{background:#3b0764;color:#e879f9}
-.b-bil{background:#1a3a00;color:#86efac}
-.b-anet{background:#2d1515;color:#fca5a5}
+.fg input, .fg select{width:100%;padding:10px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
 .pos{color:var(--acc2)}
 .neg{color:var(--acc4)}
 .mva-col{color:var(--acc3)}
-.act-wrap{display:flex;gap:4px;white-space:nowrap;position:relative;}
-.dots-btn{background:none;border:none;color:var(--txt2);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:50%}
-.dots-btn:hover{background:var(--bg4)}
-.dropdown{display:none;position:absolute;right:0;top:100%;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);z-index:100;min-width:110px;box-shadow:0 10px 20px rgba(0,0,0,0.5)}
-.dropdown.show{display:block}
-.dropdown button{width:100%;padding:10px 14px;text-align:left;background:none;border:none;color:var(--txt2);font-size:12px;cursor:pointer;border-bottom:1px solid var(--brd)}
-.dropdown button:last-child{border-bottom:none}
-.dropdown button:hover{background:var(--bg4);color:var(--txt)}
-.dropdown button.del-opt{color:var(--acc4)}
 
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
-@media(min-width:500px){.overlay{align-items:center}}
-.modal{background:var(--bg2);border:1px solid var(--brd);border-radius:16px 16px 0 0;padding:22px 20px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
-@media(min-width:500px){.modal{border-radius:16px}}
-.modal-head{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.modal-actions{display:flex;gap:8px;margin-top:16px}
-.btn-sec{padding:9px 16px;background:transparent;border:1px solid var(--brd);color:var(--txt2);border-radius:var(--rad2);font-size:12px;cursor:pointer}
-.total-modal-grid{display:flex;flex-direction:column;gap:8px}
-.total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg3);border-radius:var(--rad2);border:1px solid var(--brd)}
-.total-row .t-lbl{font-size:12px;color:var(--txt2)}
-.total-row .t-val{font-size:14px;font-weight:700}
-.total-divider{height:1px;background:var(--brd);margin:6px 0}
-.total-row.grand{background:var(--bg4);border-color:var(--acc)}
-.total-row.grand .t-lbl{color:var(--txt);font-weight:600}
-.total-row.grand .t-val{font-size:16px;color:var(--acc)}
-.step-list{display:flex;flex-direction:column;gap:8px;margin:12px 0}
-.step-item{padding:10px 14px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);font-size:13px;cursor:pointer;opacity:.45;transition:.15s;pointer-events:none}
-.step-item.ready{opacity:1;pointer-events:auto}
-.step-item.ready:hover{border-color:var(--acc4);color:var(--acc4)}
-.step-item.done{opacity:.6;text-decoration:line-through;pointer-events:none;border-color:#065f46;color:var(--acc2)}
-.user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:var(--rad2);margin-bottom:8px;border:1px solid var(--brd)}
-.avatar{width:34px;height:34px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
-.user-info{flex:1}
-.user-info .uname{font-size:13px;font-weight:500}
-.user-info .urole{font-size:10px;color:var(--txt2)}
-.user-row-actions{display:flex;gap:6px}
-.empty{text-align:center;padding:36px 20px;color:var(--txt3)}
-.empty .eico{font-size:36px;margin-bottom:10px}
-.empty p{font-size:12px}
-.report-type-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border-radius:var(--rad2);margin-bottom:6px;border:1px solid var(--brd)}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad3);padding:9px 18px;font-size:12px;color:var(--txt);z-index:999;transition:.3s;opacity:0}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+/* 3-dots Menu Style */
+.action-menu { position: relative; display: inline-block; }
+.dots-btn { background: none; border: none; color: var(--txt2); font-size: 20px; cursor: pointer; padding: 0 10px; }
+.dropdown-content { 
+    display: none; position: absolute; right: 0; background-color: var(--bg3); 
+    min-width: 120px; border: 1px solid var(--brd); border-radius: 8px; z-index: 100; 
+}
+.dropdown-content button { 
+    width: 100%; padding: 10px; text-align: left; background: none; 
+    border: none; color: var(--txt); cursor: pointer; border-bottom: 1px solid var(--brd);
+}
+.dropdown-content button:hover { background: var(--bg4); }
+.show { display: block; }
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:1000}
 </style>
 </head>
 <body>
 
+<div id="toast" class="toast"></div>
+
+<!-- Login Screen -->
 <div id="scr-auth" class="screen active">
-  <div class="auth-logo">
-    <span class="ico">🚖</span>
-    <h1>M. SALAD PRO</h1>
-    <p>Transport Regnskap System</p>
-  </div>
-  <div class="lang-strip">
-    <button class="lang-pill active" onclick="setLang('no',this)">🇳🇴 Norsk</button>
-    <button class="lang-pill" onclick="setLang('so',this)">🇸🇴 Soomaali</button>
-    <button class="lang-pill" onclick="setLang('en',this)">🇬🇧 English</button>
-  </div>
   <div class="auth-card">
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="authTab('login',this)" data-t="login">Logg Inn</button>
-      <button class="auth-tab" onclick="authTab('register',this)" data-t="register">Ny Konto</button>
-    </div>
-    <div id="login-form">
-      <div class="field-group">
-        <label data-t="username">Brukernavn</label>
-        <div class="field-wrap"><input type="text" id="l-user" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      </div>
-      <div class="field-group">
-        <label data-t="password">Passord</label>
-        <div class="field-wrap">
-          <input type="password" id="l-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-          <button class="eye-btn" onclick="togglePw('l-pass',this)">👁</button>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="doLogin()"><span data-t="login">Logg Inn</span></button>
-      <div class="err-msg" id="l-err"></div>
-      <button class="link-txt" onclick="showForgotPw()" data-t="forgot_pw">Glemt passord?</button>
-    </div>
-    <div id="register-form" style="display:none">
-      <div class="field-group">
-        <label data-t="username">Brukernavn</label>
-        <div class="field-wrap"><input type="text" id="r-user" autocomplete="username"></div>
-      </div>
-      <div class="field-group">
-        <label data-t="password">Passord</label>
-        <div class="field-wrap">
-          <input type="password" id="r-pass" autocomplete="new-password">
-          <button class="eye-btn" onclick="togglePw('r-pass',this)">👁</button>
-        </div>
-      </div>
-      <div class="field-group">
-        <label data-t="confirm_pw">Bekreft passord</label>
-        <div class="field-wrap">
-          <input type="password" id="r-pass2" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
-          <button class="eye-btn" onclick="togglePw('r-pass2',this)">👁</button>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="doRegister()"><span data-t="register">Registrer</span></button>
-      <div class="err-msg" id="r-err"></div>
+    <h2 style="text-align:center;margin-bottom:20px">M. SALAD PRO</h2>
+    <div class="field-group">
+        <input type="text" id="l-user" placeholder="Brukernavn" style="width:100%;padding:10px;margin-bottom:10px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px">
+        <input type="password" id="l-pass" placeholder="Passord" style="width:100%;padding:10px;margin-bottom:20px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px">
+        <button class="btn-primary" onclick="doLogin()">Logg Inn</button>
     </div>
   </div>
 </div>
 
+<!-- Main App -->
 <div id="scr-app" class="screen">
   <div class="topbar">
-    <div class="topbar-brand">
-      <span class="ico">🚖</span>
-      <span>M. SALAD PRO</span>
-    </div>
-    <div class="topbar-right">
-      <div class="lang-strip" style="margin:0;gap:4px">
-        <button class="lang-pill" id="lp-no" onclick="setLang('no',this)">🇳🇴</button>
-        <button class="lang-pill" id="lp-so" onclick="setLang('so',this)">🇸🇴</button>
-        <button class="lang-pill" id="lp-en" onclick="setLang('en',this)">🇬🇧</button>
-      </div>
-      <span class="user-chip" id="user-chip">—</span>
-      <button class="icon-btn" onclick="doLogout()">🚪</button>
-    </div>
+    <div style="font-weight:700;color:var(--acc)">M. SALAD PRO</div>
+    <button onclick="doLogout()" style="background:none;border:none;color:var(--txt2);cursor:pointer">Logg ut</button>
   </div>
+  
   <div class="tab-bar">
-    <div class="tab-item active" onclick="showPage('dash')" data-page="dash">📊 <span data-t="tab_dash">Oversikt</span></div>
-    <div class="tab-item" onclick="showPage('enter')" data-page="enter">➕ <span data-t="tab_enter">Legg til</span></div>
-    <div class="tab-item" onclick="showPage('entries')" data-page="entries">📋 <span data-t="tab_entries">Oppføringer</span></div>
-    <div class="tab-item" onclick="showPage('report')" data-page="report">📈 <span data-t="tab_report">Rapport</span></div>
-    <div class="tab-item" onclick="showPage('setup')" data-page="setup">⚙️ <span data-t="tab_setup">Innstillinger</span></div>
+    <div class="tab-item active" onclick="showPage('dash')">Oversikt</div>
+    <div class="tab-item" onclick="showPage('enter')">➕ Legg til</div>
+    <div class="tab-item" onclick="showPage('entries')">📋 Oppføringer</div>
   </div>
 
+  <!-- Dash -->
   <div class="page active" id="page-dash">
     <div class="sum-grid" id="sum-grid"></div>
-    <button class="totals-btn" onclick="openTotals()">
-      📊 <span data-t="view_totals">Se Alle Totaler & MVA Oversikt</span>
-    </button>
     <div class="card">
-      <div class="card-head"><span data-t="recent">Siste oppføringer</span><span id="dash-count" style="color:var(--txt2)"></span></div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th data-t="th_type">Type</th>
-            <th data-t="th_desc">Beskrivelse</th>
-            <th data-t="th_gross">Brutto</th>
-            <th data-t="th_mva">MVA</th>
-            <th data-t="th_date">Dato</th>
-          </tr></thead>
-          <tbody id="dash-tbody"></tbody>
-        </table>
-      </div>
+        <h3>Siste transaksjoner</h3>
+        <div class="tbl-wrap">
+            <table>
+                <thead><tr><th>Type</th><th>Beskrivelse</th><th>Beløp</th></tr></thead>
+                <tbody id="dash-tbody"></tbody>
+            </table>
+        </div>
     </div>
   </div>
 
+  <!-- Enter -->
   <div class="page" id="page-enter">
     <div class="card">
-      <div class="card-head"><span data-t="add_entry">Ny oppføring</span></div>
-      <div class="form-row">
-        <div class="fg">
-          <label data-t="f_type">Type</label>
-          <select id="f-type" onchange="onTypeChange()">
-            <option value="faktura">Faktura Inntekt (m/MVA)</option>
-            <option value="drivstoff">Drivstoff (m/MVA)</option>
-            <option value="lonn">Lønn + Feriepenger (u/MVA)</option>
-            <option value="bank">Bank Transaksjoner (u/MVA)</option>
-            <option value="bonpenger">Bompenger (m/MVA)</option>
-            <option value="biler">Faste Biler (m/MVA)</option>
-            <option value="anet">Anet (u/MVA)</option>
-          </select>
+        <h3>Ny registrering</h3>
+        <div class="form-row">
+            <div class="fg"><label>Type</label>
+                <select id="f-type" onchange="checkLonn()">
+                    <option value="faktura">Faktura (Inntekt)</option>
+                    <option value="drivstoff">Drivstoff</option>
+                    <option value="lonn">Lønn (u/mva)</option>
+                    <option value="biler">Bilutgifter</option>
+                </select>
+            </div>
+            <div class="fg"><label>Dato</label><input type="date" id="f-date"></div>
         </div>
-        <div class="fg">
-          <label data-t="f_date">Dato</label>
-          <input type="date" id="f-date">
+        <div class="form-row">
+            <div class="fg"><label>Beløp (Brutto)</label><input type="number" id="f-amount" placeholder="0.00"></div>
+            <div class="fg"><label>MVA %</label>
+                <select id="f-mva">
+                    <option value="25">25%</option>
+                    <option value="0">0%</option>
+                </select>
+            </div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="fg">
-          <label data-t="f_amount">Beløp (NOK)</label>
-          <input type="number" id="f-amount" placeholder="0.00" min="0" step="0.01">
+        <div id="ferie-info" style="display:none; color:var(--acc3); margin-bottom:10px; font-size:12px;">
+            * Feriepenger (10.2%) blir lagt til automatisk.
         </div>
-        <div class="fg" id="fg-mva">
-          <label>MVA %</label>
-          <select id="f-mva">
-            <option value="25">25%</option>
-            <option value="15">15%</option>
-            <option value="12">12%</option>
-            <option value="0">0% (u/MVA)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row" id="fg-worker-row" style="display:none">
-        <div class="fg" style="grid-column:1/-1">
-          <label data-t="f_worker">Ansattnavn</label>
-          <input type="text" id="f-worker" placeholder="Fullt navn på ansatt">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="fg">
-          <label data-t="f_desc">Beskrivelse</label>
-          <input type="text" id="f-desc" placeholder="Kort beskrivelse...">
-        </div>
-        <div class="fg">
-          <label data-t="f_ref">Referanse</label>
-          <input type="text" id="f-ref" placeholder="Faktura nr...">
-        </div>
-      </div>
-      <div class="form-actions">
-        <button class="btn-add" onclick="addEntry()">➕ <span data-t="btn_add">Legg til</span></button>
-        <button class="btn-clear" onclick="clearForm()">✕</button>
-      </div>
-      <div class="err-msg" id="f-err"></div>
+        <div class="fg" style="margin-bottom:10px"><label>Beskrivelse</label><input type="text" id="f-desc"></div>
+        <button class="btn-primary" onclick="addEntry()" style="background:var(--acc2)">Lagre transaksjon</button>
     </div>
   </div>
 
+  <!-- Entries -->
   <div class="page" id="page-entries">
     <div class="card">
-      <div class="card-head">
-        <span data-t="all_entries">Alle oppføringer</span>
-        <span id="entry-count" style="color:var(--txt2)"></span>
-      </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th data-t="th_type">Type</th>
-            <th data-t="th_worker">Ansatt</th>
-            <th data-t="th_desc">Beskrivelse</th>
-            <th data-t="th_gross">Brutto</th>
-            <th data-t="th_mva">MVA</th>
-            <th data-t="th_netto">Netto</th>
-            <th data-t="th_date">Dato</th>
-            <th data-t="th_ref">Ref</th>
-            <th data-t="th_actions">Handlinger</th>
-          </tr></thead>
-          <tbody id="entries-tbody"></tbody>
-          <tfoot>
-            <tr class="tfoot-total">
-              <td colspan="3" data-t="totals">Totaler</td>
-              <td class="pos" id="tf-gross">—</td>
-              <td class="mva" id="tf-mva">—</td>
-              <td class="pos" id="tf-netto">—</td>
-              <td colspan="3"></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="page" id="page-report">
-    <div class="sum-grid" id="rep-sum-grid"></div>
-    <button class="totals-btn" onclick="openTotals()">
-      📊 <span data-t="view_totals">Se Alle Totaler & MVA Oversikt</span>
-    </button>
-    <div class="card">
-      <div class="card-head" data-t="report_by_type">Rapport per type</div>
-      <div id="report-by-type"></div>
-    </div>
-  </div>
-
-  <div class="page" id="page-setup">
-    <div class="card">
-      <div class="card-head" data-t="users_title">Brukere</div>
-      <div id="users-list"></div>
-      <button class="btn-primary" style="margin-top:10px" onclick="openModal('modal-adduser')">➕ <span data-t="add_user">Legg til bruker</span></button>
-    </div>
-    <div class="card">
-      <div class="card-head" data-t="security_title">🔐 Sikkerhet & Personvern</div>
-      <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin-bottom:12px" data-t="sec_desc">Alle data lagres lokalt i din nettleser. Ingen server, ingen skytjeneste. Du har full kontroll. Hver bruker ser kun sine egne data.</p>
-      <button class="btn-sec" onclick="openModal('modal-changepw')" style="margin-bottom:8px;width:100%;text-align:left">🔑 <span data-t="change_pw">Endre passord</span></button>
-      <button class="btn-sec" onclick="exportData()" style="width:100%;text-align:left">📤 <span data-t="export">Eksporter data</span></button>
+        <div class="tbl-wrap">
+            <table>
+                <thead><tr><th>Type</th><th>Beskrivelse</th><th>Netto</th><th>MVA</th><th>Brutto</th><th>Dato</th><th></th></tr></thead>
+                <tbody id="entries-tbody"></tbody>
+            </table>
+        </div>
     </div>
   </div>
 </div>
-
-<div class="overlay" id="modal-totals">
-  <div class="modal">
-    <div class="modal-head">📊 <span data-t="totals_title">Totaler & MVA Oversikt</span></div>
-    <div class="total-modal-grid" id="totals-content"></div>
-    <div class="modal-actions">
-      <button class="btn-sec" onclick="closeModal('modal-totals')" data-t="btn_close">Lukk</button>
-    </div>
-  </div>
-</div>
-
-<div class="overlay" id="modal-edit">
-  <div class="modal">
-    <div class="modal-head">✏️ <span data-t="edit_title">Rediger oppføring</span></div>
-    <div class="form-row">
-      <div class="fg">
-        <label data-t="f_type">Type</label>
-        <select id="e-type" onchange="onEditTypeChange()">
-          <option value="faktura">Faktura Inntekt (m/MVA)</option>
-          <option value="drivstoff">Drivstoff (m/MVA)</option>
-          <option value="lonn">Lønn + Feriepenger (u/MVA)</option>
-          <option value="bank">Bank Transaksjoner (u/MVA)</option>
-          <option value="bonpenger">Bompenger (m/MVA)</option>
-          <option value="biler">Faste Biler (m/MVA)</option>
-          <option value="anet">Anet (u/MVA)</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label data-t="f_date">Dato</label>
-        <input type="date" id="e-date">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="fg">
-        <label data-t="f_amount">Beløp</label>
-        <input type="number" id="e-amount">
-      </div>
-      <div class="fg" id="eg-mva">
-        <label>MVA %</label>
-        <select id="e-mva">
-          <option value="25">25%</option>
-          <option value="15">15%</option>
-          <option value="12">12%</option>
-          <option value="0">0%</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row" id="eg-worker-row">
-      <div class="fg" style="grid-column:1/-1">
-        <label data-t="f_worker">Ansattnavn</label>
-        <input type="text" id="e-worker">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="fg">
-        <label data-t="f_desc">Beskrivelse</label>
-        <input type="text" id="e-desc">
-      </div>
-      <div class="fg">
-        <label data-t="f_ref">Referanse</label>
-        <input type="text" id="e-ref">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="saveEdit()" style="flex:1">💾 <span data-t="btn_save">Lagre</span></button>
-      <button class="btn-sec" onclick="closeModal('modal-edit')" data-t="btn_cancel">Avbryt</button>
-    </div>
-  </div>
-</div>
-
-<div class="overlay" id="modal-delete">
-  <div class="modal">
-    <div class="modal-head">⚠️ <span data-t="del_title">Slett oppføring</span></div>
-    <p style="font-size:12px;color:var(--txt2)" data-t="del_warn">Fullfør alle 3 trinn for å slette:</p>
-    <div class="step-list">
-      <div class="step-item ready" id="del-s1" onclick="delStep(1)">1️⃣ <span data-t="del_s1">Trykk for å bekrefte: Slett</span></div>
-      <div class="step-item" id="del-s2" onclick="delStep(2)">2️⃣ <span data-t="del_s2">Trykk for å bekrefte: Endre</span></div>
-      <div class="step-item" id="del-s3" onclick="delStep(3)">3️⃣ <span data-t="del_s3">Trykk for å bekrefte: Endelig sletting</span></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-sec" onclick="closeModal('modal-delete')" data-t="btn_cancel">Avbryt</button>
-    </div>
-  </div>
-</div>
-
-<div class="overlay" id="modal-adduser">
-  <div class="modal">
-    <div class="modal-head">➕ <span data-t="add_user">Legg til bruker</span></div>
-    <div class="field-group">
-      <label data-t="username">Brukernavn</label>
-      <div class="field-wrap"><input type="text" id="nu-user"></div>
-    </div>
-    <div class="field-group">
-      <label data-t="password">Passord</label>
-      <div class="field-wrap">
-        <input type="password" id="nu-pass">
-        <button class="eye-btn" onclick="togglePw('nu-pass',this)">👁</button>
-      </div>
-    </div>
-    <div class="field-group">
-      <label data-t="confirm_pw">Bekreft passord</label>
-      <div class="field-wrap">
-        <input type="password" id="nu-pass2">
-        <button class="eye-btn" onclick="togglePw('nu-pass2',this)">👁</button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="addUser()" style="flex:1">➕ <span data-t="add_user">Legg til</span></button>
-      <button class="btn-sec" onclick="closeModal('modal-adduser')" data-t="btn_cancel">Avbryt</button>
-    </div>
-    <div class="err-msg" id="nu-err"></div>
-  </div>
-</div>
-
-<div class="overlay" id="modal-changepw">
-  <div class="modal">
-    <div class="modal-head">🔑 <span data-t="change_pw">Endre passord</span></div>
-    <div class="field-group">
-      <label data-t="old_pw">Gammelt passord</label>
-      <div class="field-wrap">
-        <input type="password" id="cp-old">
-        <button class="eye-btn" onclick="togglePw('cp-old',this)">👁</button>
-      </div>
-    </div>
-    <div class="field-group">
-      <label data-t="new_pw">Nytt passord</label>
-      <div class="field-wrap">
-        <input type="password" id="cp-new">
-        <button class="eye-btn" onclick="togglePw('cp-new',this)">👁</button>
-      </div>
-    </div>
-    <div class="field-group">
-      <label data-t="confirm_pw">Bekreft nytt passord</label>
-      <div class="field-wrap">
-        <input type="password" id="cp-new2">
-        <button class="eye-btn" onclick="togglePw('cp-new2',this)">👁</button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="doChangePw()" style="flex:1">💾 <span data-t="btn_save">Lagre</span></button>
-      <button class="btn-sec" onclick="closeModal('modal-changepw')" data-t="btn_cancel">Avbryt</button>
-    </div>
-    <div class="err-msg" id="cp-err"></div>
-  </div>
-</div>
-
-<div class="overlay" id="modal-forgotpw">
-  <div class="modal">
-    <div class="modal-head">🔐 <span data-t="forgot_pw">Glemt passord</span></div>
-    <p style="font-size:12px;color:var(--txt2);margin-bottom:16px" data-t="forgot_desc">Kontakt admin for å tilbakestille passordet ditt.</p>
-    <div class="modal-actions">
-      <button class="btn-sec" onclick="closeModal('modal-forgotpw')" data-t="btn_close">Lukk</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-const LANG = {
-no:{
-  login:'Logg Inn',register:'Ny Konto',username:'Brukernavn',password:'Passord',
-  confirm_pw:'Bekreft passord',forgot_pw:'Glemt passord?',forgot_desc:'Kontakt admin for å tilbakestille passordet ditt.',
-  old_pw:'Gammelt passord',new_pw:'Nytt passord',
-  tab_dash:'Oversikt',tab_enter:'Legg til',tab_entries:'Oppføringer',tab_report:'Rapport',tab_setup:'Innstillinger',
-  view_totals:'Se Alle Totaler & MVA Oversikt',totals_title:'Totaler & MVA Oversikt',
-  recent:'Siste oppføringer',add_entry:'Ny oppføring',all_entries:'Alle oppføringer',
-  report_by_type:'Rapport per type',users_title:'Brukere',security_title:'Sikkerhet & Personvern',
-  sec_desc:'Alle data lagres lokalt i din nettleser. Ingen server, ingen skytjeneste. Du har full kontroll. Hver bruker ser kun sine egne data.',
-  change_pw:'Endre passord',export:'Eksporter data',add_user:'Legg til bruker',
-  f_type:'Type',f_date:'Dato',f_amount:'Beløp (NOK)',f_worker:'Ansattnavn',f_desc:'Beskrivelse',f_ref:'Referanse',
-  btn_add:'Legg til',btn_clear:'Nullstill',btn_save:'Lagre',btn_cancel:'Avbryt',btn_close:'Lukk',
-  del_title:'Slett oppføring',del_warn:'Fullfør alle 3 trinn for å slette:',
-  del_s1:'Trykk for å bekrefte: Slett',del_s2:'Trykk for å bekrefte: Endre',del_s3:'Trykk for å bekrefte: Endelig sletting',
-  edit_title:'Rediger oppføring',totals:'Totaler',
-  th_type:'Type',th_worker:'Ansatt',th_desc:'Beskrivelse',th_gross:'Brutto',th_mva:'MVA',
-  th_netto:'Netto',th_date:'Dato',th_ref:'Ref',th_actions:'Handlinger',th_count:'Antall',
-  t_income:'Faktura Inntekt',t_expense:'Total Utgift',t_mva_in:'MVA Innkjøpt',t_mva_out:'MVA Krevd tilbake',t_net:'Netto Resultat',
-  types:{faktura:'Faktura Inntekt',drivstoff:'Drivstoff',lonn:'Lønn+Feriepenger',bank:'Bank',bonpenger:'Bompenger',biler:'Faste Biler',anet:'Anet'},
-  err_fields:'Fyll ut alle felt',err_pw_match:'Passordene stemmer ikke',err_user_exists:'Bruker finnes allerede',err_wrong_pw:'Feil passord',err_no_user:'Bruker ikke funnet',
-  saved:'Lagret!',deleted:'Slettet!',updated:'Oppdatert!',pw_changed:'Passord endret!',user_added:'Bruker lagt til!',
-},
-so:{
-  login:'Gal',register:'Abuur Koonto',username:'Magaca',password:'Sirta',
-  confirm_pw:'Xaqiiji sirta',forgot_pw:'Sirta ma ilowday?',forgot_desc:'Admin la xiriir si aad u dib-u-dejiso sirta.',
-  old_pw:'Sirta hore',new_pw:'Sirta cusub',
-  tab_dash:'Guudmar',tab_enter:'Ku dar',tab_entries:'Diiwaanada',tab_report:'Warbixin',tab_setup:'Dejinta',
-  view_totals:'Arag Dhammaan Wadarta & MVA',totals_title:'Wadarta & MVA Guudmarka',
-  recent:'Diiwaanada ugu dambeeyay',add_entry:'Diiwaangelin cusub',all_entries:'Dhammaan diiwaanada',
-  report_by_type:'Warbixin nooc walba',users_title:'Isticmaalayaasha',security_title:'Amniga & Xogta Gaarka',
-  sec_desc:'Dhammaan xogta waxay ku kaydnaataa browserkaaga. Serfar ma leh. Isticmaale walba xogtiisa keliya ayuu arki karaa.',
-  change_pw:'Beddel sirta',export:'Dhoofin xogta',add_user:'Ku dar isticmaale',
-  f_type:'Nooca',f_date:'Taariikhda',f_amount:'Lacagta (NOK)',f_worker:'Magaca shaqaalaaha',f_desc:'Sharaxaad',f_ref:'Tixraac',
-  btn_add:'Ku dar',btn_clear:'Nadiifi',btn_save:'Keydi',btn_cancel:'Jooji',btn_close:'Xidh',
-  del_title:'Tirtir diiwaanka',del_warn:'Dhamee 3 tallaabo si aad u tirtirato:',
-  del_s1:'Guji si aad u xaqiijiso: Tirtir',del_s2:'Guji si aad u xaqiijiso: Beddelid',del_s3:'Guji si aad u xaqiijiso: Tirtirid dhamaystiran',
-  edit_title:'Wax ka bedel diiwaanka',totals:'Wadarta',
-  th_type:'Nooca',th_worker:'Shaqaale',th_desc:'Sharaxaad',th_gross:'Wadarta',th_mva:'MVA',
-  th_netto:'Netto',th_date:'Taarikh',th_ref:'Tixraac',th_actions:'Ficilada',th_count:'Tirada',
-  t_income:'Dakhliga',t_expense:'Kharashka',t_mva_in:'MVA La bixiyay',t_mva_out:'MVA La soo celiyay',t_net:"Faa'iidada Nadiifka",
-  types:{faktura:'Faktura Dakhli',drivstoff:'Shidaal',lonn:'Mushahar+Fasaxa',bank:'Bangiga',bonpenger:'Bompenger',biler:'Biilaasha Joogtada',anet:'Kale'},
-  err_fields:'Buuxi dhammaan beeraha',err_pw_match:'Siraha ma waafaqsana',err_user_exists:'Magaca horay u jiraa',err_wrong_pw:'Sirta khaldan',err_no_user:'Isticmaale la waayay',
-  saved:'La keydiay!',deleted:'La tirtiray!',updated:'La cusboonaaday!',pw_changed:'Sirta la beddelay!',user_added:'Isticmaale la daray!',
-},
-en:{
-  login:'Log In',register:'New Account',username:'Username',password:'Password',
-  confirm_pw:'Confirm password',forgot_pw:'Forgot password?',forgot_desc:'Contact admin to reset your password.',
-  old_pw:'Old password',new_pw:'New password',
-  tab_dash:'Dashboard',tab_enter:'Add Entry',tab_entries:'Entries',tab_report:'Report',tab_setup:'Settings',
-  view_totals:'View All Totals & VAT Overview',totals_title:'Totals & VAT Overview',
-  recent:'Recent entries',add_entry:'New entry',all_entries:'All entries',
-  report_by_type:'Report by type',users_title:'Users',security_title:'Security & Privacy',
-  sec_desc:'All data is stored locally in your browser. No server, no cloud. Each user only sees their own data.',
-  change_pw:'Change password',export:'Export data',add_user:'Add user',
-  f_type:'Type',f_date:'Date',f_amount:'Amount (NOK)',f_worker:'Employee name',f_desc:'Description',f_ref:'Reference',
-  btn_add:'Add',btn_clear:'Clear',btn_save:'Save',btn_cancel:'Cancel',btn_close:'Close',
-  del_title:'Delete entry',del_warn:'Complete all 3 steps to delete:',
-  del_s1:'Click to confirm: Delete',del_s2:'Click to confirm: Change',del_s3:'Click to confirm: Final deletion',
-  edit_title:'Edit entry',totals:'Totals',
-  th_type:'Type',th_worker:'Employee',th_desc:'Description',th_gross:'Gross',th_mva:'VAT',
-  th_netto:'Net',th_date:'Date',th_ref:'Ref',th_actions:'Actions',th_count:'Count',
-  t_income:'Invoice Income',t_expense:'Total Expenses',t_mva_in:'VAT Paid',t_mva_out:'VAT Reclaimed',t_net:'Net Profit',
-  types:{faktura:'Invoice Income',drivstoff:'Fuel',lonn:'Salary+Holiday',bank:'Bank',bonpenger:'Toll Fees',biler:'Fixed Vehicles',anet:'Other'},
-  err_fields:'Fill in all fields',err_pw_match:'Passwords do not match',err_user_exists:'User already exists',err_wrong_pw:'Wrong password',err_no_user:'User not found',
-  saved:'Saved!',deleted:'Deleted!',updated:'Updated!',pw_changed:'Password changed!',user_added:'User added!',
-}};
+let currentUser = null;
+let entries = [];
 
-const MVA_TYPES=['faktura','drivstoff','bonpenger','biler'];
-const INCOME_TYPES=['faktura'];
-const LONN_TYPES=['lonn'];
-let lang='no',currentUser=null,pendingDelId=null,_delStep=0,editingId=null;
+function doLogin() {
+    const u = document.getElementById('l-user').value;
+    if(u) {
+        currentUser = u;
+        entries = JSON.parse(localStorage.getItem('entries_'+u) || '[]');
+        document.getElementById('scr-auth').classList.remove('active');
+        document.getElementById('scr-app').classList.add('active');
+        renderAll();
+    }
+}
 
-function t(k){return(LANG[lang]||LANG.no)[k]||k}
-function ttype(v){return((LANG[lang]||LANG.no).types||{})[v]||v}
-function usersDb(){try{return JSON.parse(localStorage.getItem('mspro_users')||'{}')}catch{return{}}}
-function saveUsersDb(d){localStorage.setItem('mspro_users',JSON.stringify(d))}
-function entriesKey(u){return'mspro_entries_'+u}
-function getEntries(u){try{return JSON.parse(localStorage.getItem(entriesKey(u))||'[]')}catch{return[]}}
-function saveEntries(u,d){localStorage.setItem(entriesKey(u),JSON.stringify(d))}
-function hashPw(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return h.toString(36)}
+function doLogout() { location.reload(); }
 
-function setLang(l,btn){
-  lang=l;
-  document.querySelectorAll('.lang-pill').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  ['no','so','en'].forEach(x=>{const el=document.getElementById('lp-'+x);if(el)el.classList.toggle('active',x===l)});
-  applyTranslations();
-  if(currentUser)renderAll();
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    renderAll();
 }
-function applyTranslations(){
-  document.querySelectorAll('[data-t]').forEach(el=>el.textContent=t(el.getAttribute('data-t')));
-}
-function authTab(tab,btn){
-  document.querySelectorAll('.auth-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('login-form').style.display=tab==='login'?'block':'none';
-  document.getElementById('register-form').style.display=tab==='register'?'block':'none';
-}
-function togglePw(id,btn){
-  const el=document.getElementById(id);
-  if(el.type==='password'){el.type='text';btn.textContent='🙈';}
-  else{el.type='password';btn.textContent='👁';}
-}
-function doLogin(){
-  const u=document.getElementById('l-user').value.trim();
-  const p=document.getElementById('l-pass').value;
-  const db=usersDb();
-  document.getElementById('l-err').textContent='';
-  if(!u||!p){document.getElementById('l-err').textContent=t('err_fields');return}
-  if(!db[u]){document.getElementById('l-err').textContent=t('err_no_user');return}
-  if(db[u].pw!==hashPw(p)){document.getElementById('l-err').textContent=t('err_wrong_pw');return}
-  currentUser=u;
-  document.getElementById('user-chip').textContent='👤 '+u;
-  document.getElementById('l-user').value='';
-  document.getElementById('l-pass').value='';
-  showScreen('scr-app');showPage('dash');renderAll();
-}
-function doRegister(){
-  const u=document.getElementById('r-user').value.trim();
-  const p=document.getElementById('r-pass').value;
-  const p2=document.getElementById('r-pass2').value;
-  const db=usersDb();
-  document.getElementById('r-err').textContent='';
-  if(!u||!p||!p2){document.getElementById('r-err').textContent=t('err_fields');return}
-  if(p!==p2){document.getElementById('r-err').textContent=t('err_pw_match');return}
-  if(db[u]){document.getElementById('r-err').textContent=t('err_user_exists');return}
-  db[u]={pw:hashPw(p),created:new Date().toISOString()};
-  saveUsersDb(db);
-  document.getElementById('r-user').value='';
-  document.getElementById('r-pass').value='';
-  document.getElementById('r-pass2').value='';
-  toast(t('user_added'));
-  authTab('login',document.querySelector('.auth-tab'));
-}
-function doLogout(){currentUser=null;showScreen('scr-auth')}
-function showForgotPw(){openModal('modal-forgotpw')}
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-item').forEach(ti=>ti.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  const tb=document.querySelector('[data-page="'+id+'"]');if(tb)tb.classList.add('active');
-  if(id==='dash')renderDash();
-  if(id==='entries')renderEntries();
-  if(id==='report')renderReport();
-  if(id==='setup')renderSetup();
-}
-function openModal(id){document.getElementById(id).classList.add('open')}
-function closeModal(id){document.getElementById(id).classList.remove('open')}
-document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 
-function onTypeChange(){
-  const v=document.getElementById('f-type').value;
-  document.getElementById('fg-mva').style.display=MVA_TYPES.includes(v)?'block':'none';
-  document.getElementById('fg-worker-row').style.display=LONN_TYPES.includes(v)?'grid':'none';
-  if(!MVA_TYPES.includes(v))document.getElementById('f-mva').value='0';
+function checkLonn() {
+    const type = document.getElementById('f-type').value;
+    const ferieDiv = document.getElementById('ferie-info');
+    const mvaSelect = document.getElementById('f-mva');
+    
+    if(type === 'lonn') {
+        ferieDiv.style.display = 'block';
+        mvaSelect.value = "0";
+    } else {
+        ferieDiv.style.display = 'none';
+        mvaSelect.value = "25";
+    }
 }
-function onEditTypeChange(){
-  const v=document.getElementById('e-type').value;
-  document.getElementById('eg-mva').style.display=MVA_TYPES.includes(v)?'block':'none';
-  document.getElementById('eg-worker-row').style.display=LONN_TYPES.includes(v)?'grid':'none';
-}
-function clearForm(){
-  ['f-amount','f-desc','f-ref','f-worker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
-  document.getElementById('f-err').textContent='';
-  document.getElementById('f-type').value='faktura';onTypeChange();
-  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-}
-function addEntry(){
-  const type=document.getElementById('f-type').value;
-  const date=document.getElementById('f-date').value;
-  const amount=parseFloat(document.getElementById('f-amount').value);
-  const mvaPct=parseInt(document.getElementById('f-mva').value)||0;
-  const worker=document.getElementById('f-worker').value.trim();
-  const desc=document.getElementById('f-desc').value.trim();
-  const ref=document.getElementById('f-ref').value.trim();
-  document.getElementById('f-err').textContent='';
-  if(!date||isNaN(amount)||amount<=0||!desc){document.getElementById('f-err').textContent=t('err_fields');return}
-  const mvaAmt=MVA_TYPES.includes(type)?+(amount-(amount/(1+mvaPct/100))).toFixed(2):0;
-  const netto=+(amount-mvaAmt).toFixed(2);
-  const entry={id:Date.now().toString(36)+Math.random().toString(36).slice(2),type,date,amount:+amount.toFixed(2),mvaPct,mvaAmt,netto,worker,desc,ref,createdAt:new Date().toISOString()};
-  const entries=getEntries(currentUser);entries.unshift(entry);saveEntries(currentUser,entries);
-  toast(t('saved'));clearForm();renderAll();
-}
-function openEdit(id){
-  const e=getEntries(currentUser).find(x=>x.id===id);if(!e)return;
-  editingId=id;
-  document.getElementById('e-type').value=e.type;
-  document.getElementById('e-date').value=e.date;
-  document.getElementById('e-amount').value=e.amount;
-  document.getElementById('e-mva').value=e.mvaPct||0;
-  document.getElementById('e-worker').value=e.worker||'';
-  document.getElementById('e-desc').value=e.desc||'';
-  document.getElementById('e-ref').value=e.ref||'';
-  onEditTypeChange();openModal('modal-edit');
-}
-function saveEdit(){
-  if(!editingId)return;
-  const entries=getEntries(currentUser);
-  const idx=entries.findIndex(x=>x.id===editingId);if(idx<0)return;
-  const type=document.getElementById('e-type').value;
-  const amount=parseFloat(document.getElementById('e-amount').value);
-  const mvaPct=parseInt(document.getElementById('e-mva').value)||0;
-  const mvaAmt=MVA_TYPES.includes(type)?+(amount-(amount/(1+mvaPct/100))).toFixed(2):0;
-  entries[idx]={...entries[idx],type,date:document.getElementById('e-date').value,amount:+amount.toFixed(2),mvaPct,mvaAmt,netto:+(amount-mvaAmt).toFixed(2),worker:document.getElementById('e-worker').value.trim(),desc:document.getElementById('e-desc').value.trim(),ref:document.getElementById('e-ref').value.trim()};
-  saveEntries(currentUser,entries);closeModal('modal-edit');toast(t('updated'));renderAll();
-}
-function openDelete(id){
-  pendingDelId=id;_delStep=0;
-  ['del-s1','del-s2','del-s3'].forEach((sid,i)=>{const el=document.getElementById(sid);el.classList.remove('done','ready');if(i===0)el.classList.add('ready')});
-  openModal('modal-delete');
-}
-function delStep(n){
-  if(n!==_delStep+1)return;
-  _delStep=n;
-  document.getElementById('del-s'+n).classList.remove('ready');
-  document.getElementById('del-s'+n).classList.add('done');
-  if(n<3){document.getElementById('del-s'+(n+1)).classList.add('ready');}
-  else{
-    saveEntries(currentUser,getEntries(currentUser).filter(x=>x.id!==pendingDelId));
-    closeModal('modal-delete');toast(t('deleted'));renderAll();
-  }
-}
-function openTotals(){
-  const entries=getEntries(currentUser);
-  const calc=computeTotals(entries);
-  const c=document.getElementById('totals-content');c.innerHTML='';
-  const typeKeys=['faktura','drivstoff','lonn','bank','bonpenger','biler','anet'];
-  const typeSection=document.createElement('div');typeSection.style.cssText='display:flex;flex-direction:column;gap:6px;margin-bottom:10px';
-  typeKeys.forEach(k=>{
-    const te=entries.filter(e=>e.type===k);if(!te.length)return;
-    const sum=te.reduce((a,e)=>a+e.amount,0);
-    const mvaSum=te.reduce((a,e)=>a+e.mvaAmt,0);
-    const netSum=te.reduce((a,e)=>a+e.netto,0);
-    const div=document.createElement('div');div.className='total-row';
-    div.innerHTML=`<div><div class="t-lbl">${ttype(k)}</div><div style="font-size:10px;color:var(--txt3)">${te.length} ${t('th_count')} · MVA: ${fmt(mvaSum)} · Netto: ${fmt(netSum)}</div></div><div class="t-val ${INCOME_TYPES.includes(k)?'pos':'neg'}">${fmt(sum)}</div>`;
-    typeSection.appendChild(div);
-  });
-  c.appendChild(typeSection);
-  const div2=document.createElement('div');div2.className='total-divider';c.appendChild(div2);
-  const sumSection=document.createElement('div');sumSection.style.cssText='display:flex;flex-direction:column;gap:6px';
-  [{lbl:t('t_income'),val:calc.income,cls:'pos'},{lbl:t('t_expense'),val:calc.expense,cls:'neg'},{lbl:t('t_mva_in'),val:calc.mvaIn,cls:'mva-col'},{lbl:t('t_mva_out'),val:calc.mvaOut,cls:'mva-col'}].forEach(r=>{
-    const d=document.createElement('div');d.className='total-row';
-    d.innerHTML=`<div class="t-lbl">${r.lbl}</div><div class="t-val ${r.cls}">${fmt(r.val)}</div>`;
-    sumSection.appendChild(d);
-  });
-  const grand=document.createElement('div');grand.className='total-row grand';
-  grand.innerHTML=`<div class="t-lbl">${t('t_net')}</div><div class="t-val ${calc.net>=0?'pos':'neg'}">${fmt(calc.net)}</div>`;
-  sumSection.appendChild(grand);c.appendChild(sumSection);
-  openModal('modal-totals');
-}
-function computeTotals(entries){
-  let income=0,expense=0,mvaIn=0,mvaOut=0;
-  entries.forEach(e=>{if(INCOME_TYPES.includes(e.type)){income+=e.amount;mvaOut+=e.mvaAmt;}else{expense+=e.amount;mvaIn+=e.mvaAmt;}});
-  return{income,expense,mvaIn,mvaOut,net:income-expense};
-}
-function fmt(n){return(+(n||0)).toLocaleString('nb-NO',{minimumFractionDigits:0,maximumFractionDigits:0})+' kr'}
-function typeBadge(v){const cls={faktura:'b-inc',drivstoff:'b-drv',lonn:'b-lon',bank:'b-bank',bonpenger:'b-bon',biler:'b-bil',anet:'b-anet'};return`<span class="badge ${cls[v]||''}">${ttype(v)}</span>`}
-function renderAll(){
-  renderDash();
-  const ap=document.querySelector('.page.active');
-  if(ap){const id=ap.id.replace('page-','');if(id==='entries')renderEntries();if(id==='report')renderReport();if(id==='setup')renderSetup();}
-}
-function renderDash(){
-  const entries=getEntries(currentUser);const calc=computeTotals(entries);
-  document.getElementById('sum-grid').innerHTML=`<div class="sum-card inc"><div class="s-lbl">${t('t_income')}</div><div class="s-val">${fmt(calc.income)}</div></div><div class="sum-card exp"><div class="s-lbl">${t('t_expense')}</div><div class="s-val">${fmt(calc.expense)}</div></div><div class="sum-card mva"><div class="s-lbl">MVA Netto</div><div class="s-val">${fmt(calc.mvaOut-calc.mvaIn)}</div></div><div class="sum-card net"><div class="s-lbl">${t('t_net')}</div><div class="s-val ${calc.net>=0?'pos':'neg'}">${fmt(calc.net)}</div></div>`;
-  document.getElementById('dash-count').textContent=entries.length+' '+t('th_count');
-  const tb=document.getElementById('dash-tbody');
-  if(!entries.length){tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="eico">📋</div><p>${t('all_entries')}</p></div></td></tr>`;return}
-  tb.innerHTML=entries.slice(0,10).map(e=>`<tr><td>${typeBadge(e.type)}</td><td>${e.desc||'—'}</td><td class="${INCOME_TYPES.includes(e.type)?'pos':'neg'}">${fmt(e.amount)}</td><td class="mva-col">${fmt(e.mvaAmt)}</td><td style="color:var(--txt2)">${e.date||'—'}</td></tr>`).join('');
-}
-function renderEntries(){
-  const entries=getEntries(currentUser);
-  document.getElementById('entry-count').textContent=entries.length+' '+t('th_count');
-  const tb=document.getElementById('entries-tbody');
-  if(!entries.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="eico">📋</div><p>${t('add_entry')}</p></div></td></tr>`;['tf-gross','tf-mva','tf-netto'].forEach(id=>document.getElementById(id).textContent='—');return}
-  tb.innerHTML=entries.map(e=>`<tr><td>${typeBadge(e.type)}</td><td style="color:var(--txt2)">${e.worker||'—'}</td><td>${e.desc||'—'}</td><td class="${INCOME_TYPES.includes(e.type)?'pos':'neg'}">${fmt(e.amount)}</td><td class="mva-col">${fmt(e.mvaAmt)}</td><td>${fmt(e.netto)}</td><td style="color:var(--txt2)">${e.date||'—'}</td><td style="color:var(--txt3);font-size:11px">${e.ref||'—'}</td><td><div class="act-wrap"><button class="act" onclick="openEdit('${e.id}')">✏️</button><button class="act del" onclick="openDelete('${e.id}')">🗑</button></div></td></tr>`).join('');
-  document.getElementById('tf-gross').textContent=fmt(entries.reduce((a,e)=>a+e.amount,0));
-  document.getElementById('tf-mva').textContent=fmt(entries.reduce((a,e)=>a+e.mvaAmt,0));
-  document.getElementById('tf-netto').textContent=fmt(entries.reduce((a,e)=>a+e.netto,0));
-}
-function renderReport(){
-  const entries=getEntries(currentUser);const calc=computeTotals(entries);
-  document.getElementById('rep-sum-grid').innerHTML=`<div class="sum-card inc"><div class="s-lbl">${t('t_income')}</div><div class="s-val">${fmt(calc.income)}</div></div><div class="sum-card exp"><div class="s-lbl">${t('t_expense')}</div><div class="s-val">${fmt(calc.expense)}</div></div><div class="sum-card mva"><div class="s-lbl">MVA Netto</div><div class="s-val">${fmt(calc.mvaOut-calc.mvaIn)}</div></div><div class="sum-card net"><div class="s-lbl">${t('t_net')}</div><div class="s-val ${calc.net>=0?'pos':'neg'}">${fmt(calc.net)}</div></div>`;
-  const rbt=document.getElementById('report-by-type');rbt.innerHTML='';
-  ['faktura','drivstoff','lonn','bank','bonpenger','biler','anet'].forEach(k=>{
-    const te=entries.filter(e=>e.type===k);if(!te.length)return;
-    const row=document.createElement('div');row.className='report-type-row';
-    row.innerHTML=`<div>${typeBadge(k)}<div style="font-size:10px;color:var(--txt3);margin-top:4px">${te.length} ${t('th_count')} · MVA: ${fmt(te.reduce((a,e)=>a+e.mvaAmt,0))} · Netto: ${fmt(te.reduce((a,e)=>a+e.netto,0))}</div></div><div class="rt-val ${INCOME_TYPES.includes(k)?'pos':'neg'}">${fmt(te.reduce((a,e)=>a+e.amount,0))}</div>`;
-    rbt.appendChild(row);
-  });
-  if(!entries.length)rbt.innerHTML=`<div class="empty"><div class="eico">📈</div><p>${t('add_entry')}</p></div>`;
-}
-function renderSetup(){
-  const db=usersDb();const list=document.getElementById('users-list');list.innerHTML='';
-  Object.keys(db).forEach(u=>{
-    const row=document.createElement('div');row.className='user-row';
-    row.innerHTML=`<div class="avatar">${u.slice(0,2).toUpperCase()}</div><div class="user-info"><div class="uname">${u}</div><div class="urole">${u===currentUser?'👤 Deg':'Bruker'}</div></div><div class="user-row-actions">${u!==currentUser?`<button class="act del" onclick="deleteUser('${u}')">🗑</button>`:''}</div>`;
-    list.appendChild(row);
-  });
-}
-function addUser(){
-  const u=document.getElementById('nu-user').value.trim();
-  const p=document.getElementById('nu-pass').value;
-  const p2=document.getElementById('nu-pass2').value;
-  const db=usersDb();document.getElementById('nu-err').textContent='';
-  if(!u||!p||!p2){document.getElementById('nu-err').textContent=t('err_fields');return}
-  if(p!==p2){document.getElementById('nu-err').textContent=t('err_pw_match');return}
-  if(db[u]){document.getElementById('nu-err').textContent=t('err_user_exists');return}
-  db[u]={pw:hashPw(p),created:new Date().toISOString()};saveUsersDb(db);
-  document.getElementById('nu-user').value='';document.getElementById('nu-pass').value='';document.getElementById('nu-pass2').value='';
-  closeModal('modal-adduser');toast(t('user_added'));renderSetup();
-}
-function deleteUser(u){
-  if(u===currentUser)return;
-  const db=usersDb();delete db[u];saveUsersDb(db);localStorage.removeItem(entriesKey(u));
-  toast(t('deleted'));renderSetup();
-}
-function doChangePw(){
-  const old=document.getElementById('cp-old').value;
-  const nw=document.getElementById('cp-new').value;
-  const nw2=document.getElementById('cp-new2').value;
-  const db=usersDb();document.getElementById('cp-err').textContent='';
-  if(!old||!nw||!nw2){document.getElementById('cp-err').textContent=t('err_fields');return}
-  if(db[currentUser].pw!==hashPw(old)){document.getElementById('cp-err').textContent=t('err_wrong_pw');return}
-  if(nw!==nw2){document.getElementById('cp-err').textContent=t('err_pw_match');return}
-  db[currentUser].pw=hashPw(nw);saveUsersDb(db);
-  document.getElementById('cp-old').value='';document.getElementById('cp-new').value='';document.getElementById('cp-new2').value='';
-  closeModal('modal-changepw');toast(t('pw_changed'));
-}
-function exportData(){
-  const entries=getEntries(currentUser);
-  const csv=['Type,Ansatt,Beskrivelse,Brutto,MVA,Netto,Dato,Ref'].concat(entries.map(e=>[ttype(e.type),e.worker||'',e.desc||'',e.amount,e.mvaAmt,e.netto,e.date,e.ref||''].join(','))).join('\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='mspro_'+currentUser+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-}
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
 
-(function init(){
-  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-  onTypeChange();applyTranslations();
-  const db=usersDb();
-  if(!Object.keys(db).length){db['admin']={pw:hashPw('admin123'),created:new Date().toISOString()};saveUsersDb(db);}
-})();
+function addEntry() {
+    const type = document.getElementById('f-type').value;
+    const amount = parseFloat(document.getElementById('f-amount').value);
+    const date = document.getElementById('f-date').value;
+    const desc = document.getElementById('f-desc').value;
+    const mvaPct = parseInt(document.getElementById('f-mva').value);
+
+    if(!amount || !date) return alert("Fyll ut beløp og dato");
+
+    let finalAmount = amount;
+    let ferieAmt = 0;
+
+    // Otomaatik u xisaabi Feriepenger haddii ay Lønn tahay
+    if(type === 'lonn') {
+        ferieAmt = amount * 0.102;
+        finalAmount = amount + ferieAmt;
+    }
+
+    const mvaAmt = (mvaPct > 0) ? (finalAmount - (finalAmount / (1 + mvaPct/100))) : 0;
+    const netto = finalAmount - mvaAmt;
+
+    const entry = {
+        id: Date.now(),
+        type,
+        amount: finalAmount.toFixed(2),
+        netto: netto.toFixed(2),
+        mvaAmt: mvaAmt.toFixed(2),
+        date,
+        desc: type === 'lonn' ? desc + " (+10.2% feriepenger)" : desc
+    };
+
+    entries.unshift(entry);
+    localStorage.setItem('entries_'+currentUser, JSON.stringify(entries));
+    showToast("Lagret!");
+    showPage('dash');
+}
+
+function deleteEntry(id) {
+    if(confirm("Slette denne transaksjonen?")) {
+        entries = entries.filter(e => e.id !== id);
+        localStorage.setItem('entries_'+currentUser, JSON.stringify(entries));
+        renderAll();
+    }
+}
+
+function toggleMenu(id) {
+    document.getElementById('menu-'+id).classList.toggle('show');
+}
+
+function renderAll() {
+    const dashBody = document.getElementById('dash-tbody');
+    const entryBody = document.getElementById('entries-tbody');
+    const sumGrid = document.getElementById('sum-grid');
+    
+    dashBody.innerHTML = '';
+    entryBody.innerHTML = '';
+
+    let totalInc = 0, totalExp = 0, totalMva = 0;
+
+    entries.forEach(e => {
+        const isInc = e.type === 'faktura';
+        if(isInc) totalInc += parseFloat(e.amount);
+        else totalExp += parseFloat(e.amount);
+        totalMva += parseFloat(e.mvaAmt);
+
+        const row = `<tr>
+            <td><b class="${isInc?'pos':'neg'}">${e.type.toUpperCase()}</b></td>
+            <td>${e.desc}</td>
+            <td class="${isInc?'pos':'neg'}">${parseFloat(e.amount).toLocaleString()} kr</td>
+        </tr>`;
+        dashBody.innerHTML += row;
+
+        const fullRow = `<tr>
+            <td>${e.type}</td>
+            <td>${e.desc}</td>
+            <td>${parseFloat(e.netto).toLocaleString()}</td>
+            <td class="mva-col">${parseFloat(e.mvaAmt).toLocaleString()}</td>
+            <td class="${isInc?'pos':'neg'}">${parseFloat(e.amount).toLocaleString()}</td>
+            <td>${e.date}</td>
+            <td>
+                <div class="action-menu">
+                    <button class="dots-btn" onclick="toggleMenu(${e.id})">⋮</button>
+                    <div id="menu-${e.id}" class="dropdown-content">
+                        <button onclick="alert('Rediger kommer snart')">✏️ Endre</button>
+                        <button style="color:var(--acc4)" onclick="deleteEntry(${e.id})">🗑 Slett</button>
+                    </div>
+                </div>
+            </td>
+        </tr>`;
+        entryBody.innerHTML += fullRow;
+    });
+
+    sumGrid.innerHTML = `
+        <div class="sum-card inc"><div class="s-val">${totalInc.toLocaleString()} kr</div><small>Inntekt</small></div>
+        <div class="sum-card exp"><div class="s-val">${totalExp.toLocaleString()} kr</div><small>Utgifter</small></div>
+        <div class="sum-card mva"><div class="s-val">${totalMva.toLocaleString()} kr</div><small>MVA Totalt</small></div>
+        <div class="sum-card" style="border-color:var(--acc)"><div class="s-val" style="color:var(--acc)">${(totalInc-totalExp).toLocaleString()} kr</div><small>Netto Resultat</small></div>
+    `;
+}
+
+function showToast(m) {
+    const t = document.getElementById('toast');
+    t.innerText = m; t.style.display = 'block';
+    setTimeout(() => t.style.display='none', 2000);
+}
+
+// Xir menu-ga haddii meel kale la taabto
+window.onclick = function(event) {
+    if (!event.target.matches('.dots-btn')) {
+        document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+    }
+}
 </script>
 </body>
 </html>
