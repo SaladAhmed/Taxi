@@ -2,9 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Taxi App Firebase</title>
+<title>Taxi Firebase App</title>
 
-<!-- Firebase -->
+<!-- Firebase (compat version) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -15,7 +15,6 @@ input,button{padding:10px;margin:5px;border-radius:6px;border:none}
 button{background:#2563eb;color:#fff;cursor:pointer}
 .green{color:#22c55e}
 .red{color:#ef4444}
-.orange{color:#f97316}
 </style>
 </head>
 
@@ -49,38 +48,33 @@ button{background:#2563eb;color:#fff;cursor:pointer}
 </div>
 
 <script>
-// 🔥 FIREBASE CONFIG (BADAL API KEYS)
+
+// 🔥 1. KU DHEJI API KEYS KAAGA HALKAN
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "PUT_REAL_API_KEY_HERE",
   authDomain: "mohamed-salad-transport.firebaseapp.com",
   databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app/",
   projectId: "mohamed-salad-transport",
   storageBucket: "mohamed-salad-transport.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  messagingSenderId: "PUT_ID",
+  appId: "PUT_APP_ID"
 };
 
+// 🔥 INIT
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.database();
 
 // 🔥 REGISTER
 function register(){
-  const email = emailEl();
-  const pass = passEl();
-
-  auth.createUserWithEmailAndPassword(email, pass)
+  auth.createUserWithEmailAndPassword(emailEl(), passEl())
   .then(()=>alert("User created"))
   .catch(e=>alert(e.message));
 }
 
 // 🔥 LOGIN
 function login(){
-  const email = emailEl();
-  const pass = passEl();
-
-  auth.signInWithEmailAndPassword(email, pass)
+  auth.signInWithEmailAndPassword(emailEl(), passEl())
   .catch(e=>alert(e.message));
 }
 
@@ -89,9 +83,7 @@ auth.onAuthStateChanged(user=>{
   if(user){
     document.getElementById("auth").style.display="none";
     document.getElementById("app").style.display="block";
-
     document.getElementById("user").innerText="👤 "+user.email;
-
     loadData();
   }else{
     document.getElementById("auth").style.display="block";
@@ -107,6 +99,7 @@ function logout(){
 // 🔥 FORGOT PASSWORD
 function forgot(){
   const email = prompt("Enter email:");
+  if(!email) return;
 
   auth.sendPasswordResetEmail(email)
   .then(()=>alert("Email sent"))
@@ -116,6 +109,7 @@ function forgot(){
 // 🔥 CHANGE PASSWORD
 function changePassword(){
   const newPass = prompt("New password:");
+  if(!newPass) return;
 
   auth.currentUser.updatePassword(newPass)
   .then(()=>alert("Password changed"))
@@ -139,7 +133,7 @@ function loadData(){
   const uid = auth.currentUser.uid;
 
   db.ref("data/"+uid).on("value", snap=>{
-    const d = snap.val();
+    const d = snap.val() || {};
     let html="";
 
     for(let id in d){
@@ -150,7 +144,7 @@ function loadData(){
   });
 }
 
-// 🔧 HELPERS
+// HELPERS
 function emailEl(){return document.getElementById("email").value;}
 function passEl(){return document.getElementById("password").value;}
 
