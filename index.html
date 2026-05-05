@@ -1,22 +1,195 @@
-<!-- PAGE 2: GELI XOG (FORM) -->
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mohamed Salad Transport PRO</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
+        .lang-bar { display: flex; justify-content: flex-end; padding: 10px 15px; gap: 10px; background: #1e293b; border-bottom: 1px solid #334155; }
+        .lang-btn { cursor: pointer; font-size: 20px; }
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 15px 0; font-size: 16px; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 12px; }
+        .stat-box { background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center; }
+        .stat-box small { font-size: 8px; display: block; margin-bottom: 4px; color: #94a3b8; font-weight: bold; }
+        .stat-box span { font-weight: bold; font-size: 11px; }
+        .main-result { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 20px; text-align: center; position: relative; }
+        .eye-icon { position: absolute; right: 15px; top: 15px; cursor: pointer; color: var(--yellow); }
+        .sub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 15px; }
+        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 8px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 2px solid #334155; }
+        .nav-item { text-align: center; color: #64748b; cursor: pointer; font-size: 11px; }
+        .nav-item.active { color: var(--yellow); }
+        .page { display: none; padding: 20px; }
+        .page.active { display: block; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
+        .btn-pro { width: 100%; padding: 16px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .btn-pro:active { transform: scale(0.98); }
+        .hidden-val { filter: blur(8px); }
+        .dropdown { position: absolute; right: 10px; top: 45px; background: white; color: black; border-radius: 8px; display: none; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .dropdown div { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="lang-bar">
+    <span class="lang-btn" onclick="setLang('no')">🇳🇴</span>
+    <span class="lang-btn" onclick="setLang('so')">🇸🇴</span>
+</div>
+
+<div id="auth-page" style="padding: 40px 25px; text-align: center;">
+    <h1 style="color:var(--yellow)">🚖 TAXI PRO</h1>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Password">
+    <button class="btn-pro" style="background:var(--blue); color:white; margin-bottom:10px;" onclick="handleAuth('login')">LOG IN</button>
+    <button class="btn-pro" style="background:transparent; color:var(--yellow); border:1px solid var(--yellow);" onclick="handleAuth('reg')">REGISTER</button>
+</div>
+
+<div id="app-content" style="display:none;">
+    <div id="page-guudmar" class="page active">
+        <div class="header-title" id="t-dash">GUUDMARKA XISAABTA</div>
+        <div class="stats-grid">
+            <div class="stat-box" style="border-color: var(--green);"><small id="t-sentral">SENTRAL (MVA)</small><span class="val-text" id="total-sentral" style="color:var(--green)">0</span></div>
+            <div class="stat-box" style="border-color: var(--blue);"><small id="t-own">OWN (NO MVA)</small><span class="val-text" id="total-own" style="color:var(--blue)">0</span></div>
+            <div class="stat-box" style="border-color: var(--red);"><small id="t-exp">UTGIFTER</small><span class="val-text" id="total-kharash" style="color:var(--red)">0</span></div>
+        </div>
+        <div class="main-result">
+            <i class="fas fa-eye eye-icon" onclick="toggleVisibility()"></i>
+            <div class="sub-stats">
+                <div><small id="t-mva">MVA REFUND</small><span class="val-text" id="mva-val">0</span></div>
+                <div><small id="t-ferie">FERIEPENGER</small><span class="val-text" id="ferie-val">0</span></div>
+            </div>
+            <small id="t-net" style="color:var(--yellow)">NETTO RESULT (LØNN)</small>
+            <h1 class="val-text" id="net-result" style="color:var(--green); margin: 10px 0;">0 kr</h1>
+        </div>
+        <div id="entry-list"></div>
+    </div>
+
     <div id="page-add" class="page">
         <h2 style="text-align:center; color:var(--yellow)" id="t-add-title">Ku Dar Xog</h2>
-        <label id="t-type-label">Nooca:</label>
         <select id="type">
-            <option value="Income-Sentral">Sentral Income (Med MVA)</option>
-            <option value="Income-Own">Own Income (Uten MVA)</option>
+            <option value="Income-Sentral">Income: Sentral (MVA)</option>
+            <option value="Income-Own">Income: Own (No MVA)</option>
             <option value="Kharash-Regn">Regnskapsfører (Red)</option>
             <option value="Kharash-Biler">Biler Fix / Service (Red)</option>
             <option value="Kharash-Bom">Bompenger (Red)</option>
             <option value="Kharash-Driv">Drivstoff (Red)</option>
-            <option value="Kharash-Other">Other Expenses (Red)</option>
         </select>
-        <input type="text" id="cat" placeholder="Faahfaahin / Description">
-        <input type="number" id="amount" placeholder="Lacagta (kr)">
+        <input type="text" id="cat" placeholder="Description">
+        <input type="number" id="amount" placeholder="Amount (kr)">
         
-        <!-- Badhanka Cagaarka (Dakhliga) -->
-        <button class="btn-pro" style="background:var(--green); color:white; margin-bottom:10px;" onclick="saveData()" id="t-save">KEYDI DAKHLIGA (INCOME)</button>
-        
-        <!-- Badhanka Guduudka (Kharashka) oo lagu daray -->
-        <button class="btn-pro" style="background:var(--red); color:white;" onclick="saveData()">KEYDI KHARASHKA (EXPENSE)</button>
+        <button class="btn-pro" style="background:var(--green); color:white; margin-bottom:10px;" onclick="saveData()">SAVE INCOME (CAGAAR)</button>
+        <button class="btn-pro" style="background:var(--red); color:white;" onclick="saveData()">SAVE EXPENSE (GUDUUD)</button>
     </div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchPage('guudmar')"><i class="fas fa-home"></i><br>Dash</div>
+        <div class="nav-item" onclick="switchPage('add')"><i class="fas fa-plus"></i><br>Add</div>
+        <div class="nav-item" onclick="auth.signOut()"><i class="fas fa-sign-out-alt"></i><br>Exit</div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
+      authDomain: "mohamed-salad-transport.firebaseapp.com",
+      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "mohamed-salad-transport",
+      storageBucket: "mohamed-salad-transport.firebasestorage.app",
+      messagingSenderId: "608716442795",
+      appId: "1:608716442795:web:34cafc1a23316664717bee"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    let isHidden = false;
+
+    function handleAuth(mode) {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        if(mode==='reg') auth.createUserWithEmailAndPassword(e,p).catch(err=>alert(err.message));
+        else auth.signInWithEmailAndPassword(e,p).catch(err=>alert("Login Error"));
+    }
+
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            document.getElementById('auth-page').style.display='none';
+            document.getElementById('app-content').style.display='block';
+            loadData();
+        } else {
+            document.getElementById('auth-page').style.display='block';
+            document.getElementById('app-content').style.display='none';
+        }
+    });
+
+    function saveData() {
+        const t = document.getElementById('type').value;
+        const c = document.getElementById('cat').value;
+        const a = parseFloat(document.getElementById('amount').value);
+        if(!c || !a) return alert("Buuxi xogta");
+        db.ref('users/'+auth.currentUser.uid+'/entries').push({
+            type:t, cat:c, amount:a, date:new Date().toLocaleDateString('no-NO')
+        });
+        document.getElementById('cat').value=""; document.getElementById('amount').value="";
+        switchPage('guudmar');
+    }
+
+    function loadData() {
+        db.ref('users/'+auth.currentUser.uid+'/entries').on('value', snap => {
+            const list = document.getElementById('entry-list');
+            list.innerHTML = "";
+            let s=0, o=0, k=0, m=0;
+            snap.forEach(child => {
+                const d = child.val(); const id = child.key;
+                let clr = d.type.includes('Income') ? (d.type==='Income-Sentral'?'var(--green)':'var(--blue)') : 'var(--red)';
+                if(d.type==='Income-Sentral'){ s+=d.amount; m+=(d.amount*12/112); }
+                else if(d.type==='Income-Own') o+=d.amount;
+                else { k+=d.amount; if(["Kharash-Regn","Kharash-Biler","Kharash-Bom"].includes(d.type)) m+=(d.amount/5); }
+
+                list.innerHTML += `<div class="entry-card" style="border-left-color:${clr}">
+                    <div><small>${d.type.split('-')[1]}</small><h4>${d.cat}</h4></div>
+                    <div style="color:${clr}; font-weight:bold;"><span class="val-text">${d.amount.toLocaleString()} kr</span>
+                    <i class="fas fa-ellipsis-v" onclick="toggleMenu('${id}')" style="margin-left:10px; color:#444"></i>
+                    <div id="drop-${id}" class="dropdown"><div onclick="deleteE('${id}')" style="color:red">Tirtir</div></div>
+                    </div></div>`;
+            });
+            document.getElementById('total-sentral').innerText = s.toLocaleString();
+            document.getElementById('total-own').innerText = o.toLocaleString();
+            document.getElementById('total-kharash').innerText = k.toLocaleString();
+            document.getElementById('mva-val').innerText = Math.floor(m).toLocaleString();
+            document.getElementById('ferie-val').innerText = Math.floor((s+o)*0.102).toLocaleString();
+            document.getElementById('net-result').innerText = ((s+o)-k).toLocaleString() + " kr";
+        });
+    }
+
+    function switchPage(p) {
+        document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
+        document.getElementById('page-'+p).classList.add('active');
+    }
+    function toggleMenu(id) {
+        const d = document.getElementById('drop-'+id);
+        d.style.display = (d.style.display==='block')?'none':'block';
+    }
+    function deleteE(id) { db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
+    function toggleVisibility() {
+        isHidden = !isHidden;
+        document.querySelectorAll('.val-text').forEach(v=>isHidden?v.classList.add('hidden-val'):v.classList.remove('hidden-val'));
+    }
+    function setLang(l) {
+        const so = {dash:"WARBIXINTA GUUD", sentral:"SENTRAL (MVA)", own:"OWN (NO MVA)", exp:"KHARASHKA", mva:"MVA REFUND", ferie:"LACAGTA FASAXA", net:"NETTO (LØNN)"};
+        const no = {dash:"GUUDMARKA XISAABTA", sentral:"SENTRAL (MVA)", own:"OWN (NO MVA)", exp:"UTGIFTER", mva:"MVA REFUND", ferie:"FERIEPENGER", net:"NETTO RESULT (LØNN)"};
+        const d = l==='so'?so:no;
+        document.getElementById('t-dash').innerText=d.dash; document.getElementById('t-sentral').innerText=d.sentral;
+        document.getElementById('t-own').innerText=d.own; document.getElementById('t-exp').innerText=d.exp;
+        document.getElementById('t-mva').innerText=d.mva; document.getElementById('t-ferie').innerText=d.ferie;
+        document.getElementById('t-net').innerText=d.net;
+    }
+</script>
+</body>
+</html>
