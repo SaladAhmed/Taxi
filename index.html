@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taxi Salaad App</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -42,38 +43,50 @@
 </div>
 
 <script>
-    // XALKA KAMA DAMBEYSTA AH: 
-    // DHEX DHIG API KEY-GAAGA CALAAMADAHA "" EE HOOSE
- // Nuqulkan waa midka cusub ee ku shaqaynaya Firebase SDK v7.20.0+
-const firebaseConfig = {
-  apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-  authDomain: "mohamed-salad-transport.firebaseapp.com",
-  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mohamed-salad-transport",
-  storageBucket: "mohamed-salad-transport.firebasestorage.app",
-  messagingSenderId: "608716442795",
-  appId: "1:608716442795:web:34cafc1a23316664717bee",
-  measurementId: "G-YN3RKFE194"
-};
+    // 1. Firebase Configuration (NADIIF AH)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
+      authDomain: "mohamed-salad-transport.firebaseapp.com",
+      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "mohamed-salad-transport",
+      storageBucket: "mohamed-salad-transport.firebasestorage.app",
+      messagingSenderId: "608716442795",
+      appId: "1:608716442795:web:34cafc1a23316664717bee",
+      measurementId: "G-YN3RKFE194"
+    };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-};
+    // 2. Initialize Firebase (HAL MAR OO KALIYA)
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     
-    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
+    // 3. Functions
     function handleAuth(type) {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        if(type === 'reg') auth.createUserWithEmailAndPassword(e,p).then(s => showApp()).catch(err => alert(err.message));
-        else auth.signInWithEmailAndPassword(e,p).then(s => showApp()).catch(err => alert("Khalad: Hubi Emailka iyo Passwordka"));
+        
+        if (!e || !p) {
+            alert("Fadlan buuxi emailka iyo password-ka");
+            return;
+        }
+
+        if(type === 'reg') {
+            auth.createUserWithEmailAndPassword(e,p)
+                .then(s => showApp())
+                .catch(err => alert("Error Signup: " + err.message));
+        } else {
+            auth.signInWithEmailAndPassword(e,p)
+                .then(s => showApp())
+                .catch(err => alert("Khalad: Hubi Emailka iyo Passwordka"));
+        }
     }
 
     function showApp() {
-        document.getElementById('auth-page').className = 'hidden';
-        document.getElementById('app-page').className = '';
+        document.getElementById('auth-page').classList.add('hidden');
+        document.getElementById('app-page').classList.remove('hidden');
         document.getElementById('u-name').innerText = "Soo dhowaad, " + auth.currentUser.email.split('@')[0];
         loadData();
     }
@@ -83,16 +96,21 @@ firebase.initializeApp(firebaseConfig);
         const a = document.getElementById('amount').value;
         if(c && a) {
             db.ref('user_data/' + auth.currentUser.uid).push({
-                category: c, amount: a, date: new Date().toLocaleDateString()
+                category: c, 
+                amount: a, 
+                date: new Date().toLocaleDateString()
             });
             document.getElementById('cat').value = "";
             document.getElementById('amount').value = "";
+        } else {
+            alert("Fadlan qor waxa aad iibsatay iyo lacagta");
         }
     }
 
     function loadData() {
         db.ref('user_data/' + auth.currentUser.uid).on('value', snap => {
-            const l = document.getElementById('list'); l.innerHTML = "";
+            const l = document.getElementById('list'); 
+            l.innerHTML = "";
             snap.forEach(ch => {
                 const d = ch.val();
                 l.innerHTML += `<div class="item plus"><span>${d.category} (${d.date})</span><b>${d.amount} kr</b></div>`;
