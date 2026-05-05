@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="so">
+<html lang="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,85 +8,85 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #fbbf24; --bg: #0f172a; --card: #1e293b; }
-        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .card-pro { background: var(--card); border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
-        .input-pro { background: #334155 !important; border: 1px solid #475569 !important; color: white !important; border-radius: 14px; padding: 14px; width: 100%; outline: none; }
-        .btn-primary { background: var(--primary); color: black; font-weight: 900; padding: 16px; border-radius: 14px; width: 100%; transition: 0.3s; }
-        .btn-primary:active { transform: scale(0.98); }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; }
+        .card-pro { background: var(--card); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .input-pro { background: #334155 !important; border: 1px solid #475569 !important; color: white !important; border-radius: 12px; padding: 14px; width: 100%; outline: none; }
         .nav-tab.active { color: var(--primary); border-top: 3px solid var(--primary); opacity: 1 !important; }
         .hidden { display: none !important; }
+        .privacy-blur { filter: blur(8px); pointer-events: none; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #1e293b; min-width: 130px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid #475569; overflow: hidden; }
+        .dropdown:hover .dropdown-content { display: block; }
     </style>
 </head>
 <body class="pb-24">
 
-    <!-- AUTH SECTION (Login/Signup/Forgot) -->
+    <!-- AUTH SECTION -->
     <div id="authSection" class="fixed inset-0 bg-[#0f172a] z-[5000] flex items-center justify-center p-6">
-        <div class="bg-[#1e293b] p-8 rounded-[35px] w-full max-w-md shadow-2xl border-t-8 border-yellow-500">
-            <div id="authHeader" class="text-center mb-8">
-                <i class="fas fa-truck-fast text-5xl text-yellow-500 mb-3"></i>
-                <h1 id="authTitle" class="text-2xl font-black">LOGIN <span class="text-yellow-500">PRO</span></h1>
-            </div>
-
-            <div class="space-y-4">
-                <input type="email" id="emailInput" class="input-pro" placeholder="Email-kaaga">
-                <input type="password" id="passInput" class="input-pro" placeholder="Furaha (Password)">
-                
-                <button onclick="handleAuth()" id="mainAuthBtn" class="btn-primary uppercase">Gashay (Login)</button>
-                
-                <div class="flex justify-between text-[11px] font-bold px-2">
-                    <button onclick="toggleAuthMode()" id="toggleBtn" class="text-gray-400">MA SAMAYSATAA AKOON?</button>
-                    <button onclick="forgotPassword()" class="text-yellow-500">MA ILOWDAY FURAHA?</button>
-                </div>
-            </div>
+        <div class="bg-[#1e293b] p-8 rounded-[35px] w-full max-w-md shadow-2xl border-t-8 border-yellow-500 text-center">
+            <i class="fas fa-truck-fast text-5xl text-yellow-500 mb-3"></i>
+            <h1 class="text-2xl font-black mb-6 uppercase">M. Salad <span class="text-yellow-500">PRO</span></h1>
+            <input type="email" id="emailInput" class="input-pro mb-3" placeholder="E-post">
+            <input type="password" id="passInput" class="input-pro mb-6" placeholder="Passord">
+            <button onclick="handleAuth()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black shadow-lg uppercase">Logg Inn</button>
         </div>
     </div>
 
-    <!-- MAIN APP INTERFACE -->
+    <!-- MAIN APP -->
     <div id="mainApp" class="hidden">
-        <header class="p-6 flex justify-between items-center bg-[#1e293b]/50 backdrop-blur-md sticky top-0 z-[1000]">
+        <header class="p-6 flex justify-between items-center sticky top-0 z-[1000] bg-[#0f172a]/80 backdrop-blur-md">
             <div>
-                <h2 class="text-xl font-black text-yellow-500 uppercase tracking-tighter">M. Salad</h2>
+                <h2 class="text-xl font-black text-yellow-500 uppercase tracking-tighter">M. SALAD</h2>
                 <p id="userDisplay" class="text-[9px] text-gray-500 font-mono"></p>
             </div>
-            <button onclick="logout()" class="bg-red-500/10 text-red-500 p-3 rounded-xl text-xs font-bold"><i class="fas fa-power-off"></i></button>
+            <div class="flex gap-2 items-center">
+                <button onclick="togglePrivacy()" class="bg-gray-800 p-2.5 rounded-xl text-yellow-500"><i id="eyeIcon" class="fas fa-eye"></i></button>
+                <button onclick="logout()" class="bg-red-500/10 text-red-500 p-2.5 rounded-xl text-xs font-bold"><i class="fas fa-power-off"></i></button>
+            </div>
         </header>
 
         <main class="p-4 space-y-4">
-            <!-- Stats -->
+            <!-- Summary Stats -->
             <div class="grid grid-cols-2 gap-3">
-                <div class="card-pro p-5 border-l-4 border-green-500 shadow-lg">
+                <div class="card-pro p-4 border-l-4 border-green-500">
                     <p class="text-[10px] text-gray-400 font-black uppercase">Inntekt</p>
-                    <h3 id="totalIncome" class="text-2xl font-black text-green-400">0 kr</h3>
+                    <h3 id="totalIncome" class="text-xl font-black text-green-400 balance-text">0 kr</h3>
                 </div>
-                <div class="card-pro p-5 border-l-4 border-red-500 shadow-lg">
+                <div class="card-pro p-4 border-l-4 border-red-500">
                     <p class="text-[10px] text-gray-400 font-black uppercase">Utgift</p>
-                    <h3 id="totalExpense" class="text-2xl font-black text-red-400">0 kr</h3>
+                    <h3 id="totalExpense" class="text-xl font-black text-red-400 balance-text">0 kr</h3>
                 </div>
             </div>
 
-            <!-- Tax/MVA Breakdown -->
-            <div class="grid grid-cols-2 gap-3">
-                <div class="card-pro p-4 bg-blue-600/10 border border-blue-500/20">
-                    <p class="text-[9px] text-blue-400 font-black uppercase">MVA Refusjon</p>
-                    <p id="stat-mva" class="text-sm font-black">0 kr</p>
-                </div>
-                <div class="card-pro p-4 bg-orange-600/10 border border-orange-500/20">
-                    <p class="text-[9px] text-orange-400 font-black uppercase">Feriepenger (10.2%)</p>
-                    <p id="stat-ferie" class="text-sm font-black">0 kr</p>
+            <!-- Personnel Tracking Section -->
+            <div class="card-pro p-4">
+                <p class="text-[10px] text-yellow-500 font-black uppercase mb-3"><i class="fas fa-users mr-2"></i>Lønn & Feriepenger per ansatt</p>
+                <div id="employeeStats" class="space-y-2 text-[11px]">
+                    <!-- Stats per employee will appear here -->
+                    <p class="text-gray-500 italic">Ingen lønn registrert ennå...</p>
                 </div>
             </div>
 
-            <!-- Total Net -->
-            <div class="card-pro p-8 bg-gradient-to-br from-yellow-500 to-amber-600 text-black text-center shadow-2xl relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 opacity-10 text-6xl rotate-12"><i class="fas fa-coins"></i></div>
-                <p class="text-xs font-black uppercase opacity-60">Netto Resultat</p>
-                <h2 id="totalNet" class="text-5xl font-black tracking-tighter">0 kr</h2>
+            <div class="grid grid-cols-2 gap-2 text-center">
+                <div class="card-pro p-3 bg-blue-500/10 border border-blue-500/20">
+                    <p class="text-[8px] text-blue-400 font-bold uppercase">MVA Refusjon (25%)</p>
+                    <p id="stat-mva" class="text-[10px] font-black balance-text text-blue-400">0 kr</p>
+                </div>
+                <div class="card-pro p-3 bg-purple-500/10 border border-purple-500/20">
+                    <p class="text-[8px] text-purple-400 font-bold uppercase">Owner Draw</p>
+                    <p id="stat-owner" class="text-[10px] font-black balance-text text-purple-400">0 kr</p>
+                </div>
             </div>
 
-            <!-- List -->
-            <div id="listSection" class="section space-y-3 pb-16"></div>
+            <!-- Net Result -->
+            <div class="card-pro p-6 bg-gradient-to-br from-yellow-500 to-amber-600 text-black text-center shadow-2xl">
+                <p class="text-xs font-black uppercase opacity-60">Netto Resultat (Efter skatt/mva)</p>
+                <h2 id="totalNet" class="text-4xl font-black tracking-tighter balance-text">0 kr</h2>
+            </div>
 
-            <!-- Add Entry -->
+            <!-- List Section -->
+            <div id="listSection" class="section space-y-2 pb-16"></div>
+
+            <!-- Add New -->
             <div id="addSection" class="section hidden">
                 <div class="card-pro p-6 shadow-2xl">
                     <div class="flex gap-2 mb-6">
@@ -95,10 +95,17 @@
                     </div>
                     <div class="space-y-3">
                         <input type="date" id="inDate" class="input-pro">
-                        <input type="text" id="inName" class="input-pro" placeholder="Magaca (Faktura, Shidaal...)">
-                        <input type="number" id="inAmount" class="input-pro" placeholder="Lacagta (Amount)">
-                        <select id="inType" class="input-pro"></select>
-                        <button onclick="saveEntry()" class="btn-primary mt-4">KAYDI XOGTA</button>
+                        <input type="text" id="inName" class="input-pro" placeholder="Beskrivelse (f.eks. Kjøring)">
+                        
+                        <!-- Employee Name (Only shows for Lønn) -->
+                        <div id="employeeField" class="hidden">
+                            <input type="text" id="inEmployee" class="input-pro border-yellow-500/50" placeholder="Navn på ansatt (Employee Name)">
+                        </div>
+
+                        <input type="number" id="inAmount" class="input-pro" placeholder="Beløp (Amount)">
+                        <select id="inType" class="input-pro" onchange="checkType(this.value)"></select>
+                        
+                        <button onclick="saveEntry()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black mt-4 uppercase">Lagre</button>
                     </div>
                 </div>
             </div>
@@ -107,18 +114,18 @@
         <!-- Navbar -->
         <nav class="fixed bottom-0 w-full bg-[#1e293b] border-t border-white/5 flex justify-around py-5 z-[4000]">
             <button onclick="showPage('list')" id="nav-list" class="nav-tab active flex flex-col items-center gap-1 opacity-40">
-                <i class="fas fa-receipt text-xl"></i><span class="text-[10px] font-bold">Xisaabaadka</span>
+                <i class="fas fa-home text-xl"></i><span class="text-[10px] font-bold">Hjem</span>
             </button>
             <button onclick="showPage('add')" id="nav-add" class="nav-tab flex flex-col items-center gap-1 opacity-40">
-                <i class="fas fa-plus-circle text-xl"></i><span class="text-[10px] font-bold">Geli Cusub</span>
+                <i class="fas fa-plus-circle text-xl"></i><span class="text-[10px] font-bold">Legg til</span>
             </button>
         </nav>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
@@ -132,35 +139,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentMode = 'income', authMode = 'login';
-
-        // AUTH HANDLERS
-        window.toggleAuthMode = () => {
-            authMode = authMode === 'login' ? 'signup' : 'login';
-            document.getElementById('authTitle').innerHTML = authMode === 'login' ? 'LOGIN <span class="text-yellow-500">PRO</span>' : 'SETUP <span class="text-yellow-500">AKOON</span>';
-            document.getElementById('mainAuthBtn').innerText = authMode === 'login' ? 'Gashay (Login)' : 'Abuur (Sign Up)';
-            document.getElementById('toggleBtn').innerText = authMode === 'login' ? 'MA SAMAYSATAA AKOON?' : 'MA LEEDAHAY AKOON?';
-        };
-
-        window.handleAuth = () => {
-            const email = document.getElementById('emailInput').value;
-            const pass = document.getElementById('passInput').value;
-            if(!email || !pass) return alert("Fadlan buuxi!");
-            
-            if(authMode === 'login') {
-                signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email ama furaha waa qalad!"));
-            } else {
-                createUserWithEmailAndPassword(auth, email, pass).catch(e => alert("Cilad dhacday ama Email hore u jiray!"));
-            }
-        };
-
-        window.forgotPassword = () => {
-            const email = document.getElementById('emailInput').value;
-            if(!email) return alert("Horta qor email-kaaga!");
-            sendPasswordResetEmail(auth, email).then(() => alert("Email dib-u-habayn furaha ah ayaa laguu soo diray!")).catch(e => alert("Email-ka lama helin!"));
-        };
-
-        window.logout = () => signOut(auth);
+        let currentMode = 'income', isPrivate = false;
 
         onAuthStateChanged(auth, user => {
             if(user) {
@@ -174,52 +153,120 @@
             }
         });
 
-        // DATA HANDLERS
         window.fetchData = () => {
             const q = query(collection(db, "pro_records"), orderBy("date", "desc"));
             onSnapshot(q, snap => {
                 const list = document.getElementById('listSection');
+                const empStatsDiv = document.getElementById('employeeStats');
                 list.innerHTML = '';
-                let ti=0, te=0;
+                let ti=0, te=0, to=0, tmva=0;
+                let employees = {};
 
                 snap.forEach(docSnap => {
                     const d = docSnap.data();
                     const amt = Number(d.amount);
-                    if(d.mode === 'income') ti += amt; else te += amt;
+                    
+                    if(d.mode === 'income') {
+                        ti += amt;
+                    } else {
+                        te += amt;
+                        if(d.type !== 'Bank / MVA-fri' && d.type !== 'Bankuttak (Owner)') tmva += (amt * 0.25);
+                        
+                        // Track employee payroll
+                        if(d.type === 'Lønn' && d.employee) {
+                            if(!employees[d.employee]) employees[d.employee] = 0;
+                            employees[d.employee] += amt;
+                        }
+                    }
+                    if(d.type === 'Bankuttak (Owner)') to += amt;
 
                     list.innerHTML += `
-                        <div class="card-pro p-5 flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'} animate-fade-in">
-                            <div><p class="text-xs font-black uppercase">${d.name}</p><p class="text-[10px] text-gray-500">${d.date} • <span class="text-yellow-500">${d.type}</span></p></div>
-                            <div class="flex items-center gap-4"><p class="font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                            <button onclick="deleteEntry('${docSnap.id}')" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button></div>
+                        <div class="card-pro p-4 flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2 relative">
+                            <div>
+                                <p class="text-xs font-black uppercase">${d.name} ${d.employee ? ' - ('+d.employee+')' : ''}</p>
+                                <p class="text-[9px] text-gray-500">${d.date} • ${d.type}</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="font-black balance-text ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
+                                <div class="dropdown">
+                                    <button class="text-gray-500 p-2"><i class="fas fa-ellipsis-v"></i></button>
+                                    <div class="dropdown-content">
+                                        <button onclick="editEntry('${docSnap.id}', '${d.name}', ${amt})" class="w-full text-left p-3 text-blue-400 text-xs border-b border-gray-700 hover:bg-gray-800"><i class="fas fa-edit mr-2"></i>Change</button>
+                                        <button onclick="deleteEntry('${docSnap.id}')" class="w-full text-left p-3 text-red-500 text-xs hover:bg-gray-800"><i class="fas fa-trash-alt mr-2"></i>Delete</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>`;
                 });
 
+                // Update Employee Stats UI
+                empStatsDiv.innerHTML = Object.keys(employees).length ? '' : '<p class="text-gray-500 italic">Ingen lønn registrert ennå...</p>';
+                for (let name in employees) {
+                    let totalPaid = employees[name];
+                    let feriepenger = totalPaid * 0.102;
+                    empStatsDiv.innerHTML += `
+                        <div class="flex justify-between border-b border-white/5 pb-1 mb-1">
+                            <span class="font-bold text-gray-300">${name}:</span>
+                            <span>Total Lønn: <b class="text-white">${totalPaid.toLocaleString()} kr</b> | Ferie: <b class="text-orange-400">${feriepenger.toLocaleString()} kr</b></span>
+                        </div>`;
+                }
+
                 document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
                 document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-                document.getElementById('stat-mva').innerText = (te * 0.25).toLocaleString() + ' kr';
-                document.getElementById('stat-ferie').innerText = (ti * 0.102).toLocaleString() + ' kr';
+                document.getElementById('stat-mva').innerText = tmva.toLocaleString() + ' kr';
+                document.getElementById('stat-owner').innerText = to.toLocaleString() + ' kr';
                 document.getElementById('totalNet').innerText = (ti - te).toLocaleString() + ' kr';
+                if(isPrivate) applyPrivacy(true);
             });
+        };
+
+        window.checkType = (val) => {
+            const field = document.getElementById('employeeField');
+            val === 'Lønn' ? field.classList.remove('hidden') : field.classList.add('hidden');
         };
 
         window.saveEntry = async () => {
             const amt = document.getElementById('inAmount').value;
             const name = document.getElementById('inName').value;
             const date = document.getElementById('inDate').value;
-            if(!amt || !name || !date) return alert("Fadlan buuxi meelaha bannaan!");
-            await addDoc(collection(db, "pro_records"), { amount: parseFloat(amt), name, date, type: document.getElementById('inType').value, mode: currentMode, userEmail: auth.currentUser.email });
-            document.getElementById('inAmount').value = ''; document.getElementById('inName').value = ''; showPage('list');
+            const type = document.getElementById('inType').value;
+            const employee = document.getElementById('inEmployee').value;
+
+            if(!amt || !name || !date) return alert("Fyll ut alle felt!");
+            
+            await addDoc(collection(db, "pro_records"), {
+                amount: parseFloat(amt),
+                name,
+                date,
+                type,
+                employee: type === 'Lønn' ? employee : '',
+                mode: currentMode,
+                user: auth.currentUser.email
+            });
+
+            document.getElementById('inAmount').value = '';
+            document.getElementById('inName').value = '';
+            document.getElementById('inEmployee').value = '';
+            showPage('list');
         };
 
-        window.deleteEntry = async (id) => { if(confirm("Ma tirtirtaa xogtan?")) await deleteDoc(doc(db, "pro_records", id)); };
+        window.editEntry = async (id, oldName, oldAmt) => {
+            const newName = prompt("Endre beskrivelse:", oldName);
+            const newAmt = prompt("Endre beløp:", oldAmt);
+            if(newName && newAmt) await updateDoc(doc(db, "pro_records", id), { name: newName, amount: parseFloat(newAmt) });
+        };
+
+        window.deleteEntry = async (id) => { if(confirm("Er du sikker?")) await deleteDoc(doc(db, "pro_records", id)); };
+        window.togglePrivacy = () => { isPrivate = !isPrivate; applyPrivacy(isPrivate); document.getElementById('eyeIcon').className = isPrivate ? 'fas fa-eye-slash' : 'fas fa-eye'; };
+        function applyPrivacy(active) { document.querySelectorAll('.balance-text').forEach(el => active ? el.classList.add('privacy-blur') : el.classList.remove('privacy-blur')); }
 
         window.setMode = (m) => {
             currentMode = m;
-            document.getElementById('btn-inc').className = m === 'income' ? 'flex-1 py-4 rounded-xl font-black bg-green-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
-            document.getElementById('btn-exp').className = m === 'expense' ? 'flex-1 py-4 rounded-xl font-black bg-red-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
-            const opts = m === 'income' ? ['Faktura', 'Kontanter'] : ['Shidaal', 'Lønn', 'Forsikring', 'Bankuttak (Owner)', 'Reparasjon'];
-            document.getElementById('inType').innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
+            document.getElementById('btn-inc').className = m === 'income' ? 'flex-1 py-4 rounded-xl font-black bg-green-600 text-xs shadow-lg' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
+            document.getElementById('btn-exp').className = m === 'expense' ? 'flex-1 py-4 rounded-xl font-black bg-red-600 text-xs shadow-lg' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
+            const opts = m === 'income' ? ['Faktura', 'Kontanter'] : ['Shidaal', 'Lønn', 'Forsikring', 'Bank / MVA-fri', 'Bankuttak (Owner)'];
+            document.getElementById('inType').innerHTML = opts.map(o => `<option value="${o}" class="bg-[#1e293b]">${o}</option>`).join('');
+            checkType(document.getElementById('inType').value);
         };
 
         window.showPage = (p) => {
@@ -229,6 +276,8 @@
             document.getElementById('nav-add').classList.toggle('active', p === 'add');
         };
 
+        window.handleAuth = () => signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
+        window.logout = () => signOut(auth);
         document.getElementById('inDate').valueAsDate = new Date();
         setMode('income');
     </script>
