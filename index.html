@@ -3,126 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taxi System Pro</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <title>Taxi Salaad App</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --green: #22c55e; --red: #ef4444; --blue: #3b82f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
-        .container { max-width: 450px; margin: auto; }
-        .box { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #334155; text-align: center; }
+        body { font-family: sans-serif; background: var(--bg); color: white; padding: 15px; margin: 0; }
+        .box { background: var(--card); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #334155; max-width: 400px; margin: auto; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
         .btn-blue { background: var(--blue); color: white; }
-        .btn-sub { background: #334155; color: white; border: 1px solid var(--blue); }
-        .hidden { display: none; }
-        .item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid; }
+        .item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 6px solid; }
         .plus { border-left-color: var(--green); color: var(--green); }
         .minus { border-left-color: var(--red); color: var(--red); }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- AUTH SECTION -->
-    <div id="auth-page">
-        <div class="box">
-            <h1 style="color: #f1c40f;">🚖 Taxi System</h1>
-            <p style="color: #94a3b8;">Ammaankaaga waa noogu muhiimsan</p>
-            <input type="email" id="email" placeholder="Email-kaaga">
-            <input type="password" id="pass" placeholder="Password (ugu yaraan 6)">
-            <button class="btn-blue" onclick="authAction('login')">Login (Giriş)</button>
-            <button class="btn-sub" onclick="authAction('reg')">Create New Account</button>
-        </div>
+<div id="auth-page" class="box">
+    <h1 style="color: #f1c40f;">🚖 Taxi Salaad</h1>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Password">
+    <button class="btn-blue" onclick="handleAuth('login')">Login</button>
+    <button style="background:#334155; color:white;" onclick="handleAuth('reg')">Create Account</button>
+</div>
+
+<div id="app-page" class="hidden">
+    <div class="box">
+        <h2 id="u-name"></h2>
+        <select id="cat">
+            <option value="Faktura Incom">Faktura Incom (Cagaar)</option>
+            <option value="Drivstoff">Drivstoff (Guduud)</option>
+            <option value="Lønn + Feriepenger">Lønn + Feriepenger</option>
+            <option value="Bank Transaction ube MVA">Bank Transaction</option>
+            <option value="Bombenge med MVA">Bombenge</option>
+            <option value="Fixed bil MVA">Fixed bil</option>
+        </select>
+        <input type="number" id="amount" placeholder="Lacagta (kr)">
+        <button class="btn-blue" onclick="saveData()">Keydi Xogta</button>
+        <button style="background:var(--red);" onclick="location.reload()">Logout</button>
     </div>
-
-    <!-- MAIN APP SECTION -->
-    <div id="app-page" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 id="u-name" style="color: #f1c40f;"></h3>
-            <button onclick="location.reload()" style="width:auto; padding:5px 10px; background:var(--red);">Logout</button>
-        </div>
-
-        <div class="box" style="margin-bottom:20px;">
-            <select id="cat">
-                <option value="Faktura Incom">Faktura Incom (Cagaar)</option>
-                <option value="Drivstoff">Drivstoff (Guduud)</option>
-                <option value="Lønn + Feriepenger">Lønn + Feriepenger</option>
-                <option value="Lønn meel magaca lagu qoro">Lønn (Magac)</option>
-                <option value="Bank Transaction ube MVA">Bank Transaction (ube MVA)</option>
-                <option value="Bombenge med MVA">Bombenge (med MVA)</option>
-                <option value="Fixed bil MVA">Fixed bil (MVA)</option>
-                <option value="Annet uten MVA">Annet (uten MVA)</option>
-            </select>
-            <input type="number" id="amount" placeholder="Lacagta (kr)">
-            <button class="btn-blue" onclick="saveData()">+ Keydi Xogta</button>
-        </div>
-
-        <div id="data-list"></div>
-    </div>
+    <div id="list" style="margin-top:20px;"></div>
 </div>
 
 <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyCYNlmTJEV2_WWnHIbpwbUCXzAMiMb0EYE",
-      authDomain: "mohamed-salad-transport.firebaseapp.com",
-      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "mohamed-salad-transport",
-      storageBucket: "mohamed-salad-transport.firebasestorage.app",
-      messagingSenderId: "608716442795",
-      appId: "1:608716442795:web:34cafc1a23316664717bee"
+        apiKey: "SOO_NUQUL_API_KEY_GAAGA", // Ka soo qaad meesha Config-ga
+        authDomain: "mohamed-salad-transport.firebaseapp.com",
+        databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mohamed-salad-transport",
+        storageBucket: "mohamed-salad-transport.appspot.com",
+        messagingSenderId: "608716442795",
+        appId: "1:608716442795:web:ea17e2c3f26d3103717bee" // Kani waa App ID-gaaga cusub
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    function authAction(type) {
+    function handleAuth(type) {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        if(type === 'reg') {
-            auth.createUserWithEmailAndPassword(e, p).then(() => showApp()).catch(err => alert(err.message));
-        } else {
-            auth.signInWithEmailAndPassword(e, p).then(() => showApp()).catch(err => alert("Email ama Password waa khaldan yihiin!"));
-        }
+        if(type === 'reg') auth.createUserWithEmailAndPassword(e,p).then(s => showApp()).catch(err => alert(err.message));
+        else auth.signInWithEmailAndPassword(e,p).then(s => showApp()).catch(err => alert("Email ama Password waa khaldan yihiin!"));
     }
 
     function showApp() {
-        document.getElementById('auth-page').classList.add('hidden');
-        document.getElementById('app-page').classList.remove('hidden');
-        document.getElementById('u-name').innerText = "Taxi: " + auth.currentUser.email.split('@')[0];
+        document.getElementById('auth-page').className = 'hidden';
+        document.getElementById('app-page').className = '';
+        document.getElementById('u-name').innerText = "Ku soo dhowaad: " + auth.currentUser.email.split('@')[0];
         loadData();
     }
 
     function saveData() {
-        const cat = document.getElementById('cat').value;
-        const amt = document.getElementById('amount').value;
-        const type = cat.includes("Incom") ? "plus" : "minus";
-        
-        if(amt) {
+        const c = document.getElementById('cat').value;
+        const a = document.getElementById('amount').value;
+        const t = c.includes("Incom") ? "plus" : "minus";
+        if(a) {
             db.ref('user_data/' + auth.currentUser.uid).push({
-                category: cat,
-                amount: amt,
-                type: type,
-                date: new Date().toLocaleDateString()
+                category: c, amount: a, type: t, date: new Date().toLocaleDateString()
             });
             document.getElementById('amount').value = "";
         }
     }
 
     function loadData() {
-        // Kaliya soo saar xogta isticmaalaha hadda galay (Privacy)
         db.ref('user_data/' + auth.currentUser.uid).on('value', snap => {
-            const list = document.getElementById('data-list');
-            list.innerHTML = "";
-            snap.forEach(child => {
-                const d = child.val();
-                list.innerHTML += `
-                    <div class="item ${d.type}">
-                        <div><b>${d.category}</b><br><small>${d.date}</small></div>
-                        <b>${d.type === 'plus' ? '+' : '-'}${d.amount} kr</b>
-                    </div>`;
+            const l = document.getElementById('list'); l.innerHTML = "";
+            snap.forEach(ch => {
+                const d = ch.val();
+                l.innerHTML += `<div class="item ${d.type}"><span>${d.category}</span><b>${d.type === 'plus' ? '+' : '-'}${d.amount} kr</b></div>`;
             });
         });
     }
