@@ -1,65 +1,76 @@
 <!DOCTYPE html>
-<html lang="so">
+<html lang="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taxi Salaad Pro</title>
+    <title>Taxi Salaad App</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --yellow: #f1c40f; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 10px; margin: 0; }
-        .box { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #334155; max-width: 500px; margin: 10px auto; }
-        h1, h2 { text-align: center; color: var(--yellow); margin-bottom: 20px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --blue: #3b82f6; --red: #ef4444; --green: #22c55e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 10px; }
+        .box { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #334155; max-width: 450px; margin: 15px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        h1 { text-align: center; color: var(--yellow); font-size: 28px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-main { background: var(--blue); color: white; }
         .btn-save { background: var(--green); color: white; }
-        .btn-logout { background: var(--red); color: white; margin-top: 20px; }
-        .total-box { background: #334155; padding: 15px; border-radius: 10px; text-align: center; font-size: 20px; margin-bottom: 20px; border: 2px solid var(--yellow); }
-        .item { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--blue); display: flex; justify-content: space-between; align-items: center; }
-        .item small { color: #94a3b8; display: block; font-size: 12px; }
+        .btn-logout { background: var(--red); color: white; }
+        .total-box { background: #334155; padding: 20px; border-radius: 15px; text-align: center; border: 2px solid var(--yellow); margin-bottom: 20px; }
+        .total-box h3 { margin: 0; font-size: 18px; color: #cbd5e1; }
+        .total-box span { font-size: 32px; font-weight: bold; color: var(--yellow); }
+        .item { background: #0f172a; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--blue); }
+        .item-info { display: flex; justify-content: space-between; align-items: center; }
+        .item-name { color: var(--yellow); font-size: 14px; margin-top: 5px; display: block; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<!-- QAYBTA LOGIN-KA -->
+<!-- 1. LOGIN & REGISTER -->
 <div id="auth-page" class="box">
     <h1>🚖 Taxi Salaad</h1>
-    <input type="email" id="email" placeholder="Emailkaaga">
-    <input type="password" id="pass" placeholder="Password (6+ xaraf)">
-    <button style="background: var(--blue); color: white;" onclick="handleAuth('login')">Login</button>
-    <button style="background: #334155; color: white;" onclick="handleAuth('reg')">Create New Account</button>
+    <p style="text-align:center; color:#94a3b8;">Login (Giriş) / Create Account</p>
+    <input type="email" id="email" placeholder="Email (Somali/Norsk/Eng)">
+    <input type="password" id="pass" placeholder="Password (Min 6)">
+    <button class="btn-main" onclick="handleAuth('login')">LOGIN / LOGG INN</button>
+    <button style="background:#475569; color:white;" onclick="handleAuth('reg')">REGISTER / REGISTRER</button>
 </div>
 
-<!-- QAYBTA APP-KA -->
+<!-- 2. MAIN APP PAGE -->
 <div id="app-page" class="hidden">
     <div class="box">
-        <h2 id="u-name">Taxi Salaad</h2>
+        <h2 id="u-name" style="text-align:center; color:white; font-size:18px;"></h2>
         
-        <!-- ISKU DARKA LACAGTA -->
         <div class="total-box">
-            Total: <span id="total-amount" style="color: var(--yellow);">0</span> kr
+            <h3>TOTAL / ISKU DAR</h3>
+            <span id="total-amount">0</span> <small>kr</small>
         </div>
 
-        <label>Nooca Kharashka:</label>
-        <select id="cat">
+        <label>Kharashka / Utgifter:</label>
+        <select id="cat" onchange="toggleLonnField()">
             <option value="Faktura inCom (Fra Sentral)">Faktura inCom (Fra Sentral)</option>
-            <option value="Drivstoff">Drivstoff</option>
-            <option value="Lønn + feriepenger">Lønn + feriepenger</option>
+            <option value="Drivstoff">Drivstoff (Fuel)</option>
+            <option value="Lønn + feriepenger">Lønn + feriepenger (Salary)</option>
             <option value="Bank transaction ute MVA">Bank transaction ute MVA</option>
             <option value="Bompenger med MVA">Bompenger med MVA</option>
             <option value="Fixed bil MVA">Fixed bil MVA</option>
-            <option value="Annet uten MVA">Annet uten MVA</option>
+            <option value="Annet uten MVA">Annet / Other</option>
         </select>
 
-        <input type="number" id="amount" placeholder="Lacagta (kr)">
-        <button class="btn-save" onclick="saveData()">Keydi Xogta (Save)</button>
-        <button class="btn-logout" onclick="location.reload()">Logout</button>
+        <!-- Magaca Shaqaalaha (Kaliya haddii Lonn la doorto) -->
+        <div id="lonn-name-div" class="hidden">
+            <input type="text" id="staff-name" placeholder="Navn på ansatt / Magaca qofka">
+        </div>
+
+        <input type="number" id="amount" placeholder="Beløp / Lacagta (kr)">
+        
+        <button class="btn-save" onclick="saveData()">SAVE / KEYDI XOGTA</button>
+        <button class="btn-logout" onclick="logout()">LOGOUT / LOGG UT</button>
     </div>
 
-    <div id="list" style="max-width: 500px; margin: auto;"></div>
+    <div id="list" style="max-width: 450px; margin: auto;"></div>
 </div>
 
 <script>
@@ -81,31 +92,46 @@
     function handleAuth(type) {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        if (type === 'reg') {
+        if(!e || !p) return alert("Fill all fields!");
+
+        if(type === 'reg') {
             auth.createUserWithEmailAndPassword(e,p).then(() => showApp()).catch(err => alert(err.message));
         } else {
-            auth.signInWithEmailAndPassword(e,p).then(() => showApp()).catch(err => alert("Khalad: Email ama Password"));
+            auth.signInWithEmailAndPassword(e,p).then(() => showApp()).catch(err => alert("Error: Login failed"));
         }
     }
 
     function showApp() {
         document.getElementById('auth-page').classList.add('hidden');
         document.getElementById('app-page').classList.remove('hidden');
-        document.getElementById('u-name').innerText = "Soo dhowaad, " + auth.currentUser.email.split('@')[0];
+        document.getElementById('u-name').innerText = "Velkommen, " + auth.currentUser.email;
         loadData();
+    }
+
+    function toggleLonnField() {
+        const cat = document.getElementById('cat').value;
+        const lonnDiv = document.getElementById('lonn-name-div');
+        if(cat === "Lønn + feriepenger") lonnDiv.classList.remove('hidden');
+        else lonnDiv.classList.add('hidden');
     }
 
     function saveData() {
         const c = document.getElementById('cat').value;
         const a = parseFloat(document.getElementById('amount').value);
-        if(c && a) {
-            db.ref('user_data/' + auth.currentUser.uid).push({
-                category: c, amount: a, date: new Date().toLocaleString()
-            });
-            document.getElementById('amount').value = "";
-        } else {
-            alert("Fadlan qor lacagta");
-        }
+        const name = document.getElementById('staff-name').value;
+        
+        if(!a) return alert("Please enter amount!");
+
+        const data = {
+            category: c,
+            amount: a,
+            date: new Date().toLocaleString('no-NO'),
+            staffName: (c === "Lønn + feriepenger") ? name : ""
+        };
+
+        db.ref('user_data/' + auth.currentUser.uid).push(data);
+        document.getElementById('amount').value = "";
+        document.getElementById('staff-name').value = "";
     }
 
     function loadData() {
@@ -116,20 +142,32 @@
             let total = 0;
 
             snap.forEach(child => {
-                const data = child.val();
-                total += data.amount;
+                const d = child.val();
+                total += d.amount;
                 listDiv.innerHTML += `
                     <div class="item">
-                        <div>
-                            <strong>${data.category}</strong>
-                            <small>${data.date}</small>
+                        <div class="item-info">
+                            <strong>${d.category}</strong>
+                            <b>${d.amount} kr</b>
                         </div>
-                        <span style="font-weight:bold;">${data.amount} kr</span>
+                        ${d.staffName ? `<span class="item-name">Navn: ${d.staffName}</span>` : ''}
+                        <small style="color:#64748b; font-size:11px;">${d.date}</small>
                     </div>`;
             });
             totalSpan.innerText = total.toLocaleString();
         });
     }
+
+    function logout() {
+        auth.signOut().then(() => {
+            location.reload();
+        });
+    }
+
+    // Hubi haddii qofku hore u galay (Stay logged in)
+    auth.onAuthStateChanged(user => {
+        if (user) showApp();
+    });
 </script>
 </body>
 </html>
