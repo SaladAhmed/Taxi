@@ -1,61 +1,48 @@
 window.loadData = () => {
-            const collections = ['xisaabaadka', 'transfers', 'data'];
-            let ti=0, te=0, tm=0, tf=0, to=0;
-            const list = document.getElementById('dashboardSection');
-            list.innerHTML = '';
+    const dbRefs = [
+        { name: 'transfers', defaultMode: 'income' },
+        { name: 'xisaabaadka', defaultMode: 'expense' }
+    ];
+    
+    let ti=0, te=0, to=0;
+    const list = document.getElementById('dashboardSection');
+    list.innerHTML = '<p class="text-center text-xs animate-pulse">Cusboonaysiinaya...</p>';
 
-            collections.forEach(cName => {
-                onSnapshot(collection(db, cName), snap => {
-                    snap.forEach(dDoc => {
-                        const d = dDoc.data();
-                        const amt = Number(d.amount) || 0;
-                        const realName = d.name || d.type || "Salad";
-                        
-                        // XALKA LACAGTA: Xogta galka 'xisaabaadka' waa KHARASH (Utgift)
-                        let mode = d.mode;
-                        if (cName === 'xisaabaadka') {
-                            mode = 'expense'; 
-                        } else if (!mode) {
-                            mode = 'income';
-                        }
+    dbRefs.forEach(ref => {
+        onSnapshot(collection(db, ref.name), snap => {
+            // Halkan waxaan ku nadiifinaynaa liiska si aysan xogtu u laba-laabmin
+            list.innerHTML = ''; 
+            ti=0; te=0; to=0; // Dib u bilaaw xisaabta mar kasta oo xog cusub timaado
 
-                        if(mode === 'income') {
-                            ti += amt;
-                        } else {
-                            te += amt;
-                        }
-                        
-                        // Xisaabinta EIER (Owner Draw)
-                        if(d.type?.includes("Bankuttak") || d.type?.includes("Owner") || realName.toLowerCase().includes("lønn")) {
-                            to += amt;
-                        }
+            snap.forEach(dDoc => {
+                const d = dDoc.data();
+                const amt = Number(d.amount) || 0;
+                const realName = d.name || d.type || "Salad";
+                let mode = d.mode || ref.defaultMode;
 
-                        list.innerHTML += `
-                            <div class="card flex justify-between items-center border-l-4 ${mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
-                                <div>
-                                    <p class="font-bold text-[11px] uppercase text-white">${realName}</p>
-                                    <p class="text-[9px] text-gray-500">${d.date || 'Jan-Apr'}</p>
-                                    <small class="text-[8px] text-blue-400">${d.type || ''}</small>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <p class="font-black ${mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                                    <button onclick="deleteItem('${cName}', '${dDoc.id}')" class="text-gray-700 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
-                                </div>
-                            </div>`;
-                    });
+                if(mode === 'income') ti += amt; else te += amt;
+                if(d.type?.includes("Bankuttak") || realName.toLowerCase().includes("lønn")) to += amt;
 
-                    // Khariidadda Total-ka (Sida sawirkaaga 06:53)
-                    document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
-                    document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-                    
-                    // MVA iyo Feriepenger (Logic-ga saxda ah)
-                    let mvaRefund = (ti - te) * 0.05; 
-                    let ferie = ti * 0.102;
-                    
-                    document.getElementById('totalMva').innerText = mvaRefund.toLocaleString() + ' kr';
-                    document.getElementById('totalFerie').innerText = ferie.toLocaleString() + ' kr';
-                    document.getElementById('totalOwner').innerText = to.toLocaleString() + ' kr';
-                    document.getElementById('netResult').innerText = (ti - te).toLocaleString() + ' kr';
-                });
+                list.innerHTML += `
+                    <div class="card flex justify-between items-center border-l-4 ${mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
+                        <div>
+                            <p class="font-bold text-[11px] uppercase">${realName}</p>
+                            <p class="text-[9px] text-gray-500">${d.date || '2026'}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <p class="font-black ${mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
+                            <button onclick="deleteItem('${ref.name}', '${dDoc.id}')" class="text-gray-600"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>`;
             });
-        };
+
+            // Cusboonaysii interface-ka
+            document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
+            document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
+            document.getElementById('totalMva').innerText = ((ti - te) * 0.25).toLocaleString() + ' kr';
+            document.getElementById('totalFerie').innerText = (ti * 0.102).toLocaleString() + ' kr';
+            document.getElementById('totalOwner').innerText = to.toLocaleString() + ' kr';
+            document.getElementById('netResult').innerText = (ti - te).toLocaleString() + ' kr';
+        });
+    });
+};
