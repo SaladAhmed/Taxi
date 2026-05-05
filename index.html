@@ -1,194 +1,203 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>M. Salad Transport PRO</title>
-<style>
-/* Style-ka guud */
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#0d0f1a;--bg2:#141726;--bg3:#1c2035;
-  --acc:#4f8ef7; --acc2:#10b981; --acc4:#ef4444;
-  --txt:#eef0ff;--txt2:#8b93bc;--brd:#2a2f4a;--rad:12px;
-}
-html,body{height:100%;font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
-.screen{display:none;min-height:100vh;flex-direction:column}
-.screen.active{display:flex}
-#scr-auth{align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1a2050 0%,var(--bg) 60%)}
-.auth-card{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:28px 24px;width:100%;max-width:380px;text-align:center}
-.field-group input{width:100%;padding:12px;margin-bottom:12px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px}
-.btn-primary{width:100%;padding:12px;background:var(--acc);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:50}
-.tab-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto}
-.tab-item{padding:12px 16px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--txt2)}
-.tab-item.active{color:var(--acc);border-bottom:2px solid var(--acc)}
-.page{display:none;padding:15px}
-.page.active{display:block}
-.sum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px}
-.sum-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:15px}
-.sum-card .s-val{font-size:18px;font-weight:700;margin-bottom:4px}
-.sum-card.inc .s-val{color:var(--acc2)}
-.sum-card.exp .s-val{color:var(--acc4)}
-.card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:15px;margin-bottom:15px}
-.fg input, .fg select{width:100%;padding:10px;margin:5px 0;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc2);color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:1000}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M. Salad Transport PRO</title>
+    <style>
+        :root { --bg: #0d1117; --card: #161b22; --acc: #58a6ff; --txt: #c9d1d9; --err: #f85149; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; }
+        .screen { display: none; padding: 20px; min-height: 100vh; flex-direction: column; }
+        .active { display: flex; }
+        .auth-container { max-width: 400px; margin: auto; text-align: center; width: 100%; }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; }
+        button { width: 100%; padding: 12px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .tab-bar { display: flex; background: var(--card); border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 10; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 13px; color: #8b949e; }
+        .tab.active { border-bottom: 2px solid var(--acc); color: var(--acc); font-weight: bold; }
+        .card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #30363d; }
+        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #30363d; font-size: 13px; }
+        .pos { color: #3fb950; } .neg { color: #f85149; }
+        .loading { display: none; color: var(--acc); margin-top: 10px; }
+    </style>
 </head>
 <body>
 
-<div id="toast" class="toast"></div>
-
-<!-- Login -->
+<!-- Login/Register Screen -->
 <div id="scr-auth" class="screen active">
-  <div class="auth-card">
-    <h2 style="margin-bottom:8px">🚖 Taxi System</h2>
-    <p style="color:var(--txt2);font-size:12px;margin-bottom:24px">Geli magacaaga si aad u bilowdo</p>
-    <div class="field-group">
-        <input type="text" id="l-user" placeholder="Magacaaga (Brukernavn)">
-        <button class="btn-primary" onclick="doLogin()">Gid Inn 🌐</button>
+    <div class="auth-container">
+        <h2 style="font-size: 28px; margin-bottom: 5px;">🚖 M. Salad</h2>
+        <p style="color: #8b949e; margin-bottom: 20px;">Xogtaada waa mid kuu gaar ah</p>
+        <input type="email" id="email" placeholder="Email-kaaga">
+        <input type="password" id="pass" placeholder="Password-kaaga">
+        <button onclick="handleAuth('login')">Logg Inn 🌐</button>
+        <button onclick="handleAuth('signup')" style="background: #30363d; margin-top: 15px;">Saxeex Cusub (Register)</button>
+        <div id="auth-loader" class="loading">Fadlan sug...</div>
+        <p id="auth-error" class="neg" style="margin-top:15px; font-size: 12px;"></p>
     </div>
-  </div>
 </div>
 
-<!-- App -->
+<!-- Main App Screen -->
 <div id="scr-app" class="screen">
-  <div class="topbar">
-    <div style="font-weight:700;color:var(--acc)">M. SALAD PRO</div>
-    <button onclick="location.reload()" style="background:none;border:none;color:var(--txt2)">Logg ut</button>
-  </div>
-  
-  <div class="tab-bar">
-    <div class="tab-item active" onclick="showPage('dash')">Oversikt</div>
-    <div class="tab-item" onclick="showPage('enter')">➕ Ny</div>
-    <div class="tab-item" onclick="showPage('entries')">📋 Logg</div>
-  </div>
-
-  <div class="page active" id="page-dash">
-    <div class="sum-grid" id="sum-grid"></div>
-    <div class="card">
-        <h3>Siste transaksjoner</h3>
-        <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Beskrivelse</th><th>Beløp</th></tr></thead><tbody id="dash-tbody"></tbody></table></div>
+    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px; background: #161b22; padding: 10px; border-radius: 8px;">
+        <span id="user-display" style="font-size:11px; color:var(--acc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;"></span>
+        <button onclick="logout()" style="width:auto; padding:5px 12px; background:var(--err); margin: 0; font-size: 12px;">Logg ut</button>
     </div>
-  </div>
 
-  <div class="page" id="page-enter">
-    <div class="card">
-        <h3>Ny registrering</h3>
-        <div class="fg"><label>Type</label>
-            <select id="f-type">
-                <option value="faktura">Faktura</option>
-                <option value="drivstoff">Drivstoff</option>
-                <option value="lonn">Lønn (+10.2%)</option>
-            </select>
+    <div class="tab-bar">
+        <div id="tab-dash" class="tab active" onclick="showPage('dash')">Oversikt</div>
+        <div id="tab-add" class="tab" onclick="showPage('add')">➕ Ny Logg</div>
+    </div>
+
+    <!-- Dash Page -->
+    <div id="page-dash" class="page-content" style="margin-top:20px;">
+        <div id="summary" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;"></div>
+        <div class="card">
+            <h3 style="margin-top:0;">Dine Transaksjoner</h3>
+            <div id="log-list"></div>
         </div>
-        <div class="fg"><label>Dato</label><input type="date" id="f-date"></div>
-        <div class="fg"><label>Beløp</label><input type="number" id="f-amount" placeholder="0.00"></div>
-        <div class="fg"><label>Beskrivelse</label><input type="text" id="f-desc"></div>
-        <button class="btn-primary" onclick="addEntry()" style="background:var(--acc2);margin-top:10px">Lagre Online</button>
     </div>
-  </div>
 
-  <div class="page" id="page-entries">
-    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Brutto</th><th>Dato</th><th></th></tr></thead><tbody id="entries-tbody"></tbody></table></div></div>
-  </div>
+    <!-- Add Page -->
+    <div id="page-add" class="page-content" style="display:none; margin-top:20px;">
+        <div class="card">
+            <h3 style="margin-top:0;">Diiwaangeli</h3>
+            <label style="font-size: 12px;">Type</label>
+            <select id="f-type" style="width:100%; padding:12px; margin: 8px 0; background:#010409; color:white; border: 1px solid #30363d; border-radius: 6px;">
+                <option value="faktura">Faktura (Lacag soo gashay)</option>
+                <option value="utgift">Utgift (Lacag baxday)</option>
+            </select>
+            <label style="font-size: 12px;">Beløp (Lacagta)</label>
+            <input type="number" id="f-amount" placeholder="0.00">
+            <label style="font-size: 12px;">Beskrivelse</label>
+            <input type="text" id="f-desc" placeholder="Maxay ahayd?">
+            <label style="font-size: 12px;">Dato</label>
+            <input type="date" id="f-date">
+            <button onclick="saveData()" style="background: #238636;">Lagre Online ✅</button>
+        </div>
+    </div>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-  // Xogta saxda ah (Ma jirto meel banaan hadda)
-  const firebaseConfig = {
-    apiKey: "AIzaSyCYNLmTJEV2_WWNhibpwUCXzAMiMb0EYE",
-    authDomain: "mohamed-salad-transport.firebaseapp.com",
-    databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mohamed-salad-transport",
-    storageBucket: "mohamed-salad-transport.firebasestorage.app",
-    messagingSenderId: "608716442795",
-    appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  let currentUser = null;
-  let entries = [];
-
-  window.doLogin = function() {
-    const u = document.getElementById('l-user').value.trim().toLowerCase();
-    if(!u) return alert("Geli magac");
-    currentUser = u;
-    
-    const userRef = ref(db, 'users/' + u);
-    onValue(userRef, (snapshot) => {
-      const data = snapshot.val();
-      entries = data ? Object.entries(data).map(([key, val]) => ({...val, fbKey: key})) : [];
-      entries.sort((a, b) => b.id - a.id);
-      renderAll();
-      document.getElementById('scr-auth').classList.remove('active');
-      document.getElementById('scr-app').classList.add('active');
-    });
-  };
-
-  window.addEntry = function() {
-    const type = document.getElementById('f-type').value;
-    const amount = parseFloat(document.getElementById('f-amount').value);
-    const date = document.getElementById('f-date').value;
-    const desc = document.getElementById('f-desc').value;
-
-    if(!amount || !date) return alert("Fyll ut alt");
-
-    const newEntry = {
-      id: Date.now(),
-      type,
-      amount: amount.toFixed(2),
-      date,
-      desc
+    const firebaseConfig = {
+        apiKey: "AIzaSyCYNLmTJEV2_WWNhibpwUCXzAMiMb0EYE",
+        authDomain: "mohamed-salad-transport.firebaseapp.com",
+        databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mohamed-salad-transport",
+        storageBucket: "mohamed-salad-transport.firebasestorage.app",
+        messagingSenderId: "608716442795",
+        appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
     };
 
-    push(ref(db, 'users/' + currentUser), newEntry).then(() => {
-      showToast("Kaydka waa guul!");
-      showPage('dash');
-    });
-  };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-  window.deleteEntry = function(fbKey) {
-    if(confirm("Ma tirtirnaa?")) {
-      remove(ref(db, `users/${currentUser}/${fbKey}`));
+    let userUid = null;
+
+    // Authentication
+    window.handleAuth = async (type) => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+        const errTag = document.getElementById('auth-error');
+        const loader = document.getElementById('auth-loader');
+        
+        if(!email || !pass) return alert("Fadlan geli Email iyo Password");
+        
+        errTag.innerText = "";
+        loader.style.display = "block";
+
+        try {
+            if(type === 'login') await signInWithEmailAndPassword(auth, email, pass);
+            else await createUserWithEmailAndPassword(auth, email, pass);
+        } catch (e) { 
+            errTag.innerText = "Cillad: " + e.message; 
+        } finally {
+            loader.style.display = "none";
+        }
+    };
+
+    window.logout = () => signOut(auth);
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userUid = user.uid;
+            document.getElementById('scr-auth').classList.remove('active');
+            document.getElementById('scr-app').classList.add('active');
+            document.getElementById('user-display').innerText = "🔑 " + user.email;
+            loadData();
+        } else {
+            document.getElementById('scr-auth').classList.add('active');
+            document.getElementById('scr-app').classList.remove('active');
+        }
+    });
+
+    // Database Actions
+    window.saveData = () => {
+        const type = document.getElementById('f-type').value;
+        const amount = document.getElementById('f-amount').value;
+        const desc = document.getElementById('f-desc').value;
+        const date = document.getElementById('f-date').value;
+
+        if(!amount || !date) return alert("Fadlan buuxi meelaha bannaan!");
+
+        push(ref(db, `users/${userUid}`), { type, amount, desc, date, ts: Date.now() })
+            .then(() => {
+                alert("Waa la kaydiyay!");
+                document.getElementById('f-amount').value = "";
+                document.getElementById('f-desc').value = "";
+                showPage('dash');
+            });
+    };
+
+    window.deleteEntry = (key) => {
+        if(confirm("Ma hubtaa inaad tirtirto?")) {
+            remove(ref(db, `users/${userUid}/${key}`));
+        }
+    };
+
+    function loadData() {
+        onValue(ref(db, `users/${userUid}`), (snap) => {
+            const data = snap.val();
+            const list = document.getElementById('log-list');
+            const summary = document.getElementById('summary');
+            list.innerHTML = "";
+            let inn = 0, ut = 0;
+
+            if(data) {
+                Object.entries(data).reverse().forEach(([key, val]) => {
+                    const isInn = val.type === 'faktura';
+                    const amt = parseFloat(val.amount);
+                    isInn ? inn += amt : ut += amt;
+                    list.innerHTML += `
+                        <div class="row">
+                            <span><b>${val.date}</b><br><small>${val.desc}</small></span>
+                            <div style="text-align:right">
+                                <b class="${isInn?'pos':'neg'}">${amt.toLocaleString()} kr</b><br>
+                                <button onclick="deleteEntry('${key}')" style="background:none; color:gray; font-size:10px; width:auto; padding:0; margin:0;">Tirtir</button>
+                            </div>
+                        </div>`;
+                });
+            } else {
+                list.innerHTML = "<p style='color:gray; font-size:12px;'>Ma jirto xog weli...</p>";
+            }
+            summary.innerHTML = `
+                <div class="card" style="border-left: 4px solid #3fb950;"><small>Inn (Wali)</small><br><b class="pos" style="font-size:18px;">${inn.toLocaleString()}</b></div>
+                <div class="card" style="border-left: 4px solid #f85149;"><small>Ut (Baxay)</small><br><b class="neg" style="font-size:18px;">${ut.toLocaleString()}</b></div>
+            `;
+        });
     }
-  };
 
-  function renderAll() {
-    const dashBody = document.getElementById('dash-tbody');
-    const entryBody = document.getElementById('entries-tbody');
-    const sumGrid = document.getElementById('sum-grid');
-    dashBody.innerHTML = ''; entryBody.innerHTML = '';
-    let tInc = 0, tExp = 0;
-
-    entries.forEach(e => {
-      const isInc = e.type === 'faktura';
-      const amt = parseFloat(e.amount);
-      if(isInc) tInc += amt; else tExp += amt;
-
-      dashBody.innerHTML += `<tr><td><b style="color:${isInc?'#10b981':'#ef4444'}">${e.type}</b></td><td>${e.desc}</td><td>${amt.toLocaleString()}</td></tr>`;
-      entryBody.innerHTML += `<tr><td>${e.type}</td><td><b>${amt.toLocaleString()}</b></td><td>${e.date}</td><td><button onclick="deleteEntry('${e.fbKey}')" style="background:none;border:none;color:red">🗑</button></td></tr>`;
-    });
-
-    sumGrid.innerHTML = `
-      <div class="sum-card"><div class="s-val" style="color:#10b981">${tInc.toLocaleString()}</div><small>Inn</small></div>
-      <div class="sum-card"><div class="s-val" style="color:#ef4444">${tExp.toLocaleString()}</div><small>Ut</small></div>`;
-  }
-
-  window.showPage = function(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-'+id).classList.add('active');
-  };
-  
-  function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display='none', 2000); }
+    window.showPage = (id) => {
+        document.getElementById('page-dash').style.display = id === 'dash' ? 'block' : 'none';
+        document.getElementById('page-add').style.display = id === 'add' ? 'block' : 'none';
+        document.getElementById('tab-dash').classList.toggle('active', id === 'dash');
+        document.getElementById('tab-add').classList.toggle('active', id === 'add');
+    };
 </script>
 </body>
 </html>
