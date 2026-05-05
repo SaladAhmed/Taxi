@@ -23,7 +23,6 @@
 </head>
 <body>
 
-<!-- Login/Register Screen -->
 <div id="scr-auth" class="screen active">
     <div class="auth-container">
         <h2 style="font-size: 28px; margin-bottom: 5px;">🚖 M. Salad</h2>
@@ -37,7 +36,6 @@
     </div>
 </div>
 
-<!-- Main App Screen -->
 <div id="scr-app" class="screen">
     <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px; background: #161b22; padding: 10px; border-radius: 8px;">
         <span id="user-display" style="font-size:11px; color:var(--acc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;"></span>
@@ -49,7 +47,6 @@
         <div id="tab-add" class="tab" onclick="showPage('add')">➕ Ny Logg</div>
     </div>
 
-    <!-- Dash Page -->
     <div id="page-dash" class="page-content" style="margin-top:20px;">
         <div id="summary" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;"></div>
         <div class="card">
@@ -58,7 +55,6 @@
         </div>
     </div>
 
-    <!-- Add Page -->
     <div id="page-add" class="page-content" style="display:none; margin-top:20px;">
         <div class="card">
             <h3 style="margin-top:0;">Diiwaangeli</h3>
@@ -83,6 +79,7 @@
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // Xogta hoose waa la saxay (API Key-ga waa la isku xiray)
     const firebaseConfig = {
         apiKey: "AIzaSyCYNLmTJEV2_WWNhibpwUCXzAMiMb0EYE",
         authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -101,8 +98,8 @@
 
     // Authentication
     window.handleAuth = async (type) => {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('pass').value;
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('pass').value.trim();
         const errTag = document.getElementById('auth-error');
         const loader = document.getElementById('auth-loader');
         
@@ -186,8 +183,8 @@
                 list.innerHTML = "<p style='color:gray; font-size:12px;'>Ma jirto xog weli...</p>";
             }
             summary.innerHTML = `
-                <div class="card" style="border-left: 4px solid #3fb950;"><small>Inn (Wali)</small><br><b class="pos" style="font-size:18px;">${inn.toLocaleString()}</b></div>
-                <div class="card" style="border-left: 4px solid #f85149;"><small>Ut (Baxay)</small><br><b class="neg" style="font-size:18px;">${ut.toLocaleString()}</b></div>
+                <div class="card" style="border-left: 4px solid #3fb950;"><small>Inn</small><br><b class="pos" style="font-size:18px;">${inn.toLocaleString()}</b></div>
+                <div class="card" style="border-left: 4px solid #f85149;"><small>Ut</small><br><b class="neg" style="font-size:18px;">${ut.toLocaleString()}</b></div>
             `;
         });
     }
