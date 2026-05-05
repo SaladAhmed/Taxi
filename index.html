@@ -44,15 +44,20 @@
 <script>
     // XALKA KAMA DAMBEYSTA AH: 
     // DHEX DHIG API KEY-GAAGA CALAAMADAHA "" EE HOOSE
- const firebaseConfig = {
-  apiKey: "AIzaSyCYNlmTJEV2_WWnHIbpwbUCXzAMiMb0EYE",
+ // Nuqulkan waa midka cusub ee ku shaqaynaya Firebase SDK v7.20.0+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
   authDomain: "mohamed-salad-transport.firebaseapp.com",
   databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "mohamed-salad-transport",
   storageBucket: "mohamed-salad-transport.firebasestorage.app",
   messagingSenderId: "608716442795",
-  appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
-  measurementId: "G-VJTX0THFK5"
+  appId: "1:608716442795:web:34cafc1a23316664717bee",
+  measurementId: "G-YN3RKFE194"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 };
     
     firebase.initializeApp(firebaseConfig);
