@@ -1,200 +1,113 @@
 <!DOCTYPE html>
-<html lang="no">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M. Salad Transport PRO</title>
-    <style>
-        :root { --bg: #0d1117; --card: #161b22; --acc: #58a6ff; --txt: #c9d1d9; --err: #f85149; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; }
-        .screen { display: none; padding: 20px; min-height: 100vh; flex-direction: column; }
-        .active { display: flex; }
-        .auth-container { max-width: 400px; margin: auto; text-align: center; width: 100%; }
-        input { width: 100%; padding: 12px; margin: 8px 0; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; }
-        button { width: 100%; padding: 12px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .tab-bar { display: flex; background: var(--card); border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 10; }
-        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 13px; color: #8b949e; }
-        .tab.active { border-bottom: 2px solid var(--acc); color: var(--acc); font-weight: bold; }
-        .card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #30363d; }
-        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #30363d; font-size: 13px; }
-        .pos { color: #3fb950; } .neg { color: #f85149; }
-        .loading { display: none; color: var(--acc); margin-top: 10px; }
-    </style>
+  <title>Taxi System</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+
+  <style>
+    body {
+      background: #0b0f2f;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+    }
+    input, button {
+      padding: 12px;
+      margin: 8px;
+      border-radius: 8px;
+      border: none;
+      width: 80%;
+    }
+    button {
+      background: #1e3a8a;
+      color: white;
+      font-weight: bold;
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="scr-auth" class="screen active">
-    <div class="auth-container">
-        <h2 style="font-size: 28px; margin-bottom: 5px;">🚖 M. Salad</h2>
-        <p style="color: #8b949e; margin-bottom: 20px;">Xogtaada waa mid kuu gaar ah</p>
-        <input type="email" id="email" placeholder="Email-kaaga">
-        <input type="password" id="pass" placeholder="Password-kaaga">
-        <button onclick="handleAuth('login')">Logg Inn 🌐</button>
-        <button onclick="handleAuth('signup')" style="background: #30363d; margin-top: 15px;">Saxeex Cusub (Register)</button>
-        <div id="auth-loader" class="loading">Fadlan sug...</div>
-        <p id="auth-error" class="neg" style="margin-top:15px; font-size: 12px;"></p>
-    </div>
-</div>
+<h1>🚖 Taxi System</h1>
 
-<div id="scr-app" class="screen">
-    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px; background: #161b22; padding: 10px; border-radius: 8px;">
-        <span id="user-display" style="font-size:11px; color:var(--acc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;"></span>
-        <button onclick="logout()" style="width:auto; padding:5px 12px; background:var(--err); margin: 0; font-size: 12px;">Logg ut</button>
-    </div>
+<input type="email" id="email" placeholder="Email"><br>
+<input type="password" id="password" placeholder="Password"><br>
 
-    <div class="tab-bar">
-        <div id="tab-dash" class="tab active" onclick="showPage('dash')">Oversikt</div>
-        <div id="tab-add" class="tab" onclick="showPage('add')">➕ Ny Logg</div>
-    </div>
+<button onclick="login()">Login</button>
+<button onclick="register()">Register</button>
+<button onclick="resetPassword()">Forgot Password</button>
 
-    <div id="page-dash" class="page-content" style="margin-top:20px;">
-        <div id="summary" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;"></div>
-        <div class="card">
-            <h3 style="margin-top:0;">Dine Transaksjoner</h3>
-            <div id="log-list"></div>
-        </div>
-    </div>
-
-    <div id="page-add" class="page-content" style="display:none; margin-top:20px;">
-        <div class="card">
-            <h3 style="margin-top:0;">Diiwaangeli</h3>
-            <label style="font-size: 12px;">Type</label>
-            <select id="f-type" style="width:100%; padding:12px; margin: 8px 0; background:#010409; color:white; border: 1px solid #30363d; border-radius: 6px;">
-                <option value="faktura">Faktura (Lacag soo gashay)</option>
-                <option value="utgift">Utgift (Lacag baxday)</option>
-            </select>
-            <label style="font-size: 12px;">Beløp (Lacagta)</label>
-            <input type="number" id="f-amount" placeholder="0.00">
-            <label style="font-size: 12px;">Beskrivelse</label>
-            <input type="text" id="f-desc" placeholder="Maxay ahayd?">
-            <label style="font-size: 12px;">Dato</label>
-            <input type="date" id="f-date">
-            <button onclick="saveData()" style="background: #238636;">Lagre Online ✅</button>
-        </div>
-    </div>
-</div>
+<p id="msg"></p>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // Xogta hoose waa la saxay (API Key-ga waa la isku xiray)
-    const firebaseConfig = {
-        apiKey: "AIzaSyCYNLmTJEV2_WWNhibpwUCXzAMiMb0EYE",
-        authDomain: "mohamed-salad-transport.firebaseapp.com",
-        databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "mohamed-salad-transport",
-        storageBucket: "mohamed-salad-transport.firebasestorage.app",
-        messagingSenderId: "608716442795",
-        appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
-    };
+// 🔴 KU BADAL CONFIG-KAAGA HALKAN
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+// 👉 KA SOO QAADO FIREBASE (sawirka aad dirtay)
+const firebaseConfig = {
+  apiKey: "HALKAN_API_KEY_GELI",
+  authDomain: "mohamed-salad-transport.firebaseapp.com",
+  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mohamed-salad-transport",
+  storageBucket: "mohamed-salad-transport.appspot.com",
+  messagingSenderId: "XXXXXXX",
+  appId: "XXXXXXX"
+};
 
-    let userUid = null;
+// INIT
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-    // Authentication
-    window.handleAuth = async (type) => {
-        const email = document.getElementById('email').value.trim();
-        const pass = document.getElementById('pass').value.trim();
-        const errTag = document.getElementById('auth-error');
-        const loader = document.getElementById('auth-loader');
-        
-        if(!email || !pass) return alert("Fadlan geli Email iyo Password");
-        
-        errTag.innerText = "";
-        loader.style.display = "block";
+// LOGIN
+window.login = function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-        try {
-            if(type === 'login') await signInWithEmailAndPassword(auth, email, pass);
-            else await createUserWithEmailAndPassword(auth, email, pass);
-        } catch (e) { 
-            errTag.innerText = "Cillad: " + e.message; 
-        } finally {
-            loader.style.display = "none";
-        }
-    };
-
-    window.logout = () => signOut(auth);
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            userUid = user.uid;
-            document.getElementById('scr-auth').classList.remove('active');
-            document.getElementById('scr-app').classList.add('active');
-            document.getElementById('user-display').innerText = "🔑 " + user.email;
-            loadData();
-        } else {
-            document.getElementById('scr-auth').classList.add('active');
-            document.getElementById('scr-app').classList.remove('active');
-        }
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      document.getElementById("msg").innerText = "Login success ✅";
+    })
+    .catch(err => {
+      document.getElementById("msg").innerText = err.message;
     });
+}
 
-    // Database Actions
-    window.saveData = () => {
-        const type = document.getElementById('f-type').value;
-        const amount = document.getElementById('f-amount').value;
-        const desc = document.getElementById('f-desc').value;
-        const date = document.getElementById('f-date').value;
+// REGISTER
+window.register = function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-        if(!amount || !date) return alert("Fadlan buuxi meelaha bannaan!");
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      document.getElementById("msg").innerText = "Account created ✅";
+    })
+    .catch(err => {
+      document.getElementById("msg").innerText = err.message;
+    });
+}
 
-        push(ref(db, `users/${userUid}`), { type, amount, desc, date, ts: Date.now() })
-            .then(() => {
-                alert("Waa la kaydiyay!");
-                document.getElementById('f-amount').value = "";
-                document.getElementById('f-desc').value = "";
-                showPage('dash');
-            });
-    };
+// RESET PASSWORD
+window.resetPassword = function() {
+  const email = document.getElementById("email").value;
 
-    window.deleteEntry = (key) => {
-        if(confirm("Ma hubtaa inaad tirtirto?")) {
-            remove(ref(db, `users/${userUid}/${key}`));
-        }
-    };
+  sendPasswordResetEmail(auth, email)
+    .then(() => {
+      document.getElementById("msg").innerText = "Email sent ✅";
+    })
+    .catch(err => {
+      document.getElementById("msg").innerText = err.message;
+    });
+}
 
-    function loadData() {
-        onValue(ref(db, `users/${userUid}`), (snap) => {
-            const data = snap.val();
-            const list = document.getElementById('log-list');
-            const summary = document.getElementById('summary');
-            list.innerHTML = "";
-            let inn = 0, ut = 0;
-
-            if(data) {
-                Object.entries(data).reverse().forEach(([key, val]) => {
-                    const isInn = val.type === 'faktura';
-                    const amt = parseFloat(val.amount);
-                    isInn ? inn += amt : ut += amt;
-                    list.innerHTML += `
-                        <div class="row">
-                            <span><b>${val.date}</b><br><small>${val.desc}</small></span>
-                            <div style="text-align:right">
-                                <b class="${isInn?'pos':'neg'}">${amt.toLocaleString()} kr</b><br>
-                                <button onclick="deleteEntry('${key}')" style="background:none; color:gray; font-size:10px; width:auto; padding:0; margin:0;">Tirtir</button>
-                            </div>
-                        </div>`;
-                });
-            } else {
-                list.innerHTML = "<p style='color:gray; font-size:12px;'>Ma jirto xog weli...</p>";
-            }
-            summary.innerHTML = `
-                <div class="card" style="border-left: 4px solid #3fb950;"><small>Inn</small><br><b class="pos" style="font-size:18px;">${inn.toLocaleString()}</b></div>
-                <div class="card" style="border-left: 4px solid #f85149;"><small>Ut</small><br><b class="neg" style="font-size:18px;">${ut.toLocaleString()}</b></div>
-            `;
-        });
-    }
-
-    window.showPage = (id) => {
-        document.getElementById('page-dash').style.display = id === 'dash' ? 'block' : 'none';
-        document.getElementById('page-add').style.display = id === 'add' ? 'block' : 'none';
-        document.getElementById('tab-dash').classList.toggle('active', id === 'dash');
-        document.getElementById('tab-add').classList.toggle('active', id === 'add');
-    };
 </script>
+
 </body>
 </html>
