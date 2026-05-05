@@ -3,83 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M. Salad Transport</title>
+    <title>M. Salad Transport - Full System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #1a1c2c; color: white; font-family: sans-serif; }
+        body { background-color: #1a1c2c; color: white; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
         .card { background: #252945; border-radius: 15px; padding: 15px; border: 1px solid #30355a; position: relative; }
         input, select { background: #30355a !important; color: white !important; border: 1px solid #404677 !important; border-radius: 10px; padding: 12px; width: 100%; margin-bottom: 10px; outline: none; }
         .hidden { display: none !important; }
+        .nav-active { color: #fbbf24 !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="pb-24">
 
-    <!-- LOGIN -->
+    <!-- LOGIN & RESET SECTION -->
     <div id="authSection" class="fixed inset-0 bg-[#1a1c2c] z-[2000] flex items-center justify-center p-6">
-        <div class="bg-[#252945] p-8 rounded-3xl w-full max-w-sm border-t-4 border-yellow-400 text-center">
+        <div class="bg-[#252945] p-8 rounded-3xl w-full max-w-sm border-t-4 border-yellow-400 text-center shadow-2xl">
             <h1 class="text-yellow-400 font-black text-2xl mb-6">M. SALAD LOGIN</h1>
             <input type="email" id="emailInput" placeholder="Email">
             <input type="password" id="passInput" placeholder="Password">
-            <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-black mt-4 uppercase">LOGIN</button>
+            <button onclick="handleAuth()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-black mt-2 uppercase shadow-lg">LOGIN</button>
+            <button onclick="resetPassword()" class="text-yellow-400/60 text-[10px] mt-6 block w-full hover:underline">Forgot Password? / Password ma ilowday?</button>
         </div>
     </div>
 
     <!-- MAIN APP -->
     <div id="mainApp" class="hidden p-4">
         <div class="flex justify-between items-center mb-6">
-            <div class="flex gap-2">
-                <button onclick="changeLang('so')" class="bg-gray-700 px-3 py-1 rounded text-[10px] font-bold">SO</button>
-                <button onclick="changeLang('no')" class="bg-yellow-400 text-black px-3 py-1 rounded text-[10px] font-bold">NO</button>
+            <div class="flex gap-1">
+                <button onclick="changeLang('so')" class="bg-gray-700 px-2.5 py-1 rounded text-[10px] font-bold">SO</button>
+                <button onclick="changeLang('en')" class="bg-gray-700 px-2.5 py-1 rounded text-[10px] font-bold">EN</button>
+                <button onclick="changeLang('no')" class="bg-yellow-400 text-black px-2.5 py-1 rounded text-[10px] font-bold">NO</button>
             </div>
-            <button onclick="logout()" class="text-red-500 font-bold border border-red-500/30 px-3 py-1.5 rounded-lg text-[10px]">KA BAX</button>
+            <button onclick="logout()" class="text-red-500 font-bold border border-red-500/30 px-3 py-1.5 rounded-lg text-[10px]">LOGOUT</button>
         </div>
 
-        <h2 class="text-center font-black text-yellow-400 text-xl mb-6 uppercase">M. Salad Transport</h2>
+        <h2 class="text-center font-black text-yellow-400 text-xl mb-6 uppercase tracking-widest">M. Salad Transport</h2>
 
-        <!-- Stats -->
+        <!-- Stats Grid -->
         <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-            <div class="card border-l-4 border-green-500"><p id="t-inc" class="text-[8px] text-gray-400 font-bold">INNTEKT</p><h3 id="totalIncome" class="text-xs font-black text-green-400">0 kr</h3></div>
-            <div class="card border-l-4 border-red-500"><p id="t-exp" class="text-[8px] text-gray-400 font-bold">UTGIFT</p><h3 id="totalExpense" class="text-xs font-black text-red-400">0 kr</h3></div>
-            <div class="card border-l-4 border-blue-400"><p id="t-own" class="text-[8px] text-gray-400 font-bold">EIER</p><h3 id="totalOwner" class="text-xs font-black text-blue-400">0 kr</h3></div>
+            <div class="card border-l-4 border-green-500"><p id="t-inc" class="text-[8px] text-gray-400 font-bold uppercase">Dakhli</p><h3 id="totalIncome" class="text-xs font-black text-green-400">0 kr</h3></div>
+            <div class="card border-l-4 border-red-500"><p id="t-exp" class="text-[8px] text-gray-400 font-bold uppercase">Kharash</p><h3 id="totalExpense" class="text-xs font-black text-red-400">0 kr</h3></div>
+            <div class="card border-l-4 border-blue-400"><p id="t-own" class="text-[8px] text-gray-400 font-bold uppercase">Eier</p><h3 id="totalOwner" class="text-xs font-black text-blue-400">0 kr</h3></div>
         </div>
 
+        <!-- Net Result -->
         <div class="card border-2 border-yellow-400/20 text-center py-6 mb-6">
-            <p id="t-net" class="text-[10px] text-yellow-400 font-bold uppercase tracking-widest">NETTO RESULTAT</p>
+            <p id="t-net" class="text-[10px] text-yellow-400 font-bold uppercase mb-1">NET RESULT</p>
             <h2 id="netResult" class="text-3xl font-black">0 kr</h2>
         </div>
 
+        <!-- List Section -->
         <div id="dashboardSection" class="section space-y-3"></div>
 
+        <!-- Add Data Section -->
         <div id="inputSection" class="section hidden">
             <div class="card p-6">
-                <div class="flex gap-2 mb-4">
-                    <button onclick="setMode('income')" id="m-inc" class="flex-1 py-3 rounded-lg font-black bg-green-600 text-xs">DAKHLI</button>
-                    <button onclick="setMode('expense')" id="m-exp" class="flex-1 py-3 rounded-lg font-black bg-gray-700 text-xs">KHARASH</button>
+                <div class="flex gap-2 mb-6">
+                    <button onclick="setMode('income')" id="m-inc" class="flex-1 py-3 rounded-lg font-black bg-green-600 text-[10px]">DAKHLI</button>
+                    <button onclick="setMode('expense')" id="m-exp" class="flex-1 py-3 rounded-lg font-black bg-gray-700 text-[10px]">KHARASH</button>
                 </div>
                 <input type="date" id="dateInput">
-                <input type="text" id="nameInput" placeholder="Navn">
-                <input type="number" id="amountInput" placeholder="Beløp (kr)">
+                <input type="text" id="nameInput" placeholder="Magaca / Name">
+                <input type="number" id="amountInput" placeholder="Lacagta / Amount">
                 <select id="typeInput"></select>
-                <button onclick="saveData()" id="btn-save" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-black uppercase mt-2">LAGRE</button>
+                <button onclick="saveData()" id="btn-save" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-black mt-4 uppercase">KAYDI / SAVE</button>
             </div>
         </div>
     </div>
 
-    <!-- Nav -->
-    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-gray-800 flex justify-around py-4">
-        <button onclick="showSection('dashboard')" id="nav-dash" class="text-yellow-400 flex flex-col items-center gap-1">
-            <i class="fas fa-list-ul"></i><span id="n-ov" class="text-[10px] font-bold">Oversikt</span>
-        </button>
-        <button onclick="showSection('input')" id="nav-inp" class="opacity-50 flex flex-col items-center gap-1">
-            <i class="fas fa-plus-circle"></i><span id="n-add" class="text-[10px] font-bold">Legg til</span>
-        </button>
+    <!-- Navigation -->
+    <nav class="fixed bottom-0 w-full bg-[#252945] border-t border-white/5 flex justify-around py-4 shadow-2xl">
+        <button onclick="showSection('dashboard')" id="nav-dash" class="nav-active flex flex-col items-center gap-1 opacity-50"><i class="fas fa-list-ul"></i><span class="text-[10px] font-bold">Oversikt</span></button>
+        <button onclick="showSection('input')" id="nav-inp" class="flex flex-col items-center gap-1 opacity-50"><i class="fas fa-plus-circle"></i><span class="text-[10px] font-bold">Legg til</span></button>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
@@ -93,41 +95,31 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let user = null, currentMode = 'income';
+        let user = null, mode = 'income';
 
         onAuthStateChanged(auth, u => {
-            if(u) {
-                user = u;
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                loadData();
-            } else {
-                document.getElementById('authSection').classList.remove('hidden');
-            }
+            if(u) { user = u; document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); loadData(); }
+            else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
         });
 
         window.loadData = () => {
-            // "Universal Query": Wuxuu soo qaadayaa xog kasta oo taal 'data' ama 'transfers'
-            const collections = ['data', 'transfers', 'xisaabaadka'];
-            collections.forEach(cName => {
-                onSnapshot(collection(db, cName), snap => {
-                    let ti=0, te=0, to=0;
-                    const list = document.getElementById('dashboardSection');
-                    list.innerHTML = '';
+            const collections = ['transfers', 'data', 'xisaabaadka'];
+            let ti=0, te=0, to=0;
+            const list = document.getElementById('dashboardSection');
+            list.innerHTML = '';
+
+            collections.forEach(c => {
+                onSnapshot(collection(db, c), snap => {
                     snap.forEach(dDoc => {
                         const d = dDoc.data();
-                        // Hubi in xogtan ay leedahay Salad ama User-ka hadda
-                        if(d.userId === user.uid || d.name === "Salad" || d.name === "Mohamed Salad") {
+                        if(d.name === "Salad" || d.userId === user.uid) {
                             const amt = Number(d.amount);
                             if(d.mode === 'income') ti += amt; else te += amt;
-                            if(d.type === 'Bankuttak (Owner)' || d.typeKey === 'Withdrawal') to += amt;
-                            
-                            list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'}">
-                                <div><p class="font-bold text-xs uppercase">${d.name || 'Xog'}</p><p class="text-[9px] text-gray-400">${d.date}</p></div>
-                                <div class="flex items-center gap-4">
-                                    <p class="font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                                    <button onclick="deleteItem('${cName}', '${dDoc.id}')" class="text-gray-600"><i class="fas fa-trash-alt"></i></button>
-                                </div>
+                            if(d.typeKey === 'Withdrawal' || d.type === 'Bankuttak (Owner)') to += amt;
+                            list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
+                                <div><p class="font-bold text-xs uppercase">${d.name || 'Salad'}</p><p class="text-[9px] text-gray-500">${d.date}</p></div>
+                                <div class="flex items-center gap-4"><p class="font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
+                                <button onclick="deleteItem('${c}', '${dDoc.id}')" class="text-gray-600"><i class="fas fa-trash-alt"></i></button></div>
                             </div>`;
                         }
                     });
@@ -139,49 +131,14 @@
             });
         };
 
-        window.handleAuth = () => {
-            const e = document.getElementById('emailInput').value, p = document.getElementById('passInput').value;
-            signInWithEmailAndPassword(auth, e, p).catch(() => alert("Khalad!"));
-        };
-
+        window.handleAuth = () => { signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value).catch(() => alert("Email/Password Khaldan!")); };
+        window.resetPassword = () => { const e = document.getElementById('emailInput').value; if(e) sendPasswordResetEmail(auth, e).then(() => alert("Email ayaa laguu soo diray!")).catch(() => alert("Email-kan laguma hayo!")); else alert("Fadlan qor email-kaaga!"); };
+        window.saveData = async () => { const amt = parseFloat(document.getElementById('amountInput').value); if(!amt) return; await addDoc(collection(db, "transfers"), { userId: user.uid, amount: amt, name: document.getElementById('nameInput').value || "Salad", mode: mode, typeKey: document.getElementById('typeInput').value, date: document.getElementById('dateInput').value }); document.getElementById('amountInput').value = ''; showSection('dashboard'); };
+        window.deleteItem = async (c, id) => { if(confirm("Ma tirtirtaa?")) await deleteDoc(doc(db, c, id)); };
+        window.setMode = (m) => { mode = m; document.getElementById('m-inc').className = m === 'income' ? 'flex-1 py-3 rounded-lg font-black bg-green-600 text-[10px]' : 'flex-1 py-3 rounded-lg font-black bg-gray-700 text-[10px]'; document.getElementById('m-exp').className = m === 'expense' ? 'flex-1 py-3 rounded-lg font-black bg-red-600 text-[10px]' : 'flex-1 py-3 rounded-lg font-black bg-gray-700 text-[10px]'; const opts = m === 'income' ? ['TaxiCard', 'Cash', 'Invoice'] : ['Salary', 'Fuel', 'Withdrawal', 'Repair']; document.getElementById('typeInput').innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join(''); };
+        window.showSection = (s) => { document.querySelectorAll('.section').forEach(el => el.classList.add('hidden')); document.getElementById(s+'Section').classList.remove('hidden'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-' + (s === 'dashboard' ? 'dash' : 'inp')).classList.add('nav-active'); };
+        window.changeLang = (l) => { const d = { so: { inc: "DAKHLI", exp: "KHARASH", own: "EIER", net: "FAA'IIDO", ov: "Oversikt", add: "Ku dar", save: "Kaydi" }, en: { inc: "INCOME", exp: "EXPENSE", own: "OWNER", net: "PROFIT", ov: "Overview", add: "Add New", save: "Save" }, no: { inc: "INNTEKT", exp: "UTGIFT", own: "EIER", net: "RESULTAT", ov: "Oversikt", add: "Legg til", save: "Lagre" } }[l]; document.getElementById('t-inc').innerText = d.inc; document.getElementById('t-exp').innerText = d.exp; document.getElementById('t-own').innerText = d.own; document.getElementById('t-net').innerText = d.net; document.getElementById('btn-save').innerText = d.save; };
         window.logout = () => signOut(auth);
-        window.deleteItem = async (c, id) => { if(confirm("Tirtir?")) await deleteDoc(doc(db, c, id)); };
-        
-        window.showSection = (s) => {
-            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(s+'Section').classList.remove('hidden');
-            document.querySelectorAll('nav button').forEach(b => b.classList.add('opacity-50'));
-            document.getElementById('nav-' + (s === 'dashboard' ? 'dash' : 'inp')).classList.remove('opacity-50');
-        };
-
-        window.setMode = (m) => {
-            currentMode = m;
-            document.getElementById('m-inc').className = m === 'income' ? 'flex-1 py-3 rounded-lg font-black bg-green-600 text-xs' : 'flex-1 py-3 rounded-lg font-black bg-gray-700 text-xs';
-            document.getElementById('m-exp').className = m === 'expense' ? 'flex-1 py-3 rounded-lg font-black bg-red-600 text-xs' : 'flex-1 py-3 rounded-lg font-black bg-gray-700 text-xs';
-            const opts = m === 'income' ? ['TaxiCard', 'Cash', 'Invoice'] : ['Salary', 'Fuel', 'Withdrawal', 'Repair'];
-            document.getElementById('typeInput').innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
-        };
-
-        window.saveData = async () => {
-            const amt = parseFloat(document.getElementById('amountInput').value);
-            if(!amt) return;
-            await addDoc(collection(db, "transfers"), {
-                userId: user.uid, amount: amt, name: document.getElementById('nameInput').value,
-                mode: currentMode, typeKey: document.getElementById('typeInput').value, date: document.getElementById('dateInput').value
-            });
-            document.getElementById('amountInput').value = '';
-            showSection('dashboard');
-        };
-
-        window.changeLang = (l) => {
-            const d = { so: { inc: "DAKHLI", exp: "KHARASH", own: "EIER", net: "FAA'IIDO", ov: "Liiska", add: "Ku dar", save: "Kaydi" }, 
-                        no: { inc: "INNTEKT", exp: "UTGIFT", own: "EIER", net: "NETTO RESULTAT", ov: "Oversikt", add: "Legg til", save: "Lagre" } }[l];
-            document.getElementById('t-inc').innerText = d.inc; document.getElementById('t-exp').innerText = d.exp;
-            document.getElementById('t-own').innerText = d.own; document.getElementById('t-net').innerText = d.net;
-            document.getElementById('n-ov').innerText = d.ov; document.getElementById('n-add').innerText = d.add;
-            document.getElementById('btn-save').innerText = d.save;
-        };
-
         document.getElementById('dateInput').valueAsDate = new Date();
         setMode('income');
     </script>
