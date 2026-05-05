@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>M. Salad Transport PRO (ONLINE)</title>
+<title>M. Salad Transport PRO</title>
 <style>
 /* Style-ka guud */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0d0f1a;--bg2:#141726;--bg3:#1c2035;--bg4:#242840;
-  --acc:#4f8ef7; --acc2:#10b981; --acc3:#f97316; --acc4:#ef4444;
-  --txt:#eef0ff;--txt2:#8b93bc;--txt3:#555e80;
-  --brd:#2a2f4a;--rad:12px;--rad2:8px;
+  --bg:#0d0f1a;--bg2:#141726;--bg3:#1c2035;
+  --acc:#4f8ef7; --acc2:#10b981; --acc4:#ef4444;
+  --txt:#eef0ff;--txt2:#8b93bc;--brd:#2a2f4a;--rad:12px;
 }
 html,body{height:100%;font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
 .screen{display:none;min-height:100vh;flex-direction:column}
@@ -19,7 +18,7 @@ html,body{height:100%;font-family:system-ui,sans-serif;background:var(--bg);colo
 #scr-auth{align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1a2050 0%,var(--bg) 60%)}
 .auth-card{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:28px 24px;width:100%;max-width:380px;text-align:center}
 .field-group input{width:100%;padding:12px;margin-bottom:12px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px}
-.btn-primary{width:100%;padding:12px;background:var(--acc);color:#fff;border:none;border-radius:var(--rad2);cursor:pointer;font-weight:600}
+.btn-primary{width:100%;padding:12px;background:var(--acc);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:50}
 .tab-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto}
 .tab-item{padding:12px 16px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--txt2)}
@@ -31,15 +30,11 @@ html,body{height:100%;font-family:system-ui,sans-serif;background:var(--bg);colo
 .sum-card .s-val{font-size:18px;font-weight:700;margin-bottom:4px}
 .sum-card.inc .s-val{color:var(--acc2)}
 .sum-card.exp .s-val{color:var(--acc4)}
-.sum-card.mva .s-val{color:var(--acc3)}
 .card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:15px;margin-bottom:15px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.fg input, .fg select{width:100%;padding:10px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px}
+.fg input, .fg select{width:100%;padding:10px;margin:5px 0;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px}
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
-.pos{color:var(--acc2)}
-.neg{color:var(--acc4)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc2);color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:1000}
 </style>
 </head>
@@ -47,30 +42,29 @@ th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
 
 <div id="toast" class="toast"></div>
 
-<!-- Login Screen -->
+<!-- Login -->
 <div id="scr-auth" class="screen active">
   <div class="auth-card">
-    <h2 style="margin-bottom:8px">M. SALAD PRO</h2>
-    <p style="color:var(--txt2);font-size:12px;margin-bottom:24px">Online Database System</p>
+    <h2 style="margin-bottom:8px">🚖 Taxi System</h2>
+    <p style="color:var(--txt2);font-size:12px;margin-bottom:24px">Geli magacaaga si aad u bilowdo</p>
     <div class="field-group">
-        <input type="text" id="l-user" placeholder="Brukernavn">
-        <input type="password" id="l-pass" placeholder="Passord">
-        <button class="btn-primary" onclick="doLogin()">Logg Inn 🌐</button>
+        <input type="text" id="l-user" placeholder="Magacaaga (Brukernavn)">
+        <button class="btn-primary" onclick="doLogin()">Gid Inn 🌐</button>
     </div>
   </div>
 </div>
 
-<!-- Main App -->
+<!-- App -->
 <div id="scr-app" class="screen">
   <div class="topbar">
     <div style="font-weight:700;color:var(--acc)">M. SALAD PRO</div>
-    <button onclick="location.reload()" style="background:none;border:none;color:var(--txt2);cursor:pointer">Logg ut</button>
+    <button onclick="location.reload()" style="background:none;border:none;color:var(--txt2)">Logg ut</button>
   </div>
   
   <div class="tab-bar">
     <div class="tab-item active" onclick="showPage('dash')">Oversikt</div>
-    <div class="tab-item" onclick="showPage('enter')">➕ Legg til</div>
-    <div class="tab-item" onclick="showPage('entries')">📋 Oppføringer</div>
+    <div class="tab-item" onclick="showPage('enter')">➕ Ny</div>
+    <div class="tab-item" onclick="showPage('entries')">📋 Logg</div>
   </div>
 
   <div class="page active" id="page-dash">
@@ -84,27 +78,22 @@ th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
   <div class="page" id="page-enter">
     <div class="card">
         <h3>Ny registrering</h3>
-        <div class="form-row">
-            <div class="fg"><label>Type</label>
-                <select id="f-type">
-                    <option value="faktura">Faktura</option>
-                    <option value="drivstoff">Drivstoff</option>
-                    <option value="lonn">Lønn (+10.2%)</option>
-                </select>
-            </div>
-            <div class="fg"><label>Dato</label><input type="date" id="f-date"></div>
+        <div class="fg"><label>Type</label>
+            <select id="f-type">
+                <option value="faktura">Faktura</option>
+                <option value="drivstoff">Drivstoff</option>
+                <option value="lonn">Lønn (+10.2%)</option>
+            </select>
         </div>
-        <div class="form-row">
-            <div class="fg"><label>Beløp</label><input type="number" id="f-amount" placeholder="0.00"></div>
-            <div class="fg"><label>MVA %</label><select id="f-mva"><option value="25">25%</option><option value="0">0%</option></select></div>
-        </div>
-        <div class="fg" style="margin-bottom:10px"><label>Beskrivelse</label><input type="text" id="f-desc"></div>
-        <button class="btn-primary" onclick="addEntry()" style="background:var(--acc2)">Lagre Online</button>
+        <div class="fg"><label>Dato</label><input type="date" id="f-date"></div>
+        <div class="fg"><label>Beløp</label><input type="number" id="f-amount" placeholder="0.00"></div>
+        <div class="fg"><label>Beskrivelse</label><input type="text" id="f-desc"></div>
+        <button class="btn-primary" onclick="addEntry()" style="background:var(--acc2);margin-top:10px">Lagre Online</button>
     </div>
   </div>
 
   <div class="page" id="page-entries">
-    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Type</th><th>MVA</th><th>Brutto</th><th>Dato</th><th></th></tr></thead><tbody id="entries-tbody"></tbody></table></div></div>
+    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Brutto</th><th>Dato</th><th></th></tr></thead><tbody id="entries-tbody"></tbody></table></div></div>
   </div>
 </div>
 
@@ -112,16 +101,15 @@ th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-  // Xogta laga soo minguubiyay image_150.png
+  // Xogta saxda ah (Ma jirto meel banaan hadda)
   const firebaseConfig = {
-    apiKey: "AIzaSyCYNLmT JEV2_WWNhibpwUCXzAMiMb0EYE",
+    apiKey: "AIzaSyCYNLmTJEV2_WWNhibpwUCXzAMiMb0EYE",
     authDomain: "mohamed-salad-transport.firebaseapp.com",
     databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "mohamed-salad-transport",
     storageBucket: "mohamed-salad-transport.firebasestorage.app",
     messagingSenderId: "608716442795",
-    appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
-    measurementId: "G-VJTX0THFK5"
+    appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -132,7 +120,7 @@ th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
 
   window.doLogin = function() {
     const u = document.getElementById('l-user').value.trim().toLowerCase();
-    if(!u) return alert("Geli magacaaga");
+    if(!u) return alert("Geli magac");
     currentUser = u;
     
     const userRef = ref(db, 'users/' + u);
@@ -151,31 +139,25 @@ th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
     const amount = parseFloat(document.getElementById('f-amount').value);
     const date = document.getElementById('f-date').value;
     const desc = document.getElementById('f-desc').value;
-    const mvaPct = parseInt(document.getElementById('f-mva').value);
 
     if(!amount || !date) return alert("Fyll ut alt");
-
-    let finalAmount = (type === 'lonn') ? amount * 1.102 : amount;
-    const mvaAmt = (mvaPct > 0) ? (finalAmount - (finalAmount / (1 + mvaPct/100))) : 0;
 
     const newEntry = {
       id: Date.now(),
       type,
-      amount: finalAmount.toFixed(2),
-      mvaAmt: mvaAmt.toFixed(2),
+      amount: amount.toFixed(2),
       date,
-      desc: type === 'lonn' ? desc + " (+10.2%)" : desc
+      desc
     };
 
-    const userRef = ref(db, 'users/' + currentUser);
-    push(userRef, newEntry).then(() => {
+    push(ref(db, 'users/' + currentUser), newEntry).then(() => {
       showToast("Kaydka waa guul!");
       showPage('dash');
     });
   };
 
   window.deleteEntry = function(fbKey) {
-    if(confirm("Ma hubtaa inaad tirtirto?")) {
+    if(confirm("Ma tirtirnaa?")) {
       remove(ref(db, `users/${currentUser}/${fbKey}`));
     }
   };
@@ -185,31 +167,24 @@ th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
     const entryBody = document.getElementById('entries-tbody');
     const sumGrid = document.getElementById('sum-grid');
     dashBody.innerHTML = ''; entryBody.innerHTML = '';
-    let tInc = 0, tExp = 0, tMva = 0;
+    let tInc = 0, tExp = 0;
 
     entries.forEach(e => {
       const isInc = e.type === 'faktura';
       const amt = parseFloat(e.amount);
       if(isInc) tInc += amt; else tExp += amt;
-      tMva += parseFloat(e.mvaAmt);
 
-      dashBody.innerHTML += `<tr><td><b class="${isInc?'pos':'neg'}">${e.type}</b></td><td>${e.desc}</td><td class="${isInc?'pos':'neg'}">${amt.toLocaleString()}</td></tr>`;
-      entryBody.innerHTML += `<tr>
-        <td>${e.type}</td><td>${parseFloat(e.mvaAmt).toLocaleString()}</td><td class="${isInc?'pos':'neg'}"><b>${amt.toLocaleString()}</b></td><td>${e.date}</td>
-        <td><button onclick="deleteEntry('${e.fbKey}')" style="color:red;background:none;border:none;cursor:pointer">🗑</button></td>
-      </tr>`;
+      dashBody.innerHTML += `<tr><td><b style="color:${isInc?'#10b981':'#ef4444'}">${e.type}</b></td><td>${e.desc}</td><td>${amt.toLocaleString()}</td></tr>`;
+      entryBody.innerHTML += `<tr><td>${e.type}</td><td><b>${amt.toLocaleString()}</b></td><td>${e.date}</td><td><button onclick="deleteEntry('${e.fbKey}')" style="background:none;border:none;color:red">🗑</button></td></tr>`;
     });
 
     sumGrid.innerHTML = `
-      <div class="sum-card inc"><div class="s-val">${tInc.toLocaleString()}</div><small>Inn</small></div>
-      <div class="sum-card exp"><div class="s-val">${tExp.toLocaleString()}</div><small>Ut</small></div>
-      <div class="sum-card mva"><div class="s-val">${tMva.toLocaleString()}</div><small>MVA</small></div>
-      <div class="sum-card" style="border:1px solid var(--acc)"><div class="s-val" style="color:var(--acc)">${(tInc-tExp).toLocaleString()}</div><small>Netto</small></div>`;
+      <div class="sum-card"><div class="s-val" style="color:#10b981">${tInc.toLocaleString()}</div><small>Inn</small></div>
+      <div class="sum-card"><div class="s-val" style="color:#ef4444">${tExp.toLocaleString()}</div><small>Ut</small></div>`;
   }
 
   window.showPage = function(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
     document.getElementById('page-'+id).classList.add('active');
   };
   
