@@ -1,303 +1,160 @@
 <!DOCTYPE html>
-<html lang="no">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>M. Salad Transport PRO</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#0d0f1a;--bg2:#141726;--bg3:#1c2035;--bg4:#242840;
-  --acc:#4f8ef7;
-  --acc2:#10b981; /* Cagaar - Dakhli */
-  --acc3:#f97316; /* Oranjo - MVA */
-  --acc4:#ef4444; /* Guduud - Kharash */
-  --txt:#eef0ff;--txt2:#8b93bc;--txt3:#555e80;
-  --brd:#2a2f4a;--rad:12px;--rad2:8px;--rad3:20px;
-}
-html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;overflow-x:hidden}
-.screen{display:none;min-height:100vh;flex-direction:column}
-.screen.active{display:flex}
-#scr-auth{align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1a2050 0%,var(--bg) 60%)}
-.auth-card{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:28px 24px;width:100%;max-width:380px}
-.auth-tab.active{background:var(--acc);color:#fff}
-.field-wrap input{width:100%;padding:10px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--txt)}
-.btn-primary{width:100%;padding:12px;background:var(--acc);color:#fff;border:none;border-radius:var(--rad2);cursor:pointer;font-weight:600}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:50}
-.tab-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto}
-.tab-item{padding:12px 16px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--txt2)}
-.tab-item.active{color:var(--acc);border-bottom:2px solid var(--acc)}
-.page{display:none;padding:15px}
-.page.active{display:block}
-.sum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px}
-.sum-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:15px}
-.sum-card.inc .s-val{color:var(--acc2)}
-.sum-card.exp .s-val{color:var(--acc4)}
-.sum-card.mva .s-val{color:var(--acc3)}
-.card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:15px;margin-bottom:15px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.fg input, .fg select{width:100%;padding:10px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th, td{padding:10px;text-align:left;border-bottom:1px solid var(--brd)}
-.pos{color:var(--acc2)}
-.neg{color:var(--acc4)}
-.mva-col{color:var(--acc3)}
+<title>Taxi App Firebase</title>
 
-/* 3-dots Menu Style */
-.action-menu { position: relative; display: inline-block; }
-.dots-btn { background: none; border: none; color: var(--txt2); font-size: 20px; cursor: pointer; padding: 0 10px; }
-.dropdown-content { 
-    display: none; position: absolute; right: 0; background-color: var(--bg3); 
-    min-width: 120px; border: 1px solid var(--brd); border-radius: 8px; z-index: 100; 
-}
-.dropdown-content button { 
-    width: 100%; padding: 10px; text-align: left; background: none; 
-    border: none; color: var(--txt); cursor: pointer; border-bottom: 1px solid var(--brd);
-}
-.dropdown-content button:hover { background: var(--bg4); }
-.show { display: block; }
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:1000}
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#0d0f1a;color:#fff;text-align:center;padding:20px}
+input,button{padding:10px;margin:5px;border-radius:6px;border:none}
+button{background:#2563eb;color:#fff;cursor:pointer}
+.green{color:#22c55e}
+.red{color:#ef4444}
+.orange{color:#f97316}
 </style>
 </head>
+
 <body>
 
-<div id="toast" class="toast"></div>
+<h2>🚖 Taxi System</h2>
 
-<!-- Login Screen -->
-<div id="scr-auth" class="screen active">
-  <div class="auth-card">
-    <h2 style="text-align:center;margin-bottom:20px">M. SALAD PRO</h2>
-    <div class="field-group">
-        <input type="text" id="l-user" placeholder="Brukernavn" style="width:100%;padding:10px;margin-bottom:10px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px">
-        <input type="password" id="l-pass" placeholder="Passord" style="width:100%;padding:10px;margin-bottom:20px;background:var(--bg3);border:1px solid var(--brd);color:#fff;border-radius:8px">
-        <button class="btn-primary" onclick="doLogin()">Logg Inn</button>
-    </div>
-  </div>
+<!-- LOGIN -->
+<div id="auth">
+  <input id="email" placeholder="Email"><br>
+  <input id="password" type="password" placeholder="Password"><br>
+
+  <button onclick="login()">Login</button>
+  <button onclick="register()">Register</button>
+  <button onclick="forgot()">Forgot Password</button>
 </div>
 
-<!-- Main App -->
-<div id="scr-app" class="screen">
-  <div class="topbar">
-    <div style="font-weight:700;color:var(--acc)">M. SALAD PRO</div>
-    <button onclick="doLogout()" style="background:none;border:none;color:var(--txt2);cursor:pointer">Logg ut</button>
-  </div>
-  
-  <div class="tab-bar">
-    <div class="tab-item active" onclick="showPage('dash')">Oversikt</div>
-    <div class="tab-item" onclick="showPage('enter')">➕ Legg til</div>
-    <div class="tab-item" onclick="showPage('entries')">📋 Oppføringer</div>
-  </div>
+<!-- APP -->
+<div id="app" style="display:none">
+  <h3 id="user"></h3>
 
-  <!-- Dash -->
-  <div class="page active" id="page-dash">
-    <div class="sum-grid" id="sum-grid"></div>
-    <div class="card">
-        <h3>Siste transaksjoner</h3>
-        <div class="tbl-wrap">
-            <table>
-                <thead><tr><th>Type</th><th>Beskrivelse</th><th>Beløp</th></tr></thead>
-                <tbody id="dash-tbody"></tbody>
-            </table>
-        </div>
-    </div>
-  </div>
+  <input id="amount" placeholder="Amount"><br>
+  <input id="desc" placeholder="Description"><br>
 
-  <!-- Enter -->
-  <div class="page" id="page-enter">
-    <div class="card">
-        <h3>Ny registrering</h3>
-        <div class="form-row">
-            <div class="fg"><label>Type</label>
-                <select id="f-type" onchange="checkLonn()">
-                    <option value="faktura">Faktura (Inntekt)</option>
-                    <option value="drivstoff">Drivstoff</option>
-                    <option value="lonn">Lønn (u/mva)</option>
-                    <option value="biler">Bilutgifter</option>
-                </select>
-            </div>
-            <div class="fg"><label>Dato</label><input type="date" id="f-date"></div>
-        </div>
-        <div class="form-row">
-            <div class="fg"><label>Beløp (Brutto)</label><input type="number" id="f-amount" placeholder="0.00"></div>
-            <div class="fg"><label>MVA %</label>
-                <select id="f-mva">
-                    <option value="25">25%</option>
-                    <option value="0">0%</option>
-                </select>
-            </div>
-        </div>
-        <div id="ferie-info" style="display:none; color:var(--acc3); margin-bottom:10px; font-size:12px;">
-            * Feriepenger (10.2%) blir lagt til automatisk.
-        </div>
-        <div class="fg" style="margin-bottom:10px"><label>Beskrivelse</label><input type="text" id="f-desc"></div>
-        <button class="btn-primary" onclick="addEntry()" style="background:var(--acc2)">Lagre transaksjon</button>
-    </div>
-  </div>
+  <button onclick="addData()">Save</button>
+  <button onclick="changePassword()">Change Password</button>
+  <button onclick="logout()">Logout</button>
 
-  <!-- Entries -->
-  <div class="page" id="page-entries">
-    <div class="card">
-        <div class="tbl-wrap">
-            <table>
-                <thead><tr><th>Type</th><th>Beskrivelse</th><th>Netto</th><th>MVA</th><th>Brutto</th><th>Dato</th><th></th></tr></thead>
-                <tbody id="entries-tbody"></tbody>
-            </table>
-        </div>
-    </div>
-  </div>
+  <h3>Data:</h3>
+  <div id="data"></div>
 </div>
 
 <script>
-let currentUser = null;
-let entries = [];
+// 🔥 FIREBASE CONFIG (BADAL API KEYS)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "mohamed-salad-transport.firebaseapp.com",
+  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app/",
+  projectId: "mohamed-salad-transport",
+  storageBucket: "mohamed-salad-transport.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
 
-function doLogin() {
-    const u = document.getElementById('l-user').value;
-    if(u) {
-        currentUser = u;
-        entries = JSON.parse(localStorage.getItem('entries_'+u) || '[]');
-        document.getElementById('scr-auth').classList.remove('active');
-        document.getElementById('scr-app').classList.add('active');
-        renderAll();
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+// 🔥 REGISTER
+function register(){
+  const email = emailEl();
+  const pass = passEl();
+
+  auth.createUserWithEmailAndPassword(email, pass)
+  .then(()=>alert("User created"))
+  .catch(e=>alert(e.message));
+}
+
+// 🔥 LOGIN
+function login(){
+  const email = emailEl();
+  const pass = passEl();
+
+  auth.signInWithEmailAndPassword(email, pass)
+  .catch(e=>alert(e.message));
+}
+
+// 🔥 AUTO LOGIN
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById("auth").style.display="none";
+    document.getElementById("app").style.display="block";
+
+    document.getElementById("user").innerText="👤 "+user.email;
+
+    loadData();
+  }else{
+    document.getElementById("auth").style.display="block";
+    document.getElementById("app").style.display="none";
+  }
+});
+
+// 🔥 LOGOUT
+function logout(){
+  auth.signOut();
+}
+
+// 🔥 FORGOT PASSWORD
+function forgot(){
+  const email = prompt("Enter email:");
+
+  auth.sendPasswordResetEmail(email)
+  .then(()=>alert("Email sent"))
+  .catch(e=>alert(e.message));
+}
+
+// 🔥 CHANGE PASSWORD
+function changePassword(){
+  const newPass = prompt("New password:");
+
+  auth.currentUser.updatePassword(newPass)
+  .then(()=>alert("Password changed"))
+  .catch(e=>alert(e.message));
+}
+
+// 🔥 SAVE DATA
+function addData(){
+  const uid = auth.currentUser.uid;
+
+  const data = {
+    amount: document.getElementById("amount").value,
+    desc: document.getElementById("desc").value
+  };
+
+  db.ref("data/"+uid).push(data);
+}
+
+// 🔥 LOAD DATA
+function loadData(){
+  const uid = auth.currentUser.uid;
+
+  db.ref("data/"+uid).on("value", snap=>{
+    const d = snap.val();
+    let html="";
+
+    for(let id in d){
+      html += `<p class="green">${d[id].amount} - ${d[id].desc}</p>`;
     }
+
+    document.getElementById("data").innerHTML = html;
+  });
 }
 
-function doLogout() { location.reload(); }
+// 🔧 HELPERS
+function emailEl(){return document.getElementById("email").value;}
+function passEl(){return document.getElementById("password").value;}
 
-function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-    document.getElementById('page-'+id).classList.add('active');
-    renderAll();
-}
-
-function checkLonn() {
-    const type = document.getElementById('f-type').value;
-    const ferieDiv = document.getElementById('ferie-info');
-    const mvaSelect = document.getElementById('f-mva');
-    
-    if(type === 'lonn') {
-        ferieDiv.style.display = 'block';
-        mvaSelect.value = "0";
-    } else {
-        ferieDiv.style.display = 'none';
-        mvaSelect.value = "25";
-    }
-}
-
-function addEntry() {
-    const type = document.getElementById('f-type').value;
-    const amount = parseFloat(document.getElementById('f-amount').value);
-    const date = document.getElementById('f-date').value;
-    const desc = document.getElementById('f-desc').value;
-    const mvaPct = parseInt(document.getElementById('f-mva').value);
-
-    if(!amount || !date) return alert("Fyll ut beløp og dato");
-
-    let finalAmount = amount;
-    let ferieAmt = 0;
-
-    // Otomaatik u xisaabi Feriepenger haddii ay Lønn tahay
-    if(type === 'lonn') {
-        ferieAmt = amount * 0.102;
-        finalAmount = amount + ferieAmt;
-    }
-
-    const mvaAmt = (mvaPct > 0) ? (finalAmount - (finalAmount / (1 + mvaPct/100))) : 0;
-    const netto = finalAmount - mvaAmt;
-
-    const entry = {
-        id: Date.now(),
-        type,
-        amount: finalAmount.toFixed(2),
-        netto: netto.toFixed(2),
-        mvaAmt: mvaAmt.toFixed(2),
-        date,
-        desc: type === 'lonn' ? desc + " (+10.2% feriepenger)" : desc
-    };
-
-    entries.unshift(entry);
-    localStorage.setItem('entries_'+currentUser, JSON.stringify(entries));
-    showToast("Lagret!");
-    showPage('dash');
-}
-
-function deleteEntry(id) {
-    if(confirm("Slette denne transaksjonen?")) {
-        entries = entries.filter(e => e.id !== id);
-        localStorage.setItem('entries_'+currentUser, JSON.stringify(entries));
-        renderAll();
-    }
-}
-
-function toggleMenu(id) {
-    document.getElementById('menu-'+id).classList.toggle('show');
-}
-
-function renderAll() {
-    const dashBody = document.getElementById('dash-tbody');
-    const entryBody = document.getElementById('entries-tbody');
-    const sumGrid = document.getElementById('sum-grid');
-    
-    dashBody.innerHTML = '';
-    entryBody.innerHTML = '';
-
-    let totalInc = 0, totalExp = 0, totalMva = 0;
-
-    entries.forEach(e => {
-        const isInc = e.type === 'faktura';
-        if(isInc) totalInc += parseFloat(e.amount);
-        else totalExp += parseFloat(e.amount);
-        totalMva += parseFloat(e.mvaAmt);
-
-        const row = `<tr>
-            <td><b class="${isInc?'pos':'neg'}">${e.type.toUpperCase()}</b></td>
-            <td>${e.desc}</td>
-            <td class="${isInc?'pos':'neg'}">${parseFloat(e.amount).toLocaleString()} kr</td>
-        </tr>`;
-        dashBody.innerHTML += row;
-
-        const fullRow = `<tr>
-            <td>${e.type}</td>
-            <td>${e.desc}</td>
-            <td>${parseFloat(e.netto).toLocaleString()}</td>
-            <td class="mva-col">${parseFloat(e.mvaAmt).toLocaleString()}</td>
-            <td class="${isInc?'pos':'neg'}">${parseFloat(e.amount).toLocaleString()}</td>
-            <td>${e.date}</td>
-            <td>
-                <div class="action-menu">
-                    <button class="dots-btn" onclick="toggleMenu(${e.id})">⋮</button>
-                    <div id="menu-${e.id}" class="dropdown-content">
-                        <button onclick="alert('Rediger kommer snart')">✏️ Endre</button>
-                        <button style="color:var(--acc4)" onclick="deleteEntry(${e.id})">🗑 Slett</button>
-                    </div>
-                </div>
-            </td>
-        </tr>`;
-        entryBody.innerHTML += fullRow;
-    });
-
-    sumGrid.innerHTML = `
-        <div class="sum-card inc"><div class="s-val">${totalInc.toLocaleString()} kr</div><small>Inntekt</small></div>
-        <div class="sum-card exp"><div class="s-val">${totalExp.toLocaleString()} kr</div><small>Utgifter</small></div>
-        <div class="sum-card mva"><div class="s-val">${totalMva.toLocaleString()} kr</div><small>MVA Totalt</small></div>
-        <div class="sum-card" style="border-color:var(--acc)"><div class="s-val" style="color:var(--acc)">${(totalInc-totalExp).toLocaleString()} kr</div><small>Netto Resultat</small></div>
-    `;
-}
-
-function showToast(m) {
-    const t = document.getElementById('toast');
-    t.innerText = m; t.style.display = 'block';
-    setTimeout(() => t.style.display='none', 2000);
-}
-
-// Xir menu-ga haddii meel kale la taabto
-window.onclick = function(event) {
-    if (!event.target.matches('.dots-btn')) {
-        document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-    }
-}
 </script>
+
 </body>
 </html>
