@@ -13,11 +13,22 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
         .container { max-width: 450px; margin: auto; }
         .auth-box { background: var(--card); padding: 30px; border-radius: 20px; text-align: center; margin-top: 50px; border: 1px solid #334155; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #121826; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; margin: 5px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #121826; color: white; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; margin: 5px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
         .btn-login { background: var(--blue); color: white; }
         .btn-reg { background: #334155; color: white; border: 1px solid var(--blue); }
         .hidden { display: none; }
+        
+        /* Dashboard Styling */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .box { padding: 10px; border-radius: 12px; text-align: center; border: 2px solid #334155; font-weight: bold; }
+        .income { border-color: var(--green); color: var(--green); }
+        .expense { border-color: var(--red); color: var(--red); }
+        .mva-box { border-color: var(--blue); color: var(--blue); }
+        .net-card { background: var(--card); border: 2px solid #f1c40f; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 25px; }
+        .item { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #444; }
+        .item.plus { border-left-color: var(--green); }
+        .item.minus { border-left-color: var(--red); }
     </style>
 </head>
 <body>
@@ -25,24 +36,40 @@
 <div class="container">
     <div id="auth-page">
         <div class="auth-box">
-            <h1 style="color: #f1c40f;">🚖 Taxi System</h1>
-            <input type="email" id="email" placeholder="Geli Email-kaaga">
-            <input type="password" id="pass" placeholder="Geli Password-kaaga">
-            <button class="btn-login" onclick="doLogin()">Login (Giriş)</button>
+            <h1 style="color: #f1c40f; margin-bottom: 5px;">🚖 Taxi System</h1>
+            <p style="color: #94a3b8; margin-bottom: 20px;">Mohamed Salad Transport</p>
+            
+            <input type="email" id="email" placeholder="Email-kaaga">
+            <input type="password" id="pass" placeholder="Password-kaaga">
+            
+            <button class="btn-login" onclick="doLogin()">Giriş (Login)</button>
             <button class="btn-reg" onclick="doRegister()">Create New Account</button>
         </div>
     </div>
 
     <div id="app-page" class="hidden">
-        <h2 style="text-align: center; color: #f1c40f;">MOHAMED SALAD TRANSPORT</h2>
+        <h2 style="text-align: center; color: #f1c40f;">DASHBOARD</h2>
+        
+        <div class="stat-grid">
+            <div class="box income"><h6>INCOME</h6><span id="total-inc">0</span> kr</div>
+            <div class="box expense"><h6>KHARASH</h6><span id="total-exp">0</span> kr</div>
+            <div class="box mva-box"><h6>MVA</h6><span id="total-mva">0</span> kr</div>
+        </div>
+
+        <div class="net-card">
+            <h3 style="margin:0; color: #94a3b8;">NET INCOME</h3>
+            <h1 style="color: var(--green); margin: 10px 0; font-size: 40px;" id="net-val">0 kr</h1>
+        </div>
+
         <div id="data-list"></div>
-        <button class="btn-login" onclick="addData()">+ Geli Xog Cusub</button>
-        <button class="btn-reg" onclick="auth.signOut(); location.reload();">Log Out</button>
+
+        <button class="btn-login" style="margin-top:20px;" onclick="addData()">+ Geli Xog Cusub</button>
+        <button style="background: var(--red); color: white; margin-top:10px;" onclick="auth.signOut(); location.reload();">Log Out</button>
     </div>
 </div>
 
 <script>
-    // Koodhka isku xirka Firebase-kaaga (Config)
+    // Firebase Config laga soo qaatay sawiradaada
     const firebaseConfig = {
       apiKey: "AIzaSyCYNlmTJEV2_WWnHIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -50,7 +77,8 @@
       projectId: "mohamed-salad-transport",
       storageBucket: "mohamed-salad-transport.firebasestorage.app",
       messagingSenderId: "608716442795",
-      appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
+      appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
+      measurementId: "G-VJTX0THFK5"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -60,11 +88,11 @@
     function doLogin() {
         auth.signInWithEmailAndPassword(email.value, pass.value)
             .then(() => { showApp(); })
-            .catch(e => alert("Cillad: Email ama Password waa khaldan yihiin!"));
+            .catch(e => alert("Khalad: Email ama Password waa khaldan yihiin!"));
     }
 
     function doRegister() {
-        if(pass.value.length < 6) return alert("Password-ku waa inuu ka badnaadaa 6 xaraf");
+        if(pass.value.length < 6) return alert("Password-ku waa inuu 6 xaraf ka badnaadaa");
         auth.createUserWithEmailAndPassword(email.value, pass.value)
             .then(() => { alert("Akoon cusub waa la sameeyay!"); showApp(); })
             .catch(e => alert("Cillad: " + e.message));
@@ -73,6 +101,41 @@
     function showApp() {
         document.getElementById('auth-page').classList.add('hidden');
         document.getElementById('app-page').classList.remove('hidden');
+        loadData();
+    }
+
+    function addData() {
+        const title = prompt("Maxay tahay?");
+        const amount = prompt("Immisa waaye?");
+        const isPlus = confirm("Dakhli (Plus) miyaa?");
+        if(title && amount) {
+            db.ref('entries').push({
+                title: title,
+                amount: parseInt(amount),
+                type: isPlus ? 'plus' : 'minus',
+                date: new Date().toLocaleDateString()
+            });
+        }
+    }
+
+    function loadData() {
+        db.ref('entries').on('value', snap => {
+            const list = document.getElementById('data-list');
+            list.innerHTML = "";
+            let inc = 0, exp = 0;
+            snap.forEach(child => {
+                const val = child.val();
+                if(val.type === 'plus') inc += val.amount; else exp += val.amount;
+                list.innerHTML += `
+                    <div class="item ${val.type}">
+                        <div><b>${val.title}</b><br><small>${val.date}</small></div>
+                        <b>${val.amount} kr</b>
+                    </div>`;
+            });
+            document.getElementById('total-inc').innerText = inc;
+            document.getElementById('total-exp').innerText = exp;
+            document.getElementById('net-val').innerText = (inc - exp) + " kr";
+        });
     }
 </script>
 </body>
