@@ -8,96 +8,116 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #fbbf24; --bg: #0f172a; --card: #1e293b; }
-        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; }
-        .card-pro { background: var(--card); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        .input-pro { background: #334155 !important; border: 1px solid #475569 !important; color: white !important; border-radius: 12px; padding: 12px; width: 100%; outline: none; }
-        .nav-tab.active { color: var(--primary); border-top: 3px solid var(--primary); }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .card-pro { background: var(--card); border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
+        .input-pro { background: #334155 !important; border: 1px solid #475569 !important; color: white !important; border-radius: 14px; padding: 14px; width: 100%; outline: none; }
+        .btn-primary { background: var(--primary); color: black; font-weight: 900; padding: 16px; border-radius: 14px; width: 100%; transition: 0.3s; }
+        .btn-primary:active { transform: scale(0.98); }
+        .nav-tab.active { color: var(--primary); border-top: 3px solid var(--primary); opacity: 1 !important; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body class="pb-24">
 
-    <div id="authSection" class="fixed inset-0 bg-[#0f172a] z-[3000] flex items-center justify-center p-6">
-        <div class="bg-[#1e293b] p-8 rounded-[30px] w-full max-w-md shadow-2xl border-t-4 border-yellow-500 text-center">
-            <i class="fas fa-truck-moving text-4xl text-yellow-500 mb-2"></i>
-            <h1 class="text-2xl font-black mb-6">M. SALAD <span class="text-yellow-500">PRO</span></h1>
-            <input type="email" id="emailInput" class="input-pro mb-3" placeholder="Email">
-            <input type="password" id="passInput" class="input-pro mb-6" placeholder="Password">
-            <button onclick="handleAuth()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black">LOGIN</button>
+    <!-- AUTH SECTION (Login/Signup/Forgot) -->
+    <div id="authSection" class="fixed inset-0 bg-[#0f172a] z-[5000] flex items-center justify-center p-6">
+        <div class="bg-[#1e293b] p-8 rounded-[35px] w-full max-w-md shadow-2xl border-t-8 border-yellow-500">
+            <div id="authHeader" class="text-center mb-8">
+                <i class="fas fa-truck-fast text-5xl text-yellow-500 mb-3"></i>
+                <h1 id="authTitle" class="text-2xl font-black">LOGIN <span class="text-yellow-500">PRO</span></h1>
+            </div>
+
+            <div class="space-y-4">
+                <input type="email" id="emailInput" class="input-pro" placeholder="Email-kaaga">
+                <input type="password" id="passInput" class="input-pro" placeholder="Furaha (Password)">
+                
+                <button onclick="handleAuth()" id="mainAuthBtn" class="btn-primary uppercase">Gashay (Login)</button>
+                
+                <div class="flex justify-between text-[11px] font-bold px-2">
+                    <button onclick="toggleAuthMode()" id="toggleBtn" class="text-gray-400">MA SAMAYSATAA AKOON?</button>
+                    <button onclick="forgotPassword()" class="text-yellow-500">MA ILOWDAY FURAHA?</button>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- MAIN APP INTERFACE -->
     <div id="mainApp" class="hidden">
-        <header class="p-6 flex justify-between items-center">
-            <h2 class="text-xl font-bold" id="txt-welcome">Admin Panel</h2>
-            <div class="flex gap-2">
-                <select onchange="changeLang(this.value)" class="bg-transparent text-[10px] border border-gray-600 rounded px-2">
-                    <option value="so">SO</option>
-                    <option value="no">NO</option>
-                    <option value="en">EN</option>
-                </select>
-                <button onclick="logout()" class="text-red-400 text-xs font-bold p-2"><i class="fas fa-sign-out-alt"></i></button>
+        <header class="p-6 flex justify-between items-center bg-[#1e293b]/50 backdrop-blur-md sticky top-0 z-[1000]">
+            <div>
+                <h2 class="text-xl font-black text-yellow-500 uppercase tracking-tighter">M. Salad</h2>
+                <p id="userDisplay" class="text-[9px] text-gray-500 font-mono"></p>
             </div>
+            <button onclick="logout()" class="bg-red-500/10 text-red-500 p-3 rounded-xl text-xs font-bold"><i class="fas fa-power-off"></i></button>
         </header>
 
-        <main class="px-4 space-y-4">
+        <main class="p-4 space-y-4">
+            <!-- Stats -->
             <div class="grid grid-cols-2 gap-3">
-                <div class="card-pro p-4 border-l-4 border-green-500">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold" id="lbl-income">Inntekt</p>
-                    <h3 id="totalIncome" class="text-xl font-black text-green-400">0 kr</h3>
+                <div class="card-pro p-5 border-l-4 border-green-500 shadow-lg">
+                    <p class="text-[10px] text-gray-400 font-black uppercase">Inntekt</p>
+                    <h3 id="totalIncome" class="text-2xl font-black text-green-400">0 kr</h3>
                 </div>
-                <div class="card-pro p-4 border-l-4 border-red-500">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold" id="lbl-expense">Utgift</p>
-                    <h3 id="totalExpense" class="text-xl font-black text-red-400">0 kr</h3>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 text-center">
-                <div class="card-pro p-3 bg-blue-500/5">
-                    <p class="text-[8px] text-blue-400 font-bold uppercase">MVA REFUND (1/5)</p>
-                    <p id="stat-mva" class="text-xs font-black text-blue-400">0 kr</p>
-                </div>
-                <div class="card-pro p-3 bg-orange-500/5">
-                    <p class="text-[8px] text-orange-400 font-bold uppercase">FERIEPENGER (10.2%)</p>
-                    <p id="stat-ferie" class="text-xs font-black text-orange-400">0 kr</p>
+                <div class="card-pro p-5 border-l-4 border-red-500 shadow-lg">
+                    <p class="text-[10px] text-gray-400 font-black uppercase">Utgift</p>
+                    <h3 id="totalExpense" class="text-2xl font-black text-red-400">0 kr</h3>
                 </div>
             </div>
 
-            <div class="card-pro p-6 bg-gradient-to-br from-yellow-500 to-yellow-600 text-black text-center shadow-xl">
-                <p class="text-[11px] font-black uppercase opacity-70" id="lbl-net">NET PROFIT</p>
-                <h2 id="totalNet" class="text-4xl font-black">0 kr</h2>
+            <!-- Tax/MVA Breakdown -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="card-pro p-4 bg-blue-600/10 border border-blue-500/20">
+                    <p class="text-[9px] text-blue-400 font-black uppercase">MVA Refusjon</p>
+                    <p id="stat-mva" class="text-sm font-black">0 kr</p>
+                </div>
+                <div class="card-pro p-4 bg-orange-600/10 border border-orange-500/20">
+                    <p class="text-[9px] text-orange-400 font-black uppercase">Feriepenger (10.2%)</p>
+                    <p id="stat-ferie" class="text-sm font-black">0 kr</p>
+                </div>
             </div>
 
-            <div id="listSection" class="section space-y-3 pb-12"></div>
+            <!-- Total Net -->
+            <div class="card-pro p-8 bg-gradient-to-br from-yellow-500 to-amber-600 text-black text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-10 text-6xl rotate-12"><i class="fas fa-coins"></i></div>
+                <p class="text-xs font-black uppercase opacity-60">Netto Resultat</p>
+                <h2 id="totalNet" class="text-5xl font-black tracking-tighter">0 kr</h2>
+            </div>
 
+            <!-- List -->
+            <div id="listSection" class="section space-y-3 pb-16"></div>
+
+            <!-- Add Entry -->
             <div id="addSection" class="section hidden">
-                <div class="card-pro p-6">
-                    <div class="flex gap-2 mb-4">
-                        <button onclick="setMode('income')" id="btn-inc" class="flex-1 py-3 rounded-lg font-bold bg-green-600 text-xs">INNTEKT</button>
-                        <button onclick="setMode('expense')" id="btn-exp" class="flex-1 py-3 rounded-lg font-bold bg-gray-700 text-xs">UTGIFT</button>
+                <div class="card-pro p-6 shadow-2xl">
+                    <div class="flex gap-2 mb-6">
+                        <button onclick="setMode('income')" id="btn-inc" class="flex-1 py-4 rounded-xl font-black bg-green-600 text-xs">INNTEKT</button>
+                        <button onclick="setMode('expense')" id="btn-exp" class="flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs">UTGIFT</button>
                     </div>
-                    <input type="date" id="inDate" class="input-pro mb-3">
-                    <input type="text" id="inName" class="input-pro mb-3" placeholder="Magaca (e.g. Shidaal)">
-                    <input type="number" id="inAmount" class="input-pro mb-3" placeholder="Lacagta">
-                    <select id="inType" class="input-pro mb-4"></select>
-                    <button onclick="saveEntry()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black uppercase shadow-lg">KAYDI (SAVE)</button>
+                    <div class="space-y-3">
+                        <input type="date" id="inDate" class="input-pro">
+                        <input type="text" id="inName" class="input-pro" placeholder="Magaca (Faktura, Shidaal...)">
+                        <input type="number" id="inAmount" class="input-pro" placeholder="Lacagta (Amount)">
+                        <select id="inType" class="input-pro"></select>
+                        <button onclick="saveEntry()" class="btn-primary mt-4">KAYDI XOGTA</button>
+                    </div>
                 </div>
             </div>
         </main>
 
-        <nav class="fixed bottom-0 w-full bg-[#1e293b] border-t border-white/5 flex justify-around py-4">
-            <button onclick="showPage('list')" id="nav-list" class="nav-tab active flex flex-col items-center gap-1 opacity-100">
-                <i class="fas fa-home text-xl"></i><span class="text-[10px] font-bold">Oversikt</span>
+        <!-- Navbar -->
+        <nav class="fixed bottom-0 w-full bg-[#1e293b] border-t border-white/5 flex justify-around py-5 z-[4000]">
+            <button onclick="showPage('list')" id="nav-list" class="nav-tab active flex flex-col items-center gap-1 opacity-40">
+                <i class="fas fa-receipt text-xl"></i><span class="text-[10px] font-bold">Xisaabaadka</span>
             </button>
             <button onclick="showPage('add')" id="nav-add" class="nav-tab flex flex-col items-center gap-1 opacity-40">
-                <i class="fas fa-plus-circle text-xl"></i><span class="text-[10px] font-bold">Add New</span>
+                <i class="fas fa-plus-circle text-xl"></i><span class="text-[10px] font-bold">Geli Cusub</span>
             </button>
         </nav>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -112,12 +132,41 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentMode = 'income';
+        let currentMode = 'income', authMode = 'login';
+
+        // AUTH HANDLERS
+        window.toggleAuthMode = () => {
+            authMode = authMode === 'login' ? 'signup' : 'login';
+            document.getElementById('authTitle').innerHTML = authMode === 'login' ? 'LOGIN <span class="text-yellow-500">PRO</span>' : 'SETUP <span class="text-yellow-500">AKOON</span>';
+            document.getElementById('mainAuthBtn').innerText = authMode === 'login' ? 'Gashay (Login)' : 'Abuur (Sign Up)';
+            document.getElementById('toggleBtn').innerText = authMode === 'login' ? 'MA SAMAYSATAA AKOON?' : 'MA LEEDAHAY AKOON?';
+        };
+
+        window.handleAuth = () => {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            if(!email || !pass) return alert("Fadlan buuxi!");
+            
+            if(authMode === 'login') {
+                signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Email ama furaha waa qalad!"));
+            } else {
+                createUserWithEmailAndPassword(auth, email, pass).catch(e => alert("Cilad dhacday ama Email hore u jiray!"));
+            }
+        };
+
+        window.forgotPassword = () => {
+            const email = document.getElementById('emailInput').value;
+            if(!email) return alert("Horta qor email-kaaga!");
+            sendPasswordResetEmail(auth, email).then(() => alert("Email dib-u-habayn furaha ah ayaa laguu soo diray!")).catch(e => alert("Email-ka lama helin!"));
+        };
+
+        window.logout = () => signOut(auth);
 
         onAuthStateChanged(auth, user => {
             if(user) {
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('userDisplay').innerText = user.email;
                 fetchData();
             } else {
                 document.getElementById('authSection').classList.remove('hidden');
@@ -125,6 +174,7 @@
             }
         });
 
+        // DATA HANDLERS
         window.fetchData = () => {
             const q = query(collection(db, "pro_records"), orderBy("date", "desc"));
             onSnapshot(q, snap => {
@@ -138,16 +188,16 @@
                     if(d.mode === 'income') ti += amt; else te += amt;
 
                     list.innerHTML += `
-                        <div class="card-pro p-4 flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
-                            <div><p class="text-xs font-black uppercase">${d.name}</p><p class="text-[9px] text-gray-500">${d.date} • ${d.type}</p></div>
-                            <div class="flex items-center gap-3"><p class="font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                            <button onclick="deleteEntry('${docSnap.id}')" class="text-gray-600"><i class="fas fa-trash"></i></button></div>
+                        <div class="card-pro p-5 flex justify-between items-center border-l-4 ${d.mode === 'income' ? 'border-green-500' : 'border-red-500'} animate-fade-in">
+                            <div><p class="text-xs font-black uppercase">${d.name}</p><p class="text-[10px] text-gray-500">${d.date} • <span class="text-yellow-500">${d.type}</span></p></div>
+                            <div class="flex items-center gap-4"><p class="font-black ${d.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
+                            <button onclick="deleteEntry('${docSnap.id}')" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button></div>
                         </div>`;
                 });
 
                 document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
                 document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-                document.getElementById('stat-mva').innerText = (ti > te ? (ti - te) * 0.20 : 0).toLocaleString() + ' kr';
+                document.getElementById('stat-mva').innerText = (te * 0.25).toLocaleString() + ' kr';
                 document.getElementById('stat-ferie').innerText = (ti * 0.102).toLocaleString() + ' kr';
                 document.getElementById('totalNet').innerText = (ti - te).toLocaleString() + ' kr';
             });
@@ -157,29 +207,28 @@
             const amt = document.getElementById('inAmount').value;
             const name = document.getElementById('inName').value;
             const date = document.getElementById('inDate').value;
-            if(!amt || !name || !date) return alert("Buuxi!");
-            await addDoc(collection(db, "pro_records"), { amount: parseFloat(amt), name, date, type: document.getElementById('inType').value, mode: currentMode });
+            if(!amt || !name || !date) return alert("Fadlan buuxi meelaha bannaan!");
+            await addDoc(collection(db, "pro_records"), { amount: parseFloat(amt), name, date, type: document.getElementById('inType').value, mode: currentMode, userEmail: auth.currentUser.email });
             document.getElementById('inAmount').value = ''; document.getElementById('inName').value = ''; showPage('list');
         };
 
-        window.deleteEntry = async (id) => { if(confirm("Ma tirtirtaa?")) await deleteDoc(doc(db, "pro_records", id)); };
+        window.deleteEntry = async (id) => { if(confirm("Ma tirtirtaa xogtan?")) await deleteDoc(doc(db, "pro_records", id)); };
+
         window.setMode = (m) => {
             currentMode = m;
-            document.getElementById('btn-inc').className = m === 'income' ? 'flex-1 py-3 rounded-lg font-bold bg-green-600 text-xs' : 'flex-1 py-3 rounded-lg font-bold bg-gray-700 text-xs';
-            document.getElementById('btn-exp').className = m === 'expense' ? 'flex-1 py-3 rounded-lg font-bold bg-red-600 text-xs' : 'flex-1 py-3 rounded-lg font-bold bg-gray-700 text-xs';
-            const opts = m === 'income' ? ['Faktura', 'Kontanter'] : ['Shidaal', 'Lønn', 'Feriepenger', 'Forsikring', 'Bankuttak (Owner)'];
+            document.getElementById('btn-inc').className = m === 'income' ? 'flex-1 py-4 rounded-xl font-black bg-green-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
+            document.getElementById('btn-exp').className = m === 'expense' ? 'flex-1 py-4 rounded-xl font-black bg-red-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
+            const opts = m === 'income' ? ['Faktura', 'Kontanter'] : ['Shidaal', 'Lønn', 'Forsikring', 'Bankuttak (Owner)', 'Reparasjon'];
             document.getElementById('inType').innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
         };
 
         window.showPage = (p) => {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             document.getElementById(p + 'Section').classList.remove('hidden');
-            document.getElementById('nav-list').style.opacity = p === 'list' ? '1' : '0.4';
-            document.getElementById('nav-add').style.opacity = p === 'add' ? '1' : '0.4';
+            document.getElementById('nav-list').classList.toggle('active', p === 'list');
+            document.getElementById('nav-add').classList.toggle('active', p === 'add');
         };
 
-        window.handleAuth = () => signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
-        window.logout = () => signOut(auth);
         document.getElementById('inDate').valueAsDate = new Date();
         setMode('income');
     </script>
