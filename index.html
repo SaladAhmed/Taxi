@@ -11,7 +11,7 @@
         :root { --bg: #0f172a; --card: #1e293b; --green: #22c55e; --red: #ef4444; --blue: #3b82f6; }
         body { font-family: sans-serif; background: var(--bg); color: white; padding: 15px; margin: 0; }
         .box { background: var(--card); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #334155; max-width: 400px; margin: auto; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
         button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
         .btn-blue { background: var(--blue); color: white; }
         .item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 6px solid; }
@@ -24,23 +24,16 @@
 
 <div id="auth-page" class="box">
     <h1 style="color: #f1c40f;">🚖 Taxi Salaad</h1>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="pass" placeholder="Password">
-    <button class="btn-blue" onclick="handleAuth('login')">Login</button>
-    <button style="background:#334155; color:white;" onclick="handleAuth('reg')">Create Account</button>
+    <input type="email" id="email" placeholder="Emailkaaga">
+    <input type="password" id="pass" placeholder="Password (6+ xaraf)">
+    <button class="btn-blue" onclick="handleAuth('login')">Login (Giriş)</button>
+    <button style="background:#334155; color:white;" onclick="handleAuth('reg')">Create New Account</button>
 </div>
 
 <div id="app-page" class="hidden">
     <div class="box">
         <h2 id="u-name"></h2>
-        <select id="cat">
-            <option value="Faktura Incom">Faktura Incom (Cagaar)</option>
-            <option value="Drivstoff">Drivstoff (Guduud)</option>
-            <option value="Lønn + Feriepenger">Lønn + Feriepenger</option>
-            <option value="Bank Transaction ube MVA">Bank Transaction</option>
-            <option value="Bombenge med MVA">Bombenge</option>
-            <option value="Fixed bil MVA">Fixed bil</option>
-        </select>
+        <input type="text" id="cat" placeholder="Maxay tahay? (Tusaale: Shidaal)">
         <input type="number" id="amount" placeholder="Lacagta (kr)">
         <button class="btn-blue" onclick="saveData()">Keydi Xogta</button>
         <button style="background:var(--red);" onclick="location.reload()">Logout</button>
@@ -49,15 +42,18 @@
 </div>
 
 <script>
+    // XALKA KAMA DAMBEYSTA AH: 
+    // DHEX DHIG API KEY-GAAGA CALAAMADAHA "" EE HOOSE
     const firebaseConfig = {
-        apiKey: "SOO_NUQUL_API_KEY_GAAGA", // Ka soo qaad meesha Config-ga
+        apiKey: "AIzaSy...", 
         authDomain: "mohamed-salad-transport.firebaseapp.com",
         databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "mohamed-salad-transport",
         storageBucket: "mohamed-salad-transport.appspot.com",
         messagingSenderId: "608716442795",
-        appId: "1:608716442795:web:ea17e2c3f26d3103717bee" // Kani waa App ID-gaaga cusub
+        appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
     };
+    
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
@@ -66,24 +62,24 @@
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
         if(type === 'reg') auth.createUserWithEmailAndPassword(e,p).then(s => showApp()).catch(err => alert(err.message));
-        else auth.signInWithEmailAndPassword(e,p).then(s => showApp()).catch(err => alert("Email ama Password waa khaldan yihiin!"));
+        else auth.signInWithEmailAndPassword(e,p).then(s => showApp()).catch(err => alert("Khalad: Hubi Emailka iyo Passwordka"));
     }
 
     function showApp() {
         document.getElementById('auth-page').className = 'hidden';
         document.getElementById('app-page').className = '';
-        document.getElementById('u-name').innerText = "Ku soo dhowaad: " + auth.currentUser.email.split('@')[0];
+        document.getElementById('u-name').innerText = "Soo dhowaad, " + auth.currentUser.email.split('@')[0];
         loadData();
     }
 
     function saveData() {
         const c = document.getElementById('cat').value;
         const a = document.getElementById('amount').value;
-        const t = c.includes("Incom") ? "plus" : "minus";
-        if(a) {
+        if(c && a) {
             db.ref('user_data/' + auth.currentUser.uid).push({
-                category: c, amount: a, type: t, date: new Date().toLocaleDateString()
+                category: c, amount: a, date: new Date().toLocaleDateString()
             });
+            document.getElementById('cat').value = "";
             document.getElementById('amount').value = "";
         }
     }
@@ -93,7 +89,7 @@
             const l = document.getElementById('list'); l.innerHTML = "";
             snap.forEach(ch => {
                 const d = ch.val();
-                l.innerHTML += `<div class="item ${d.type}"><span>${d.category}</span><b>${d.type === 'plus' ? '+' : '-'}${d.amount} kr</b></div>`;
+                l.innerHTML += `<div class="item plus"><span>${d.category} (${d.date})</span><b>${d.amount} kr</b></div>`;
             });
         });
     }
