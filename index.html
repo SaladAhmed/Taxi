@@ -1,48 +1,62 @@
 window.loadData = () => {
-    const dbRefs = [
-        { name: 'transfers', defaultMode: 'income' },
-        { name: 'xisaabaadka', defaultMode: 'expense' }
-    ];
-    
-    let ti=0, te=0, to=0;
     const list = document.getElementById('dashboardSection');
     list.innerHTML = '<p class="text-center text-xs animate-pulse">Cusboonaysiinaya...</p>';
 
-    dbRefs.forEach(ref => {
-        onSnapshot(collection(db, ref.name), snap => {
-            // Halkan waxaan ku nadiifinaynaa liiska si aysan xogtu u laba-laabmin
-            list.innerHTML = ''; 
-            ti=0; te=0; to=0; // Dib u bilaaw xisaabta mar kasta oo xog cusub timaado
+    // Mid weyn oo xogta oo dhan isku dabeeya
+    let allData = { ti: 0, te: 0, to: 0 };
+    let items = [];
 
-            snap.forEach(dDoc => {
-                const d = dDoc.data();
-                const amt = Number(d.amount) || 0;
-                const realName = d.name || d.type || "Salad";
-                let mode = d.mode || ref.defaultMode;
+    const collections = [
+        { name: 'transfers', mode: 'income' },
+        { name: 'xisaabaadka', mode: 'expense' }
+    ];
 
-                if(mode === 'income') ti += amt; else te += amt;
-                if(d.type?.includes("Bankuttak") || realName.toLowerCase().includes("lønn")) to += amt;
+    collections.forEach(col => {
+        onSnapshot(collection(db, col.name), snap => {
+            // Nadiifi liiska mar kasta oo isbeddel dhaco
+            items = items.filter(i => i.source !== col.name);
+            
+            snap.forEach(doc => {
+                const d = doc.data();
+                items.push({
+                    id: doc.id,
+                    source: col.name,
+                    amt: Number(d.amount) || 0,
+                    name: d.name || d.type || "Salad",
+                    date: d.date || "2026",
+                    mode: d.mode || col.mode,
+                    type: d.type || ""
+                });
+            });
+
+            // Dib u xisaabi dhammaan
+            let finalTi = 0, finalTe = 0, finalTo = 0;
+            list.innerHTML = '';
+
+            items.forEach(item => {
+                if(item.mode === 'income') finalTi += item.amt; else finalTe += item.amt;
+                if(item.type.includes("Bankuttak") || item.name.toLowerCase().includes("lønn")) finalTo += item.amt;
 
                 list.innerHTML += `
-                    <div class="card flex justify-between items-center border-l-4 ${mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
+                    <div class="card flex justify-between items-center border-l-4 ${item.mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
                         <div>
-                            <p class="font-bold text-[11px] uppercase">${realName}</p>
-                            <p class="text-[9px] text-gray-500">${d.date || '2026'}</p>
+                            <p class="font-bold text-[11px] uppercase">${item.name}</p>
+                            <p class="text-[9px] text-gray-500">${item.date}</p>
                         </div>
                         <div class="flex items-center gap-4">
-                            <p class="font-black ${mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                            <button onclick="deleteItem('${ref.name}', '${dDoc.id}')" class="text-gray-600"><i class="fas fa-trash-alt"></i></button>
+                            <p class="font-black ${item.mode === 'income' ? 'text-green-400' : 'text-red-400'}">${item.amt.toLocaleString()} kr</p>
+                            <button onclick="deleteItem('${item.source}', '${item.id}')" class="text-gray-600"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>`;
             });
 
             // Cusboonaysii interface-ka
-            document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
-            document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-            document.getElementById('totalMva').innerText = ((ti - te) * 0.25).toLocaleString() + ' kr';
-            document.getElementById('totalFerie').innerText = (ti * 0.102).toLocaleString() + ' kr';
-            document.getElementById('totalOwner').innerText = to.toLocaleString() + ' kr';
-            document.getElementById('netResult').innerText = (ti - te).toLocaleString() + ' kr';
+            document.getElementById('totalIncome').innerText = finalTi.toLocaleString() + ' kr';
+            document.getElementById('totalExpense').innerText = finalTe.toLocaleString() + ' kr';
+            document.getElementById('totalMva').innerText = ((finalTi - finalTe) * 0.25).toLocaleString() + ' kr';
+            document.getElementById('totalFerie').innerText = (finalTi * 0.102).toLocaleString() + ' kr';
+            document.getElementById('totalOwner').innerText = finalTo.toLocaleString() + ' kr';
+            document.getElementById('netResult').innerText = (finalTi - finalTe).toLocaleString() + ' kr';
         });
     });
 };
