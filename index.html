@@ -3,47 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taxi Salaad App</title>
-    <!-- Firebase SDKs -->
+    <title>Taxi Salaad Pro</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --green: #22c55e; --red: #ef4444; --blue: #3b82f6; }
-        body { font-family: sans-serif; background: var(--bg); color: white; padding: 15px; margin: 0; }
-        .box { background: var(--card); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #334155; max-width: 400px; margin: auto; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-blue { background: var(--blue); color: white; }
-        .item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 6px solid; }
-        .plus { border-left-color: var(--green); color: var(--green); }
-        .minus { border-left-color: var(--red); color: var(--red); }
+        :root { --bg: #0f172a; --card: #1e293b; --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --yellow: #f1c40f; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 10px; margin: 0; }
+        .box { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #334155; max-width: 500px; margin: 10px auto; }
+        h1, h2 { text-align: center; color: var(--yellow); margin-bottom: 20px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .btn-save { background: var(--green); color: white; }
+        .btn-logout { background: var(--red); color: white; margin-top: 20px; }
+        .total-box { background: #334155; padding: 15px; border-radius: 10px; text-align: center; font-size: 20px; margin-bottom: 20px; border: 2px solid var(--yellow); }
+        .item { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--blue); display: flex; justify-content: space-between; align-items: center; }
+        .item small { color: #94a3b8; display: block; font-size: 12px; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
+<!-- QAYBTA LOGIN-KA -->
 <div id="auth-page" class="box">
-    <h1 style="color: #f1c40f;">🚖 Taxi Salaad</h1>
+    <h1>🚖 Taxi Salaad</h1>
     <input type="email" id="email" placeholder="Emailkaaga">
     <input type="password" id="pass" placeholder="Password (6+ xaraf)">
-    <button class="btn-blue" onclick="handleAuth('login')">Login (Giriş)</button>
-    <button style="background:#334155; color:white;" onclick="handleAuth('reg')">Create New Account</button>
+    <button style="background: var(--blue); color: white;" onclick="handleAuth('login')">Login</button>
+    <button style="background: #334155; color: white;" onclick="handleAuth('reg')">Create New Account</button>
 </div>
 
+<!-- QAYBTA APP-KA -->
 <div id="app-page" class="hidden">
     <div class="box">
-        <h2 id="u-name"></h2>
-        <input type="text" id="cat" placeholder="Maxay tahay? (Tusaale: Shidaal)">
+        <h2 id="u-name">Taxi Salaad</h2>
+        
+        <!-- ISKU DARKA LACAGTA -->
+        <div class="total-box">
+            Total: <span id="total-amount" style="color: var(--yellow);">0</span> kr
+        </div>
+
+        <label>Nooca Kharashka:</label>
+        <select id="cat">
+            <option value="Faktura inCom (Fra Sentral)">Faktura inCom (Fra Sentral)</option>
+            <option value="Drivstoff">Drivstoff</option>
+            <option value="Lønn + feriepenger">Lønn + feriepenger</option>
+            <option value="Bank transaction ute MVA">Bank transaction ute MVA</option>
+            <option value="Bompenger med MVA">Bompenger med MVA</option>
+            <option value="Fixed bil MVA">Fixed bil MVA</option>
+            <option value="Annet uten MVA">Annet uten MVA</option>
+        </select>
+
         <input type="number" id="amount" placeholder="Lacagta (kr)">
-        <button class="btn-blue" onclick="saveData()">Keydi Xogta</button>
-        <button style="background:var(--red);" onclick="location.reload()">Logout</button>
+        <button class="btn-save" onclick="saveData()">Keydi Xogta (Save)</button>
+        <button class="btn-logout" onclick="location.reload()">Logout</button>
     </div>
-    <div id="list" style="margin-top:20px;"></div>
+
+    <div id="list" style="max-width: 500px; margin: auto;"></div>
 </div>
 
 <script>
-    // 1. Firebase Configuration (NADIIF AH)
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -55,32 +74,17 @@
       measurementId: "G-YN3RKFE194"
     };
 
-    // 2. Initialize Firebase (HAL MAR OO KALIYA)
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // 3. Functions
     function handleAuth(type) {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        
-        if (!e || !p) {
-            alert("Fadlan buuxi emailka iyo password-ka");
-            return;
-        }
-
-        if(type === 'reg') {
-            auth.createUserWithEmailAndPassword(e,p)
-                .then(s => showApp())
-                .catch(err => alert("Error Signup: " + err.message));
+        if (type === 'reg') {
+            auth.createUserWithEmailAndPassword(e,p).then(() => showApp()).catch(err => alert(err.message));
         } else {
-            auth.signInWithEmailAndPassword(e,p)
-                .then(s => showApp())
-                .catch(err => alert("Khalad: Hubi Emailka iyo Passwordka"));
+            auth.signInWithEmailAndPassword(e,p).then(() => showApp()).catch(err => alert("Khalad: Email ama Password"));
         }
     }
 
@@ -93,28 +97,37 @@
 
     function saveData() {
         const c = document.getElementById('cat').value;
-        const a = document.getElementById('amount').value;
+        const a = parseFloat(document.getElementById('amount').value);
         if(c && a) {
             db.ref('user_data/' + auth.currentUser.uid).push({
-                category: c, 
-                amount: a, 
-                date: new Date().toLocaleDateString()
+                category: c, amount: a, date: new Date().toLocaleString()
             });
-            document.getElementById('cat').value = "";
             document.getElementById('amount').value = "";
         } else {
-            alert("Fadlan qor waxa aad iibsatay iyo lacagta");
+            alert("Fadlan qor lacagta");
         }
     }
 
     function loadData() {
         db.ref('user_data/' + auth.currentUser.uid).on('value', snap => {
-            const l = document.getElementById('list'); 
-            l.innerHTML = "";
-            snap.forEach(ch => {
-                const d = ch.val();
-                l.innerHTML += `<div class="item plus"><span>${d.category} (${d.date})</span><b>${d.amount} kr</b></div>`;
+            const listDiv = document.getElementById('list');
+            const totalSpan = document.getElementById('total-amount');
+            listDiv.innerHTML = "";
+            let total = 0;
+
+            snap.forEach(child => {
+                const data = child.val();
+                total += data.amount;
+                listDiv.innerHTML += `
+                    <div class="item">
+                        <div>
+                            <strong>${data.category}</strong>
+                            <small>${data.date}</small>
+                        </div>
+                        <span style="font-weight:bold;">${data.amount} kr</span>
+                    </div>`;
             });
+            totalSpan.innerText = total.toLocaleString();
         });
     }
 </script>
