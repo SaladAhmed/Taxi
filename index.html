@@ -1,118 +1,4 @@
-<!DOCTYPE html>
-<html lang="so">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M. Salad Transport - Full Logic</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { background-color: #121420; color: white; font-family: 'Inter', sans-serif; }
-        .card { background: #1e213a; border-radius: 16px; padding: 18px; border: 1px solid #2d314d; }
-        input, select { background: #2d314d !important; color: white !important; border: 1px solid #3d4266 !important; border-radius: 12px; padding: 14px; width: 100%; margin-bottom: 12px; outline: none; }
-        .nav-active { color: #fbbf24 !important; }
-        .hidden { display: none !important; }
-    </style>
-</head>
-<body class="pb-24">
-
-    <div id="authSection" class="fixed inset-0 bg-[#121420] z-[2000] flex items-center justify-center p-6">
-        <div class="bg-[#1e213a] p-8 rounded-3xl w-full max-w-sm border-b-4 border-yellow-500 shadow-2xl">
-            <h1 class="text-yellow-500 font-black text-2xl mb-8 text-center uppercase">M. Salad Login</h1>
-            <input type="email" id="emailInput" placeholder="Email">
-            <div class="relative">
-                <input type="password" id="passInput" placeholder="Password">
-                <button onclick="togglePass()" class="absolute right-4 top-4 text-gray-400"><i id="passIcon" class="fas fa-eye"></i></button>
-            </div>
-            <button onclick="handleAuth()" class="w-full bg-yellow-500 text-black py-4 rounded-xl mt-4 font-black">LOGIN</button>
-            <button onclick="resetPassword()" class="text-yellow-500/50 text-[10px] mt-6 block w-full text-center">Password ma ilowday?</button>
-        </div>
-    </div>
-
-    <div id="mainApp" class="hidden p-4">
-        <div class="flex justify-between items-center mb-6">
-            <span class="bg-yellow-500 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase">Admin</span>
-            <button onclick="logout()" class="text-red-500 font-bold border border-red-500/20 px-4 py-2 rounded-xl text-[10px]">KA BAX</button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 mb-3">
-            <div class="card border-l-4 border-green-500">
-                <p class="text-[9px] text-gray-400 font-bold uppercase text-center">Inntekt (Dakhli)</p>
-                <h3 id="totalIncome" class="text-lg font-black text-green-400 text-center">0 kr</h3>
-            </div>
-            <div class="card border-l-4 border-red-500">
-                <p class="text-[9px] text-gray-400 font-bold uppercase text-center">Utgift (Kharash)</p>
-                <h3 id="totalExpense" class="text-lg font-black text-red-400 text-center">0 kr</h3>
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-            <div class="card p-2">
-                <p class="text-[7px] text-gray-500 uppercase">MVA 25%</p>
-                <h4 id="totalMva" class="text-[10px] font-black text-blue-400">0 kr</h4>
-            </div>
-            <div class="card p-2">
-                <p class="text-[7px] text-gray-500 uppercase">Feriepenger</p>
-                <h4 id="totalFerie" class="text-[10px] font-black text-orange-400">0 kr</h4>
-            </div>
-            <div class="card p-2">
-                <p class="text-[7px] text-gray-500 uppercase">Owner/Eier</p>
-                <h4 id="totalOwner" class="text-[10px] font-black text-purple-400">0 kr</h4>
-            </div>
-        </div>
-
-        <div class="card border-2 border-yellow-500/20 text-center py-6 mb-6">
-            <p class="text-[11px] text-yellow-500 font-black uppercase mb-1">Net Resultat</p>
-            <h2 id="netResult" class="text-3xl font-black">0 kr</h2>
-        </div>
-
-        <div id="dashboardSection" class="section space-y-3"></div>
-
-        <div id="inputSection" class="section hidden">
-            <div class="card p-6">
-                <div class="flex gap-2 mb-6">
-                    <button onclick="setMode('income')" id="m-inc" class="flex-1 py-4 rounded-xl font-black bg-green-600 text-xs">INNTEKT</button>
-                    <button onclick="setMode('expense')" id="m-exp" class="flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs">UTGIFT</button>
-                </div>
-                <input type="date" id="dateInput">
-                <input type="text" id="nameInput" placeholder="Magaca (e.g. Salad Drivstoff)">
-                <input type="number" id="amountInput" placeholder="Lacagta (Amount)">
-                <select id="typeInput"></select>
-                <button onclick="saveData()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black mt-4 uppercase">Kaydi / Save</button>
-            </div>
-        </div>
-    </div>
-
-    <nav class="fixed bottom-0 w-full bg-[#1e213a] border-t border-white/5 flex justify-around py-5">
-        <button onclick="showSection('dashboard')" id="nav-dash" class="nav-active flex flex-col items-center gap-1"><i class="fas fa-chart-line text-xl"></i><span class="text-[10px] font-bold">Oversikt</span></button>
-        <button onclick="showSection('input')" id="nav-inp" class="flex flex-col items-center gap-1 opacity-40"><i class="fas fa-plus-circle text-xl"></i><span class="text-[10px] font-bold">Add New</span></button>
-    </nav>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-            authDomain: "mohamed-salad-transport.firebaseapp.com",
-            projectId: "mohamed-salad-transport",
-            storageBucket: "mohamed-salad-transport.firebasestorage.app",
-            messagingSenderId: "608716442795",
-            appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let user = null, currentMode = 'income';
-
-        onAuthStateChanged(auth, u => {
-            if(u) { user = u; document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); loadData(); }
-            else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
-        });
-
-        window.loadData = () => {
+window.loadData = () => {
             const collections = ['xisaabaadka', 'transfers', 'data'];
             let ti=0, te=0, tm=0, tf=0, to=0;
             const list = document.getElementById('dashboardSection');
@@ -122,82 +8,54 @@
                 onSnapshot(collection(db, cName), snap => {
                     snap.forEach(dDoc => {
                         const d = dDoc.data();
-                        const realName = d.name || "Salad";
                         const amt = Number(d.amount) || 0;
+                        const realName = d.name || d.type || "Salad";
                         
-                        // LOGIC CUSUB: Kala saarista saxda ah ee xogta hore
+                        // XALKA LACAGTA: Xogta galka 'xisaabaadka' waa KHARASH (Utgift)
                         let mode = d.mode;
-                        if (!mode) {
-                            // Haddii 'mode' uusan jirin, eeg nooca xogta (Type)
-                            if (d.type === "Bankuttak (Owner)" || d.type === "Drivstoff" || d.type === "Lønn") {
-                                mode = 'expense';
-                            } else {
-                                mode = 'income';
-                            }
+                        if (cName === 'xisaabaadka') {
+                            mode = 'expense'; 
+                        } else if (!mode) {
+                            mode = 'income';
                         }
 
                         if(mode === 'income') {
-                            ti += amt; tm += (amt * 0.25); tf += (amt * 0.102);
+                            ti += amt;
                         } else {
                             te += amt;
                         }
                         
+                        // Xisaabinta EIER (Owner Draw)
                         if(d.type?.includes("Bankuttak") || d.type?.includes("Owner") || realName.toLowerCase().includes("lønn")) {
                             to += amt;
                         }
 
-                        list.innerHTML += `<div class="card flex justify-between items-center border-l-4 ${mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
-                            <div><p class="font-bold text-xs uppercase">${realName}</p><p class="text-[9px] text-gray-500">${d.date || 'Jan-Apr'}</p></div>
-                            <div class="flex items-center gap-4"><p class="font-black ${mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
-                            <button onclick="deleteItem('${cName}', '${dDoc.id}')" class="text-gray-700 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>
-                        </div>`;
+                        list.innerHTML += `
+                            <div class="card flex justify-between items-center border-l-4 ${mode === 'income' ? 'border-green-500' : 'border-red-500'} mb-2">
+                                <div>
+                                    <p class="font-bold text-[11px] uppercase text-white">${realName}</p>
+                                    <p class="text-[9px] text-gray-500">${d.date || 'Jan-Apr'}</p>
+                                    <small class="text-[8px] text-blue-400">${d.type || ''}</small>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <p class="font-black ${mode === 'income' ? 'text-green-400' : 'text-red-400'}">${amt.toLocaleString()} kr</p>
+                                    <button onclick="deleteItem('${cName}', '${dDoc.id}')" class="text-gray-700 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>`;
                     });
 
+                    // Khariidadda Total-ka (Sida sawirkaaga 06:53)
                     document.getElementById('totalIncome').innerText = ti.toLocaleString() + ' kr';
                     document.getElementById('totalExpense').innerText = te.toLocaleString() + ' kr';
-                    document.getElementById('totalMva').innerText = tm.toLocaleString() + ' kr';
-                    document.getElementById('totalFerie').innerText = tf.toLocaleString() + ' kr';
+                    
+                    // MVA iyo Feriepenger (Logic-ga saxda ah)
+                    let mvaRefund = (ti - te) * 0.05; 
+                    let ferie = ti * 0.102;
+                    
+                    document.getElementById('totalMva').innerText = mvaRefund.toLocaleString() + ' kr';
+                    document.getElementById('totalFerie').innerText = ferie.toLocaleString() + ' kr';
                     document.getElementById('totalOwner').innerText = to.toLocaleString() + ' kr';
                     document.getElementById('netResult').innerText = (ti - te).toLocaleString() + ' kr';
                 });
             });
         };
-
-        window.handleAuth = () => signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value).catch(e => alert("Khalad login-ka"));
-        window.resetPassword = () => { const e = document.getElementById('emailInput').value; if(e) sendPasswordResetEmail(auth, e).then(() => alert("Email ayaa laguu soo diray")); };
-        window.togglePass = () => { const p = document.getElementById('passInput'); const i = document.getElementById('passIcon'); p.type = p.type === 'password' ? 'text' : 'password'; i.className = p.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash'; };
-        
-        window.saveData = async () => {
-            const amt = parseFloat(document.getElementById('amountInput').value);
-            if(!amt) return;
-            await addDoc(collection(db, "transfers"), {
-                userId: user.uid, amount: amt, name: document.getElementById('nameInput').value || "Salad",
-                mode: currentMode, type: document.getElementById('typeInput').value, date: document.getElementById('dateInput').value
-            });
-            document.getElementById('amountInput').value = '';
-            showSection('dashboard');
-        };
-
-        window.deleteItem = async (c, id) => { if(confirm("Ma tirtirtaa xogtan?")) await deleteDoc(doc(db, c, id)); };
-        
-        window.setMode = (m) => {
-            currentMode = m;
-            document.getElementById('m-inc').className = m === 'income' ? 'flex-1 py-4 rounded-xl font-black bg-green-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
-            document.getElementById('m-exp').className = m === 'expense' ? 'flex-1 py-4 rounded-xl font-black bg-red-600 text-xs' : 'flex-1 py-4 rounded-xl font-black bg-gray-700 text-xs';
-            const opts = m === 'income' ? ['Faktura', 'Kontanter', 'Annet'] : ['Drivstoff', 'Lønn', 'Feriepenger', 'Regnskap', 'Withdrawal', 'Reparasjon'];
-            document.getElementById('typeInput').innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
-        };
-
-        window.showSection = (s) => {
-            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(s+'Section').classList.remove('hidden');
-            document.getElementById('nav-dash').style.opacity = s === 'dashboard' ? '1' : '0.4';
-            document.getElementById('nav-inp').style.opacity = s === 'input' ? '1' : '0.4';
-        };
-
-        window.logout = () => signOut(auth);
-        document.getElementById('dateInput').valueAsDate = new Date();
-        setMode('income');
-    </script>
-</body>
-</html>
