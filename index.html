@@ -15,7 +15,7 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; overflow-x: hidden; }
         
         .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
-        .lang-btn { cursor: pointer; font-size: 18px; margin-left: 10px; }
+        .lang-btn { pointer; font-size: 18px; margin-left: 10px; }
         .theme-toggle { cursor: pointer; font-size: 20px; color: var(--yellow); }
 
         .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
@@ -104,6 +104,7 @@
                 <option value="exp-fuel">Drivstoff (MVA 25%)</option>
                 <option value="exp-bomp">Bompenger (MVA 25%)</option>
                 <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
+                <option value="exp-wash">Vaske Biler (MVA 25%)</option>
                 <option value="exp-anet-no">Anet uden MVA</option>
                 <option value="exp-bank">Bank Transaction (No MVA)</option>
                 <option value="exp-lonn">Lønn (Taxable - 10.2% FP)</option>
@@ -148,7 +149,6 @@
         }
     }
 
-    // Shaqada password-ka lagu soo celinayo
     function resetPass() {
         const email = document.getElementById('email').value;
         if (!email) {
@@ -206,7 +206,8 @@
                     tmva += (v.amt * 0.20); 
                 } else {
                     te += v.amt;
-                    if(['exp-fuel', 'exp-bomp', 'exp-fixed', 'inc-mva'].includes(v.subCat)) {
+                    // Halkan ayaan ku daray 'exp-wash' si MVA-ga looga jaro
+                    if(['exp-fuel', 'exp-bomp', 'exp-fixed', 'exp-wash', 'inc-mva'].includes(v.subCat)) {
                         tmva -= (v.amt * 0.20); 
                     }
                     if(v.subCat === 'exp-lonn') { tfp += (v.amt * 0.102); }
