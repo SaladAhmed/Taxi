@@ -36,7 +36,7 @@
         .menu-dots { cursor: pointer; color: #64748b; padding: 10px; }
         .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 120px; }
         .dropdown div { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
-        .dropdown div:last-child { border: none; color: red; }
+        .dropdown div:hover { background: #f1f5f9; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); }
         .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
@@ -121,7 +121,6 @@
 </div>
 
 <script>
-    // Firebase Config halkan ayay ku jirtay (aan iska dhaafno si aan koodhka u gaabino)
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -135,12 +134,9 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let currentView = 'individual';
     let rawData = [];
 
-    function toggleTheme() {
-        document.getElementById('body-tag').classList.toggle('light-theme');
-    }
+    function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
 
     function toggleAuth() {
         const rf = document.getElementById('reg-fields');
@@ -176,21 +172,16 @@
             rawData = [];
             let ti=0, te=0, tmva=0, tfp=0;
             snap.forEach(child => {
-                const v = child.val();
-                v.id = child.key;
-                rawData.push(v);
-                
+                const v = child.val(); v.id = child.key; rawData.push(v);
                 if(v.mainCat === 'income') {
                     ti += v.amt;
                     tmva += (v.amt * 0.20); 
                 } else {
                     te += v.amt;
-                    if(['exp-fuel', 'exp-bomp', 'exp-fixed'].includes(v.subCat)) {
+                    if(['exp-fuel', 'exp-bomp', 'exp-fixed', 'inc-mva'].includes(v.subCat)) {
                         tmva -= (v.amt * 0.20); 
                     }
-                    if(v.subCat === 'exp-lonn') {
-                        tfp += (v.amt * 0.102);
-                    }
+                    if(v.subCat === 'exp-lonn') { tfp += (v.amt * 0.102); }
                 }
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
@@ -209,13 +200,14 @@
         rawData.forEach(v => {
             list.innerHTML += `
             <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
-                <div><small style="color:#888">${v.subCat}</small><h4>${v.desc}</h4><small>${v.date}</small></div>
+                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${v.date}</small></div>
                 <div style="text-align:right">
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${v.id}')"></i>
                     <div id="m-${v.id}" class="dropdown">
                         <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})">Edit</div>
-                        <div onclick="delEntry('${v.id}')">Delete</div>
+                        <div style="color:red" onclick="delEntry('${v.id}')">Delete</div>
+                        <div onclick="toggleM('${v.id}')" style="border-top:1px solid #eee; font-weight:bold">Exit</div>
                     </div>
                 </div>
             </div>`;
@@ -223,17 +215,17 @@
     }
 
     function toggleM(id) {
+        const drop = document.getElementById('m-'+id);
+        const isVisible = drop.style.display === 'block';
         document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
-        document.getElementById('m-'+id).style.display = 'block';
+        drop.style.display = isVisible ? 'none' : 'block';
     }
 
-    function delEntry(id) {
-        if(confirm("Ma hubtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
-    }
+    function delEntry(id) { if(confirm("Ma hubtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
 
     function editEntry(id, oldD, oldA) {
-        const nD = prompt("Description:", oldD);
-        const nA = prompt("Amount:", oldA);
+        const nD = prompt("New Description:", oldD);
+        const nA = prompt("New Amount:", oldA);
         if(nD && nA) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({ desc: nD, amt: parseFloat(nA) });
     }
 
@@ -245,9 +237,7 @@
         if(t==='add') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
     }
 
-    function logout() {
-        auth.signOut().then(() => { window.location.reload(); });
-    }
+    function logout() { auth.signOut().then(() => { window.location.reload(); }); }
 
     auth.onAuthStateChanged(user => {
         if(user) {
