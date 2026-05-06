@@ -30,7 +30,7 @@
         .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px auto; padding: 20px; text-align: center; max-width: 770px; }
         
         .view-toggle { text-align: right; padding: 0 20px; margin-bottom: 10px; max-width: 800px; margin: auto; }
-        .view-btn { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .view-btn { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
 
         .entry-list-container { max-width: 800px; margin: auto; }
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -44,6 +44,7 @@
 
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
+        .forget-btn { background: none; border: none; color: var(--yellow); cursor: pointer; font-size: 13px; margin-top: 10px; text-decoration: underline; }
     </style>
 </head>
 <body id="body-tag">
@@ -54,10 +55,12 @@
         <input type="text" id="fname" placeholder="Fornavn">
         <input type="text" id="lname" placeholder="Etternavn">
     </div>
-    <input type="email" id="email" placeholder="E-post">
-    <input type="password" id="pass" placeholder="Passord">
+    <input type="email" id="email" placeholder="E-post" onkeypress="handleEnter(event)">
+    <input type="password" id="pass" placeholder="Passord" onkeypress="handleEnter(event)">
     <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()" id="auth-btn">LOGG INN</button>
     <button onclick="toggleAuth()" id="toggle-text" style="background:none; border:none; color:var(--yellow); cursor:pointer;">Registrer deg</button>
+    <br>
+    <button class="forget-btn" onclick="resetPass()">Glemt passord?</button>
 </div>
 
 <div id="main-app" style="display:none">
@@ -139,7 +142,24 @@
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
 
-    // SHUQAALKA MOBILE-KA: Si mode-ku u shaqeeyo
+    function handleEnter(e) {
+        if (e.key === "Enter") {
+            handleAuth();
+        }
+    }
+
+    // Shaqada password-ka lagu soo celinayo
+    function resetPass() {
+        const email = document.getElementById('email').value;
+        if (!email) {
+            alert("Fadlan marka hore qor E-mailkaaga qaybta sare.");
+            return;
+        }
+        auth.sendPasswordResetEmail(email).then(() => {
+            alert("Link-ga Password-ka lagu badalo waxaa loo diray: " + email + ". Fadlan eeg Inbox-kaaga.");
+        }).catch(e => alert(e.message));
+    }
+
     function toggleView() {
         currentMode = (currentMode === 'individual') ? 'total' : 'individual';
         document.getElementById('toggle-view-btn').innerText = "Mode: " + currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
@@ -245,7 +265,6 @@
         if (drop) drop.style.display = isVisible ? 'none' : 'block';
     }
 
-    // Xir dropdown-ka hadii meel kale la taabto mobile-ka
     window.onclick = function(event) {
         if (!event.target.matches('.menu-dots')) {
             document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
