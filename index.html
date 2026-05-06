@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mohamed Salad Transport Smart PRO</title>
+    <title>Mohamed Salad Transport PRO - Final</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,87 +11,72 @@
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
-        
-        .lang-bar { display: flex; justify-content: flex-end; padding: 10px 15px; gap: 15px; background: #1e293b; border-bottom: 1px solid #334155; }
-        .lang-btn { cursor: pointer; font-size: 20px; transition: 0.2s; }
-
-        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 15px 0; font-size: 16px; text-transform: uppercase; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px; }
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
         .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
-        .stat-box small { font-size: 8px; display: block; margin-bottom: 4px; font-weight: bold; }
-        .stat-box span { font-weight: bold; font-size: 12px; }
-
-        .summary-box { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 20px; text-align: center; }
+        .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
+        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px 15px; padding: 20px; text-align: center; }
         .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 15px; }
-        .summary-row div small { font-size: 9px; color: #94a3b8; display: block; }
-        .summary-row div b { font-size: 14px; }
-
-        .list-container { padding: 0 15px; }
-        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 12px; border-left: 5px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
-        .entry-info h4 { margin: 0; font-size: 15px; }
-        .entry-info small { color: #64748b; font-size: 11px; }
-
-        .menu-dots { cursor: pointer; color: #64748b; padding: 5px; }
-        .dropdown { position: absolute; right: 15px; top: 45px; background: white; color: black; border-radius: 8px; display: none; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 120px; }
-        .dropdown div { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .dropdown div:last-child { border-bottom: none; color: var(--red); }
-
+        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .menu-dots { cursor: pointer; color: #64748b; padding: 10px; }
+        .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 150px; }
+        .dropdown div { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #eee; cursor: pointer; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; }
-        .nav-item { text-align: center; color: #64748b; font-size: 11px; cursor: pointer; }
+        .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--yellow); }
-
-        input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; font-size: 16px; }
-        .btn-save { width: 100%; padding: 16px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; }
+        .form-container { padding: 20px; }
+        input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 15px; font-size: 16px; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="lang-bar">
-    <span class="lang-btn" onclick="setLang('no')">🇳🇴</span>
-    <span class="lang-btn" onclick="setLang('so')">🇸🇴</span>
-    <span class="lang-btn" onclick="setLang('en')">🇺🇸</span>
-</div>
-
 <div id="page-dash" class="page">
     <div class="header-title">MOHAMED SALAD TRANSPORT</div>
     <div class="stats-grid">
-        <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="t-inc">INCOME</small><span id="total-income">0 kr</span></div>
-        <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="t-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
-        <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="t-oth">U-BAXAY</small><span id="total-other">0 kr</span></div>
+        <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INCOME</small><span id="total-income">0 kr</span></div>
+        <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>EXPENSES</small><span id="total-expense">0 kr</span></div>
+        <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>NETTO</small><span id="total-netto">0 kr</span></div>
     </div>
-
-    <div class="summary-box">
+    <div class="summary-card">
         <div class="summary-row">
-            <div><small id="t-mva">MVA REFUND</small><b id="res-mva">0 kr</b></div>
-            <div><small id="t-fp">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
+            <div><small>MVA (25%)</small><b id="res-mva">0 kr</b></div>
+            <div><small>FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
         </div>
-        <small id="t-net" style="color:var(--yellow); font-weight:bold;">NET RESULT (LØNN)</small>
-        <h2 id="res-net" style="color:var(--green); margin: 5px 0;">0 kr</h2>
+        <small style="color:var(--yellow); font-weight:bold;">TOTAL RESULTAT</small>
+        <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
     </div>
-
-    <div id="entries-list" class="list-container"></div>
+    <div id="entries-list"></div>
 </div>
 
-<div id="page-add" class="page" style="display:none; padding: 20px;">
-    <h2 id="t-add-title" style="text-align:center; color:var(--yellow)">Geli Xog Cusub</h2>
-    <select id="entry-category">
-        <option value="income-mva">Income: Faktura (MVA)</option>
-        <option value="income-no-mva">Income: Own (No MVA)</option>
-        <option value="expense-mva">Expense: Anet (Med MVA)</option>
-        <option value="expense-no-mva">Expense: Anet (Uten MVA)</option>
-        <option value="expense-fuel">Expense: Drivstoff</option>
-        <option value="expense-bomp">Expense: Bompenger</option>
-        <option value="other">U-baxay (Me/Personal)</option>
-    </select>
-    <input type="text" id="entry-desc" placeholder="Magaca (Tusaale: Ahmed Lønn)">
-    <input type="number" id="entry-amt" placeholder="Lacagta (kr)">
-    <button class="btn-save" style="background:var(--green); color:white" onclick="saveData()" id="t-btn-save">KEYDI XOGTA</button>
+<div id="page-add" class="page" style="display:none;">
+    <div class="header-title">GELI XOG CUSUB</div>
+    <div class="form-container">
+        <select id="entry-category">
+            <optgroup label="CAGAAR (INCOME)">
+                <option value="inc-mva">Sentral Avgjifter (MVA 25%)</option>
+            </optgroup>
+            <optgroup label="GADUUD (EXPENSES)">
+                <option value="exp-fuel">Drivstoff (MVA 25%)</option>
+                <option value="exp-bomp">Bompenger (MVA 25%)</option>
+                <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
+                <option value="exp-anet-no">Anet uden MVA</option>
+                <option value="exp-bank">Bank Transaction (No MVA)</option>
+                <option value="exp-lonn">Lønn + Feriepenger (No MVA)</option>
+                <option value="exp-own">Own Withdrawal (No MVA)</option>
+            </optgroup>
+        </select>
+        <input type="text" id="entry-desc" placeholder="Magaca (Tusaale: Ahmed Lønn)">
+        <input type="number" id="entry-amt" placeholder="Lacagta (kr)">
+        <button class="btn-save" style="background:var(--green); color:white" onclick="saveData('income')">SAVE INCOME</button>
+        <button class="btn-save" style="background:var(--red); color:white" onclick="saveData('expense')">SAVE EXPENSE</button>
+    </div>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list-ul"></i><br><span id="n-dash">Guudmar</span></div>
-    <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Geli Xog</span></div>
-    <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logout</span></div>
+    <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list"></i><br>Guudmar</div>
+    <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus"></i><br>Geli Xog</div>
+    <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br>Exit</div>
 </div>
 
 <script>
@@ -108,34 +93,16 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", oth: "ANDRE", mva: "MVA REFUND", fp: "FERIEPENGER", net: "NETTO RESULTAT", add: "Geli Xog", n_dash: "Dash", n_add: "Ny", n_exit: "Ut" },
-        so: { inc: "DAKHLI", exp: "KHARASH", oth: "U-BAXAY", mva: "MVA REFUND", fp: "LACAGTA FASAXA", net: "NET RESULT", add: "Ku Dar", n_dash: "Guudmar", n_add: "Geli Xog", n_exit: "Bax" },
-        en: { inc: "INCOME", exp: "EXPENSE", oth: "OTHER", mva: "MVA REFUND", fp: "FERIEPENGER", net: "NET RESULT", add: "Add Entry", n_dash: "Dash", n_add: "Add", n_exit: "Exit" }
-    };
-
-    function setLang(l) {
-        const d = dict[l];
-        document.getElementById('t-inc').innerText = d.inc;
-        document.getElementById('t-exp').innerText = d.exp;
-        document.getElementById('t-oth').innerText = d.oth;
-        document.getElementById('t-mva').innerText = d.mva;
-        document.getElementById('t-fp').innerText = d.fp;
-        document.getElementById('t-net').innerText = d.net;
-        document.getElementById('n-dash').innerText = d.n_dash;
-        document.getElementById('n-add').innerText = d.n_add;
-        document.getElementById('n-exit').innerText = d.n_exit;
-    }
-
-    function saveData() {
+    function saveData(mainCat) {
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
-        const cat = document.getElementById('entry-category').value;
+        const subCat = document.getElementById('entry-category').value;
         if(!desc || !amt) return alert("Fadlan buuxi!");
-
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
-            desc, amt, cat, date: new Date().toLocaleDateString('no-NO')
+            desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO')
         });
+        document.getElementById('entry-desc').value = "";
+        document.getElementById('entry-amt').value = "";
         showTab('dash');
     }
 
@@ -143,62 +110,53 @@
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
             const list = document.getElementById('entries-list');
             list.innerHTML = "";
-            let ti=0, te=0, to=0, tmva=0;
-
+            let ti=0, te=0, tmva=0;
             snap.forEach(child => {
                 const v = child.val();
                 const id = child.key;
-                let color = "var(--blue)";
-                
-                if(v.cat.includes('income')) { 
-                    ti += v.amt; color = "var(--green)";
-                    if(v.cat === 'income-mva') tmva += (v.amt * 12 / 112);
-                } else if(v.cat.includes('expense')) { 
-                    te += v.amt; color = "var(--red)";
-                    if(v.cat !== 'expense-no-mva') tmva += (v.amt / 5);
-                } else { to += v.amt; }
-
+                if(v.mainCat === 'income') {
+                    ti += v.amt;
+                    tmva += (v.amt * 25 / 125);
+                } else {
+                    te += v.amt;
+                    if(['exp-fuel', 'exp-bomp', 'exp-fixed'].includes(v.subCat)) tmva += (v.amt * 25 / 125);
+                }
                 list.innerHTML += `
-                <div class="entry-card" style="border-left-color:${color}">
+                <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
                     <div class="entry-info">
-                        <small>${v.cat.toUpperCase()}</small>
+                        <small>${v.subCat.toUpperCase()}</small>
                         <h4>${v.desc}</h4>
                         <small>${v.date}</small>
                     </div>
                     <div style="text-align:right">
-                        <span style="font-weight:bold; color:${color}">${v.amt.toLocaleString()} kr</span>
+                        <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                         <i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${id}')"></i>
                         <div id="m-${id}" class="dropdown">
-                            <div onclick="alert('Xogta: ${v.desc}')">Detail</div>
-                            <div onclick="alert('Soon')">Edit</div>
-                            <div onclick="del('${id}')">Delete</div>
+                            <div onclick="showDetail('${v.desc}', '${v.amt}', '${v.subCat}')">Detail</div>
+                            <div onclick="del('${id}')" style="color:red">Delete</div>
                         </div>
                     </div>
                 </div>`;
             });
-
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
             document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
-            document.getElementById('total-other').innerText = to.toLocaleString() + " kr";
+            document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
             document.getElementById('res-mva').innerText = Math.floor(tmva).toLocaleString() + " kr";
             document.getElementById('res-fp').innerText = Math.floor(ti * 0.102).toLocaleString() + " kr";
-            document.getElementById('res-net').innerText = (ti - te - to).toLocaleString() + " kr";
+            document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
         });
     }
 
+    function showDetail(d, a, s) { alert(`MAGACA: ${d}\nQIIMAHA: ${a} kr\nNOOCA: ${s}`); }
     function toggleM(id) {
         const m = document.getElementById('m-'+id);
         m.style.display = (m.style.display==='block') ? 'none' : 'block';
     }
-
-    function del(id) { if(confirm("Ma tirtirtaa?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
-
+    function del(id) { if(confirm("Tirtir?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     }
-
     function logout() { auth.signOut().then(() => location.reload()); }
     auth.onAuthStateChanged(user => { if(user) loadData(); });
 </script>
