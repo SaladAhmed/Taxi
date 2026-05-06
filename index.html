@@ -12,94 +12,81 @@
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
         
-        /* Language Bar */
         .lang-bar { display: flex; justify-content: flex-end; padding: 10px 15px; gap: 15px; background: #1e293b; border-bottom: 1px solid #334155; }
-        .lang-btn { cursor: pointer; font-size: 22px; transition: 0.2s; }
-        .lang-btn:hover { transform: scale(1.2); }
+        .lang-btn { cursor: pointer; font-size: 20px; }
 
-        /* Dashboard Header */
-        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 15px 0; font-size: 16px; text-transform: uppercase; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 12px; }
-        .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
-        .stat-box small { font-size: 8px; display: block; margin-bottom: 4px; font-weight: bold; }
-        .stat-box span { font-weight: bold; font-size: 13px; }
+        .header-main { text-align: center; color: var(--yellow); font-weight: bold; padding: 15px 0; font-size: 16px; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px; }
+        .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 10px; text-align: center; }
+        .stat-box small { font-size: 8px; display: block; margin-bottom: 3px; font-weight: bold; }
+        .stat-box span { font-weight: bold; font-size: 11px; }
 
-        /* Main Result Box */
-        .main-result { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 20px; text-align: center; }
-        .sub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 15px; }
-        .sub-stats div small { display: block; font-size: 9px; color: #94a3b8; }
-        .sub-stats div b { font-size: 14px; }
+        .main-summary { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 20px; text-align: center; }
+        .sub-row { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 10px; }
+        .sub-row div small { font-size: 9px; color: #94a3b8; display: block; }
+        .sub-row div b { font-size: 13px; }
 
-        /* Entries */
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 5px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
-        .entry-info h4 { margin: 0; font-size: 15px; }
+        .entry-info h4 { margin: 0; font-size: 14px; }
         .entry-info small { color: #64748b; font-size: 11px; }
 
-        /* Dropdown Menu */
-        .menu-dots { cursor: pointer; color: #444; padding: 5px; }
-        .dropdown { position: absolute; right: 10px; top: 40px; background: white; color: black; border-radius: 8px; display: none; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 120px; }
-        .dropdown div { padding: 10px 15px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #eee; }
-        .dropdown div:last-child { border-bottom: none; color: red; }
+        .menu-dots { cursor: pointer; color: #64748b; padding: 5px; }
+        .dropdown { position: absolute; right: 15px; top: 45px; background: white; color: black; border-radius: 8px; display: none; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.4); min-width: 110px; }
+        .dropdown div { padding: 10px; font-size: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .dropdown div:last-child { border: none; color: var(--red); }
 
-        /* Navigation */
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
-        .nav-item { text-align: center; color: #64748b; font-size: 11px; cursor: pointer; }
+        .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; }
         .nav-item.active { color: var(--yellow); }
 
-        /* Form Elements */
-        input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
-        .btn-action { width: 100%; padding: 16px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        .btn-act { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="lang-bar">
-    <span class="lang-btn" onclick="setLang('no')">🇳🇴</span>
-    <span class="lang-btn" onclick="setLang('so')">🇸🇴</span>
-    <span class="lang-btn" onclick="setLang('en')">🇺🇸</span>
+    <span class="lang-btn" onclick="updateLang('no')">🇳🇴</span>
+    <span class="lang-btn" onclick="updateLang('so')">🇸🇴</span>
+    <span class="lang-btn" onclick="updateLang('en')">🇺🇸</span>
 </div>
 
-<div id="app-content">
-    <!-- DASHBOARD -->
-    <div id="page-dash" class="page">
-        <div class="header-title" id="t-dash-head">MOHAMED SALAD TRANSPORT</div>
-        <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="t-inc">INCOME</small><span id="total-income">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="t-exp">KHARASH</small><span id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="t-other">U-BAXAY (ME)</small><span id="total-other">0 kr</span></div>
-        </div>
-
-        <div class="main-result">
-            <div class="sub-stats">
-                <div><small id="t-mva">MVA REFUND (1/5)</small><b id="res-mva">0 kr</b></div>
-                <div><small id="t-ferie">FERIEPENGER (10.2%)</small><b id="res-ferie">0 kr</b></div>
-            </div>
-            <small id="t-net" style="color:var(--yellow); font-weight:bold;">NET RESULT</small>
-            <h1 id="res-net" style="color:var(--green); margin: 5px 0;">0 kr</h1>
-        </div>
-
-        <div id="entry-list"></div>
+<div id="page-dash" class="page">
+    <div class="header-main">MOHAMED SALAD TRANSPORT</div>
+    <div class="stats-grid">
+        <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-inc">0 kr</span></div>
+        <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-exp">0 kr</span></div>
+        <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-oth">ANDRE</small><span id="total-oth">0 kr</span></div>
     </div>
-
-    <!-- ADD FORM -->
-    <div id="page-add" class="page" style="display:none; padding: 20px;">
-        <h2 style="text-align:center; color:var(--yellow)" id="t-add-title">Add New Entry</h2>
-        <select id="entry-type">
-            <option value="income">Income (Faktura/Sentral)</option>
-            <option value="expense">Expense (Fuel/Regnskap)</option>
-            <option value="other">Other (Bank/Anet)</option>
-        </select>
-        <input type="text" id="entry-desc" placeholder="Description (e.g. Drivstoff)">
-        <input type="number" id="entry-amt" placeholder="Amount (kr)">
-        <button class="btn-action" style="background:var(--green); color:white" onclick="saveData('income')" id="btn-save-inc">SAVE INCOME</button>
-        <button class="btn-action" style="background:var(--red); color:white" onclick="saveData('expense')" id="btn-save-exp">SAVE EXPENSE</button>
+    <div class="main-summary">
+        <div class="sub-row">
+            <div><small id="l-mva">MVA REFUND</small><b id="res-mva">0 kr</b></div>
+            <div><small id="l-fp">FERIEPENGER</small><b id="res-fp">0 kr</b></div>
+        </div>
+        <small id="l-net" style="color:var(--yellow); font-weight:bold;">NETTO RESULTAT</small>
+        <h2 id="res-net" style="color:var(--green); margin: 5px 0;">0 kr</h2>
     </div>
+    <div id="list-items"></div>
+</div>
+
+<div id="page-add" class="page" style="display:none; padding:20px;">
+    <h3 id="l-add-h" style="text-align:center; color:var(--yellow)">Legg til ny xog</h3>
+    <select id="in-type">
+        <option value="In-Mva">Inntekt (MVA 12%)</option>
+        <option value="Ex-Fuel">Drivstoff (Fuel)</option>
+        <option value="Ex-Bomp">Bompenger</option>
+        <option value="Ex-Other">Andre Utgifter</option>
+    </select>
+    <input type="text" id="in-desc" placeholder="Hva er det?">
+    <input type="number" id="in-amt" placeholder="Beløp (kr)">
+    <button class="btn-act" style="background:var(--green); color:white" onclick="save('income')" id="l-btn-i">LAGRE INNTEKT</button>
+    <button class="btn-act" style="background:var(--red); color:white" onclick="save('expense')" id="l-btn-e">LAGRE UTGIFT</button>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('dash')"><i class="fas fa-chart-pie"></i><br><span id="n-dash">Dash</span></div>
-    <div class="nav-item" onclick="switchTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Add</span></div>
-    <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Exit</span></div>
+    <div class="nav-item active" onclick="tab('dash')"><i class="fas fa-chart-line"></i><br><span id="n-dash">Dash</span></div>
+    <div class="nav-item" onclick="tab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
+    <div class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><br><span id="n-exit">Logg ut</span></div>
 </div>
 
 <script>
@@ -112,99 +99,93 @@
       messagingSenderId: "608716442795",
       appId: "1:608716442795:web:34cafc1a23316664717bee"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
 
-    const dictionary = {
-        no: { dash: "GUUDMARKA", inc: "INNTEKT", exp: "UTGIFT", other: "ANDRE", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NETTO RESULTAT", add: "Legg til", n_dash: "Hjem", n_add: "Ny", n_exit: "Ut" },
-        so: { dash: "GUUDMARKA", inc: "DAKHLI", exp: "KHARASH", other: "U-BAXAY", mva: "MVA REFUND", ferie: "LACAGTA FASAXA", net: "NET RESULT", add: "Ku Dar", n_dash: "Dash", n_add: "Ku Dar", n_exit: "Ka Bax" },
-        en: { dash: "DASHBOARD", inc: "INCOME", exp: "EXPENSE", other: "OTHER", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NET RESULT", add: "Add Entry", n_dash: "Dash", n_add: "Add", n_exit: "Exit" }
+    const dict = {
+        no: { inc: "INNTEKT", exp: "UTGIFTER", oth: "ANDRE", mva: "MVA REFUND", fp: "FERIEPENGER", net: "NETTO RESULTAT", add_h: "Legg til ny", btn_i: "LAGRE INNTEKT", btn_e: "LAGRE UTGIFT", n_dash: "Dash", n_add: "Legg til", n_exit: "Logg ut" },
+        so: { inc: "DAKHLI", exp: "KHARASH", oth: "U-BAXAY", mva: "MVA REFUND", fp: "LACAGTA FASAXA", net: "NET RESULT", add_h: "Geli Xog Cusub", btn_i: "KEYDI DAKHLI", btn_e: "KEYDI KHARASH", n_dash: "Guudmar", n_add: "Ku Dar", n_exit: "Ka Bax" },
+        en: { inc: "INCOME", exp: "EXPENSES", oth: "OTHERS", mva: "MVA REFUND", fp: "FERIEPENGER", net: "NET RESULT", add_h: "Add New Entry", btn_i: "SAVE INCOME", btn_e: "SAVE EXPENSE", n_dash: "Dash", n_add: "Add", n_exit: "Logout" }
     };
 
-    function setLang(l) {
-        const d = dictionary[l];
-        document.getElementById('t-inc').innerText = d.inc;
-        document.getElementById('t-exp').innerText = d.exp;
-        document.getElementById('t-other').innerText = d.other;
-        document.getElementById('t-mva').innerText = d.mva;
-        document.getElementById('t-ferie').innerText = d.ferie;
-        document.getElementById('t-net').innerText = d.net;
+    function updateLang(l) {
+        const d = dict[l];
+        document.getElementById('l-inc').innerText = d.inc;
+        document.getElementById('l-exp').innerText = d.exp;
+        document.getElementById('l-oth').innerText = d.oth;
+        document.getElementById('l-mva').innerText = d.mva;
+        document.getElementById('l-fp').innerText = d.fp;
+        document.getElementById('l-net').innerText = d.net;
+        document.getElementById('l-add-h').innerText = d.add_h;
+        document.getElementById('l-btn-i').innerText = d.btn_i;
+        document.getElementById('l-btn-e').innerText = d.btn_e;
         document.getElementById('n-dash').innerText = d.n_dash;
         document.getElementById('n-add').innerText = d.n_add;
         document.getElementById('n-exit').innerText = d.n_exit;
     }
 
-    function saveData(cat) {
-        const desc = document.getElementById('entry-desc').value;
-        const amt = parseFloat(document.getElementById('entry-amt').value);
-        const type = document.getElementById('entry-type').value;
-        if(!desc || !amt) return alert("Fadlan buuxi!");
-
+    function save(cat) {
+        const desc = document.getElementById('in-desc').value;
+        const amt = parseFloat(document.getElementById('in-amt').value);
+        const type = document.getElementById('in-type').value;
+        if(!desc || !amt) return alert("Buuxi!");
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
-            desc, amt, type, category: cat, date: new Date().toLocaleDateString('no-NO')
+            desc, amt, type, cat, date: new Date().toLocaleDateString('no-NO')
         });
-        switchTab('dash');
+        tab('dash');
     }
 
-    function loadData() {
+    function load() {
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
-            const list = document.getElementById('entry-list');
+            const list = document.getElementById('list-items');
             list.innerHTML = "";
             let i=0, e=0, o=0, m=0;
-
             snap.forEach(child => {
                 const v = child.val();
-                const id = child.key;
-                if(v.category==='income') { i+=v.amt; m+=(v.amt*12/112); }
-                else if(v.type==='other') { o+=v.amt; }
+                if(v.cat==='income') { i+=v.amt; m+=(v.amt*12/112); }
                 else { e+=v.amt; m+=(v.amt/5); }
 
                 list.innerHTML += `
-                <div class="entry-card" style="border-left-color:${v.category==='income'?'var(--green)':'var(--red)'}">
+                <div class="entry-card" style="border-left-color:${v.cat==='income'?'var(--green)':'var(--red)'}">
                     <div class="entry-info">
-                        <small>${v.type.toUpperCase()}</small>
+                        <small>${v.type}</small>
                         <h4>${v.desc}</h4>
                         <small>${v.date}</small>
                     </div>
                     <div style="text-align:right">
-                        <span style="font-weight:bold; color:${v.category==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
-                        <i class="fas fa-ellipsis-v menu-dots" onclick="toggleMenu('${id}')"></i>
-                        <div id="drop-${id}" class="dropdown">
-                            <div onclick="alert('Details: ${v.desc}')">Detail</div>
-                            <div onclick="alert('Edit soon')">Edit</div>
-                            <div onclick="deleteE('${id}')">Delete</div>
+                        <span style="font-weight:bold; color:${v.cat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
+                        <i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${child.key}')"></i>
+                        <div id="m-${child.key}" class="dropdown">
+                            <div onclick="alert('${v.desc}')">Detail</div>
+                            <div onclick="alert('Edit soon')">Change/Edit</div>
+                            <div onclick="del('${child.key}')">Delete</div>
                         </div>
                     </div>
                 </div>`;
             });
-
-            document.getElementById('total-income').innerText = i.toLocaleString() + " kr";
-            document.getElementById('total-expense').innerText = e.toLocaleString() + " kr";
-            document.getElementById('total-other').innerText = o.toLocaleString() + " kr";
+            document.getElementById('total-inc').innerText = i.toLocaleString() + " kr";
+            document.getElementById('total-exp').innerText = e.toLocaleString() + " kr";
             document.getElementById('res-mva').innerText = Math.floor(m).toLocaleString() + " kr";
-            document.getElementById('res-ferie').innerText = Math.floor(i * 0.102).toLocaleString() + " kr";
-            document.getElementById('res-net').innerText = (i - e - o).toLocaleString() + " kr";
+            document.getElementById('res-fp').innerText = Math.floor(i * 0.102).toLocaleString() + " kr";
+            document.getElementById('res-net').innerText = (i - e).toLocaleString() + " kr";
         });
     }
 
-    function toggleMenu(id) {
-        const d = document.getElementById('drop-'+id);
-        d.style.display = (d.style.display==='block') ? 'none' : 'block';
+    function toggleM(id) {
+        const m = document.getElementById('m-'+id);
+        m.style.display = (m.style.display==='block') ? 'none' : 'block';
     }
 
-    function deleteE(id) { if(confirm("Ma tirtirtaa?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
+    function del(id) { if(confirm("Tirtir?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
 
-    function switchTab(t) {
-        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        document.getElementById('page-'+t).style.display = 'block';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    function tab(t) {
+        document.querySelectorAll('.page').forEach(p => p.style.display='none');
+        document.getElementById('page-'+t).style.display='block';
     }
 
-    function logout() { auth.signOut().then(() => location.reload()); }
-
-    auth.onAuthStateChanged(user => { if(user) loadData(); });
+    function logout() { auth.signOut().then(()=>location.reload()); }
+    auth.onAuthStateChanged(user => { if(user) load(); });
 </script>
 </body>
 </html>
