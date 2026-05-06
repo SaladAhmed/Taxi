@@ -22,7 +22,6 @@
         .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
         .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
 
-        /* MVA Box sidii sawirka */
         .mva-card { background: #1e293b; border: 2px solid #555; border-radius: 15px; margin: 10px 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
 
         .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px 15px; padding: 20px; text-align: center; }
@@ -32,8 +31,9 @@
 
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .menu-dots { cursor: pointer; color: #64748b; padding: 10px; }
-        .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 150px; }
-        .dropdown div { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 120px; }
+        .dropdown div { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .dropdown div:last-child { border: none; color: red; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; }
         .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
@@ -76,7 +76,7 @@
 
         <div class="mva-card">
             <div><small style="color:#888; display:block">MVA (25%)</small><b id="res-mva" style="font-size:18px">0 kr</b></div>
-            <div style="text-align:right"><small style="color:#888; display:block">FERIEPENGER</small><b id="res-fp">0 kr</b></div>
+            <div style="text-align:right"><small style="color:#888; display:block">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
         </div>
 
         <div class="summary-card">
@@ -104,12 +104,12 @@
                     <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
                     <option value="exp-anet-no">Anet uden MVA</option>
                     <option value="exp-bank">Bank Transaction (No MVA)</option>
-                    <option value="exp-lonn">Lønn + Feriepenger (No MVA)</option>
+                    <option value="exp-lonn">Lønn (Taxable - 10.2% FP)</option>
                     <option value="exp-own">Own Withdrawal (No MVA)</option>
                 </optgroup>
             </select>
-            <input type="text" id="entry-desc" placeholder="Magaca (Tusaale: Salad)">
-            <input type="number" id="entry-amt" placeholder="Lacagta (kr)">
+            <input type="text" id="entry-desc" placeholder="Magaca / Beskrivelse">
+            <input type="number" id="entry-amt" placeholder="Beløp (kr)">
             <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">SAVE INCOME</button>
             <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">SAVE EXPENSE</button>
         </div>
@@ -136,7 +136,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let currentView = 'individual'; // 'individual' ama 'total'
+    let currentView = 'individual';
     let rawData = [];
 
     function toggleView() {
@@ -177,7 +177,7 @@
     function loadData() {
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
             rawData = [];
-            let ti=0, te=0, tmva=0;
+            let ti=0, te=0, tmva=0, tfp=0;
             snap.forEach(child => {
                 const v = child.val();
                 v.id = child.key;
@@ -185,17 +185,22 @@
                 
                 if(v.mainCat === 'income') {
                     ti += v.amt;
-                    tmva += (v.amt * 25 / 125);
+                    tmva += (v.amt * 0.20); // MVA calculation (25% of net / 20% of gross)
                 } else {
                     te += v.amt;
-                    if(['exp-fuel', 'exp-bomp', 'exp-fixed'].includes(v.subCat)) tmva += (v.amt * 25 / 125);
+                    if(['exp-fuel', 'exp-bomp', 'exp-fixed'].includes(v.subCat)) {
+                        tmva -= (v.amt * 0.20); 
+                    }
+                    if(v.subCat === 'exp-lonn') {
+                        tfp += (v.amt * 0.102);
+                    }
                 }
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
             document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
             document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
             document.getElementById('res-mva').innerText = Math.floor(tmva).toLocaleString() + " kr";
-            document.getElementById('res-fp').innerText = Math.floor(ti * 0.102).toLocaleString() + " kr";
+            document.getElementById('res-fp').innerText = Math.floor(tfp).toLocaleString() + " kr";
             document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
             renderList();
         });
@@ -204,24 +209,20 @@
     function renderList() {
         const list = document.getElementById('entries-list');
         list.innerHTML = "";
-
         if(currentView === 'individual') {
             rawData.forEach(v => {
                 list.innerHTML += createCard(v.subCat, v.desc, v.amt, v.mainCat, v.id, v.date);
             });
         } else {
-            // Group by Name (Description)
             const grouped = {};
             rawData.forEach(v => {
                 const key = v.desc.toLowerCase();
-                if(!grouped[key]) {
-                    grouped[key] = { ...v, amt: 0, count: 0 };
-                }
+                if(!grouped[key]) grouped[key] = { ...v, amt: 0, count: 0 };
                 grouped[key].amt += v.amt;
                 grouped[key].count++;
             });
             Object.values(grouped).forEach(v => {
-                list.innerHTML += createCard("TOTAL", v.desc + ` (${v.count} entries)`, v.amt, v.mainCat, null, "Summary");
+                list.innerHTML += createCard("TOTAL", v.desc + ` (${v.count})`, v.amt, v.mainCat, null, "Summary");
             });
         }
     }
@@ -238,31 +239,49 @@
                 <span style="font-weight:bold; color:${cat==='income'?'var(--green)':'var(--red)'}">${amt.toLocaleString()} kr</span>
                 ${id ? `<i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${id}')"></i>` : ''}
                 <div id="m-${id}" class="dropdown">
-                    <div onclick="editEntry('${id}', '${desc}', '${amt}')">Edit</div>
-                    <div onclick="del('${id}')" style="color:red">Delete</div>
+                    <div onclick="editEntry('${id}', '${desc}', ${amt})">Edit</div>
+                    <div onclick="delEntry('${id}')">Delete</div>
                 </div>
             </div>
         </div>`;
     }
 
     function toggleM(id) {
+        document.querySelectorAll('.dropdown').forEach(d => { if(d.id !== 'm-'+id) d.style.display = 'none'; });
         const m = document.getElementById('m-'+id);
-        m.style.display = (m.style.display==='block') ? 'none' : 'block';
+        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
     }
 
-    function editEntry(id, d, a) {
-        const nD = prompt("New Name:", d);
-        const nA = prompt("New Amount:", a);
-        if(nD && nA) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).update({desc: nD, amt: parseFloat(nA)});
+    function editEntry(id, oldDesc, oldAmt) {
+        const nDesc = prompt("Edit Description:", oldDesc);
+        const nAmt = prompt("Edit Amount:", oldAmt);
+        if(nDesc !== null && nAmt !== null) {
+            db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({
+                desc: nDesc,
+                amt: parseFloat(nAmt)
+            });
+        }
     }
 
-    function del(id) { if(confirm("Slette?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
+    function delEntry(id) {
+        if(confirm("Ma hubtaa inaad tirtirto?")) {
+            db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
+        }
+    }
+
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(t === 'dash') document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+        if(t === 'add') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
     }
-    function logout() { auth.signOut().then(() => location.reload()); }
+
+    function logout() {
+        auth.signOut().then(() => {
+            window.location.reload();
+        });
+    }
 
     auth.onAuthStateChanged(user => {
         if(user) {
