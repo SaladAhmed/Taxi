@@ -30,11 +30,11 @@
         .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px auto; padding: 20px; text-align: center; max-width: 770px; }
         
         .view-toggle { text-align: right; padding: 0 20px; margin-bottom: 10px; max-width: 800px; margin: auto; }
-        .view-btn { background: var(--blue); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+        .view-btn { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 14px; cursor: pointer; font-weight: bold; }
 
         .entry-list-container { max-width: 800px; margin: auto; }
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .menu-dots { cursor: pointer; color: #64748b; padding: 10px; }
+        .menu-dots { cursor: pointer; color: #64748b; padding: 10px; font-size: 20px; }
         .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 120px; }
         .dropdown div { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
 
@@ -44,11 +44,6 @@
 
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
-        
-        @media (min-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(3, 1fr); }
-            .auth-container { margin-top: 100px; }
-        }
     </style>
 </head>
 <body id="body-tag">
@@ -140,10 +135,11 @@
     const auth = firebase.auth();
 
     let rawData = [];
-    let currentMode = 'individual'; // 'individual' ama 'total'
+    let currentMode = 'individual'; 
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
 
+    // SHUQAALKA MOBILE-KA: Si mode-ku u shaqeeyo
     function toggleView() {
         currentMode = (currentMode === 'individual') ? 'total' : 'individual';
         document.getElementById('toggle-view-btn').innerText = "Mode: " + currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
@@ -231,7 +227,7 @@
                 <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${currentMode === 'total' ? 'Wadarta Guud' : v.date}</small></div>
                 <div style="text-align:right">
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
-                    <i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${v.id}')"></i>
+                    <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
                     <div id="m-${v.id}" class="dropdown">
                         <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})">Edit</div>
                         <div style="color:red" onclick="delEntry('${v.id}')">Delete</div>
@@ -247,6 +243,13 @@
         const isVisible = drop.style.display === 'block';
         document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
         if (drop) drop.style.display = isVisible ? 'none' : 'block';
+    }
+
+    // Xir dropdown-ka hadii meel kale la taabto mobile-ka
+    window.onclick = function(event) {
+        if (!event.target.matches('.menu-dots')) {
+            document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
+        }
     }
 
     function delEntry(id) { if(confirm("Ma hubtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
@@ -295,8 +298,8 @@
         document.getElementById('n-add').innerText = d.nadd;
         document.getElementById('n-exit').innerText = d.exit;
         
-        // Saxidda Mode Button-ka
-        document.getElementById('toggle-view-btn').innerText = (l === 'so') ? "Habka: " + currentMode : "Mode: " + currentMode;
+        const modeTxt = (l === 'so') ? "Habka: " : "Mode: ";
+        document.getElementById('toggle-view-btn').innerText = modeTxt + currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
     }
 </script>
 </body>
