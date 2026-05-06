@@ -13,9 +13,10 @@
         .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
         
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; overflow-x: hidden; }
+        .rtl { direction: rtl; text-align: right; }
         
         .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
-        .lang-btn { pointer; font-size: 18px; margin-left: 10px; }
+        .lang-btn { cursor: pointer; font-size: 18px; margin-left: 10px; }
         .theme-toggle { cursor: pointer; font-size: 20px; color: var(--yellow); }
 
         .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
@@ -70,6 +71,7 @@
             <span class="lang-btn" onclick="updateLang('no')">🇳🇴</span>
             <span class="lang-btn" onclick="updateLang('so')">🇸🇴</span>
             <span class="lang-btn" onclick="updateLang('en')">🇺🇸</span>
+            <span class="lang-btn" onclick="updateLang('ar')">🇸🇦</span>
         </div>
     </div>
 
@@ -82,7 +84,7 @@
         </div>
         <div class="mva-card">
             <div><small style="color:#888; display:block">MVA (25%)</small><b id="res-mva" style="font-size:18px">0 kr</b></div>
-            <div style="text-align:right"><small style="color:#888; display:block">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
+            <div style="text-align:right"><small style="color:#888; display:block" id="l-fp-text">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
         </div>
         <div class="summary-card">
             <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULT</small>
@@ -97,10 +99,10 @@
     <div id="page-add" class="page" style="display:none; padding: 20px; max-width: 600px; margin: auto;">
         <div class="header-title" id="l-add-title">GELI XOG CUSUB</div>
         <select id="entry-category">
-            <optgroup label="CAGAAR (INCOME)">
+            <optgroup label="INCOME" id="opt-inc">
                 <option value="inc-mva">Sentral Avgjifter (MVA 25%)</option>
             </optgroup>
-            <optgroup label="GADUUD (EXPENSES)">
+            <optgroup label="EXPENSES" id="opt-exp">
                 <option value="exp-fuel">Drivstoff (MVA 25%)</option>
                 <option value="exp-bomp">Bompenger (MVA 25%)</option>
                 <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
@@ -140,6 +142,7 @@
 
     let rawData = [];
     let currentMode = 'individual'; 
+    let currentLang = 'no';
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
 
@@ -162,7 +165,7 @@
 
     function toggleView() {
         currentMode = (currentMode === 'individual') ? 'total' : 'individual';
-        document.getElementById('toggle-view-btn').innerText = "Mode: " + currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
+        updateLang(currentLang);
         renderList();
     }
 
@@ -206,7 +209,6 @@
                     tmva += (v.amt * 0.20); 
                 } else {
                     te += v.amt;
-                    // Halkan ayaan ku daray 'exp-wash' si MVA-ga looga jaro
                     if(['exp-fuel', 'exp-bomp', 'exp-fixed', 'exp-wash', 'inc-mva'].includes(v.subCat)) {
                         tmva -= (v.amt * 0.20); 
                     }
@@ -242,10 +244,12 @@
             dataToDisplay = rawData;
         }
 
+        const totalTxt = { no: "Wadarta Guud", so: "Wadarta Guud", en: "Grand Total", ar: "الإجمالي الكلي" };
+
         dataToDisplay.forEach(v => {
             list.innerHTML += `
             <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
-                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${currentMode === 'total' ? 'Wadarta Guud' : v.date}</small></div>
+                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${currentMode === 'total' ? totalTxt[currentLang] : v.date}</small></div>
                 <div style="text-align:right">
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
@@ -302,12 +306,14 @@
     });
 
     const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "GELI XOG", dash: "Guudmar", nadd: "Geli Xog", exit: "Exit" },
-        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax" },
-        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout" }
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "GELI XOG", dash: "Guudmar", nadd: "Geli Xog", exit: "Exit", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)" },
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca / Beskrivelse", amt: "Cadadka (kr)" },
+        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout", mode: "Mode: ", fp: "HOLIDAY PAY (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Description", amt: "Amount (kr)" },
+        ar: { inc: "دخل", exp: "مصروفات", net: "صافي", res: "النتيجة النهائية", add: "إضافة بيانات", dash: "لوحة التحكم", nadd: "إضافة جديد", exit: "خروج", mode: "الوضع: ", fp: "راتب الإجازة (10.2%)", btninc: "حفظ الدخل", btnexp: "حفظ المصروف", desc: "الوصف", amt: "المبلغ (كرونة)" }
     };
 
     function updateLang(l) {
+        currentLang = l;
         const d = dict[l];
         document.getElementById('l-inc').innerText = d.inc;
         document.getElementById('l-exp').innerText = d.exp;
@@ -317,9 +323,21 @@
         document.getElementById('n-dash').innerText = d.dash;
         document.getElementById('n-add').innerText = d.nadd;
         document.getElementById('n-exit').innerText = d.exit;
+        document.getElementById('l-fp-text').innerText = d.fp;
+        document.getElementById('l-btn-inc').innerText = d.btninc;
+        document.getElementById('l-btn-exp').innerText = d.btnexp;
+        document.getElementById('entry-desc').placeholder = d.desc;
+        document.getElementById('entry-amt').placeholder = d.amt;
         
-        const modeTxt = (l === 'so') ? "Habka: " : "Mode: ";
-        document.getElementById('toggle-view-btn').innerText = modeTxt + currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
+        document.getElementById('toggle-view-btn').innerText = d.mode + (currentMode === 'individual' ? (l==='ar'?'فردي':'Individual') : (l==='ar'?'إجمالي':'Total'));
+        
+        // RTL for Arabic
+        if(l === 'ar') {
+            document.body.classList.add('rtl');
+        } else {
+            document.body.classList.remove('rtl');
+        }
+        renderList();
     }
 </script>
 </body>
