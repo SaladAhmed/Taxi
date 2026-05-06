@@ -10,45 +10,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
         
         /* Language Bar */
-        .lang-bar { display: flex; justify-content: flex-end; padding: 15px; gap: 15px; background: #1e293b; border-bottom: 1px solid #334155; }
-        .lang-btn { cursor: pointer; font-size: 22px; }
+        .lang-bar { display: flex; justify-content: flex-end; padding: 10px 15px; gap: 15px; background: #1e293b; border-bottom: 1px solid #334155; }
+        .lang-btn { cursor: pointer; font-size: 22px; transition: 0.2s; }
+        .lang-btn:hover { transform: scale(1.2); }
 
-        /* Dashboard Stats */
-        .header-main { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 15px; }
-        .stat-box { background: var(--card); border-radius: 12px; padding: 12px; text-align: center; border: 1.5px solid; }
-        .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
-        .stat-box span { font-weight: bold; font-size: 14px; }
+        /* Dashboard Header */
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 15px 0; font-size: 16px; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 12px; }
+        .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
+        .stat-box small { font-size: 8px; display: block; margin-bottom: 4px; font-weight: bold; }
+        .stat-box span { font-weight: bold; font-size: 13px; }
 
-        .main-summary { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 25px; text-align: center; }
-        .sub-row { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 15px; }
-        .sub-row div small { color: #94a3b8; font-size: 10px; display: block; }
-        .sub-row div b { font-size: 15px; color: white; }
+        /* Main Result Box */
+        .main-result { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 20px; text-align: center; }
+        .sub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 15px; }
+        .sub-stats div small { display: block; font-size: 9px; color: #94a3b8; }
+        .sub-stats div b { font-size: 14px; }
 
-        /* List Cards */
-        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .entry-card.expense { border-left: 5px solid var(--red); }
-        .entry-card.income { border-left: 5px solid var(--green); }
-        
-        .entry-info h4 { margin: 0; font-size: 16px; }
-        .entry-info small { color: #64748b; font-size: 12px; }
-        .entry-val { text-align: right; font-weight: bold; position: relative; }
-        
-        /* Action Menu */
-        .menu-dots { cursor: pointer; color: #444; padding: 5px; margin-left: 10px; }
-        .dropdown { position: absolute; right: 0; top: 25px; background: white; color: black; border-radius: 8px; display: none; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5); min-width: 100px; }
-        .dropdown div { padding: 10px; font-size: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        /* Entries */
+        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 5px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .entry-info h4 { margin: 0; font-size: 15px; }
+        .entry-info small { color: #64748b; font-size: 11px; }
+
+        /* Dropdown Menu */
+        .menu-dots { cursor: pointer; color: #444; padding: 5px; }
+        .dropdown { position: absolute; right: 10px; top: 40px; background: white; color: black; border-radius: 8px; display: none; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 120px; }
+        .dropdown div { padding: 10px 15px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .dropdown div:last-child { border-bottom: none; color: red; }
 
         /* Navigation */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { text-align: center; color: #64748b; font-size: 11px; cursor: pointer; }
         .nav-item.active { color: var(--yellow); }
 
-        input, select { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; margin-bottom: 10px; cursor: pointer; font-size: 16px; }
+        /* Form Elements */
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
+        .btn-action { width: 100%; padding: 16px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -60,52 +60,49 @@
 </div>
 
 <div id="app-content">
-    <!-- PAGE 1: DASHBOARD -->
+    <!-- DASHBOARD -->
     <div id="page-dash" class="page">
-        <div class="header-main">MOHAMED SALAD TRANSPORT</div>
-        
+        <div class="header-title" id="t-dash-head">MOHAMED SALAD TRANSPORT</div>
         <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="t-inc">INCOME</small><span id="val-income">0</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="t-exp">KHARASH</small><span id="val-expense">0</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="t-other">U-BAXAY</small><span id="val-other">0</span></div>
+            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="t-inc">INCOME</small><span id="total-income">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="t-exp">KHARASH</small><span id="total-expense">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="t-other">U-BAXAY (ME)</small><span id="total-other">0 kr</span></div>
         </div>
 
-        <div class="main-summary">
-            <div class="sub-row">
+        <div class="main-result">
+            <div class="sub-stats">
                 <div><small id="t-mva">MVA REFUND (1/5)</small><b id="res-mva">0 kr</b></div>
                 <div><small id="t-ferie">FERIEPENGER (10.2%)</small><b id="res-ferie">0 kr</b></div>
             </div>
-            <small style="color:var(--yellow); font-weight:bold;" id="t-net">NET RESULT</small>
-            <h1 id="res-net" style="color:var(--green); margin: 10px 0;">0 kr</h1>
+            <small id="t-net" style="color:var(--yellow); font-weight:bold;">NET RESULT</small>
+            <h1 id="res-net" style="color:var(--green); margin: 5px 0;">0 kr</h1>
         </div>
 
         <div id="entry-list"></div>
     </div>
 
-    <!-- PAGE 2: ADD -->
+    <!-- ADD FORM -->
     <div id="page-add" class="page" style="display:none; padding: 20px;">
         <h2 style="text-align:center; color:var(--yellow)" id="t-add-title">Add New Entry</h2>
-        <select id="type">
-            <option value="income-mva">Faktura (Income MVA)</option>
-            <option value="expense-fuel">Drivstoff (Fuel)</option>
-            <option value="expense-regn">Regnskap</option>
-            <option value="expense-other">Other Expense</option>
+        <select id="entry-type">
+            <option value="income">Income (Faktura/Sentral)</option>
+            <option value="expense">Expense (Fuel/Regnskap)</option>
+            <option value="other">Other (Bank/Anet)</option>
         </select>
-        <input type="text" id="desc" placeholder="Description (e.g. Drivstoff)">
-        <input type="number" id="amt" placeholder="Amount (kr)">
-        <button class="btn-save" style="background:var(--green); color:white" onclick="save('income')" id="btn-inc">SAVE INCOME</button>
-        <button class="btn-save" style="background:var(--red); color:white" onclick="save('expense')" id="btn-exp">SAVE EXPENSE</button>
+        <input type="text" id="entry-desc" placeholder="Description (e.g. Drivstoff)">
+        <input type="number" id="entry-amt" placeholder="Amount (kr)">
+        <button class="btn-action" style="background:var(--green); color:white" onclick="saveData('income')" id="btn-save-inc">SAVE INCOME</button>
+        <button class="btn-action" style="background:var(--red); color:white" onclick="saveData('expense')" id="btn-save-exp">SAVE EXPENSE</button>
     </div>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" onclick="showPage('dash')"><i class="fas fa-th-large"></i><br><span id="n-dash">Dash</span></div>
-    <div class="nav-item" onclick="showPage('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Add</span></div>
+    <div class="nav-item active" onclick="switchTab('dash')"><i class="fas fa-chart-pie"></i><br><span id="n-dash">Dash</span></div>
+    <div class="nav-item" onclick="switchTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Add</span></div>
     <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Exit</span></div>
 </div>
 
 <script>
-    // Config taada geli halkan
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -120,14 +117,14 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    const lang = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", other: "ANDRE", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NETTO RESULTAT", add: "Legg til", n_dash: "Dash", n_add: "Legg til", n_exit: "Logg ut" },
-        so: { inc: "INCOME", exp: "KHARASH", other: "U-BAXAY", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NET RESULT", add: "Geli Xog", n_dash: "Guudmar", n_add: "Ku Dar", n_exit: "Ka Bax" },
-        en: { inc: "INCOME", exp: "EXPENSES", other: "OTHER", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NET RESULT", add: "Add Entry", n_dash: "Dash", n_add: "Add", n_exit: "Exit" }
+    const dictionary = {
+        no: { dash: "GUUDMARKA", inc: "INNTEKT", exp: "UTGIFT", other: "ANDRE", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NETTO RESULTAT", add: "Legg til", n_dash: "Hjem", n_add: "Ny", n_exit: "Ut" },
+        so: { dash: "GUUDMARKA", inc: "DAKHLI", exp: "KHARASH", other: "U-BAXAY", mva: "MVA REFUND", ferie: "LACAGTA FASAXA", net: "NET RESULT", add: "Ku Dar", n_dash: "Dash", n_add: "Ku Dar", n_exit: "Ka Bax" },
+        en: { dash: "DASHBOARD", inc: "INCOME", exp: "EXPENSE", other: "OTHER", mva: "MVA REFUND", ferie: "FERIEPENGER", net: "NET RESULT", add: "Add Entry", n_dash: "Dash", n_add: "Add", n_exit: "Exit" }
     };
 
     function setLang(l) {
-        const d = lang[l];
+        const d = dictionary[l];
         document.getElementById('t-inc').innerText = d.inc;
         document.getElementById('t-exp').innerText = d.exp;
         document.getElementById('t-other').innerText = d.other;
@@ -139,69 +136,75 @@
         document.getElementById('n-exit').innerText = d.n_exit;
     }
 
-    function save(category) {
-        const t = document.getElementById('type').value;
-        const d = document.getElementById('desc').value;
-        const a = parseFloat(document.getElementById('amt').value);
-        if(!d || !a) return alert("Buuxi xogta!");
+    function saveData(cat) {
+        const desc = document.getElementById('entry-desc').value;
+        const amt = parseFloat(document.getElementById('entry-amt').value);
+        const type = document.getElementById('entry-type').value;
+        if(!desc || !amt) return alert("Fadlan buuxi!");
 
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
-            category: category, type: t, desc: d, amount: a, date: new Date().toISOString().split('T')[0]
+            desc, amt, type, category: cat, date: new Date().toLocaleDateString('no-NO')
         });
-        showPage('dash');
+        switchTab('dash');
     }
 
-    function load() {
+    function loadData() {
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
             const list = document.getElementById('entry-list');
             list.innerHTML = "";
-            let i=0, e=0, m=0;
-            
+            let i=0, e=0, o=0, m=0;
+
             snap.forEach(child => {
-                const val = child.val();
-                if(val.category === 'income') { i += val.amount; m += (val.amount * 12/112); }
-                else e += val.amount;
+                const v = child.val();
+                const id = child.key;
+                if(v.category==='income') { i+=v.amt; m+=(v.amt*12/112); }
+                else if(v.type==='other') { o+=v.amt; }
+                else { e+=v.amt; m+=(v.amt/5); }
 
                 list.innerHTML += `
-                <div class="entry-card ${val.category}">
+                <div class="entry-card" style="border-left-color:${v.category==='income'?'var(--green)':'var(--red)'}">
                     <div class="entry-info">
-                        <small>${val.type.toUpperCase()}</small>
-                        <h4>${val.desc}</h4>
-                        <small>${val.date}</small>
+                        <small>${v.type.toUpperCase()}</small>
+                        <h4>${v.desc}</h4>
+                        <small>${v.date}</small>
                     </div>
-                    <div class="entry-val">
-                        <span style="color:${val.category==='income'?'var(--green)':'var(--red)'}">${val.amount.toLocaleString()} kr</span>
-                        <i class="fas fa-ellipsis-v menu-dots" onclick="toggleMenu('${child.key}')"></i>
-                        <div id="menu-${child.key}" class="dropdown">
-                            <div onclick="alert('Detail: ${val.desc}')"><i class="fas fa-info-circle"></i> Detail</div>
-                            <div onclick="alert('Edit disabled for safety')"><i class="fas fa-edit"></i> Edit</div>
-                            <div onclick="remove('${child.key}')" style="color:red"><i class="fas fa-trash"></i> Delete</div>
+                    <div style="text-align:right">
+                        <span style="font-weight:bold; color:${v.category==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
+                        <i class="fas fa-ellipsis-v menu-dots" onclick="toggleMenu('${id}')"></i>
+                        <div id="drop-${id}" class="dropdown">
+                            <div onclick="alert('Details: ${v.desc}')">Detail</div>
+                            <div onclick="alert('Edit soon')">Edit</div>
+                            <div onclick="deleteE('${id}')">Delete</div>
                         </div>
                     </div>
                 </div>`;
             });
 
-            document.getElementById('val-income').innerText = i.toLocaleString() + " kr";
-            document.getElementById('val-expense').innerText = e.toLocaleString() + " kr";
+            document.getElementById('total-income').innerText = i.toLocaleString() + " kr";
+            document.getElementById('total-expense').innerText = e.toLocaleString() + " kr";
+            document.getElementById('total-other').innerText = o.toLocaleString() + " kr";
             document.getElementById('res-mva').innerText = Math.floor(m).toLocaleString() + " kr";
             document.getElementById('res-ferie').innerText = Math.floor(i * 0.102).toLocaleString() + " kr";
-            document.getElementById('res-net').innerText = (i - e).toLocaleString() + " kr";
+            document.getElementById('res-net').innerText = (i - e - o).toLocaleString() + " kr";
         });
     }
 
     function toggleMenu(id) {
-        const m = document.getElementById('menu-'+id);
-        m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        const d = document.getElementById('drop-'+id);
+        d.style.display = (d.style.display==='block') ? 'none' : 'block';
     }
 
-    function remove(id) { if(confirm("Ma tirtirtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
+    function deleteE(id) { if(confirm("Ma tirtirtaa?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
 
-    function showPage(p) {
-        document.querySelectorAll('.page').forEach(pg => pg.style.display = 'none');
-        document.getElementById('page-'+p).style.display = 'block';
+    function switchTab(t) {
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+        document.getElementById('page-'+t).style.display = 'block';
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     }
 
-    auth.onAuthStateChanged(user => { if(user) load(); else location.href="login.html"; }); // Hubi inuu login yahay
+    function logout() { auth.signOut().then(() => location.reload()); }
+
+    auth.onAuthStateChanged(user => { if(user) loadData(); });
 </script>
 </body>
 </html>
