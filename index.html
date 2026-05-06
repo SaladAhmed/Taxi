@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mohamed Salad Transport PRO - Final</title>
+    <title>Mohamed Salad Transport PRO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,72 +11,107 @@
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
+        
+        .lang-bar { display: flex; justify-content: flex-end; padding: 10px 15px; gap: 15px; background: #1e293b; border-bottom: 1px solid #334155; }
+        .lang-btn { cursor: pointer; font-size: 20px; }
+
+        .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: auto; }
         .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
         .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
         .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
+
         .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px 15px; padding: 20px; text-align: center; }
         .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 15px; }
+
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .menu-dots { cursor: pointer; color: #64748b; padding: 10px; }
         .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 150px; }
         .dropdown div { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .dropdown div:last-child { color: red; border: none; }
+
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; }
         .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--yellow); }
+
         .form-container { padding: 20px; }
-        input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 15px; font-size: 16px; }
-        .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
+        
+        .forget-btn { background: none; border: none; color: var(--yellow); cursor: pointer; font-size: 13px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div id="page-dash" class="page">
-    <div class="header-title">MOHAMED SALAD TRANSPORT</div>
-    <div class="stats-grid">
-        <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INCOME</small><span id="total-income">0 kr</span></div>
-        <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>EXPENSES</small><span id="total-expense">0 kr</span></div>
-        <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>NETTO</small><span id="total-netto">0 kr</span></div>
+<div id="auth-page" class="auth-container">
+    <h2 id="auth-title">LOGG INN</h2>
+    <div id="reg-fields" style="display:none">
+        <input type="text" id="fname" placeholder="Fornavn (First Name)">
+        <input type="text" id="lname" placeholder="Etternavn (Last Name)">
     </div>
-    <div class="summary-card">
-        <div class="summary-row">
-            <div><small>MVA (25%)</small><b id="res-mva">0 kr</b></div>
-            <div><small>FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
+    <input type="email" id="email" placeholder="E-post">
+    <input type="password" id="pass" placeholder="Passord">
+    <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()" id="auth-btn">LOGG INN</button>
+    <button class="forget-btn" onclick="toggleAuth()" id="toggle-text">Har du ikke konto? Registrer deg</button>
+    <br>
+    <button class="forget-btn" onclick="resetPass()">Glemt passord? (Forget Password)</button>
+</div>
+
+<div id="main-app" style="display:none">
+    <div class="lang-bar">
+        <span class="lang-btn" onclick="updateLang('no')">🇳🇴</span>
+        <span class="lang-btn" onclick="updateLang('so')">🇸🇴</span>
+        <span class="lang-btn" onclick="updateLang('en')">🇺🇸</span>
+    </div>
+
+    <div id="page-dash" class="page">
+        <div class="header-title">MOHAMED SALAD TRANSPORT</div>
+        <div class="stats-grid">
+            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INCOME</small><span id="total-income">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">EXPENSES</small><span id="total-expense">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
-        <small style="color:var(--yellow); font-weight:bold;">TOTAL RESULTAT</small>
-        <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
+        <div class="summary-card">
+            <div class="summary-row">
+                <div><small>MVA (25%)</small><b id="res-mva">0 kr</b></div>
+                <div><small id="l-fp">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
+            </div>
+            <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULTAT</small>
+            <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
+        </div>
+        <div id="entries-list"></div>
     </div>
-    <div id="entries-list"></div>
-</div>
 
-<div id="page-add" class="page" style="display:none;">
-    <div class="header-title">GELI XOG CUSUB</div>
-    <div class="form-container">
-        <select id="entry-category">
-            <optgroup label="CAGAAR (INCOME)">
-                <option value="inc-mva">Sentral Avgjifter (MVA 25%)</option>
-            </optgroup>
-            <optgroup label="GADUUD (EXPENSES)">
-                <option value="exp-fuel">Drivstoff (MVA 25%)</option>
-                <option value="exp-bomp">Bompenger (MVA 25%)</option>
-                <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
-                <option value="exp-anet-no">Anet uden MVA</option>
-                <option value="exp-bank">Bank Transaction (No MVA)</option>
-                <option value="exp-lonn">Lønn + Feriepenger (No MVA)</option>
-                <option value="exp-own">Own Withdrawal (No MVA)</option>
-            </optgroup>
-        </select>
-        <input type="text" id="entry-desc" placeholder="Magaca (Tusaale: Ahmed Lønn)">
-        <input type="number" id="entry-amt" placeholder="Lacagta (kr)">
-        <button class="btn-save" style="background:var(--green); color:white" onclick="saveData('income')">SAVE INCOME</button>
-        <button class="btn-save" style="background:var(--red); color:white" onclick="saveData('expense')">SAVE EXPENSE</button>
+    <div id="page-add" class="page" style="display:none;">
+        <div class="header-title" id="l-add">GELI XOG CUSUB</div>
+        <div class="form-container">
+            <select id="entry-category">
+                <optgroup label="CAGAAR (INCOME)">
+                    <option value="inc-mva">Sentral Avgjifter (MVA 25%)</option>
+                </optgroup>
+                <optgroup label="GADUUD (EXPENSES)">
+                    <option value="exp-fuel">Drivstoff (MVA 25%)</option>
+                    <option value="exp-bomp">Bompenger (MVA 25%)</option>
+                    <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
+                    <option value="exp-anet-no">Anet uden MVA</option>
+                    <option value="exp-bank">Bank Transaction (No MVA)</option>
+                    <option value="exp-lonn">Lønn + Feriepenger (No MVA)</option>
+                    <option value="exp-own">Own Withdrawal (No MVA)</option>
+                </optgroup>
+            </select>
+            <input type="text" id="entry-desc" placeholder="Navn / Beskrivelse">
+            <input type="number" id="entry-amt" placeholder="Beløp (kr)">
+            <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">SAVE INCOME</button>
+            <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">SAVE EXPENSE</button>
+        </div>
     </div>
-</div>
 
-<div class="nav-bar">
-    <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list"></i><br>Guudmar</div>
-    <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus"></i><br>Geli Xog</div>
-    <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br>Exit</div>
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list"></i><br id="n-dash">Guudmar</div>
+        <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br id="n-add">Geli Xog</div>
+        <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br id="n-exit">Exit</div>
+    </div>
 </div>
 
 <script>
@@ -93,11 +128,41 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
+    let isLogin = true;
+
+    function toggleAuth() {
+        isLogin = !isLogin;
+        document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block';
+        document.getElementById('auth-title').innerText = isLogin ? 'LOGG INN' : 'REGISTRER DEG';
+        document.getElementById('auth-btn').innerText = isLogin ? 'LOGG INN' : 'REGISTRER';
+        document.getElementById('toggle-text').innerText = isLogin ? 'Har du ikke konto? Registrer deg' : 'Har du konto? Logg inn';
+    }
+
+    function handleAuth() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+        if(isLogin) {
+            auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+        } else {
+            const f = document.getElementById('fname').value;
+            const l = document.getElementById('lname').value;
+            auth.createUserWithEmailAndPassword(email, pass).then(u => {
+                db.ref('users/'+u.user.uid+'/profile').set({fname: f, lname: l});
+            }).catch(e => alert(e.message));
+        }
+    }
+
+    function resetPass() {
+        const email = document.getElementById('email').value;
+        if(!email) return alert("Skriv e-post først!");
+        auth.sendPasswordResetEmail(email).then(() => alert("Reset link sent!")).catch(e => alert(e.message));
+    }
+
     function saveData(mainCat) {
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const subCat = document.getElementById('entry-category').value;
-        if(!desc || !amt) return alert("Fadlan buuxi!");
+        if(!desc || !amt) return alert("Fyll ut alt!");
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
             desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO')
         });
@@ -132,8 +197,9 @@
                         <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                         <i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${id}')"></i>
                         <div id="m-${id}" class="dropdown">
-                            <div onclick="showDetail('${v.desc}', '${v.amt}', '${v.subCat}')">Detail</div>
-                            <div onclick="del('${id}')" style="color:red">Delete</div>
+                            <div onclick="alert('Navn: ${v.desc}\\nBeløp: ${v.amt}')">Detail</div>
+                            <div onclick="editEntry('${id}', '${v.desc}', '${v.amt}')">Change / Edit</div>
+                            <div onclick="del('${id}')">Delete</div>
                         </div>
                     </div>
                 </div>`;
@@ -147,18 +213,54 @@
         });
     }
 
-    function showDetail(d, a, s) { alert(`MAGACA: ${d}\nQIIMAHA: ${a} kr\nNOOCA: ${s}`); }
+    function editEntry(id, oldDesc, oldAmt) {
+        const newDesc = prompt("Nytt navn:", oldDesc);
+        const newAmt = prompt("Nytt beløp:", oldAmt);
+        if(newDesc && newAmt) {
+            db.ref('users/'+auth.currentUser.uid+'/entries/'+id).update({desc: newDesc, amt: parseFloat(newAmt)});
+        }
+    }
+
     function toggleM(id) {
         const m = document.getElementById('m-'+id);
         m.style.display = (m.style.display==='block') ? 'none' : 'block';
     }
-    function del(id) { if(confirm("Tirtir?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
+
+    function del(id) { if(confirm("Slette?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
+    
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
     }
+
     function logout() { auth.signOut().then(() => location.reload()); }
-    auth.onAuthStateChanged(user => { if(user) loadData(); });
+
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            document.getElementById('auth-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('auth-page').style.display = 'block';
+            document.getElementById('main-app').style.display = 'none';
+        }
+    });
+
+    const dict = {
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", fp: "FERIEPENGER", res: "TOTAL RESULTAT", add: "GELI XOG CUSUB", d: "Guudmar", a: "Geli Xog", e: "Logg ut" },
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", fp: "LACAG FASAX", res: "NATIIJADA GUUD", add: "GELI XOG CUSUB", d: "Guudmar", a: "Geli Xog", e: "Ka Bax" },
+        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", fp: "FERIEPENGER", res: "TOTAL RESULT", add: "ADD NEW DATA", d: "Dashboard", a: "Add Data", e: "Logout" }
+    };
+
+    function updateLang(l) {
+        const d = dict[l];
+        document.getElementById('l-inc').innerText = d.inc;
+        document.getElementById('l-exp').innerText = d.exp;
+        document.getElementById('l-net').innerText = d.net;
+        document.getElementById('l-fp').innerText = d.fp;
+        document.getElementById('l-res').innerText = d.res;
+        document.getElementById('l-add').innerText = d.add;
+    }
 </script>
 </body>
 </html>
