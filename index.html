@@ -22,14 +22,18 @@
         .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
         .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
 
+        /* MVA Box sidii sawirka */
+        .mva-card { background: #1e293b; border: 2px solid #555; border-radius: 15px; margin: 10px 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+
         .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px 15px; padding: 20px; text-align: center; }
-        .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 15px; }
+        
+        .view-toggle { text-align: right; padding: 0 20px; margin-bottom: 10px; }
+        .view-btn { background: var(--blue); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; cursor: pointer; }
 
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .menu-dots { cursor: pointer; color: #64748b; padding: 10px; }
         .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 150px; }
         .dropdown div { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .dropdown div:last-child { color: red; border: none; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; }
         .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
@@ -38,8 +42,6 @@
         .form-container { padding: 20px; }
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
-        
-        .forget-btn { background: none; border: none; color: var(--yellow); cursor: pointer; font-size: 13px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -47,15 +49,13 @@
 <div id="auth-page" class="auth-container">
     <h2 id="auth-title">LOGG INN</h2>
     <div id="reg-fields" style="display:none">
-        <input type="text" id="fname" placeholder="Fornavn (First Name)">
-        <input type="text" id="lname" placeholder="Etternavn (Last Name)">
+        <input type="text" id="fname" placeholder="Fornavn">
+        <input type="text" id="lname" placeholder="Etternavn">
     </div>
     <input type="email" id="email" placeholder="E-post">
     <input type="password" id="pass" placeholder="Passord">
     <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()" id="auth-btn">LOGG INN</button>
-    <button class="forget-btn" onclick="toggleAuth()" id="toggle-text">Har du ikke konto? Registrer deg</button>
-    <br>
-    <button class="forget-btn" onclick="resetPass()">Glemt passord? (Forget Password)</button>
+    <button class="forget-btn" onclick="toggleAuth()" id="toggle-text" style="background:none; border:none; color:var(--yellow); cursor:pointer;">Registrer deg</button>
 </div>
 
 <div id="main-app" style="display:none">
@@ -67,19 +67,27 @@
 
     <div id="page-dash" class="page">
         <div class="header-title">MOHAMED SALAD TRANSPORT</div>
+        
         <div class="stats-grid">
             <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INCOME</small><span id="total-income">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">EXPENSES</small><span id="total-expense">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
+
+        <div class="mva-card">
+            <div><small style="color:#888; display:block">MVA (25%)</small><b id="res-mva" style="font-size:18px">0 kr</b></div>
+            <div style="text-align:right"><small style="color:#888; display:block">FERIEPENGER</small><b id="res-fp">0 kr</b></div>
+        </div>
+
         <div class="summary-card">
-            <div class="summary-row">
-                <div><small>MVA (25%)</small><b id="res-mva">0 kr</b></div>
-                <div><small id="l-fp">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
-            </div>
-            <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULTAT</small>
+            <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULT</small>
             <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
         </div>
+
+        <div class="view-toggle">
+            <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Mode: Individual</button>
+        </div>
+
         <div id="entries-list"></div>
     </div>
 
@@ -100,8 +108,8 @@
                     <option value="exp-own">Own Withdrawal (No MVA)</option>
                 </optgroup>
             </select>
-            <input type="text" id="entry-desc" placeholder="Navn / Beskrivelse">
-            <input type="number" id="entry-amt" placeholder="Beløp (kr)">
+            <input type="text" id="entry-desc" placeholder="Magaca (Tusaale: Salad)">
+            <input type="number" id="entry-amt" placeholder="Lacagta (kr)">
             <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">SAVE INCOME</button>
             <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">SAVE EXPENSE</button>
         </div>
@@ -128,38 +136,33 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let isLogin = true;
+    let currentView = 'individual'; // 'individual' ama 'total'
+    let rawData = [];
+
+    function toggleView() {
+        currentView = (currentView === 'individual') ? 'total' : 'individual';
+        document.getElementById('toggle-view-btn').innerText = "Mode: " + currentView.charAt(0).toUpperCase() + currentView.slice(1);
+        renderList();
+    }
 
     function toggleAuth() {
-        isLogin = !isLogin;
-        document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block';
-        document.getElementById('auth-title').innerText = isLogin ? 'LOGG INN' : 'REGISTRER DEG';
-        document.getElementById('auth-btn').innerText = isLogin ? 'LOGG INN' : 'REGISTRER';
-        document.getElementById('toggle-text').innerText = isLogin ? 'Har du ikke konto? Registrer deg' : 'Har du konto? Logg inn';
+        const rf = document.getElementById('reg-fields');
+        rf.style.display = (rf.style.display === 'none') ? 'block' : 'none';
+        document.getElementById('auth-title').innerText = (rf.style.display === 'none') ? 'LOGG INN' : 'REGISTRER DEG';
     }
 
     function handleAuth() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('pass').value;
-        if(isLogin) {
+        if(document.getElementById('reg-fields').style.display === 'none') {
             auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         } else {
-            const f = document.getElementById('fname').value;
-            const l = document.getElementById('lname').value;
-            auth.createUserWithEmailAndPassword(email, pass).then(u => {
-                db.ref('users/'+u.user.uid+'/profile').set({fname: f, lname: l});
-            }).catch(e => alert(e.message));
+            auth.createUserWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         }
     }
 
-    function resetPass() {
-        const email = document.getElementById('email').value;
-        if(!email) return alert("Skriv e-post først!");
-        auth.sendPasswordResetEmail(email).then(() => alert("Reset link sent!")).catch(e => alert(e.message));
-    }
-
     function saveData(mainCat) {
-        const desc = document.getElementById('entry-desc').value;
+        const desc = document.getElementById('entry-desc').value.trim();
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const subCat = document.getElementById('entry-category').value;
         if(!desc || !amt) return alert("Fyll ut alt!");
@@ -173,12 +176,13 @@
 
     function loadData() {
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
-            const list = document.getElementById('entries-list');
-            list.innerHTML = "";
+            rawData = [];
             let ti=0, te=0, tmva=0;
             snap.forEach(child => {
                 const v = child.val();
-                const id = child.key;
+                v.id = child.key;
+                rawData.push(v);
+                
                 if(v.mainCat === 'income') {
                     ti += v.amt;
                     tmva += (v.amt * 25 / 125);
@@ -186,23 +190,6 @@
                     te += v.amt;
                     if(['exp-fuel', 'exp-bomp', 'exp-fixed'].includes(v.subCat)) tmva += (v.amt * 25 / 125);
                 }
-                list.innerHTML += `
-                <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
-                    <div class="entry-info">
-                        <small>${v.subCat.toUpperCase()}</small>
-                        <h4>${v.desc}</h4>
-                        <small>${v.date}</small>
-                    </div>
-                    <div style="text-align:right">
-                        <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
-                        <i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${id}')"></i>
-                        <div id="m-${id}" class="dropdown">
-                            <div onclick="alert('Navn: ${v.desc}\\nBeløp: ${v.amt}')">Detail</div>
-                            <div onclick="editEntry('${id}', '${v.desc}', '${v.amt}')">Change / Edit</div>
-                            <div onclick="del('${id}')">Delete</div>
-                        </div>
-                    </div>
-                </div>`;
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
             document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
@@ -210,15 +197,52 @@
             document.getElementById('res-mva').innerText = Math.floor(tmva).toLocaleString() + " kr";
             document.getElementById('res-fp').innerText = Math.floor(ti * 0.102).toLocaleString() + " kr";
             document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
+            renderList();
         });
     }
 
-    function editEntry(id, oldDesc, oldAmt) {
-        const newDesc = prompt("Nytt navn:", oldDesc);
-        const newAmt = prompt("Nytt beløp:", oldAmt);
-        if(newDesc && newAmt) {
-            db.ref('users/'+auth.currentUser.uid+'/entries/'+id).update({desc: newDesc, amt: parseFloat(newAmt)});
+    function renderList() {
+        const list = document.getElementById('entries-list');
+        list.innerHTML = "";
+
+        if(currentView === 'individual') {
+            rawData.forEach(v => {
+                list.innerHTML += createCard(v.subCat, v.desc, v.amt, v.mainCat, v.id, v.date);
+            });
+        } else {
+            // Group by Name (Description)
+            const grouped = {};
+            rawData.forEach(v => {
+                const key = v.desc.toLowerCase();
+                if(!grouped[key]) {
+                    grouped[key] = { ...v, amt: 0, count: 0 };
+                }
+                grouped[key].amt += v.amt;
+                grouped[key].count++;
+            });
+            Object.values(grouped).forEach(v => {
+                list.innerHTML += createCard("TOTAL", v.desc + ` (${v.count} entries)`, v.amt, v.mainCat, null, "Summary");
+            });
         }
+    }
+
+    function createCard(sub, desc, amt, cat, id, date) {
+        return `
+        <div class="entry-card" style="border-left-color:${cat==='income'?'var(--green)':'var(--red)'}">
+            <div>
+                <small style="color:#888">${sub.toUpperCase()}</small>
+                <h4>${desc}</h4>
+                <small>${date}</small>
+            </div>
+            <div style="text-align:right">
+                <span style="font-weight:bold; color:${cat==='income'?'var(--green)':'var(--red)'}">${amt.toLocaleString()} kr</span>
+                ${id ? `<i class="fas fa-ellipsis-v menu-dots" onclick="toggleM('${id}')"></i>` : ''}
+                <div id="m-${id}" class="dropdown">
+                    <div onclick="editEntry('${id}', '${desc}', '${amt}')">Edit</div>
+                    <div onclick="del('${id}')" style="color:red">Delete</div>
+                </div>
+            </div>
+        </div>`;
     }
 
     function toggleM(id) {
@@ -226,13 +250,18 @@
         m.style.display = (m.style.display==='block') ? 'none' : 'block';
     }
 
+    function editEntry(id, d, a) {
+        const nD = prompt("New Name:", d);
+        const nA = prompt("New Amount:", a);
+        if(nD && nA) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).update({desc: nD, amt: parseFloat(nA)});
+    }
+
     function del(id) { if(confirm("Slette?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
-    
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     }
-
     function logout() { auth.signOut().then(() => location.reload()); }
 
     auth.onAuthStateChanged(user => {
@@ -247,9 +276,9 @@
     });
 
     const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", fp: "FERIEPENGER", res: "TOTAL RESULTAT", add: "GELI XOG CUSUB", d: "Guudmar", a: "Geli Xog", e: "Logg ut" },
-        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", fp: "LACAG FASAX", res: "NATIIJADA GUUD", add: "GELI XOG CUSUB", d: "Guudmar", a: "Geli Xog", e: "Ka Bax" },
-        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", fp: "FERIEPENGER", res: "TOTAL RESULT", add: "ADD NEW DATA", d: "Dashboard", a: "Add Data", e: "Logout" }
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "GELI XOG CUSUB" },
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA GUUD", add: "GELI XOG CUSUB" },
+        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA" }
     };
 
     function updateLang(l) {
@@ -257,7 +286,6 @@
         document.getElementById('l-inc').innerText = d.inc;
         document.getElementById('l-exp').innerText = d.exp;
         document.getElementById('l-net').innerText = d.net;
-        document.getElementById('l-fp').innerText = d.fp;
         document.getElementById('l-res').innerText = d.res;
         document.getElementById('l-add').innerText = d.add;
     }
