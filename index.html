@@ -22,7 +22,6 @@
         .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
         .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; }
         
-        /* Password wrapper */
         .pass-wrapper { position: relative; width: 100%; }
         .pass-wrapper i { position: absolute; right: 15px; top: 18px; cursor: pointer; color: #64748b; }
         .rtl .pass-wrapper i { left: 15px; right: auto; }
@@ -109,17 +108,16 @@
         <select id="entry-category">
             <optgroup label="INCOME" id="opt-inc">
                 <option value="inc-mva">Sentral Avgjifter (MVA 25%)</option>
-                <option value="inc-faktura">Faktura Income (MVA 25%)</option>
+                <option value="inc-faktura-no">Faktura Income (No MVA)</option>
             </optgroup>
             <optgroup label="EXPENSES" id="opt-exp">
                 <option value="exp-fuel">Drivstoff (MVA 25%)</option>
-                <option value="exp-bomp">Bompenger (MVA 25%)</option>
+                <option value="exp-regnskap">Regnskap (MVA 25%)</option>
                 <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
                 <option value="exp-wash">Vaske Biler (MVA 25%)</option>
-                <option value="exp-regnskap">Regnskap (MVA 25%)</option>
+                <option value="exp-bomp-no">Bompenger (No MVA)</option>
                 <option value="exp-skatt-no">Skatt (No MVA)</option>
                 <option value="exp-arb-no">Arbeider avgifter (No MVA)</option>
-                <option value="exp-bomp-no">Bompenger (No MVA)</option>
                 <option value="exp-tel-no">Telefonen (No MVA)</option>
                 <option value="exp-net-no">Internet (No MVA)</option>
                 <option value="exp-anet-no">Anet uden MVA</option>
@@ -233,11 +231,12 @@
                 const v = child.val(); v.id = child.key; rawData.push(v);
                 if(v.mainCat === 'income') {
                     ti += v.amt;
-                    tmva += (v.amt * 0.20); 
+                    // Kaliya Sentral Avgjifter ayaa MVA leh
+                    if(v.subCat === 'inc-mva') { tmva += (v.amt * 0.20); }
                 } else {
                     te += v.amt;
-                    // MVA 25% logic (amt * 0.20 calculates the MVA part of total)
-                    if(['exp-fuel', 'exp-bomp', 'exp-fixed', 'exp-wash', 'exp-regnskap', 'inc-mva', 'inc-faktura'].includes(v.subCat)) {
+                    // Kaliya kuwan ayaa MVA laga goynayaa
+                    if(['exp-fuel', 'exp-fixed', 'exp-wash', 'exp-regnskap'].includes(v.subCat)) {
                         tmva -= (v.amt * 0.20); 
                     }
                     if(v.subCat === 'exp-lonn') { tfp += (v.amt * 0.102); }
