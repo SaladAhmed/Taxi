@@ -115,12 +115,14 @@
                 <option value="exp-regnskap">Regnskap (MVA 25%)</option>
                 <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
                 <option value="exp-wash">Vaske Biler (MVA 25%)</option>
+                <option value="exp-anet-mva">Anet (MVA 25%)</option>
                 <option value="exp-bomp-no">Bompenger (No MVA)</option>
+                <option value="exp-forsikring-no">Forsikring (No MVA)</option>
                 <option value="exp-skatt-no">Skatt (No MVA)</option>
                 <option value="exp-arb-no">Arbeider avgifter (No MVA)</option>
                 <option value="exp-tel-no">Telefonen (No MVA)</option>
                 <option value="exp-net-no">Internet (No MVA)</option>
-                <option value="exp-anet-no">Anet uden MVA</option>
+                <option value="exp-anet-no">Anet (No MVA)</option>
                 <option value="exp-bank">Bank Transaction (No MVA)</option>
                 <option value="exp-lonn">Lønn (Taxable - 10.2% FP)</option>
                 <option value="exp-own">Own Withdrawal (No MVA)</option>
@@ -231,12 +233,10 @@
                 const v = child.val(); v.id = child.key; rawData.push(v);
                 if(v.mainCat === 'income') {
                     ti += v.amt;
-                    // Kaliya Sentral Avgjifter ayaa MVA leh
                     if(v.subCat === 'inc-mva') { tmva += (v.amt * 0.20); }
                 } else {
                     te += v.amt;
-                    // Kaliya kuwan ayaa MVA laga goynayaa
-                    if(['exp-fuel', 'exp-fixed', 'exp-wash', 'exp-regnskap'].includes(v.subCat)) {
+                    if(['exp-fuel', 'exp-fixed', 'exp-wash', 'exp-regnskap', 'exp-anet-mva'].includes(v.subCat)) {
                         tmva -= (v.amt * 0.20); 
                     }
                     if(v.subCat === 'exp-lonn') { tfp += (v.amt * 0.102); }
