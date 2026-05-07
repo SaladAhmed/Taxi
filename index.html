@@ -50,8 +50,11 @@
         .dropdown label { margin: 0; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
-        .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
+        .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; position: relative; }
         .nav-item.active { color: var(--yellow); }
+        
+        /* New Camera Icon Style for Navigation */
+        .nav-scan-icon { font-size: 10px; position: absolute; top: 5px; right: 25%; color: var(--yellow); opacity: 0.8; }
 
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
@@ -117,8 +120,6 @@
             <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Modus: Individuell</button>
         </div>
         
-        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
-        
         <div id="entries-list" class="entry-list-container"></div>
     </div>
 
@@ -154,8 +155,16 @@
         <button class="btn-save" style="background:var(--red)" id="l-btn-exp" onclick="saveData('expense')">LAGRE UTGIFT</button>
     </div>
 
+    <input type="file" id="camera-input-nav" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
+
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list"></i><br><span id="n-dash">Oversikt</span></div>
+        <div class="nav-item active" onclick="showTab('dash')">
+            <label for="camera-input-nav" style="cursor:pointer; display:block;">
+                <i class="fas fa-camera nav-scan-icon"></i>
+                <i class="fas fa-list"></i><br>
+                <span id="n-dash">Guudmar</span>
+            </label>
+        </div>
         <div class="nav-item" onclick="onclickAddTab()"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
         <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logg ut</span></div>
     </div>
@@ -307,8 +316,6 @@
             acc[key].amt += item.amt; return acc;
         }, {})) : rawData;
 
-        const scanTxt = { no: "Skann faktura", so: "Sawir faktura", en: "Scan Invoice", ar: "مسح الفاتورة" };
-
         dataToDisplay.forEach(v => {
             list.innerHTML += `
             <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
@@ -317,7 +324,6 @@
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
                     <div id="m-${v.id}" class="dropdown">
-                        <label for="camera-input"><i class="fas fa-camera"></i> ${scanTxt[currentLang]}</label>
                         <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})"><i class="fas fa-edit"></i> Rediger</div>
                         <div style="color:red" onclick="delEntry('${v.id}')"><i class="fas fa-trash"></i> Slett</div>
                         <div onclick="toggleM('${v.id}')" style="border-top:1px solid #eee; font-weight:bold">Lukk</div>
