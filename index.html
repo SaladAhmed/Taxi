@@ -45,8 +45,9 @@
         .entry-list-container { max-width: 800px; margin: auto; }
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .menu-dots { cursor: pointer; color: #64748b; padding: 10px; font-size: 20px; }
-        .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 120px; }
-        .dropdown div { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 140px; }
+        .dropdown div, .dropdown label { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; display: block; }
+        .dropdown label { margin: 0; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
         .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
@@ -56,10 +57,7 @@
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
         .forget-btn { background: none; border: none; color: var(--yellow); cursor: pointer; font-size: 13px; margin-top: 10px; text-decoration: underline; }
 
-        /* Scanner Button Style (Moved to Dashboard) */
-        .scan-container { text-align: center; margin: 15px auto; max-width: 800px; padding: 0 15px; }
-        .scan-btn { background: var(--yellow); color: #000; padding: 15px; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        #scan-loading { display: none; font-size: 12px; color: var(--yellow); margin-top: 5px; }
+        #scan-loading { display: none; font-size: 14px; color: var(--yellow); text-align: center; padding: 10px; font-weight: bold; }
     </style>
 </head>
 <body id="body-tag">
@@ -113,17 +111,14 @@
             <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
         </div>
         
-        <div class="scan-container">
-            <label for="camera-input" class="scan-btn">
-                <i class="fas fa-camera"></i>
-            </label>
-            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
-            <div id="scan-loading">Processing AI... Sabir...</div>
-        </div>
+        <div id="scan-loading"><i class="fas fa-spinner fa-spin"></i> Processing AI... Sabir...</div>
 
         <div class="view-toggle">
             <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Modus: Individuell</button>
         </div>
+        
+        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
+        
         <div id="entries-list" class="entry-list-container"></div>
     </div>
 
@@ -198,18 +193,11 @@
         }
     }
 
-    function handleEnter(e) {
-        if (e.key === "Enter") {
-            handleAuth();
-        }
-    }
+    function handleEnter(e) { if (e.key === "Enter") handleAuth(); }
 
     function resetPass() {
         const email = document.getElementById('email').value;
-        if (!email) {
-            alert("Vennligst skriv inn e-post først.");
-            return;
-        }
+        if (!email) { alert("Vennligst skriv inn e-post først."); return; }
         auth.sendPasswordResetEmail(email).then(() => {
             alert("Tilbakestillingslenke er sendt til: " + email);
         }).catch(e => alert(e.message));
@@ -232,19 +220,14 @@
         const pass = document.getElementById('pass').value;
         const fname = document.getElementById('fname').value.trim();
         const lname = document.getElementById('lname').value.trim();
-
         if(document.getElementById('reg-fields').style.display === 'none') {
             auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         } else {
             if(!fname || !lname) return alert("Vennligst fyll ut navnet ditt!");
             auth.createUserWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
-                    const user = userCredential.user;
-                    db.ref('users/' + user.uid + '/profile').set({
-                        fullName: fname.toUpperCase() + " " + lname.toUpperCase()
-                    });
-                })
-                .catch(e => alert(e.message));
+                    db.ref('users/' + userCredential.user.uid + '/profile').set({ fullName: fname.toUpperCase() + " " + lname.toUpperCase() });
+                }).catch(e => alert(e.message));
         }
     }
 
@@ -252,31 +235,20 @@
         const currentName = document.getElementById('user-display-name').innerText;
         const newName = prompt("Skriv nytt navn:", currentName);
         if (newName && newName.trim() !== "" && newName !== currentName) {
-            db.ref('users/' + auth.currentUser.uid + '/profile').update({
-                fullName: newName.trim().toUpperCase()
-            }).then(() => {
-                alert("Navnet er endret!");
-            }).catch(e => alert("Error: " + e.message));
+            db.ref('users/' + auth.currentUser.uid + '/profile').update({ fullName: newName.trim().toUpperCase() });
         }
     }
 
-    // --- SCANNER LOGIC ---
     async function scanInvoice(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const loading = document.getElementById('scan-loading');
         loading.style.display = 'block';
-
         try {
-            const result = await Tesseract.recognize(file, 'eng+nor', {
-                logger: m => console.log(m)
-            });
-            
+            const result = await Tesseract.recognize(file, 'eng+nor');
             const text = result.data.text;
             const lines = text.split('\n');
             let foundAmt = 0;
-
             lines.forEach(line => {
                 const numbers = line.replace(',', '.').match(/\d+\.\d{2}/g) || line.match(/\d+/g);
                 if (numbers) {
@@ -284,21 +256,11 @@
                     if (val > foundAmt) foundAmt = val;
                 }
             });
-
-            if (foundAmt > 0) {
-                showTab('add');
-                document.getElementById('entry-amt').value = foundAmt;
-                document.getElementById('entry-desc').value = "Scanned Receipt";
-            } else {
-                alert("Could not read amount clearly. Please enter manually.");
-                showTab('add');
-            }
-
-        } catch (error) {
-            alert("Error scanning image.");
-        } finally {
-            loading.style.display = 'none';
-        }
+            showTab('add');
+            document.getElementById('entry-amt').value = foundAmt > 0 ? foundAmt : "";
+            document.getElementById('entry-desc').value = "Scanned Receipt";
+        } catch (error) { alert("Error scanning."); }
+        finally { loading.style.display = 'none'; event.target.value = ''; }
     }
 
     function saveData(mainCat) {
@@ -306,43 +268,24 @@
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const subCat = document.getElementById('entry-category').value;
         if(!desc || !amt) return alert("Fyll ut alle felt!");
-        db.ref('users/' + auth.currentUser.uid + '/entries').push({
-            desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO')
-        });
-        document.getElementById('entry-desc').value = "";
-        document.getElementById('entry-amt').value = "";
+        db.ref('users/' + auth.currentUser.uid + '/entries').push({ desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO') });
+        document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
     }
 
     function loadData() {
         db.ref('users/' + auth.currentUser.uid + '/profile/fullName').on('value', snap => {
-            let name = snap.val();
-            if (!name) {
-                const askName = prompt("Vennligst skriv inn navnet ditt (Fornavn og Etternavn):");
-                if (askName) {
-                    name = askName.toUpperCase();
-                    db.ref('users/' + auth.currentUser.uid + '/profile').set({ fullName: name });
-                } else {
-                    name = "USER TRANSPORT";
-                }
-            }
-            document.getElementById('user-display-name').innerText = name;
+            document.getElementById('user-display-name').innerText = snap.val() || "USER TRANSPORT";
         });
-
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
-            rawData = [];
-            let ti=0, te=0, tmva=0, tfp=0;
+            rawData = []; let ti=0, te=0, tmva=0, tfp=0;
             snap.forEach(child => {
                 const v = child.val(); v.id = child.key; rawData.push(v);
                 if(v.mainCat === 'income') {
-                    ti += v.amt;
-                    if(v.subCat === 'inc-mva') { tmva += (v.amt * 0.20); }
+                    ti += v.amt; if(v.subCat === 'inc-mva') tmva += (v.amt * 0.20);
                 } else {
-                    te += v.amt;
-                    if(['exp-fuel', 'exp-fixed', 'exp-wash', 'exp-regnskap', 'exp-anet-mva'].includes(v.subCat)) {
-                        tmva -= (v.amt * 0.20); 
-                    }
-                    if(v.subCat === 'exp-lonn') { tfp += (v.amt * 0.102); }
+                    te += v.amt; if(['exp-fuel', 'exp-fixed', 'exp-wash', 'exp-regnskap', 'exp-anet-mva'].includes(v.subCat)) tmva -= (v.amt * 0.20);
+                    if(v.subCat === 'exp-lonn') tfp += (v.amt * 0.102);
                 }
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
@@ -358,34 +301,25 @@
     function renderList() {
         const list = document.getElementById('entries-list');
         list.innerHTML = "";
-        
-        let dataToDisplay = [];
-        if (currentMode === 'total') {
-            const totals = {};
-            rawData.forEach(item => {
-                const key = item.desc.toLowerCase();
-                if (!totals[key]) {
-                    totals[key] = { ...item, amt: 0 };
-                }
-                totals[key].amt += item.amt;
-            });
-            dataToDisplay = Object.values(totals);
-        } else {
-            dataToDisplay = rawData;
-        }
+        let dataToDisplay = currentMode === 'total' ? Object.values(rawData.reduce((acc, item) => {
+            const key = item.desc.toLowerCase();
+            if (!acc[key]) acc[key] = { ...item, amt: 0 };
+            acc[key].amt += item.amt; return acc;
+        }, {})) : rawData;
 
-        const totalTxt = { no: "Total sum", so: "Wadarta Guud", en: "Grand Total", ar: "الإجمالي الكلي" };
+        const scanTxt = { no: "Skann faktura", so: "Sawir faktura", en: "Scan Invoice", ar: "مسح الفاتورة" };
 
         dataToDisplay.forEach(v => {
             list.innerHTML += `
             <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
-                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${currentMode === 'total' ? totalTxt[currentLang] : v.date}</small></div>
+                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${currentMode === 'total' ? 'Total' : v.date}</small></div>
                 <div style="text-align:right">
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
                     <div id="m-${v.id}" class="dropdown">
-                        <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})">Rediger</div>
-                        <div style="color:red" onclick="delEntry('${v.id}')">Slett</div>
+                        <label for="camera-input"><i class="fas fa-camera"></i> ${scanTxt[currentLang]}</label>
+                        <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})"><i class="fas fa-edit"></i> Rediger</div>
+                        <div style="color:red" onclick="delEntry('${v.id}')"><i class="fas fa-trash"></i> Slett</div>
                         <div onclick="toggleM('${v.id}')" style="border-top:1px solid #eee; font-weight:bold">Lukk</div>
                     </div>
                 </div>
@@ -400,17 +334,10 @@
         if (drop) drop.style.display = isVisible ? 'none' : 'block';
     }
 
-    window.onclick = function(event) {
-        if (!event.target.matches('.menu-dots')) {
-            document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
-        }
-    }
-
+    window.onclick = function(event) { if (!event.target.matches('.menu-dots')) document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none'); }
     function delEntry(id) { if(confirm("Er du sikker?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
-
     function editEntry(id, oldD, oldA) {
-        const nD = prompt("Ny beskrivelse:", oldD);
-        const nA = prompt("Nytt beløp:", oldA);
+        const nD = prompt("Ny beskrivelse:", oldD); const nA = prompt("Nytt beløp:", oldA);
         if(nD && nA) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({ desc: nD, amt: parseFloat(nA) });
     }
 
@@ -422,55 +349,33 @@
         if(t==='add') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
     }
 
-    function onclickAddTab() {
-        showTab('add');
-    }
-
+    function onclickAddTab() { showTab('add'); }
     function logout() { auth.signOut().then(() => { window.location.reload(); }); }
 
     auth.onAuthStateChanged(user => {
-        if(user) {
-            document.getElementById('auth-page').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            loadData();
-        } else {
-            document.getElementById('auth-page').style.display = 'block';
-            document.getElementById('main-app').style.display = 'none';
-        }
+        if(user) { document.getElementById('auth-page').style.display = 'none'; document.getElementById('main-app').style.display = 'block'; loadData(); }
+        else { document.getElementById('auth-page').style.display = 'block'; document.getElementById('main-app').style.display = 'none'; }
     });
 
     const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER NY DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)", scan: "SCAN FAKTURA" },
-        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca / Beskrivelse", amt: "Cadadka (kr)", scan: "SAWIR FAKTURA" },
-        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout", mode: "Mode: ", fp: "HOLIDAY PAY (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Description", amt: "Amount (kr)", scan: "SCAN INVOICE" },
-        ar: { inc: "دخل", exp: "مصروفات", net: "صافي", res: "النتيجة النهائية", add: "إضافة بيانات", dash: "لوحة التحكم", nadd: "إضافة جديد", exit: "خروج", mode: "الوضع: ", fp: "راتب الإجازة (10.2%)", btninc: "حفظ الدخل", btnexp: "حفظ المصروف", desc: "الوصف", amt: "المبلغ (كرونة)", scan: "مسح الفاتورة" }
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER NY DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)" },
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca", amt: "Cadadka (kr)" },
+        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout", mode: "Mode: ", fp: "HOLIDAY PAY (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Description", amt: "Amount (kr)" },
+        ar: { inc: "دخل", exp: "مصروفات", net: "صافي", res: "النتيجة النهائية", add: "إضافة بيانات", dash: "لوحة التحكم", nadd: "إضافة جديد", exit: "خروج", mode: "الوضع: ", fp: "راتب الإجازة (10.2%)", btninc: "حفظ الدخل", btnexp: "حفظ المصروف", desc: "الوصف", amt: "المبلغ (كرونة)" }
     };
 
     function updateLang(l) {
-        currentLang = l;
-        const d = dict[l];
-        document.getElementById('l-inc').innerText = d.inc;
-        document.getElementById('l-exp').innerText = d.exp;
-        document.getElementById('l-net').innerText = d.net;
-        document.getElementById('l-res').innerText = d.res;
-        document.getElementById('l-add-title').innerText = d.add;
-        document.getElementById('n-dash').innerText = d.dash;
-        document.getElementById('n-add').innerText = d.nadd;
-        document.getElementById('n-exit').innerText = d.exit;
-        document.getElementById('l-fp-text').innerText = d.fp;
-        document.getElementById('l-btn-inc').innerText = d.btninc;
-        document.getElementById('l-btn-exp').innerText = d.btnexp;
-        document.getElementById('entry-desc').placeholder = d.desc;
+        currentLang = l; const d = dict[l];
+        document.getElementById('l-inc').innerText = d.inc; document.getElementById('l-exp').innerText = d.exp;
+        document.getElementById('l-net').innerText = d.net; document.getElementById('l-res').innerText = d.res;
+        document.getElementById('l-add-title').innerText = d.add; document.getElementById('n-dash').innerText = d.dash;
+        document.getElementById('n-add').innerText = d.nadd; document.getElementById('n-exit').innerText = d.exit;
+        document.getElementById('l-fp-text').innerText = d.fp; document.getElementById('l-btn-inc').innerText = d.btninc;
+        document.getElementById('l-btn-exp').innerText = d.btnexp; document.getElementById('entry-desc').placeholder = d.desc;
         document.getElementById('entry-amt').placeholder = d.amt;
-        
-        const modeLabel = (currentMode === 'individual') ? (l==='no'?'Individuell':(l==='so'?'Mid-mid':(l==='ar'?'فردي':'Individual'))) : (l==='no'?'Total':(l==='so'?'Isugeyn':(l==='ar'?'إجمالي':'Total')));
+        const modeLabel = currentMode === 'individual' ? (l==='no'?'Individuell':(l==='so'?'Mid-mid':'Individual')) : (l==='no'?'Total':(l==='so'?'Isugeyn':'Total'));
         document.getElementById('toggle-view-btn').innerText = d.mode + modeLabel;
-        
-        if(l === 'ar') {
-            document.body.classList.add('rtl');
-        } else {
-            document.body.classList.remove('rtl');
-        }
+        if(l === 'ar') document.body.classList.add('rtl'); else document.body.classList.remove('rtl');
         renderList();
     }
 </script>
