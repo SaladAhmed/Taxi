@@ -49,13 +49,11 @@
         .dropdown div, .dropdown label { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; display: block; }
         .dropdown label { margin: 0; }
 
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
-        .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; flex: 1; }
+        .nav-item i { font-size: 18px; margin-bottom: 4px; display: block; }
         .nav-item.active { color: var(--yellow); }
         
-        /* Scan Icon style */
-        .scan-overlay { font-size: 10px; color: var(--yellow); vertical-align: super; margin-left: -5px; }
-
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
         .forget-btn { background: none; border: none; color: var(--yellow); cursor: pointer; font-size: 13px; margin-top: 10px; text-decoration: underline; }
@@ -154,16 +152,21 @@
         <button class="btn-save" style="background:var(--red)" id="l-btn-exp" onclick="saveData('expense')">LAGRE UTGIFT</button>
     </div>
 
-    <input type="file" id="nav-camera" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
+    <input type="file" id="camera-file" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
 
     <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash-btn" onclick="showTab('dash')">
-            <i class="fas fa-list"></i>
-            <i class="fas fa-camera scan-overlay" onclick="event.stopPropagation(); document.getElementById('nav-camera').click();"></i>
-            <br><span id="n-dash">Guudmar</span>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')">
+            <i class="fas fa-th-large"></i><span id="n-dash">Oversikt</span>
         </div>
-        <div class="nav-item" onclick="onclickAddTab()"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
-        <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logg ut</span></div>
+        <div class="nav-item" onclick="document.getElementById('camera-file').click()">
+            <i class="fas fa-camera"></i><span>Scanner</span>
+        </div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')">
+            <i class="fas fa-plus-circle"></i><span id="n-add">Legg til</span>
+        </div>
+        <div class="nav-item" onclick="logout()">
+            <i class="fas fa-power-off"></i><span id="n-exit">Logg ut</span>
+        </div>
     </div>
 </div>
 
@@ -203,10 +206,8 @@
 
     function resetPass() {
         const email = document.getElementById('email').value;
-        if (!email) { alert("Vennligst skriv inn e-post først."); return; }
-        auth.sendPasswordResetEmail(email).then(() => {
-            alert("Tilbakestillingslenke ee loo diray: " + email);
-        }).catch(e => alert(e.message));
+        if (!email) { alert("Skriv e-post!"); return; }
+        auth.sendPasswordResetEmail(email).then(() => { alert("Check email!"); }).catch(e => alert(e.message));
     }
 
     function toggleView() {
@@ -265,7 +266,7 @@
             showTab('add');
             document.getElementById('entry-amt').value = foundAmt > 0 ? foundAmt : "";
             document.getElementById('entry-desc').value = "Scanned Receipt";
-        } catch (error) { alert("Cillad ayaa dhacday."); }
+        } catch (error) { alert("Cillad Scanner!"); }
         finally { loading.style.display = 'none'; event.target.value = ''; }
     }
 
@@ -273,7 +274,7 @@
         const desc = document.getElementById('entry-desc').value.trim();
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const subCat = document.getElementById('entry-category').value;
-        if(!desc || !amt) return alert("Fyll ut alle felt!");
+        if(!desc || !amt) return alert("Fyll ut!");
         db.ref('users/' + auth.currentUser.uid + '/entries').push({ desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO') });
         document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
@@ -281,7 +282,7 @@
 
     function loadData() {
         db.ref('users/' + auth.currentUser.uid + '/profile/fullName').on('value', snap => {
-            document.getElementById('user-display-name').innerText = snap.val() || "USER TRANSPORT";
+            document.getElementById('user-display-name').innerText = snap.val() || "USER";
         });
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
             rawData = []; let ti=0, te=0, tmva=0, tfp=0;
@@ -316,14 +317,13 @@
         dataToDisplay.forEach(v => {
             list.innerHTML += `
             <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
-                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${currentMode === 'total' ? 'Total' : v.date}</small></div>
+                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${v.date}</small></div>
                 <div style="text-align:right">
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
                     <div id="m-${v.id}" class="dropdown">
-                        <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})"><i class="fas fa-edit"></i> Rediger</div>
-                        <div style="color:red" onclick="delEntry('${v.id}')"><i class="fas fa-trash"></i> Slett</div>
-                        <div onclick="toggleM('${v.id}')" style="border-top:1px solid #eee; font-weight:bold">Lukk</div>
+                        <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})">Rediger</div>
+                        <div style="color:red" onclick="delEntry('${v.id}')">Slett</div>
                     </div>
                 </div>
             </div>`;
@@ -331,16 +331,15 @@
     }
 
     function toggleM(id) {
-        const drop = document.getElementById('m-'+id);
-        const isVisible = drop.style.display === 'block';
         document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
-        if (drop) drop.style.display = isVisible ? 'none' : 'block';
+        document.getElementById('m-'+id).style.display = 'block';
     }
 
-    window.onclick = function(event) { if (!event.target.matches('.menu-dots')) document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none'); }
-    function delEntry(id) { if(confirm("Ma hubtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
+    window.onclick = function() { document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none'); }
+
+    function delEntry(id) { if(confirm("Slette?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
     function editEntry(id, oldD, oldA) {
-        const nD = prompt("Beskrivelse cusub:", oldD); const nA = prompt("Beløp cusub:", oldA);
+        const nD = prompt("Desc:", oldD); const nA = prompt("Amt:", oldA);
         if(nD && nA) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({ desc: nD, amt: parseFloat(nA) });
     }
 
@@ -348,11 +347,10 @@
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if(t==='dash') document.getElementById('nav-dash-btn').classList.add('active');
-        if(t==='add') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+        if(t==='dash') document.getElementById('nav-dash').classList.add('active');
+        if(t==='add') document.getElementById('nav-add').classList.add('active');
     }
 
-    function onclickAddTab() { showTab('add'); }
     function logout() { auth.signOut().then(() => { window.location.reload(); }); }
 
     auth.onAuthStateChanged(user => {
@@ -362,9 +360,7 @@
 
     const dict = {
         no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER NY DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)" },
-        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca", amt: "Cadadka (kr)" },
-        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout", mode: "Mode: ", fp: "HOLIDAY PAY (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Description", amt: "Amount (kr)" },
-        ar: { inc: "دخل", exp: "مصروفات", net: "صافي", res: "النتيجة النهائية", add: "إضافة بيانات", dash: "لوحة التحكم", nadd: "إضافة جديد", exit: "خروج", mode: "الوضع: ", fp: "راتب الإجازة (10.2%)", btninc: "حفظ الدخل", btnexp: "حفظ المصروف", desc: "الوصف", amt: "المبلغ (كرونة)" }
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca", amt: "Cadadka (kr)" }
     };
 
     function updateLang(l) {
@@ -378,7 +374,6 @@
         document.getElementById('entry-amt').placeholder = d.amt;
         const modeLabel = currentMode === 'individual' ? (l==='no'?'Individuell':(l==='so'?'Mid-mid':'Individual')) : (l==='no'?'Total':(l==='so'?'Isugeyn':'Total'));
         document.getElementById('toggle-view-btn').innerText = d.mode + modeLabel;
-        if(l === 'ar') document.body.classList.add('rtl'); else document.body.classList.remove('rtl');
         renderList();
     }
 </script>
