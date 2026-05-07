@@ -237,9 +237,19 @@
     }
 
     function loadData() {
-        // Load Profile Name
+        // Qaybtan waxay hubineysaa magaca qofka gaarka u ah
         db.ref('users/' + auth.currentUser.uid + '/profile/fullName').on('value', snap => {
-            const name = snap.val() || "MY TRANSPORT";
+            let name = snap.val();
+            // Haddii uu yahay qof hore oo aan magac lahayn, weydii
+            if (!name) {
+                const askName = prompt("Fadlan qor magacaaga (Fornavn iyo Etternavn):");
+                if (askName) {
+                    name = askName.toUpperCase();
+                    db.ref('users/' + auth.currentUser.uid + '/profile').set({ fullName: name });
+                } else {
+                    name = "USER TRANSPORT";
+                }
+            }
             document.getElementById('user-display-name').innerText = name;
         });
 
