@@ -50,11 +50,11 @@
         .dropdown label { margin: 0; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
-        .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; position: relative; }
+        .nav-item { text-align: center; color: #64748b; font-size: 12px; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--yellow); }
         
-        /* New Camera Icon Style for Navigation */
-        .nav-scan-icon { font-size: 10px; position: absolute; top: 5px; right: 25%; color: var(--yellow); opacity: 0.8; }
+        /* Scan Icon style */
+        .scan-overlay { font-size: 10px; color: var(--yellow); vertical-align: super; margin-left: -5px; }
 
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
@@ -125,7 +125,6 @@
 
     <div id="page-add" class="page" style="display:none; padding: 20px; max-width: 600px; margin: auto;">
         <div class="header-title" id="l-add-title">REGISTRER NY DATA</div>
-        
         <select id="entry-category">
             <optgroup label="INNTEKT" id="opt-inc">
                 <option value="inc-mva">Sentrals avgift (MVA 25%)</option>
@@ -155,15 +154,13 @@
         <button class="btn-save" style="background:var(--red)" id="l-btn-exp" onclick="saveData('expense')">LAGRE UTGIFT</button>
     </div>
 
-    <input type="file" id="camera-input-nav" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
+    <input type="file" id="nav-camera" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('dash')">
-            <label for="camera-input-nav" style="cursor:pointer; display:block;">
-                <i class="fas fa-camera nav-scan-icon"></i>
-                <i class="fas fa-list"></i><br>
-                <span id="n-dash">Guudmar</span>
-            </label>
+        <div class="nav-item active" id="nav-dash-btn" onclick="showTab('dash')">
+            <i class="fas fa-list"></i>
+            <i class="fas fa-camera scan-overlay" onclick="event.stopPropagation(); document.getElementById('nav-camera').click();"></i>
+            <br><span id="n-dash">Guudmar</span>
         </div>
         <div class="nav-item" onclick="onclickAddTab()"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
         <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logg ut</span></div>
@@ -208,7 +205,7 @@
         const email = document.getElementById('email').value;
         if (!email) { alert("Vennligst skriv inn e-post først."); return; }
         auth.sendPasswordResetEmail(email).then(() => {
-            alert("Tilbakestillingslenke er sendt til: " + email);
+            alert("Tilbakestillingslenke ee loo diray: " + email);
         }).catch(e => alert(e.message));
     }
 
@@ -232,7 +229,7 @@
         if(document.getElementById('reg-fields').style.display === 'none') {
             auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         } else {
-            if(!fname || !lname) return alert("Vennligst fyll ut navnet ditt!");
+            if(!fname || !lname) return alert("Fyll magaca!");
             auth.createUserWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
                     db.ref('users/' + userCredential.user.uid + '/profile').set({ fullName: fname.toUpperCase() + " " + lname.toUpperCase() });
@@ -242,7 +239,7 @@
 
     function changeName() {
         const currentName = document.getElementById('user-display-name').innerText;
-        const newName = prompt("Skriv nytt navn:", currentName);
+        const newName = prompt("Magaca cusub:", currentName);
         if (newName && newName.trim() !== "" && newName !== currentName) {
             db.ref('users/' + auth.currentUser.uid + '/profile').update({ fullName: newName.trim().toUpperCase() });
         }
@@ -268,7 +265,7 @@
             showTab('add');
             document.getElementById('entry-amt').value = foundAmt > 0 ? foundAmt : "";
             document.getElementById('entry-desc').value = "Scanned Receipt";
-        } catch (error) { alert("Error scanning."); }
+        } catch (error) { alert("Cillad ayaa dhacday."); }
         finally { loading.style.display = 'none'; event.target.value = ''; }
     }
 
@@ -341,9 +338,9 @@
     }
 
     window.onclick = function(event) { if (!event.target.matches('.menu-dots')) document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none'); }
-    function delEntry(id) { if(confirm("Er du sikker?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
+    function delEntry(id) { if(confirm("Ma hubtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
     function editEntry(id, oldD, oldA) {
-        const nD = prompt("Ny beskrivelse:", oldD); const nA = prompt("Nytt beløp:", oldA);
+        const nD = prompt("Beskrivelse cusub:", oldD); const nA = prompt("Beløp cusub:", oldA);
         if(nD && nA) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({ desc: nD, amt: parseFloat(nA) });
     }
 
@@ -351,7 +348,7 @@
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if(t==='dash') document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+        if(t==='dash') document.getElementById('nav-dash-btn').classList.add('active');
         if(t==='add') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
     }
 
