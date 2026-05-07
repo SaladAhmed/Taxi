@@ -22,7 +22,6 @@
         .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
         .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Edit Icon for name */
         .name-wrapper { cursor: pointer; display: inline-block; position: relative; }
         .name-wrapper:hover { opacity: 0.8; }
         .name-wrapper i { font-size: 12px; margin-left: 5px; color: #64748b; }
@@ -90,13 +89,13 @@
     <div id="page-dash" class="page">
         <div class="header-title">
             <span class="name-wrapper" onclick="changeName()">
-                <span id="user-display-name">LOADING...</span>
+                <span id="user-display-name">Laster...</span>
                 <i class="fas fa-edit"></i>
             </span>
         </div>
         <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INCOME</small><span id="total-income">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">EXPENSES</small><span id="total-expense">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
         <div class="mva-card">
@@ -104,50 +103,50 @@
             <div style="text-align:right"><small style="color:#888; display:block" id="l-fp-text">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
         </div>
         <div class="summary-card">
-            <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULT</small>
+            <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULTAT</small>
             <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
         </div>
         <div class="view-toggle">
-            <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Mode: Individual</button>
+            <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Modus: Individuell</button>
         </div>
         <div id="entries-list" class="entry-list-container"></div>
     </div>
 
     <div id="page-add" class="page" style="display:none; padding: 20px; max-width: 600px; margin: auto;">
-        <div class="header-title" id="l-add-title">GELI XOG CUSUB</div>
+        <div class="header-title" id="l-add-title">REGISTRER NY DATA</div>
         <select id="entry-category">
-            <optgroup label="INCOME" id="opt-inc">
-                <option value="inc-mva">Sentral Avgjifter (MVA 25%)</option>
-                <option value="inc-faktura-no">Faktura Income (No MVA)</option>
+            <optgroup label="INNTEKT" id="opt-inc">
+                <option value="inc-mva">Sentrals avgift (MVA 25%)</option>
+                <option value="inc-faktura-no">Faktura Inntekt (Uten MVA)</option>
             </optgroup>
-            <optgroup label="EXPENSES" id="opt-exp">
+            <optgroup label="UTGIFTER" id="opt-exp">
                 <option value="exp-fuel">Drivstoff (MVA 25%)</option>
                 <option value="exp-regnskap">Regnskap (MVA 25%)</option>
-                <option value="exp-fixed">Fixed Biler (MVA 25%)</option>
-                <option value="exp-wash">Vaske Biler (MVA 25%)</option>
-                <option value="exp-anet-mva">Anet (MVA 25%)</option>
-                <option value="exp-bomp-no">Bompenger (No MVA)</option>
-                <option value="exp-forsikring-no">Forsikring (No MVA)</option>
-                <option value="exp-skatt-no">Skatt (No MVA)</option>
-                <option value="exp-arb-no">Arbeider avgifter (No MVA)</option>
-                <option value="exp-tel-no">Telefonen (No MVA)</option>
-                <option value="exp-net-no">Internet (No MVA)</option>
-                <option value="exp-anet-no">Anet (No MVA)</option>
-                <option value="exp-bank">Bank Transaction (No MVA)</option>
-                <option value="exp-lonn">Lønn (Taxable - 10.2% FP)</option>
-                <option value="exp-own">Own Withdrawal (No MVA)</option>
+                <option value="exp-fixed">Bilreparasjon (MVA 25%)</option>
+                <option value="exp-wash">Bilvask (MVA 25%)</option>
+                <option value="exp-anet-mva">Annet (MVA 25%)</option>
+                <option value="exp-bomp-no">Bompenger (Ingen MVA)</option>
+                <option value="exp-forsikring-no">Forsikring (Ingen MVA)</option>
+                <option value="exp-skatt-no">Skatt (Ingen MVA)</option>
+                <option value="exp-arb-no">Arbeidsgiveravgift (Ingen MVA)</option>
+                <option value="exp-tel-no">Telefon (Ingen MVA)</option>
+                <option value="exp-net-no">Internett (Ingen MVA)</option>
+                <option value="exp-anet-no">Annet (Ingen MVA)</option>
+                <option value="exp-bank">Bankgebyr (Ingen MVA)</option>
+                <option value="exp-lonn">Lønn (Skattepliktig - 10.2% FP)</option>
+                <option value="exp-own">Eget uttak (Ingen MVA)</option>
             </optgroup>
         </select>
-        <input type="text" id="entry-desc" placeholder="Magaca / Beskrivelse">
+        <input type="text" id="entry-desc" placeholder="Beskrivelse">
         <input type="number" id="entry-amt" placeholder="Beløp (kr)">
-        <button class="btn-save" style="background:var(--green)" id="l-btn-inc" onclick="saveData('income')">SAVE INCOME</button>
-        <button class="btn-save" style="background:var(--red)" id="l-btn-exp" onclick="saveData('expense')">SAVE EXPENSE</button>
+        <button class="btn-save" style="background:var(--green)" id="l-btn-inc" onclick="saveData('income')">LAGRE INNTEKT</button>
+        <button class="btn-save" style="background:var(--red)" id="l-btn-exp" onclick="saveData('expense')">LAGRE UTGIFT</button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list"></i><br><span id="n-dash">Guudmar</span></div>
-        <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Geli Xog</span></div>
-        <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Exit</span></div>
+        <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list"></i><br><span id="n-dash">Oversikt</span></div>
+        <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
+        <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logg ut</span></div>
     </div>
 </div>
 
@@ -192,11 +191,11 @@
     function resetPass() {
         const email = document.getElementById('email').value;
         if (!email) {
-            alert("Fadlan marka hore qor E-mailkaaga qaybta sare.");
+            alert("Vennligst skriv inn e-post først.");
             return;
         }
         auth.sendPasswordResetEmail(email).then(() => {
-            alert("Link-ga Password-ka lagu badalo waxaa loo diray: " + email + ". Fadlan eeg Inbox-kaaga.");
+            alert("Tilbakestillingslenke er sendt til: " + email);
         }).catch(e => alert(e.message));
     }
 
@@ -221,7 +220,7 @@
         if(document.getElementById('reg-fields').style.display === 'none') {
             auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         } else {
-            if(!fname || !lname) return alert("Fadlan qor magacaaga oo buuxa!");
+            if(!fname || !lname) return alert("Vennligst fyll ut navnet ditt!");
             auth.createUserWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
                     const user = userCredential.user;
@@ -233,15 +232,14 @@
         }
     }
 
-    // Function cusub oo magaca lagu badalayo
     function changeName() {
         const currentName = document.getElementById('user-display-name').innerText;
-        const newName = prompt("Qor magacaaga cusub / Skriv nytt navn:", currentName);
+        const newName = prompt("Skriv nytt navn:", currentName);
         if (newName && newName.trim() !== "" && newName !== currentName) {
             db.ref('users/' + auth.currentUser.uid + '/profile').update({
                 fullName: newName.trim().toUpperCase()
             }).then(() => {
-                alert("Magaca si guul leh ayaa loo badalay!");
+                alert("Navnet er endret!");
             }).catch(e => alert("Error: " + e.message));
         }
     }
@@ -250,7 +248,7 @@
         const desc = document.getElementById('entry-desc').value.trim();
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const subCat = document.getElementById('entry-category').value;
-        if(!desc || !amt) return alert("Fyll ut alt!");
+        if(!desc || !amt) return alert("Fyll ut alle felt!");
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
             desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO')
         });
@@ -263,7 +261,7 @@
         db.ref('users/' + auth.currentUser.uid + '/profile/fullName').on('value', snap => {
             let name = snap.val();
             if (!name) {
-                const askName = prompt("Fadlan qor magacaaga (Fornavn iyo Etternavn):");
+                const askName = prompt("Vennligst skriv inn navnet ditt (Fornavn og Etternavn):");
                 if (askName) {
                     name = askName.toUpperCase();
                     db.ref('users/' + auth.currentUser.uid + '/profile').set({ fullName: name });
@@ -319,7 +317,7 @@
             dataToDisplay = rawData;
         }
 
-        const totalTxt = { no: "Wadarta Guud", so: "Wadarta Guud", en: "Grand Total", ar: "الإجمالي الكلي" };
+        const totalTxt = { no: "Total sum", so: "Wadarta Guud", en: "Grand Total", ar: "الإجمالي الكلي" };
 
         dataToDisplay.forEach(v => {
             list.innerHTML += `
@@ -329,9 +327,9 @@
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
                     <div id="m-${v.id}" class="dropdown">
-                        <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})">Edit</div>
-                        <div style="color:red" onclick="delEntry('${v.id}')">Delete</div>
-                        <div onclick="toggleM('${v.id}')" style="border-top:1px solid #eee; font-weight:bold">Exit</div>
+                        <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})">Rediger</div>
+                        <div style="color:red" onclick="delEntry('${v.id}')">Slett</div>
+                        <div onclick="toggleM('${v.id}')" style="border-top:1px solid #eee; font-weight:bold">Lukk</div>
                     </div>
                 </div>
             </div>`;
@@ -351,11 +349,11 @@
         }
     }
 
-    function delEntry(id) { if(confirm("Ma hubtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
+    function delEntry(id) { if(confirm("Er du sikker?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
 
     function editEntry(id, oldD, oldA) {
-        const nD = prompt("New Description:", oldD);
-        const nA = prompt("New Amount:", oldA);
+        const nD = prompt("Ny beskrivelse:", oldD);
+        const nA = prompt("Nytt beløp:", oldA);
         if(nD && nA) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({ desc: nD, amt: parseFloat(nA) });
     }
 
@@ -381,7 +379,7 @@
     });
 
     const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "GELI XOG", dash: "Guudmar", nadd: "Geli Xog", exit: "Exit", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)" },
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER NY DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)" },
         so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca / Beskrivelse", amt: "Cadadka (kr)" },
         en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout", mode: "Mode: ", fp: "HOLIDAY PAY (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Description", amt: "Amount (kr)" },
         ar: { inc: "دخل", exp: "مصروفات", net: "صافي", res: "النتيجة النهائية", add: "إضافة بيانات", dash: "لوحة التحكم", nadd: "إضافة جديد", exit: "خروج", mode: "الوضع: ", fp: "راتب الإجازة (10.2%)", btninc: "حفظ الدخل", btnexp: "حفظ المصروف", desc: "الوصف", amt: "المبلغ (كرونة)" }
@@ -404,7 +402,8 @@
         document.getElementById('entry-desc').placeholder = d.desc;
         document.getElementById('entry-amt').placeholder = d.amt;
         
-        document.getElementById('toggle-view-btn').innerText = d.mode + (currentMode === 'individual' ? (l==='ar'?'فردي':'Individual') : (l==='ar'?'إجمالي':'Total'));
+        const modeLabel = (currentMode === 'individual') ? (l==='no'?'Individuell':(l==='so'?'Mid-mid':(l==='ar'?'فردي':'Individual'))) : (l==='no'?'Total':(l==='so'?'Isugeyn':(l==='ar'?'إجمالي':'Total')));
+        document.getElementById('toggle-view-btn').innerText = d.mode + modeLabel;
         
         if(l === 'ar') {
             document.body.classList.add('rtl');
