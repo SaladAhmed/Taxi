@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
@@ -54,6 +55,11 @@
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
         .forget-btn { background: none; border: none; color: var(--yellow); cursor: pointer; font-size: 13px; margin-top: 10px; text-decoration: underline; }
+
+        /* Scanner Button Style */
+        .scan-wrapper { position: relative; margin-bottom: 15px; }
+        .scan-btn { background: var(--yellow); color: #000; padding: 12px; border-radius: 10px; text-align: center; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        #scan-loading { display: none; font-size: 12px; color: var(--yellow); margin-top: 5px; text-align: center; }
     </style>
 </head>
 <body id="body-tag">
@@ -114,6 +120,15 @@
 
     <div id="page-add" class="page" style="display:none; padding: 20px; max-width: 600px; margin: auto;">
         <div class="header-title" id="l-add-title">REGISTRER NY DATA</div>
+        
+        <div class="scan-wrapper">
+            <label for="camera-input" class="scan-btn">
+                <i class="fas fa-camera"></i> <span id="l-scan">SCAN FAKTURA</span>
+            </label>
+            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="scanInvoice(event)">
+            <div id="scan-loading">Processing AI... Sabir...</div>
+        </div>
+
         <select id="entry-category">
             <optgroup label="INNTEKT" id="opt-inc">
                 <option value="inc-mva">Sentrals avgift (MVA 25%)</option>
@@ -145,7 +160,7 @@
 
     <div class="nav-bar">
         <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-list"></i><br><span id="n-dash">Oversikt</span></div>
-        <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
+        <div class="nav-item" onclick="onclickAddTab()"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
         <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logg ut</span></div>
     </div>
 </div>
@@ -241,6 +256,51 @@
             }).then(() => {
                 alert("Navnet er endret!");
             }).catch(e => alert("Error: " + e.message));
+        }
+    }
+
+    // --- SCANNER LOGIC ---
+    async function scanInvoice(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const loading = document.getElementById('scan-loading');
+        loading.style.display = 'block';
+
+        try {
+            const result = await Tesseract.recognize(file, 'eng+nor', {
+                logger: m => console.log(m)
+            });
+            
+            const text = result.data.text;
+            console.log("Scanned Text:", text);
+
+            // Simple Logic to find numbers (Amount)
+            // Look for patterns like "Total", "MVA", "Sum"
+            const lines = text.split('\n');
+            let foundAmt = 0;
+
+            lines.forEach(line => {
+                const numbers = line.replace(',', '.').match(/\d+\.\d{2}/g) || line.match(/\d+/g);
+                if (numbers) {
+                    const val = parseFloat(numbers[numbers.length - 1]);
+                    if (val > foundAmt) foundAmt = val; // Assuming the largest number is the total
+                }
+            });
+
+            if (foundAmt > 0) {
+                document.getElementById('entry-amt').value = foundAmt;
+                document.getElementById('entry-desc').value = "Scanned Receipt";
+                alert("AI Found Amount: " + foundAmt + " kr");
+            } else {
+                alert("Could not read amount clearly. Please enter manually.");
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Error scanning image.");
+        } finally {
+            loading.style.display = 'none';
         }
     }
 
@@ -365,6 +425,10 @@
         if(t==='add') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
     }
 
+    function onclickAddTab() {
+        showTab('add');
+    }
+
     function logout() { auth.signOut().then(() => { window.location.reload(); }); }
 
     auth.onAuthStateChanged(user => {
@@ -379,10 +443,10 @@
     });
 
     const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER NY DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)" },
-        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca / Beskrivelse", amt: "Cadadka (kr)" },
-        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout", mode: "Mode: ", fp: "HOLIDAY PAY (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Description", amt: "Amount (kr)" },
-        ar: { inc: "دخل", exp: "مصروفات", net: "صافي", res: "النتيجة النهائية", add: "إضافة بيانات", dash: "لوحة التحكم", nadd: "إضافة جديد", exit: "خروج", mode: "الوضع: ", fp: "راتب الإجازة (10.2%)", btninc: "حفظ الدخل", btnexp: "حفظ المصروف", desc: "الوصف", amt: "المبلغ (كرونة)" }
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER NY DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", mode: "Modus: ", fp: "FERIEPENGER (10.2%)", btninc: "LAGRE INNTEKT", btnexp: "LAGRE UTGIFT", desc: "Beskrivelse", amt: "Beløp (kr)", scan: "SCAN FAKTURA" },
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA", add: "GELI XOG CUSUB", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", mode: "Habka: ", fp: "LACAGTA FASAXA (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Magaca / Beskrivelse", amt: "Cadadka (kr)", scan: "SAWIR FAKTURA" },
+        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", res: "TOTAL RESULT", add: "ADD DATA", dash: "Dashboard", nadd: "Add New", exit: "Logout", mode: "Mode: ", fp: "HOLIDAY PAY (10.2%)", btninc: "SAVE INCOME", btnexp: "SAVE EXPENSE", desc: "Description", amt: "Amount (kr)", scan: "SCAN INVOICE" },
+        ar: { inc: "دخل", exp: "مصروفات", net: "صافي", res: "النتيجة النهائية", add: "إضافة بيانات", dash: "لوحة التحكم", nadd: "إضافة جديد", exit: "خروج", mode: "الوضع: ", fp: "راتب الإجازة (10.2%)", btninc: "حفظ الدخل", btnexp: "حفظ المصروف", desc: "الوصف", amt: "المبلغ (كرونة)", scan: "مسح الفاتورة" }
     };
 
     function updateLang(l) {
@@ -401,6 +465,7 @@
         document.getElementById('l-btn-exp').innerText = d.btnexp;
         document.getElementById('entry-desc').placeholder = d.desc;
         document.getElementById('entry-amt').placeholder = d.amt;
+        document.getElementById('l-scan').innerText = d.scan;
         
         const modeLabel = (currentMode === 'individual') ? (l==='no'?'Individuell':(l==='so'?'Mid-mid':(l==='ar'?'فردي':'Individual'))) : (l==='no'?'Total':(l==='so'?'Isugeyn':(l==='ar'?'إجمالي':'Total')));
         document.getElementById('toggle-view-btn').innerText = d.mode + modeLabel;
