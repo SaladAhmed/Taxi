@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transport PRO</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="TransportPRO">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
         .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
@@ -46,8 +53,7 @@
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .menu-dots { cursor: pointer; color: #64748b; padding: 10px; font-size: 20px; }
         .dropdown { position: absolute; right: 20px; top: 45px; background: white; color: black; border-radius: 10px; display: none; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 140px; }
-        .dropdown div, .dropdown label { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; display: block; }
-        .dropdown label { margin: 0; }
+        .dropdown div { padding: 10px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000; }
         .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; flex: 1; }
@@ -112,7 +118,7 @@
             <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
         </div>
         
-        <div id="scan-loading"><i class="fas fa-spinner fa-spin"></i> Processing AI... Sabir...</div>
+        <div id="scan-loading"><i class="fas fa-spinner fa-spin"></i> Smart Scanning... Sabir...</div>
 
         <div class="view-toggle">
             <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Modus: Individuell</button>
@@ -171,6 +177,13 @@
 </div>
 
 <script>
+    // PWA: Registering simple service worker for offline/install
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi.dhZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGV2ZW50ID0+IHsgfSk7').catch(() => {});
+        });
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -189,7 +202,6 @@
     let currentLang = 'no';
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
-
     function togglePassView() {
         const passInput = document.getElementById('pass');
         const passIcon = document.getElementById('togglePass');
@@ -201,27 +213,22 @@
             passIcon.classList.replace('fa-eye-slash', 'fa-eye');
         }
     }
-
     function handleEnter(e) { if (e.key === "Enter") handleAuth(); }
-
     function resetPass() {
         const email = document.getElementById('email').value;
         if (!email) { alert("Skriv e-post!"); return; }
         auth.sendPasswordResetEmail(email).then(() => { alert("Check email!"); }).catch(e => alert(e.message));
     }
-
     function toggleView() {
         currentMode = (currentMode === 'individual') ? 'total' : 'individual';
         updateLang(currentLang);
         renderList();
     }
-
     function toggleAuth() {
         const rf = document.getElementById('reg-fields');
         rf.style.display = (rf.style.display === 'none') ? 'block' : 'none';
         document.getElementById('auth-title').innerText = (rf.style.display === 'none') ? 'LOGG INN' : 'REGISTRER DEG';
     }
-
     function handleAuth() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('pass').value;
@@ -237,7 +244,6 @@
                 }).catch(e => alert(e.message));
         }
     }
-
     function changeName() {
         const currentName = document.getElementById('user-display-name').innerText;
         const newName = prompt("Magaca cusub:", currentName);
@@ -252,22 +258,43 @@
         const loading = document.getElementById('scan-loading');
         loading.style.display = 'block';
         try {
-            const result = await Tesseract.recognize(file, 'eng+nor');
-            const text = result.data.text;
+            const result = await Tesseract.recognize(file, 'nor+eng', {
+                logger: m => console.log(m) 
+            });
+            const text = result.data.text.toLowerCase();
             const lines = text.split('\n');
-            let foundAmt = 0;
+            let possibleAmounts = [];
             lines.forEach(line => {
-                const numbers = line.replace(',', '.').match(/\d+\.\d{2}/g) || line.match(/\d+/g);
-                if (numbers) {
-                    const val = parseFloat(numbers[numbers.length - 1]);
-                    if (val > foundAmt) foundAmt = val;
+                const cleanedLine = line.replace(/\s/g, '').replace(',', '.');
+                const matches = cleanedLine.match(/\d+\.\d{2}/g);
+                if (matches) {
+                    matches.forEach(m => {
+                        const val = parseFloat(m);
+                        if (val > 10) possibleAmounts.push(val);
+                    });
                 }
             });
-            showTab('add');
-            document.getElementById('entry-amt').value = foundAmt > 0 ? foundAmt : "";
-            document.getElementById('entry-desc').value = "Scanned Receipt";
-        } catch (error) { alert("Cillad Scanner!"); }
-        finally { loading.style.display = 'none'; event.target.value = ''; }
+            let finalAmt = 0;
+            if (text.includes('total') || text.includes('sum') || text.includes('beløp') || text.includes('betale')) {
+                finalAmt = Math.max(...possibleAmounts);
+            } else {
+                finalAmt = possibleAmounts.length > 0 ? possibleAmounts[0] : 0;
+            }
+            if (finalAmt > 0) {
+                showTab('add');
+                document.getElementById('entry-amt').value = finalAmt;
+                document.getElementById('entry-desc').value = "Scanned: " + new Date().toLocaleDateString();
+                alert("Scanner-ku wuxuu helay: " + finalAmt + " kr. Fadlan hubi ka hor intaadan keydin.");
+            } else {
+                alert("Waan ka xumahay, ma aqoonsan karo nambarka lacagta. Fadlan gacanta ku geli ama sawir cad qaad.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Cillad dhanka Scanner-ka ah.");
+        } finally {
+            loading.style.display = 'none';
+            event.target.value = '';
+        }
     }
 
     function saveData(mainCat) {
@@ -313,7 +340,6 @@
             if (!acc[key]) acc[key] = { ...item, amt: 0 };
             acc[key].amt += item.amt; return acc;
         }, {})) : rawData;
-
         dataToDisplay.forEach(v => {
             list.innerHTML += `
             <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
@@ -329,20 +355,16 @@
             </div>`;
         });
     }
-
     function toggleM(id) {
         document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
         document.getElementById('m-'+id).style.display = 'block';
     }
-
     window.onclick = function() { document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none'); }
-
     function delEntry(id) { if(confirm("Slette?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
     function editEntry(id, oldD, oldA) {
         const nD = prompt("Desc:", oldD); const nA = prompt("Amt:", oldA);
         if(nD && nA) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({ desc: nD, amt: parseFloat(nA) });
     }
-
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
@@ -350,7 +372,6 @@
         if(t==='dash') document.getElementById('nav-dash').classList.add('active');
         if(t==='add') document.getElementById('nav-add').classList.add('active');
     }
-
     function logout() { auth.signOut().then(() => { window.location.reload(); }); }
 
     auth.onAuthStateChanged(user => {
