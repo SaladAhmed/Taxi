@@ -34,9 +34,10 @@
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
         .stat-box { background: var(--card); border: 2px solid; border-radius: 15px; padding: 20px 10px; text-align: center; }
         .stat-box small { font-size: 10px; display: block; margin-bottom: 8px; font-weight: bold; opacity: 0.8; }
-        .stat-box span { font-size: 16px; font-weight: bold; }
+        .stat-box span { font-size: 14px; font-weight: bold; }
 
-        .summary-card { background: var(--card); border: 3px solid var(--yellow); border-radius: 25px; padding: 30px; text-align: center; margin-bottom: 25px; }
+        .summary-card { background: var(--card); border: 3px solid var(--yellow); border-radius: 25px; padding: 20px; text-align: center; margin-bottom: 25px; }
+        .tax-info { display: flex; justify-content: space-around; font-size: 12px; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
         
         .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; }
         .filter-select { padding: 12px; border-radius: 12px; background: var(--card); color: var(--text); border: 1px solid var(--border); flex: 1; cursor: pointer; }
@@ -53,7 +54,7 @@
 
         @media (min-width: 768px) {
             .stats-grid { gap: 25px; }
-            .stat-box span { font-size: 22px; }
+            .stat-box span { font-size: 20px; }
         }
     </style>
 </head>
@@ -66,7 +67,6 @@
         <input type="text" id="fname" placeholder="Fornavn">
         <input type="text" id="lname" placeholder="Etternavn">
     </div>
-    <!-- Qaybtan hadda Enter ayay ogolaanaysaa -->
     <div onkeypress="handleEnter(event)">
         <input type="email" id="email" placeholder="E-post" autofocus>
         <input type="password" id="pass" placeholder="Passord">
@@ -79,7 +79,7 @@
     <div class="top-bar">
         <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
         <div class="header-title" style="padding:0; font-size:14px;">TRANSPORT PRO</div>
-        <div><span class="lang-btn" onclick="alert('Baqatiin qabo')">🇳🇴</span></div>
+        <div><span class="lang-btn" onclick="alert('🇸🇴 Ku soo dhawaada!')">🇸🇴</span></div>
     </div>
 
     <div class="container">
@@ -87,19 +87,28 @@
             <div class="header-title" style="color:var(--text); text-align:left; font-size:16px;">
                 👋 <span id="user-display-name">...</span>
             </div>
+            
             <div class="filter-bar">
                 <select id="month-filter" class="filter-select" onchange="renderList()">
                     <option value="all">Dhamaan Bilaha</option>
                 </select>
             </div>
+
             <div class="stats-grid">
                 <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INNTEKT</small><span id="total-income">0</span></div>
                 <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>UTGIFTER</small><span id="total-expense">0</span></div>
                 <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>NETTO</small><span id="total-netto">0</span></div>
             </div>
+
             <div class="summary-card">
-                <h1>Resultat: <span id="res-total">0</span></h1>
+                <small>TOTAL RESULTAT</small>
+                <h1 id="res-total" style="color:var(--green)">0 kr</h1>
+                <div class="tax-info">
+                    <div><small>MVA (25%)</small><br><b id="tax-mva">0 kr</b></div>
+                    <div><small>FERIEPENGER</small><br><b id="tax-ferie">0 kr</b></div>
+                </div>
             </div>
+            
             <div id="entries-list"></div>
         </div>
 
@@ -112,19 +121,19 @@
         </div>
 
         <div id="page-profile" class="page" style="display:none; text-align:center;">
+            <div class="header-title">PROFILE</div>
             <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT</button>
         </div>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-home"></i><span>Home</span></div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><span>Add</span></div>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><span>Home</span></div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><span>Add</span></div>
         <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><span>User</span></div>
     </div>
 </div>
 
 <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -137,13 +146,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    // FUNCTION: Enter Key Support
-    function handleEnter(e) {
-        if (e.key === 'Enter') {
-            handleAuth();
-        }
-    }
-
+    function handleEnter(e) { if (e.key === 'Enter') handleAuth(); }
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
     
     function toggleAuth() {
@@ -155,28 +158,25 @@
     function handleAuth() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('pass').value;
-        if(!email || !pass) return alert("Fadhlan buuxi iimaylka iyo password-ka");
-
+        if(!email || !pass) return alert("Buuxi meelaha banaan!");
         if(document.getElementById('reg-fields').style.display === 'none') {
-            auth.signInWithEmailAndPassword(email, pass).catch(e => alert("Cillad: " + e.message));
+            auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         } else {
             const fn = document.getElementById('fname').value;
             const ln = document.getElementById('lname').value;
             auth.createUserWithEmailAndPassword(email, pass).then(u => {
                 db.ref('users/' + u.user.uid + '/profile').set({ fullName: fn + " " + ln });
-            }).catch(e => alert("Cillad: " + e.message));
+            }).catch(e => alert(e.message));
         }
     }
 
     function saveData(mainCat) {
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
-        if(!desc || !amt) return alert("Buuxi meelaha banaan!");
-
+        if(!desc || !amt) return alert("Buuxi xogta!");
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
             desc, amt, mainCat, date: new Date().toLocaleDateString('no-NO'), timestamp: Date.now()
         });
-        
         document.getElementById('entry-desc').value = "";
         document.getElementById('entry-amt').value = "";
         showTab('dash');
@@ -196,12 +196,19 @@
                 list.innerHTML += `
                 <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
                     <div><h4>${v.desc}</h4><small>${v.date}</small></div>
-                    <b>${v.amt} kr</b>
+                    <b>${v.amt.toLocaleString()} kr</b>
                 </div>`;
             });
-            document.getElementById('total-income').innerText = ti + " kr";
-            document.getElementById('total-expense').innerText = te + " kr";
-            document.getElementById('res-total').innerText = (ti - te) + " kr";
+
+            let netto = ti - te;
+            document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
+            document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
+            document.getElementById('total-netto').innerText = netto.toLocaleString() + " kr";
+            document.getElementById('res-total').innerText = netto.toLocaleString() + " kr";
+            
+            // Xisaabinta MVA iyo Feriepenger
+            document.getElementById('tax-mva').innerText = (netto * 0.25).toLocaleString() + " kr";
+            document.getElementById('tax-ferie').innerText = (netto * 0.102).toLocaleString() + " kr";
         });
     }
 
@@ -215,14 +222,8 @@
     function logout() { auth.signOut().then(() => window.location.reload()); }
 
     auth.onAuthStateChanged(u => {
-        if(u) { 
-            document.getElementById('auth-page').style.display='none'; 
-            document.getElementById('main-app').style.display='block'; 
-            loadData(); 
-        } else { 
-            document.getElementById('auth-page').style.display='block'; 
-            document.getElementById('main-app').style.display='none'; 
-        }
+        if(u) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
+        else { document.getElementById('auth-page').style.display='block'; document.getElementById('main-app').style.display='none'; }
     });
 </script>
 </body>
