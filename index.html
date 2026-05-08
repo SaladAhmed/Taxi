@@ -17,60 +17,70 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
         .container { max-width: 500px; margin: auto; padding: 15px; }
 
-        /* Stats Grid */
+        /* Profile & Language Header */
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(31, 41, 55, 0.5); padding: 10px; border-radius: 15px; }
+        .profile-area { display: flex; align-items: center; gap: 10px; }
+        .profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--yellow); object-fit: cover; cursor: pointer; }
+        .lang-icons { display: flex; gap: 10px; font-size: 20px; cursor: pointer; }
+
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: transparent; border: 2px solid; border-radius: 12px; padding: 15px 5px; text-align: center; }
         .stat-box small { font-size: 10px; font-weight: bold; display: block; margin-bottom: 5px; }
         .stat-box span { font-size: 14px; font-weight: bold; }
 
-        /* MVA & Ferie Info */
         .tax-info-row { display: flex; justify-content: space-between; padding: 0 10px; margin-bottom: 20px; color: #9ca3af; font-size: 13px; }
         .tax-info-row b { color: white; font-size: 16px; display: block; margin-top: 4px; }
 
-        /* Total Resultat */
         .result-card { border: 2px solid var(--yellow); border-radius: 20px; padding: 25px; text-align: center; margin-bottom: 20px; background: var(--card); }
         .result-card small { color: var(--yellow); font-weight: bold; letter-spacing: 1px; }
         .result-card h1 { margin: 10px 0 0 0; color: var(--green); font-size: 32px; }
 
-        /* Action Buttons */
         .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
         .action-btn { flex: 1; padding: 12px; border-radius: 15px; border: none; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 
-        /* Entries */
         .entry-card { background: var(--card); border-radius: 20px; padding: 18px; margin-bottom: 12px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
-        .entry-info small { color: #9ca3af; font-size: 12px; text-transform: uppercase; }
-        .entry-info h4 { margin: 5px 0; font-size: 18px; }
-        .entry-info p { margin: 0; color: #9ca3af; font-size: 12px; }
         .entry-amount { text-align: right; font-weight: bold; font-size: 18px; }
 
-        /* Nav */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111827; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111827; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
         .nav-item { text-align: center; color: #6b7280; font-size: 11px; cursor: pointer; }
-        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
         .nav-item.active { color: var(--yellow); }
 
-        /* Popups/Inputs */
         input, select { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: white; margin-bottom: 15px; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--green); color: white; font-weight: bold; }
+        .btn-save { width: 100%; padding: 15px; border-radius: 12px; border: none; color: white; font-weight: bold; cursor: pointer; }
         
-        .dots-menu { color: #6b7280; padding-left: 10px; cursor: pointer; }
+        .dots-menu { color: #6b7280; padding-left: 15px; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div id="auth-page" class="container" style="margin-top:100px; text-align:center;">
-    <h2 style="color:var(--yellow)">LOGG INN</h2>
-    <div onkeypress="if(event.key==='Enter') handleAuth()">
+<div id="auth-page" class="container" style="margin-top:50px;">
+    <div style="text-align:center">
+        <h2 id="auth-title" style="color:var(--yellow)">LOGG INN</h2>
+        <div id="reg-fields" style="display:none">
+            <input type="text" id="reg-name" placeholder="Full Name (Magacaaga)">
+        </div>
         <input type="email" id="email" placeholder="E-post">
         <input type="password" id="pass" placeholder="Passord">
-        <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
+        <button class="btn-save" style="background:var(--blue)" id="auth-btn" onclick="handleAuth()">LOGG INN</button>
+        <p onclick="toggleAuthMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; color: var(--blue)">Ma haysat account? Is diiwaan geli</p>
     </div>
 </div>
 
 <div id="main-app" style="display:none">
     <div class="container">
-        <div style="text-align:center; padding: 10px 0;">
-            <h4 style="color:var(--yellow); margin:0;">MOHAMED SALAAD</h4>
+        <div class="header-top">
+            <div class="profile-area">
+                <label for="pfp-upload">
+                    <img id="user-pfp" class="profile-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+                </label>
+                <input type="file" id="pfp-upload" style="display:none" onchange="uploadPFP(event)">
+                <h4 id="user-display-name" style="color:var(--yellow); margin:0; font-size: 14px;">WAA LA RARAYAA...</h4>
+            </div>
+            <div class="lang-icons">
+                <span onclick="alert('Norsk valgt')">🇳🇴</span>
+                <span onclick="alert('Somali valgt')">🇸🇴</span>
+                <span onclick="alert('English valgt')">🇺🇸</span>
+            </div>
         </div>
 
         <div id="page-dash" class="page">
@@ -91,8 +101,8 @@
             </div>
 
             <div class="btn-row">
-                <button class="action-btn" style="background:var(--green)" onclick="downloadCSV()"><i class="fas fa-file-invoice"></i> Report</button>
-                <button class="action-btn" style="background:var(--blue)" onclick="toggleMode()"><span id="mode-text">Modus: Total</span></button>
+                <button class="action-btn" style="background:var(--green)" onclick="alert('Report generated')"><i class="fas fa-file-invoice"></i> Report</button>
+                <button class="action-btn" style="background:var(--blue)" onclick="changePass()"><i class="fas fa-key"></i> Passord</button>
             </div>
 
             <div id="entries-list"></div>
@@ -100,21 +110,21 @@
 
         <div id="page-add" class="page" style="display:none;">
             <h3 style="text-align:center">LEGG TIL</h3>
-            <select id="e-type" onchange="updateCats()">
+            <select id="e-type" onchange="updateUIForType()">
                 <option value="income">INNTEKT (GREEN)</option>
                 <option value="expense" selected>UTGIFTER (RED)</option>
             </select>
             <select id="e-cat"></select>
             <input type="number" id="e-amt" placeholder="Beløp (kr)">
             <input type="text" id="e-desc" placeholder="Beskrivelse (f.eks Tesla, Dnb)">
-            <button class="btn-save" onclick="saveData()">LAGRE DATA</button>
+            <button class="btn-save" id="btn-save-data" style="background:var(--red)" onclick="saveData()">LAGRE DATA</button>
         </div>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-th-large"></i>Oversikt</div>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-th-large"></i>Oversikt</div>
         <div class="nav-item" onclick="document.getElementById('cam').click()"><i class="fas fa-camera"></i>Scanner</div>
-        <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus-circle"></i>Legg til</div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i>Legg til</div>
         <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i>Logg ut</div>
     </div>
     <input type="file" id="cam" capture="environment" accept="image/*" style="display:none" onchange="scanImage(event)">
@@ -123,34 +133,60 @@
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE", authDomain: "mohamed-salad-transport.firebaseapp.com", databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app", projectId: "mohamed-salad-transport", storageBucket: "mohamed-salad-transport.appspot.com", appId: "1:608716442795:web:34cafc1a23316664717bee" };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database(), auth = firebase.auth();
+    const db = firebase.database(), auth = firebase.auth(), storage = firebase.storage();
 
+    let isRegister = false;
     const cats = {
-        income: ["Faktura mva income", "Faktura uten mva"],
+        income: ["Faktura mva income", "Faktura uden mva"],
         expense: ["Drivstoff mva", "Bil fixed mva", "Regnskap mva", "Own withdrawal uten mva", "Forsikring mva", "Bil vasker mva", "Lønn + feriepenger", "Internet uten mva", "Telefon uten mva", "Dekk shift mva", "Kontor shoping mva", "Bank transaksjon uten mva"]
     };
 
-    function updateCats() {
-        const type = document.getElementById('e-type').value;
-        document.getElementById('e-cat').innerHTML = cats[type].map(c => `<option value="${c}">${c}</option>`).join('');
+    function toggleAuthMode() {
+        isRegister = !isRegister;
+        document.getElementById('auth-title').innerText = isRegister ? "DIIWAANGELIN" : "LOGG INN";
+        document.getElementById('auth-btn').innerText = isRegister ? "CREATE ACCOUNT" : "LOGG INN";
+        document.getElementById('reg-fields').style.display = isRegister ? "block" : "none";
+        document.getElementById('toggle-text').innerText = isRegister ? "Account ma haysataa? Log in" : "Ma haysat account? Is diiwaan geli";
     }
 
     function handleAuth() {
-        auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
+        const email = document.getElementById('email').value, pass = document.getElementById('pass').value;
+        if(isRegister) {
+            const name = document.getElementById('reg-name').value;
+            if(!name) return alert("Fadhlan magacaaga qor");
+            auth.createUserWithEmailAndPassword(email, pass).then(res => {
+                db.ref('users/' + res.user.uid + '/profile').set({ name: name });
+            }).catch(e => alert(e.message));
+        } else {
+            auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+        }
+    }
+
+    function updateUIForType() {
+        const type = document.getElementById('e-type').value;
+        document.getElementById('btn-save-data').style.background = type === 'income' ? 'var(--green)' : 'var(--red)';
+        document.getElementById('e-cat').innerHTML = cats[type].map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
     function saveData() {
-        const type = document.getElementById('e-type').value;
-        const cat = document.getElementById('e-cat').value;
-        const amt = parseFloat(document.getElementById('e-amt').value);
-        const desc = document.getElementById('e-desc').value;
+        const type = document.getElementById('e-type').value, amt = parseFloat(document.getElementById('e-amt').value), 
+              desc = document.getElementById('e-desc').value, cat = document.getElementById('e-cat').value;
         if(!amt || !desc) return alert("Fyll ut alt");
         db.ref('users/'+auth.currentUser.uid+'/entries').push({ type, cat, amt, desc, date: new Date().toLocaleDateString('no-NO') });
         showTab('dash');
     }
 
     function loadData() {
-        db.ref('users/'+auth.currentUser.uid+'/entries').on('value', snap => {
+        const uid = auth.currentUser.uid;
+        // Load Profile Name
+        db.ref('users/' + uid + '/profile/name').on('value', s => {
+            document.getElementById('user-display-name').innerText = (s.val() || "USER").toUpperCase();
+        });
+        // Load Profile Pic
+        storage.ref('users/'+uid+'/pfp').getDownloadURL().then(url => { document.getElementById('user-pfp').src = url; }).catch(() => {});
+
+        // Load Entries
+        db.ref('users/'+uid+'/entries').on('value', snap => {
             const list = document.getElementById('entries-list'); list.innerHTML = "";
             let ti=0, te=0;
             snap.forEach(child => {
@@ -158,11 +194,7 @@
                 if(v.type==='income') ti+=v.amt; else te+=v.amt;
                 list.innerHTML += `
                 <div class="entry-card" style="border-left-color:${v.type==='income'?'var(--green)':'var(--red)'}">
-                    <div class="entry-info">
-                        <small>${v.cat}</small>
-                        <h4>${v.desc}</h4>
-                        <p>${v.date}</p>
-                    </div>
+                    <div><small>${v.cat}</small><h4>${v.desc}</h4><p>${v.date}</p></div>
                     <div class="entry-amount" style="color:${v.type==='income'?'var(--green)':'var(--red)'}">
                         ${v.amt.toLocaleString()} kr
                         <i class="fas fa-ellipsis-v dots-menu" onclick="deleteItem('${child.key}')"></i>
@@ -179,8 +211,17 @@
         });
     }
 
+    function uploadPFP(e) {
+        const file = e.target.files[0];
+        if(file) storage.ref('users/'+auth.currentUser.uid+'/pfp').put(file).then(() => location.reload());
+    }
+
+    function changePass() {
+        const newP = prompt("Gali password-ka cusub:");
+        if(newP) auth.currentUser.updatePassword(newP).then(() => alert("Password-ka waa la bedelay!")).catch(e => alert(e.message));
+    }
+
     function scanImage(e) {
-        alert("Scanner-ka waa uu bilaabanayaa...");
         Tesseract.recognize(e.target.files[0], 'nor').then(({ data: { text } }) => {
             const m = text.match(/\d+[\.,]\d{2}/g);
             if(m) document.getElementById('e-amt').value = m[0].replace(',', '.');
@@ -188,13 +229,18 @@
         });
     }
 
-    function deleteItem(id) { if(confirm("Suley?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
+    function deleteItem(id) { if(confirm("Ma tirtirtaa xogtan?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
+    
     function showTab(t) { 
         document.querySelectorAll('.page').forEach(p => p.style.display='none'); 
         document.getElementById('page-'+t).style.display='block';
-        if(t==='add') updateCats();
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(t==='dash') document.getElementById('nav-dash').classList.add('active');
+        if(t==='add') { document.getElementById('nav-add').classList.add('active'); updateUIForType(); }
     }
+
     function logout() { auth.signOut().then(() => location.reload()); }
+    
     auth.onAuthStateChanged(u => { if(u) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); } });
 </script>
 </body>
