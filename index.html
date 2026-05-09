@@ -22,57 +22,37 @@
         .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
         
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; transition: 0.3s; overflow-x: hidden; }
-        
-        /* Layout Responsiveness */
         .container { max-width: 1000px; margin: auto; padding: 10px; }
-        
         .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .lang-btn { cursor: pointer; font-size: 20px; margin-left: 15px; }
-
         .auth-container { padding: 40px 20px; text-align: center; max-width: 400px; margin: 60px auto; background: var(--card); border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
         
-        /* Stats Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
-        .stat-box { background: var(--card); border: 2px solid; border-radius: 15px; padding: 20px 10px; text-align: center; transition: 0.3s; }
-        .stat-box:hover { transform: translateY(-5px); }
+        .stat-box { background: var(--card); border: 2px solid; border-radius: 15px; padding: 20px 10px; text-align: center; }
         .stat-box small { font-size: 10px; display: block; margin-bottom: 8px; font-weight: bold; opacity: 0.8; }
         .stat-box span { font-size: 16px; font-weight: bold; }
 
+        /* MVA & Feriepenger Row */
+        .tax-row { display: flex; justify-content: space-between; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--border); font-size: 12px; }
+        .tax-item b { display: block; color: var(--yellow); font-size: 14px; }
+
         .summary-card { background: var(--card); border: 3px solid var(--yellow); border-radius: 25px; padding: 30px; text-align: center; margin-bottom: 25px; }
-        .summary-card h1 { font-size: 32px; margin: 10px 0; }
+
+        .entry-card { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 15px; border-left: 8px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
         
-        /* Desktop specific tweaks */
-        @media (min-width: 768px) {
-            .stats-grid { gap: 25px; }
-            .stat-box span { font-size: 22px; }
-            .entry-card { margin: 0 0 15px 0 !important; }
-        }
+        /* Menu Dots Styling */
+        .menu-dots { cursor: pointer; padding: 5px 10px; color: #64748b; }
+        .menu-dropdown { display: none; position: absolute; right: 10px; top: 40px; background: #2d3748; border-radius: 8px; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-width: 100px; }
+        .menu-dropdown div { padding: 10px; border-bottom: 1px solid #4a5568; font-size: 13px; cursor: pointer; }
+        .menu-dropdown div:last-child { border-bottom: none; color: var(--red); }
 
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-        .filter-select { padding: 12px; border-radius: 12px; background: var(--card); color: var(--text); border: 1px solid var(--border); flex: 1; cursor: pointer; }
-
-        .view-toggle { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
-        .view-btn, .report-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; }
-        .view-btn { background: var(--blue); color: white; }
-        .report-btn { background: var(--green); color: white; }
-
-        /* Entry Cards */
-        .entry-card { background: var(--card); border-radius: 18px; padding: 18px; margin: 0 10px 15px 10px; border-left: 8px solid; display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .entry-info h4 { margin: 5px 0; font-size: 16px; }
-        .entry-info small { color: #888; font-size: 11px; }
-
-        /* Navigation */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
-        .nav-item { text-align: center; color: #64748b; font-size: 11px; cursor: pointer; flex: 1; transition: 0.2s; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); }
+        .nav-item { text-align: center; color: #64748b; font-size: 11px; cursor: pointer; flex: 1; }
         .nav-item i { font-size: 22px; margin-bottom: 5px; display: block; }
-        .nav-item.active { color: var(--yellow); transform: scale(1.1); }
+        .nav-item.active { color: var(--yellow); }
         
-        input, select { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; }
-        .btn-save { width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; color: white; transition: 0.2s; }
-        .btn-save:active { transform: scale(0.98); }
-
-        .img-preview { width: 100%; border-radius: 15px; margin-bottom: 15px; display: none; border: 2px solid var(--yellow); }
+        input, select { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; color: white; }
     </style>
 </head>
 <body id="body-tag">
@@ -86,30 +66,20 @@
     <input type="email" id="email" placeholder="E-post">
     <input type="password" id="pass" placeholder="Passord">
     <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
-    <p onclick="toggleAuth()" style="color:var(--yellow); cursor:pointer; margin-top:15px; font-size:14px;">Ma rabtaa inaad is qorto? <b>Registrer deg</b></p>
+    <p onclick="toggleAuth()" style="color:var(--yellow); cursor:pointer; margin-top:15px; font-size:14px;">Registrer deg</p>
 </div>
 
 <div id="main-app" style="display:none">
     <div class="top-bar">
-        <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
+        <i class="fas fa-moon" onclick="toggleTheme()"></i>
         <div class="header-title" style="padding:0; font-size:14px;">TRANSPORT PRO</div>
-        <div>
-            <span class="lang-btn" onclick="updateLang('no')">🇳🇴</span>
-            <span class="lang-btn" onclick="updateLang('so')">🇸🇴</span>
-        </div>
+        <div>🇳🇴 🇸🇴</div>
     </div>
 
     <div class="container">
-        <!-- Dashboard -->
         <div id="page-dash" class="page">
             <div class="header-title" style="color:var(--text); text-align:left; font-size:16px;">
                 👋 <span id="user-display-name">...</span>
-            </div>
-            
-            <div class="filter-bar">
-                <select id="month-filter" class="filter-select" onchange="renderList()">
-                    <option value="all">Dhamaan Bilaha</option>
-                </select>
             </div>
 
             <div class="stats-grid">
@@ -118,201 +88,123 @@
                 <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>NETTO</small><span id="total-netto">0</span></div>
             </div>
 
+            <!-- MVA & FERIEPENGER Section -->
+            <div class="tax-row">
+                <div class="tax-item">MVA (25%) <b id="tax-mva">0 kr</b></div>
+                <div class="tax-item" style="text-align:right">FERIEPENGER (10.2%) <b id="tax-ferie">0 kr</b></div>
+            </div>
+
             <div class="summary-card">
-                <small id="l-res">TOTAL RESULTAT (MVA INKL.)</small>
+                <small>TOTAL RESULTAT</small>
                 <h1 id="res-total" style="color:var(--green)">0 kr</h1>
             </div>
             
-            <div class="view-toggle">
-                <button class="report-btn" onclick="downloadReport()"><i class="fas fa-file-excel"></i> Export CSV</button>
-                <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Habka: Mid-mid</button>
-            </div>
-            
-            <div id="entries-list" class="entry-list-container"></div>
+            <div id="entries-list"></div>
         </div>
 
-        <!-- Add Data -->
+        <!-- Add Data Page -->
         <div id="page-add" class="page" style="display:none;">
             <div class="header-title">REGISTRER NY DATA</div>
-            <center><img id="scan-preview" class="img-preview"></center>
-            <div id="scan-loading" style="display:none; text-align:center; padding:10px; color:var(--yellow);"><i class="fas fa-spinner fa-spin"></i> Akhrinayaa...</div>
-            
             <select id="entry-category">
-                <optgroup label="INNTEKT">
-                    <option value="inc-mva">Sentrals avgift (MVA 25%)</option>
-                </optgroup>
-                <optgroup label="UTGIFTER">
-                    <option value="exp-fuel">Drivstoff (MVA 25%)</option>
-                    <option value="exp-fixed">Reparasjon (MVA 25%)</option>
-                    <option value="exp-lonn">Lønn (Skattepliktig)</option>
-                </optgroup>
+                <option value="inc-mva">Inntekt (MVA 25%)</option>
+                <option value="exp-fuel">Drivstoff (MVA 25%)</option>
+                <option value="exp-fixed">Reparasjon (MVA 25%)</option>
             </select>
-            <input type="text" id="entry-desc" placeholder="Maxay tahay? (Tusaale: Diesel)">
-            <input type="number" id="entry-amt" placeholder="Lacagta (kr)">
-            <button class="btn-save" style="background:var(--green); margin-top:10px;" onclick="saveData('income')">SAVE INCOME</button>
+            <input type="text" id="entry-desc" placeholder="Beskrivelse">
+            <input type="number" id="entry-amt" placeholder="Beløp (kr)">
+            <button class="btn-save" style="background:var(--green); margin-bottom:10px;" onclick="saveData('income')">SAVE INCOME</button>
             <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">SAVE EXPENSE</button>
         </div>
 
-        <!-- Profile -->
+        <!-- Profile Page -->
         <div id="page-profile" class="page" style="display:none; text-align:center;">
-            <div class="header-title">PROFILE SETTINGS</div>
-            <div class="summary-card" style="border-color:var(--blue)">
-                <i class="fas fa-user-circle" style="font-size:60px; color:var(--blue)"></i>
-                <h3 id="profile-name">User Name</h3>
-                <p id="profile-email" style="opacity:0.7">email@example.com</p>
-            </div>
-            <button class="btn-save" style="background:var(--blue)" onclick="changePassword()"><i class="fas fa-key"></i> Endre Passord</button>
-            <button class="btn-save" style="background:var(--red); margin-top:20px;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logg ut</button>
+            <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT</button>
         </div>
     </div>
 
-    <!-- Hidden Camera Trigger -->
-    <input type="file" id="camera-file" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)">
-
-    <!-- Navigation -->
     <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><span>Dash</span></div>
-        <div class="nav-item" onclick="document.getElementById('camera-file').click()"><i class="fas fa-camera"></i><span>Scanner</span></div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><span>Add</span></div>
-        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user-cog"></i><span>User</span></div>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i>Dash</div>
+        <div class="nav-item" onclick="document.getElementById('camera-file').click()"><i class="fas fa-camera"></i>Scanner</div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i>Add</div>
+        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user-cog"></i>User</div>
     </div>
+    <input type="file" id="camera-file" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)">
 </div>
 
 <script>
-    // Firebase Init
-    const firebaseConfig = {
-      apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-      authDomain: "mohamed-salad-transport.firebaseapp.com",
-      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "mohamed-salad-transport",
-      storageBucket: "mohamed-salad-transport.appspot.com",
-      appId: "1:608716442795:web:34cafc1a23316664717bee"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE", authDomain: "mohamed-salad-transport.firebaseapp.com", databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app", projectId: "mohamed-salad-transport", storageBucket: "mohamed-salad-transport.appspot.com", appId: "1:608716442795:web:34cafc1a23316664717bee" };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
-
-    let rawData = [];
-    let currentMode = 'individual';
-    let selectedFile = null;
+    const db = firebase.database(), auth = firebase.auth();
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
-    
     function toggleAuth() {
         const rf = document.getElementById('reg-fields');
         rf.style.display = rf.style.display === 'none' ? 'block' : 'none';
-        document.getElementById('auth-title').innerText = rf.style.display === 'none' ? 'LOGG INN' : 'REGISTRER DEG';
     }
 
     function handleAuth() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('pass').value;
+        const email = document.getElementById('email').value, pass = document.getElementById('pass').value;
         if(document.getElementById('reg-fields').style.display === 'none') {
             auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         } else {
-            const fn = document.getElementById('fname').value;
-            const ln = document.getElementById('lname').value;
+            const fn = document.getElementById('fname').value, ln = document.getElementById('lname').value;
             auth.createUserWithEmailAndPassword(email, pass).then(u => {
                 db.ref('users/' + u.user.uid + '/profile').set({ fullName: fn + " " + ln });
             }).catch(e => alert(e.message));
         }
     }
 
-    async function handleImage(event) {
-        const file = event.target.files[0]; if (!file) return;
-        selectedFile = file;
-        const reader = new FileReader();
-        reader.onload = e => { 
-            const img = document.getElementById('scan-preview');
-            img.src = e.target.result; img.style.display = 'block';
-            showTab('add');
-        };
-        reader.readAsDataURL(file);
-
-        document.getElementById('scan-loading').style.display = 'block';
-        try {
-            const result = await Tesseract.recognize(file, 'nor+eng');
-            const matches = result.data.text.replace(/\s/g, '').replace(',', '.').match(/\d+\.\d{2}/g);
-            if (matches) document.getElementById('entry-amt').value = Math.max(...matches.map(m => parseFloat(m)));
-            document.getElementById('entry-desc').value = "Scanned: " + new Date().toLocaleDateString();
-        } catch (e) { alert("Cillad Scanner!"); }
-        document.getElementById('scan-loading').style.display = 'none';
-    }
-
-    async function saveData(mainCat) {
-        const desc = document.getElementById('entry-desc').value;
-        const amt = parseFloat(document.getElementById('entry-amt').value);
-        const subCat = document.getElementById('entry-category').value;
+    function saveData(mainCat) {
+        const desc = document.getElementById('entry-desc').value, amt = parseFloat(document.getElementById('entry-amt').value), subCat = document.getElementById('entry-category').value;
         if(!desc || !amt) return alert("Fyll ut!");
-
-        const newRef = db.ref('users/' + auth.currentUser.uid + '/entries').push();
-        const entryId = newRef.key;
-        
-        let imgUrl = "";
-        if(selectedFile) {
-            const sRef = storage.ref(`users/${auth.currentUser.uid}/${entryId}`);
-            await sRef.put(selectedFile);
-            imgUrl = await sRef.getDownloadURL();
-        }
-
-        newRef.set({ desc, amt, subCat, mainCat, imgUrl, date: new Date().toLocaleDateString('no-NO'), timestamp: Date.now() });
-        
-        document.getElementById('entry-desc').value = "";
-        document.getElementById('entry-amt').value = "";
-        document.getElementById('scan-preview').style.display = 'none';
-        selectedFile = null;
+        db.ref('users/' + auth.currentUser.uid + '/entries').push({ desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO') });
+        document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
     }
 
     function loadData() {
-        const uid = auth.currentUser.uid;
-        document.getElementById('profile-email').innerText = auth.currentUser.email;
-        
-        db.ref('users/' + uid + '/profile/fullName').on('value', s => {
-            const name = s.val() || "User";
-            document.getElementById('user-display-name').innerText = name;
-            document.getElementById('profile-name').innerText = name;
-        });
-
-        db.ref('users/' + uid + '/entries').on('value', snap => {
-            rawData = []; let months = new Set();
+        db.ref('users/' + auth.currentUser.uid + '/profile/fullName').on('value', s => { document.getElementById('user-display-name').innerText = s.val() || "User"; });
+        db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
+            const list = document.getElementById('entries-list'); list.innerHTML = "";
+            let ti=0, te=0;
             snap.forEach(child => {
-                const v = child.val(); v.id = child.key; rawData.push(v);
-                const m = v.date.split('.')[1] + "/" + v.date.split('.')[2];
-                months.add(m);
+                const v = child.val(), id = child.key;
+                if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
+                list.innerHTML += `
+                <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
+                    <div class="entry-info"><h4>${v.desc}</h4><small>${v.date}</small></div>
+                    <div style="display:flex; align-items:center;">
+                        <b style="margin-right:10px">${v.amt.toLocaleString()} kr</b>
+                        <div class="menu-dots" onclick="toggleMenu('${id}')"><i class="fas fa-ellipsis-v"></i></div>
+                        <div id="menu-${id}" class="menu-dropdown">
+                            <div onclick="editItem('${id}')">Edit</div>
+                            <div onclick="delEntry('${id}')">Delete</div>
+                            <div onclick="toggleMenu('${id}')">Exit</div>
+                        </div>
+                    </div>
+                </div>`;
             });
-            const filter = document.getElementById('month-filter');
-            filter.innerHTML = '<option value="all">Dhamaan Bilaha</option>';
-            months.forEach(m => filter.innerHTML += `<option value="${m}">${m}</option>`);
-            renderList();
+            let netto = ti - te;
+            document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
+            document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
+            document.getElementById('total-netto').innerText = netto.toLocaleString() + " kr";
+            document.getElementById('res-total').innerText = netto.toLocaleString() + " kr";
+            // Calculations for MVA & Feriepenger
+            document.getElementById('tax-mva').innerText = (netto * 0.25).toLocaleString() + " kr";
+            document.getElementById('tax-ferie').innerText = (netto * 0.102).toLocaleString() + " kr";
         });
     }
 
-    function renderList() {
-        const list = document.getElementById('entries-list'); list.innerHTML = "";
-        const mFilter = document.getElementById('month-filter').value;
-        let ti=0, te=0;
+    function toggleMenu(id) {
+        const m = document.getElementById('menu-'+id);
+        m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    }
 
-        const filtered = rawData.filter(v => mFilter === 'all' || v.date.includes('.' + mFilter.split('/')[0] + '.' + mFilter.split('/')[1]));
-        
-        filtered.forEach(v => {
-            if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
-            list.innerHTML += `
-            <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
-                <div class="entry-info"><small>${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${v.date}</small></div>
-                <div style="text-align:right">
-                    <b style="font-size:16px;">${v.amt.toLocaleString()} kr</b><br>
-                    ${v.imgUrl ? `<i class="fas fa-file-image" style="color:var(--blue); margin-right:10px;" onclick="window.open('${v.imgUrl}')"></i>` : ''}
-                    <i class="fas fa-trash" style="color:#64748b; cursor:pointer;" onclick="delEntry('${v.id}')"></i>
-                </div>
-            </div>`;
-        });
-
-        document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
-        document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
-        document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
-        document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
+    function delEntry(id) { if(confirm("Tirtir?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
+    
+    function editItem(id) {
+        const newAmt = prompt("Geli lacagta cusub:");
+        if(newAmt) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).update({ amt: parseFloat(newAmt) });
     }
 
     function showTab(t) {
@@ -322,13 +214,7 @@
         document.getElementById('nav-'+t).classList.add('active');
     }
 
-    function delEntry(id) { if(confirm("Ma tirtirtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
-    
     function logout() { auth.signOut().then(() => window.location.reload()); }
-
-    function changePassword() {
-        auth.sendPasswordResetEmail(auth.currentUser.email).then(() => alert("Iimayl ayaa kuu soo dhacay si aad password-ka u bedesho."));
-    }
 
     auth.onAuthStateChanged(u => {
         if(u) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
