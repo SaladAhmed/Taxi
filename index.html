@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transport PRO</title>
     
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="TransportPRO">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -13,227 +18,322 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --bg: #111827; --card: #1f2937; --yellow: #f1c40f; --green: #10b981; --red: #ef4444; --blue: #3b82f6; --text: #f3f4f6; --border: #374151; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
-        .container { max-width: 500px; margin: auto; padding: 15px; }
+        :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
+        .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; transition: 0.3s; overflow-x: hidden; }
+        
+        /* Layout Responsiveness */
+        .container { max-width: 1000px; margin: auto; padding: 10px; }
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .lang-btn { cursor: pointer; font-size: 20px; margin-left: 15px; }
 
-        /* Header & Profile */
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(31, 41, 55, 0.8); padding: 12px; border-radius: 15px; border: 1px solid var(--border); }
-        .profile-area { display: flex; align-items: center; gap: 12px; }
-        .profile-img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--yellow); object-fit: cover; cursor: pointer; background: #374151; }
-        .lang-icons { display: flex; gap: 8px; font-size: 18px; }
+        .auth-container { padding: 40px 20px; text-align: center; max-width: 400px; margin: 60px auto; background: var(--card); border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+        .stat-box { background: var(--card); border: 2px solid; border-radius: 15px; padding: 20px 10px; text-align: center; transition: 0.3s; }
+        .stat-box:hover { transform: translateY(-5px); }
+        .stat-box small { font-size: 10px; display: block; margin-bottom: 8px; font-weight: bold; opacity: 0.8; }
+        .stat-box span { font-size: 16px; font-weight: bold; }
 
-        /* Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-box { border: 2px solid; border-radius: 12px; padding: 12px 5px; text-align: center; }
-        .stat-box small { font-size: 10px; font-weight: bold; display: block; margin-bottom: 4px; }
-        .stat-box span { font-size: 13px; font-weight: bold; }
+        .summary-card { background: var(--card); border: 3px solid var(--yellow); border-radius: 25px; padding: 30px; text-align: center; margin-bottom: 25px; }
+        .summary-card h1 { font-size: 32px; margin: 10px 0; }
+        
+        /* Desktop specific tweaks */
+        @media (min-width: 768px) {
+            .stats-grid { gap: 25px; }
+            .stat-box span { font-size: 22px; }
+            .entry-card { margin: 0 0 15px 0 !important; }
+        }
 
-        .tax-info-row { display: flex; justify-content: space-between; padding: 0 10px; margin-bottom: 15px; color: #9ca3af; font-size: 12px; }
-        .tax-info-row b { color: white; font-size: 15px; display: block; margin-top: 2px; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .filter-select { padding: 12px; border-radius: 12px; background: var(--card); color: var(--text); border: 1px solid var(--border); flex: 1; cursor: pointer; }
 
-        .result-card { border: 2px solid var(--yellow); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 20px; background: var(--card); }
-        .result-card h1 { margin: 10px 0 0 0; color: var(--green); font-size: 28px; }
+        .view-toggle { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+        .view-btn, .report-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; }
+        .view-btn { background: var(--blue); color: white; }
+        .report-btn { background: var(--green); color: white; }
 
-        .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
-        .action-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; color: white; cursor: pointer; font-size: 14px; }
+        /* Entry Cards */
+        .entry-card { background: var(--card); border-radius: 18px; padding: 18px; margin: 0 10px 15px 10px; border-left: 8px solid; display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .entry-info h4 { margin: 5px 0; font-size: 16px; }
+        .entry-info small { color: #888; font-size: 11px; }
 
-        /* Entries */
-        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 10px; border-left: 5px solid; display: flex; justify-content: space-between; align-items: center; }
-        .entry-info h4 { margin: 3px 0; font-size: 16px; }
-        .entry-info small { color: #9ca3af; font-size: 11px; }
+        /* Navigation */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
+        .nav-item { text-align: center; color: #64748b; font-size: 11px; cursor: pointer; flex: 1; transition: 0.2s; }
+        .nav-item i { font-size: 22px; margin-bottom: 5px; display: block; }
+        .nav-item.active { color: var(--yellow); transform: scale(1.1); }
+        
+        input, select { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; color: white; transition: 0.2s; }
+        .btn-save:active { transform: scale(0.98); }
 
-        /* Form Inputs */
-        input, select { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: white; margin-bottom: 12px; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 15px; border-radius: 12px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
-
-        /* Nav Bar */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111827; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { text-align: center; color: #6b7280; font-size: 10px; cursor: pointer; flex: 1; }
-        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
-        .nav-item.active { color: var(--yellow); }
+        .img-preview { width: 100%; border-radius: 15px; margin-bottom: 15px; display: none; border: 2px solid var(--yellow); }
     </style>
 </head>
-<body>
+<body id="body-tag">
 
-<!-- Login/Register Page -->
-<div id="auth-page" class="container" style="margin-top:60px;">
-    <div style="text-align:center">
-        <h2 id="auth-title" style="color:var(--yellow)">LOGG INN</h2>
-        <div id="reg-fields" style="display:none">
-            <input type="text" id="reg-name" placeholder="Fullt Navn (Magacaaga)">
-        </div>
-        <div onkeypress="if(event.key === 'Enter') handleAuth()">
-            <input type="email" id="email" placeholder="E-post">
-            <input type="password" id="pass" placeholder="Passord">
-            <button class="btn-save" style="background:var(--blue)" id="auth-btn" onclick="handleAuth()">LOGG INN</button>
-        </div>
-        <p onclick="toggleAuthMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; color: var(--blue)">Ma haysat account? <b>Is diiwaan geli</b></p>
+<div id="auth-page" class="auth-container">
+    <h2 id="auth-title">LOGG INN</h2>
+    <div id="reg-fields" style="display:none">
+        <input type="text" id="fname" placeholder="Fornavn">
+        <input type="text" id="lname" placeholder="Etternavn">
     </div>
+    <input type="email" id="email" placeholder="E-post">
+    <input type="password" id="pass" placeholder="Passord">
+    <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
+    <p onclick="toggleAuth()" style="color:var(--yellow); cursor:pointer; margin-top:15px; font-size:14px;">Ma rabtaa inaad is qorto? <b>Registrer deg</b></p>
 </div>
 
-<!-- Main App -->
 <div id="main-app" style="display:none">
-    <div class="container">
-        <!-- Header -->
-        <div class="header-top">
-            <div class="profile-area">
-                <label for="pfp-input"><img id="user-pfp" class="profile-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png"></label>
-                <input type="file" id="pfp-input" style="display:none" onchange="uploadPFP(event)">
-                <h4 id="user-display-name" style="color:var(--yellow); margin:0; font-size: 14px;">...</h4>
-            </div>
-            <div class="lang-icons">
-                <span onclick="alert('Norsk')">🇳🇴</span>
-                <span onclick="alert('Somali')">🇸🇴</span>
-                <span onclick="alert('English')">🇺🇸</span>
-            </div>
-        </div>
-
-        <!-- Dashboard -->
-        <div id="page-dash" class="page">
-            <div class="stats-grid">
-                <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INNTEKT</small><span id="top-ti">0 kr</span></div>
-                <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>UTGIFTER</small><span id="top-te">0 kr</span></div>
-                <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>NETTO</small><span id="top-nt">0 kr</span></div>
-            </div>
-            <div class="tax-info-row">
-                <div>MVA (25%) <b id="tax-mva">0 kr</b></div>
-                <div style="text-align:right">FERIEPENGER (10.2%) <b id="tax-ferie">0 kr</b></div>
-            </div>
-            <div class="result-card">
-                <small style="color:var(--yellow); font-weight: bold;">TOTAL RESULTAT</small>
-                <h1 id="res-total">0 kr</h1>
-            </div>
-            <div class="btn-row">
-                <button class="action-btn" style="background:var(--green)" onclick="alert('Report Ready')">Report</button>
-                <button class="action-btn" style="background:var(--blue)" onclick="changePass()">Passord</button>
-            </div>
-            <div id="entries-list"></div>
-        </div>
-
-        <!-- Add Page -->
-        <div id="page-add" class="page" style="display:none;">
-            <h3 style="text-align:center">LEGG TIL</h3>
-            <select id="e-type" onchange="updateFormColor()">
-                <option value="income">INNTEKT (GREEN)</option>
-                <option value="expense" selected>UTGIFTER (RED)</option>
-            </select>
-            <select id="e-cat"></select>
-            <input type="number" id="e-amt" placeholder="Beløp (kr)">
-            <input type="text" id="e-desc" placeholder="Beskrivelse">
-            <button class="btn-save" id="btn-save-main" onclick="saveData()">LAGRE DATA</button>
+    <div class="top-bar">
+        <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
+        <div class="header-title" style="padding:0; font-size:14px;">TRANSPORT PRO</div>
+        <div>
+            <span class="lang-btn" onclick="updateLang('no')">🇳🇴</span>
+            <span class="lang-btn" onclick="updateLang('so')">🇸🇴</span>
         </div>
     </div>
+
+    <div class="container">
+        <!-- Dashboard -->
+        <div id="page-dash" class="page">
+            <div class="header-title" style="color:var(--text); text-align:left; font-size:16px;">
+                👋 <span id="user-display-name">...</span>
+            </div>
+            
+            <div class="filter-bar">
+                <select id="month-filter" class="filter-select" onchange="renderList()">
+                    <option value="all">Dhamaan Bilaha</option>
+                </select>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INNTEKT</small><span id="total-income">0</span></div>
+                <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>UTGIFTER</small><span id="total-expense">0</span></div>
+                <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>NETTO</small><span id="total-netto">0</span></div>
+            </div>
+
+            <div class="summary-card">
+                <small id="l-res">TOTAL RESULTAT (MVA INKL.)</small>
+                <h1 id="res-total" style="color:var(--green)">0 kr</h1>
+            </div>
+            
+            <div class="view-toggle">
+                <button class="report-btn" onclick="downloadReport()"><i class="fas fa-file-excel"></i> Export CSV</button>
+                <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Habka: Mid-mid</button>
+            </div>
+            
+            <div id="entries-list" class="entry-list-container"></div>
+        </div>
+
+        <!-- Add Data -->
+        <div id="page-add" class="page" style="display:none;">
+            <div class="header-title">REGISTRER NY DATA</div>
+            <center><img id="scan-preview" class="img-preview"></center>
+            <div id="scan-loading" style="display:none; text-align:center; padding:10px; color:var(--yellow);"><i class="fas fa-spinner fa-spin"></i> Akhrinayaa...</div>
+            
+            <select id="entry-category">
+                <optgroup label="INNTEKT">
+                    <option value="inc-mva">Sentrals avgift (MVA 25%)</option>
+                </optgroup>
+                <optgroup label="UTGIFTER">
+                    <option value="exp-fuel">Drivstoff (MVA 25%)</option>
+                    <option value="exp-fixed">Reparasjon (MVA 25%)</option>
+                    <option value="exp-lonn">Lønn (Skattepliktig)</option>
+                </optgroup>
+            </select>
+            <input type="text" id="entry-desc" placeholder="Maxay tahay? (Tusaale: Diesel)">
+            <input type="number" id="entry-amt" placeholder="Lacagta (kr)">
+            <button class="btn-save" style="background:var(--green); margin-top:10px;" onclick="saveData('income')">SAVE INCOME</button>
+            <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">SAVE EXPENSE</button>
+        </div>
+
+        <!-- Profile -->
+        <div id="page-profile" class="page" style="display:none; text-align:center;">
+            <div class="header-title">PROFILE SETTINGS</div>
+            <div class="summary-card" style="border-color:var(--blue)">
+                <i class="fas fa-user-circle" style="font-size:60px; color:var(--blue)"></i>
+                <h3 id="profile-name">User Name</h3>
+                <p id="profile-email" style="opacity:0.7">email@example.com</p>
+            </div>
+            <button class="btn-save" style="background:var(--blue)" onclick="changePassword()"><i class="fas fa-key"></i> Endre Passord</button>
+            <button class="btn-save" style="background:var(--red); margin-top:20px;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logg ut</button>
+        </div>
+    </div>
+
+    <!-- Hidden Camera Trigger -->
+    <input type="file" id="camera-file" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)">
 
     <!-- Navigation -->
     <div class="nav-bar">
-        <div class="nav-item active" id="n-dash" onclick="showTab('dash')"><i class="fas fa-th-large"></i>Oversikt</div>
-        <div class="nav-item" onclick="document.getElementById('cam').click()"><i class="fas fa-camera"></i>Scanner</div>
-        <div class="nav-item" id="n-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i>Legg til</div>
-        <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i>Logg ut</div>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><span>Dash</span></div>
+        <div class="nav-item" onclick="document.getElementById('camera-file').click()"><i class="fas fa-camera"></i><span>Scanner</span></div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><span>Add</span></div>
+        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user-cog"></i><span>User</span></div>
     </div>
-    <input type="file" id="cam" capture="environment" accept="image/*" style="display:none" onchange="scanImage(event)">
 </div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE", authDomain: "mohamed-salad-transport.firebaseapp.com", databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app", projectId: "mohamed-salad-transport", storageBucket: "mohamed-salad-transport.appspot.com", appId: "1:608716442795:web:34cafc1a23316664717bee" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database(), auth = firebase.auth(), storage = firebase.storage();
-
-    let isReg = false;
-    const cats = {
-        income: ["Faktura mva income", "Faktura uden mva"],
-        expense: ["Drivstoff mva", "Bil fixed mva", "Regnskap mva", "Own withdrawal uten mva", "Forsikring mva", "Bil vasker mva", "Lønn + feriepenger", "Internet uten mva", "Telefon uten mva", "Dekk shift mva", "Kontor shoping mva", "Bank transaksjon uten mva"]
+    // Firebase Init
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
+      authDomain: "mohamed-salad-transport.firebaseapp.com",
+      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "mohamed-salad-transport",
+      storageBucket: "mohamed-salad-transport.appspot.com",
+      appId: "1:608716442795:web:34cafc1a23316664717bee"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    const storage = firebase.storage();
 
-    function toggleAuthMode() {
-        isReg = !isReg;
-        document.getElementById('auth-title').innerText = isReg ? "REGISTRER DEG" : "LOGG INN";
-        document.getElementById('reg-fields').style.display = isReg ? "block" : "none";
-        document.getElementById('auth-btn').innerText = isReg ? "SIGN UP" : "LOGG INN";
+    let rawData = [];
+    let currentMode = 'individual';
+    let selectedFile = null;
+
+    function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
+    
+    function toggleAuth() {
+        const rf = document.getElementById('reg-fields');
+        rf.style.display = rf.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('auth-title').innerText = rf.style.display === 'none' ? 'LOGG INN' : 'REGISTRER DEG';
     }
 
     function handleAuth() {
-        const email = document.getElementById('email').value, pass = document.getElementById('pass').value;
-        if(isReg) {
-            const name = document.getElementById('reg-name').value;
-            auth.createUserWithEmailAndPassword(email, pass).then(u => db.ref('users/'+u.user.uid+'/profile').set({name})).catch(e => alert(e.message));
-        } else {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+        if(document.getElementById('reg-fields').style.display === 'none') {
             auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+        } else {
+            const fn = document.getElementById('fname').value;
+            const ln = document.getElementById('lname').value;
+            auth.createUserWithEmailAndPassword(email, pass).then(u => {
+                db.ref('users/' + u.user.uid + '/profile').set({ fullName: fn + " " + ln });
+            }).catch(e => alert(e.message));
         }
     }
 
-    function updateFormColor() {
-        const type = document.getElementById('e-type').value;
-        document.getElementById('btn-save-main').style.background = type === 'income' ? 'var(--green)' : 'var(--red)';
-        document.getElementById('e-cat').innerHTML = cats[type].map(c => `<option value="${c}">${c}</option>`).join('');
+    async function handleImage(event) {
+        const file = event.target.files[0]; if (!file) return;
+        selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = e => { 
+            const img = document.getElementById('scan-preview');
+            img.src = e.target.result; img.style.display = 'block';
+            showTab('add');
+        };
+        reader.readAsDataURL(file);
+
+        document.getElementById('scan-loading').style.display = 'block';
+        try {
+            const result = await Tesseract.recognize(file, 'nor+eng');
+            const matches = result.data.text.replace(/\s/g, '').replace(',', '.').match(/\d+\.\d{2}/g);
+            if (matches) document.getElementById('entry-amt').value = Math.max(...matches.map(m => parseFloat(m)));
+            document.getElementById('entry-desc').value = "Scanned: " + new Date().toLocaleDateString();
+        } catch (e) { alert("Cillad Scanner!"); }
+        document.getElementById('scan-loading').style.display = 'none';
     }
 
-    function saveData() {
-        const type = document.getElementById('e-type').value, amt = parseFloat(document.getElementById('e-amt').value),
-              desc = document.getElementById('e-desc').value, cat = document.getElementById('e-cat').value;
-        if(!amt || !desc) return alert("Fyll ut!");
-        db.ref('users/'+auth.currentUser.uid+'/entries').push({ type, cat, amt, desc, date: new Date().toLocaleDateString('no-NO') });
+    async function saveData(mainCat) {
+        const desc = document.getElementById('entry-desc').value;
+        const amt = parseFloat(document.getElementById('entry-amt').value);
+        const subCat = document.getElementById('entry-category').value;
+        if(!desc || !amt) return alert("Fyll ut!");
+
+        const newRef = db.ref('users/' + auth.currentUser.uid + '/entries').push();
+        const entryId = newRef.key;
+        
+        let imgUrl = "";
+        if(selectedFile) {
+            const sRef = storage.ref(`users/${auth.currentUser.uid}/${entryId}`);
+            await sRef.put(selectedFile);
+            imgUrl = await sRef.getDownloadURL();
+        }
+
+        newRef.set({ desc, amt, subCat, mainCat, imgUrl, date: new Date().toLocaleDateString('no-NO'), timestamp: Date.now() });
+        
+        document.getElementById('entry-desc').value = "";
+        document.getElementById('entry-amt').value = "";
+        document.getElementById('scan-preview').style.display = 'none';
+        selectedFile = null;
         showTab('dash');
     }
 
     function loadData() {
         const uid = auth.currentUser.uid;
-        db.ref('users/'+uid+'/profile/name').on('value', s => document.getElementById('user-display-name').innerText = (s.val() || "USER").toUpperCase());
-        storage.ref('users/'+uid+'/pfp').getDownloadURL().then(url => document.getElementById('user-pfp').src = url).catch(()=>{});
+        document.getElementById('profile-email').innerText = auth.currentUser.email;
         
-        db.ref('users/'+uid+'/entries').on('value', snap => {
-            const list = document.getElementById('entries-list'); list.innerHTML = "";
-            let ti=0, te=0;
-            snap.forEach(c => {
-                const v = c.val();
-                if(v.type==='income') ti+=v.amt; else te+=v.amt;
-                list.innerHTML += `
-                    <div class="entry-card" style="border-left-color:${v.type==='income'?'var(--green)':'var(--red)'}">
-                        <div class="entry-info"><small>${v.cat}</small><h4>${v.desc}</h4><p>${v.date}</p></div>
-                        <div style="color:${v.type==='income'?'var(--green)':'var(--red)'}; font-weight:bold">${v.amt.toLocaleString()} kr <i class="fas fa-trash" style="margin-left:10px; font-size:12px; color:#6b7280" onclick="deleteItem('${c.key}')"></i></div>
-                    </div>`;
+        db.ref('users/' + uid + '/profile/fullName').on('value', s => {
+            const name = s.val() || "User";
+            document.getElementById('user-display-name').innerText = name;
+            document.getElementById('profile-name').innerText = name;
+        });
+
+        db.ref('users/' + uid + '/entries').on('value', snap => {
+            rawData = []; let months = new Set();
+            snap.forEach(child => {
+                const v = child.val(); v.id = child.key; rawData.push(v);
+                const m = v.date.split('.')[1] + "/" + v.date.split('.')[2];
+                months.add(m);
             });
-            let nt = ti - te;
-            document.getElementById('top-ti').innerText = ti.toLocaleString() + " kr";
-            document.getElementById('top-te').innerText = te.toLocaleString() + " kr";
-            document.getElementById('top-nt').innerText = nt.toLocaleString() + " kr";
-            document.getElementById('res-total').innerText = nt.toLocaleString() + " kr";
-            document.getElementById('tax-mva').innerText = (nt * 0.25).toLocaleString() + " kr";
-            document.getElementById('tax-ferie').innerText = (nt * 0.102).toLocaleString() + " kr";
+            const filter = document.getElementById('month-filter');
+            filter.innerHTML = '<option value="all">Dhamaan Bilaha</option>';
+            months.forEach(m => filter.innerHTML += `<option value="${m}">${m}</option>`);
+            renderList();
         });
     }
 
-    function scanImage(e) {
-        Tesseract.recognize(e.target.files[0], 'nor').then(({ data: { text } }) => {
-            const m = text.match(/\d+[\.,]\d{2}/g);
-            if(m) document.getElementById('e-amt').value = m[0].replace(',', '.');
-            showTab('add');
+    function renderList() {
+        const list = document.getElementById('entries-list'); list.innerHTML = "";
+        const mFilter = document.getElementById('month-filter').value;
+        let ti=0, te=0;
+
+        const filtered = rawData.filter(v => mFilter === 'all' || v.date.includes('.' + mFilter.split('/')[0] + '.' + mFilter.split('/')[1]));
+        
+        filtered.forEach(v => {
+            if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
+            list.innerHTML += `
+            <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
+                <div class="entry-info"><small>${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${v.date}</small></div>
+                <div style="text-align:right">
+                    <b style="font-size:16px;">${v.amt.toLocaleString()} kr</b><br>
+                    ${v.imgUrl ? `<i class="fas fa-file-image" style="color:var(--blue); margin-right:10px;" onclick="window.open('${v.imgUrl}')"></i>` : ''}
+                    <i class="fas fa-trash" style="color:#64748b; cursor:pointer;" onclick="delEntry('${v.id}')"></i>
+                </div>
+            </div>`;
         });
-    }
 
-    function uploadPFP(e) {
-        const file = e.target.files[0];
-        if(file) storage.ref('users/'+auth.currentUser.uid+'/pfp').put(file).then(() => location.reload());
+        document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
+        document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
+        document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
+        document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
     }
-
-    function changePass() {
-        const p = prompt("New Password:");
-        if(p) auth.currentUser.updatePassword(p).then(() => alert("Saved!")).catch(e => alert(e.message));
-    }
-
-    function deleteItem(id) { if(confirm("Tirtir?")) db.ref('users/'+auth.currentUser.uid+'/entries/'+id).remove(); }
 
     function showTab(t) {
-        document.querySelectorAll('.page').forEach(p => p.style.display='none');
-        document.getElementById('page-'+t).style.display='block';
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+        document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if(t==='dash') document.getElementById('n-dash').classList.add('active');
-        if(t==='add') { document.getElementById('n-add').classList.add('active'); updateFormColor(); }
+        document.getElementById('nav-'+t).classList.add('active');
     }
 
-    function logout() { auth.signOut().then(() => location.reload()); }
-    auth.onAuthStateChanged(u => { if(u) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); } });
+    function delEntry(id) { if(confirm("Ma tirtirtaa?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
+    
+    function logout() { auth.signOut().then(() => window.location.reload()); }
+
+    function changePassword() {
+        auth.sendPasswordResetEmail(auth.currentUser.email).then(() => alert("Iimayl ayaa kuu soo dhacay si aad password-ka u bedesho."));
+    }
+
+    auth.onAuthStateChanged(u => {
+        if(u) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
+        else { document.getElementById('auth-page').style.display='block'; document.getElementById('main-app').style.display='none'; }
+    });
 </script>
 </body>
 </html>
