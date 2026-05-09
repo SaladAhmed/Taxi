@@ -10,7 +10,6 @@
     <meta name="apple-mobile-web-app-title" content="TransportPRO">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
     
-    <!-- Firebase Libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -148,6 +147,11 @@
 
     <div id="page-add" class="page" style="display:none; padding: 20px; max-width: 600px; margin: auto;">
         <div class="header-title" id="l-add-title">REGISTRER NY DATA</div>
+        
+        <!-- TAARIIKHDA DOORASHADA (CUSUB) -->
+        <label id="l-date" style="font-size:12px; color:var(--yellow); font-weight:bold;">TAARIIKHDA:</label>
+        <input type="date" id="entry-date">
+
         <select id="entry-category">
             <optgroup label="INNTEKT" id="opt-inc">
                 <option value="inc-mva">Sentrals avgift (MVA 25%)</option>
@@ -217,22 +221,21 @@
     let undoTimer = null;
     let tempImgUrl = null;
 
-    // Filter-ka halkan waxaan ku xiray kaliya sanadka 2026
     function setupFilter() {
         const select = document.getElementById('month-filter');
         const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
         const year2026 = 2026;
         let options = `<option value="all">Alt tid</option>`;
-        
         for(let i = 0; i < 12; i++) {
             let m = i + 1;
             options += `<option value="${m}-${year2026}">${months[i]} ${year2026}</option>`;
         }
         select.innerHTML = options;
-        
-        // Si toos ah u dooro bisha hadda la joogo
         const currentMonth = new Date().getMonth() + 1;
         select.value = `${currentMonth}-2026`;
+        
+        // Sidoo kale ku dar taariikhda maanta meesha lagu keydinayo
+        document.getElementById('entry-date').valueAsDate = new Date();
     }
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
@@ -288,12 +291,10 @@
             const storageRef = storage.ref(`receipts/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
             const uploadTask = await storageRef.put(file);
             tempImgUrl = await uploadTask.ref.getDownloadURL();
-
             const result = await Tesseract.recognize(file, 'nor+eng');
             const text = result.data.text.toLowerCase();
             const matches = text.replace(/\s/g, '').replace(',', '.').match(/\d+\.\d{2}/g);
             let finalAmt = matches ? Math.max(...matches.map(m => parseFloat(m))) : 0;
-            
             showTab('add');
             document.getElementById('entry-amt').value = finalAmt > 0 ? finalAmt : "";
             document.getElementById('entry-desc').value = "Scanned Receipt";
@@ -306,14 +307,13 @@
         const desc = document.getElementById('entry-desc').value.trim();
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const subCat = document.getElementById('entry-category').value;
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('no-NO');
-        
-        // Halkan waxaa lagu xiray sanadka 2026
-        const filterKey = `${now.getMonth()+1}-2026`;
+        const selectedDate = new Date(document.getElementById('entry-date').value);
 
-        if(!desc || !amt) return alert("Fyll ut!");
-        
+        if(!desc || !amt || isNaN(selectedDate.getTime())) return alert("Fyll ut!");
+
+        const dateStr = selectedDate.toLocaleDateString('no-NO');
+        const filterKey = `${selectedDate.getMonth()+1}-${selectedDate.getFullYear()}`;
+
         const newRef = db.ref('users/' + auth.currentUser.uid + '/entries').push();
         lastSavedId = newRef.key;
         newRef.set({ 
