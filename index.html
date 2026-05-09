@@ -14,7 +14,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script> <!-- Added for Storage -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -52,7 +52,6 @@
         .view-btn { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
         .report-btn { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
         
-        /* New Filter Style */
         #month-filter { background: var(--card); color: var(--text); border: 1px solid var(--yellow); padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
         .entry-list-container { max-width: 800px; margin: auto; }
@@ -218,17 +217,18 @@
     let undoTimer = null;
     let tempImgUrl = null;
 
-    // Generate Month Filter (Current Year 2026)
+    // Fixed Month Filter Logic for 2026
     function setupFilter() {
         const select = document.getElementById('month-filter');
         const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
-        const now = new Date(); // Automatically gets current date (May 2026)
+        const now = new Date(); // May 2026
         let options = `<option value="all">Alt tid</option>`;
+        
         for(let i = 0; i < 12; i++) {
-            let m = (now.getMonth() - i);
-            let y = now.getFullYear();
-            if(m < 0) { m += 12; y -= 1; }
-            options += `<option value="${m+1}-${y}">${months[m]} ${y}</option>`;
+            let d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            let m = d.getMonth() + 1;
+            let y = d.getFullYear();
+            options += `<option value="${m}-${y}">${months[d.getMonth()]} ${y}</option>`;
         }
         select.innerHTML = options;
     }
@@ -283,27 +283,20 @@
         const loading = document.getElementById('scan-loading');
         loading.style.display = 'block';
         try {
-            // 1. Upload to Firebase Storage
             const storageRef = storage.ref(`receipts/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
             const uploadTask = await storageRef.put(file);
             tempImgUrl = await uploadTask.ref.getDownloadURL();
 
-            // 2. OCR Text Recognition
             const result = await Tesseract.recognize(file, 'nor+eng');
             const text = result.data.text.toLowerCase();
             const matches = text.replace(/\s/g, '').replace(',', '.').match(/\d+\.\d{2}/g);
             let finalAmt = matches ? Math.max(...matches.map(m => parseFloat(m))) : 0;
             
-            if (finalAmt > 0) {
-                showTab('add');
-                document.getElementById('entry-amt').value = finalAmt;
-                document.getElementById('entry-desc').value = "Scanned Receipt";
-                alert("Scanner-ku wuxuu helay: " + finalAmt + " kr. Sawirkiina waa la keydiyay.");
-            } else {
-                showTab('add');
-                alert("Lacagta ma aqoonsan karo, laakiin sawirkii waa la upload gareeyay.");
-            }
-        } catch (e) { alert("Cillad Scanner/Upload."); console.error(e); }
+            showTab('add');
+            document.getElementById('entry-amt').value = finalAmt > 0 ? finalAmt : "";
+            document.getElementById('entry-desc').value = "Scanned Receipt";
+            alert(finalAmt > 0 ? "Scanner-ku wuxuu helay: " + finalAmt + " kr" : "Lacagta ma aqoonsan karo.");
+        } catch (e) { alert("Cillad Scanner/Upload."); }
         finally { loading.style.display = 'none'; event.target.value = ''; }
     }
 
@@ -320,16 +313,13 @@
         const newRef = db.ref('users/' + auth.currentUser.uid + '/entries').push();
         lastSavedId = newRef.key;
         newRef.set({ 
-            desc, 
-            amt, 
-            subCat, 
-            mainCat, 
+            desc, amt, subCat, mainCat, 
             date: dateStr, 
             filterKey: filterKey,
             img: tempImgUrl || null 
         });
         
-        tempImgUrl = null; // reset
+        tempImgUrl = null;
         document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
         showUndoToast(currentLang === 'so' ? "Waa la keydiyay!" : "Lagret!");
@@ -360,7 +350,6 @@
             rawData = []; let ti=0, te=0, tmva=0, tfp=0;
             snap.forEach(child => {
                 const v = child.val(); v.id = child.key;
-                // Apply Month Filter
                 if(filterVal === "all" || v.filterKey === filterVal) {
                     rawData.push(v);
                     if(v.mainCat === 'income') {
