@@ -14,7 +14,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script> <!-- Added for Storage -->
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -46,13 +46,13 @@
 
         .mva-card { background: var(--card); border: 2px solid var(--border); border-radius: 15px; margin: 10px auto; padding: 15px; display: flex; justify-content: space-between; align-items: center; max-width: 780px; }
 
-        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px auto; padding: 20px; text-align: center; max-width: 770px; position: relative; }
-        .eye-toggle { position: absolute; top: 10px; right: 15px; cursor: pointer; color: var(--yellow); font-size: 18px; }
+        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px auto; padding: 20px; text-align: center; max-width: 770px; }
         
         .view-toggle { display: flex; flex-wrap: wrap; justify-content: space-between; padding: 0 20px; gap: 10px; max-width: 800px; margin: auto; }
         .view-btn { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
         .report-btn { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
         
+        /* New Filter Style */
         #month-filter { background: var(--card); color: var(--text); border: 1px solid var(--yellow); padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
         .entry-list-container { max-width: 800px; margin: auto; }
@@ -119,20 +119,19 @@
         </div>
         
         <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span class="balance-text" id="total-income">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span class="balance-text" id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span class="balance-text" id="total-netto">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
         
         <div class="mva-card">
-            <div><small style="color:#888; display:block">MVA (25%)</small><b class="balance-text" id="res-mva" style="font-size:18px">0 kr</b></div>
-            <div style="text-align:right"><small style="color:#888; display:block" id="l-fp-text">FERIEPENGER (10.2%)</small><b class="balance-text" id="res-fp">0 kr</b></div>
+            <div><small style="color:#888; display:block">MVA (25%)</small><b id="res-mva" style="font-size:18px">0 kr</b></div>
+            <div style="text-align:right"><small style="color:#888; display:block" id="l-fp-text">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
         </div>
         
         <div class="summary-card">
-            <i class="fas fa-eye eye-toggle" onclick="toggleBalanceVisibility()"></i>
             <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULTAT</small>
-            <h1 class="balance-text" id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
+            <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
         </div>
         
         <div id="scan-loading"><i class="fas fa-spinner fa-spin"></i> Smart Scanning & Uploading...</div>
@@ -218,13 +217,12 @@
     let lastSavedId = null; 
     let undoTimer = null;
     let tempImgUrl = null;
-    let isBalanceHidden = false;
 
-    // Generate Month Filter (Updated for 2026)
+    // Generate Month Filter (Current Year 2026)
     function setupFilter() {
         const select = document.getElementById('month-filter');
         const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
-        const now = new Date(); // This is May 2026
+        const now = new Date(); // Automatically gets current date (May 2026)
         let options = `<option value="all">Alt tid</option>`;
         for(let i = 0; i < 12; i++) {
             let m = (now.getMonth() - i);
@@ -233,19 +231,6 @@
             options += `<option value="${m+1}-${y}">${months[m]} ${y}</option>`;
         }
         select.innerHTML = options;
-    }
-
-    function toggleBalanceVisibility() {
-        isBalanceHidden = !isBalanceHidden;
-        const eyeIcon = document.querySelector('.eye-toggle');
-        eyeIcon.classList.toggle('fa-eye');
-        eyeIcon.classList.toggle('fa-eye-slash');
-        loadData(); // Re-render values
-    }
-
-    function formatBalance(val) {
-        if (isBalanceHidden) return "**** kr";
-        return val.toLocaleString() + " kr";
     }
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
@@ -298,10 +283,12 @@
         const loading = document.getElementById('scan-loading');
         loading.style.display = 'block';
         try {
+            // 1. Upload to Firebase Storage
             const storageRef = storage.ref(`receipts/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
             const uploadTask = await storageRef.put(file);
             tempImgUrl = await uploadTask.ref.getDownloadURL();
 
+            // 2. OCR Text Recognition
             const result = await Tesseract.recognize(file, 'nor+eng');
             const text = result.data.text.toLowerCase();
             const matches = text.replace(/\s/g, '').replace(',', '.').match(/\d+\.\d{2}/g);
@@ -342,7 +329,7 @@
             img: tempImgUrl || null 
         });
         
-        tempImgUrl = null; 
+        tempImgUrl = null; // reset
         document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
         showUndoToast(currentLang === 'so' ? "Waa la keydiyay!" : "Lagret!");
@@ -373,6 +360,7 @@
             rawData = []; let ti=0, te=0, tmva=0, tfp=0;
             snap.forEach(child => {
                 const v = child.val(); v.id = child.key;
+                // Apply Month Filter
                 if(filterVal === "all" || v.filterKey === filterVal) {
                     rawData.push(v);
                     if(v.mainCat === 'income') {
@@ -383,12 +371,12 @@
                     }
                 }
             });
-            document.getElementById('total-income').innerText = formatBalance(ti);
-            document.getElementById('total-expense').innerText = formatBalance(te);
-            document.getElementById('total-netto').innerText = formatBalance(ti - te);
-            document.getElementById('res-mva').innerText = formatBalance(Math.floor(tmva));
-            document.getElementById('res-fp').innerText = formatBalance(Math.floor(tfp));
-            document.getElementById('res-total').innerText = formatBalance(ti - te);
+            document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
+            document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
+            document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
+            document.getElementById('res-mva').innerText = Math.floor(tmva).toLocaleString() + " kr";
+            document.getElementById('res-fp').innerText = Math.floor(tfp).toLocaleString() + " kr";
+            document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
             renderList();
         });
     }
@@ -412,7 +400,7 @@
                     ${imgBtn}
                 </div>
                 <div style="text-align:right">
-                    <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${formatBalance(v.amt)}</span>
+                    <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
                     <div id="m-${v.id}" class="dropdown">
                         <div onclick="editEntry('${v.id}', '${v.desc}', ${v.amt})">Rediger</div>
