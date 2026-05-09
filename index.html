@@ -10,9 +10,11 @@
     <meta name="apple-mobile-web-app-title" content="TransportPRO">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
     
+    <!-- Firebase Libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script> <!-- Added for Storage -->
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -46,9 +48,12 @@
 
         .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px auto; padding: 20px; text-align: center; max-width: 770px; }
         
-        .view-toggle { display: flex; justify-content: space-between; padding: 0 20px; margin-bottom: 10px; max-width: 800px; margin: auto; }
+        .view-toggle { display: flex; flex-wrap: wrap; justify-content: space-between; padding: 0 20px; gap: 10px; max-width: 800px; margin: auto; }
         .view-btn { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
         .report-btn { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        
+        /* New Filter Style */
+        #month-filter { background: var(--card); color: var(--text); border: 1px solid var(--yellow); padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
         .entry-list-container { max-width: 800px; margin: auto; }
         .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -64,11 +69,11 @@
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
         
-        /* Undo Toast Style */
         #undo-toast { display: none; position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 20px; border-radius: 30px; border: 1px solid var(--yellow); z-index: 2000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); align-items: center; gap: 15px; min-width: 250px; justify-content: space-between; }
         #undo-toast button { background: var(--yellow); color: black; border: none; padding: 5px 12px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
         #scan-loading { display: none; font-size: 14px; color: var(--yellow); text-align: center; padding: 10px; font-weight: bold; }
+        .receipt-link { color: var(--blue); font-size: 12px; text-decoration: underline; cursor: pointer; display: block; margin-top: 5px; }
     </style>
 </head>
 <body id="body-tag">
@@ -106,28 +111,35 @@
 
     <div id="page-dash" class="page">
         <div class="header-title">
-            <span class="name-wrapper" onclick="changeName()">
-                <span id="user-display-name">Laster...</span>
-                <i class="fas fa-edit"></i>
+            <span class="name-wrapper">
+                <span id="user-display-name" onclick="changeName()">Laster...</span>
+                <i class="fas fa-edit" onclick="changeName()"></i>
+                <i class="fas fa-key" onclick="updatePassword()" style="margin-left:15px; color:var(--yellow)"></i>
             </span>
         </div>
+        
         <div class="stats-grid">
             <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
+        
         <div class="mva-card">
             <div><small style="color:#888; display:block">MVA (25%)</small><b id="res-mva" style="font-size:18px">0 kr</b></div>
             <div style="text-align:right"><small style="color:#888; display:block" id="l-fp-text">FERIEPENGER (10.2%)</small><b id="res-fp">0 kr</b></div>
         </div>
+        
         <div class="summary-card">
             <small style="color:var(--yellow); font-weight:bold;" id="l-res">TOTAL RESULTAT</small>
             <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
         </div>
         
-        <div id="scan-loading"><i class="fas fa-spinner fa-spin"></i> Smart Scanning... Sabir...</div>
+        <div id="scan-loading"><i class="fas fa-spinner fa-spin"></i> Smart Scanning & Uploading...</div>
 
         <div class="view-toggle">
+            <select id="month-filter" onchange="loadData()">
+                <!-- Months generated by JS -->
+            </select>
             <button class="report-btn" onclick="downloadReport()"><i class="fas fa-file-download"></i> Report</button>
             <button class="view-btn" id="toggle-view-btn" onclick="toggleView()">Modus: Individuell</button>
         </div>
@@ -197,12 +209,29 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
+    const storage = firebase.storage();
 
     let rawData = [];
     let currentMode = 'individual'; 
     let currentLang = 'no';
     let lastSavedId = null; 
     let undoTimer = null;
+    let tempImgUrl = null;
+
+    // Generate Month Filter
+    function setupFilter() {
+        const select = document.getElementById('month-filter');
+        const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
+        const now = new Date();
+        let options = `<option value="all">Alt tid</option>`;
+        for(let i = 0; i < 12; i++) {
+            let m = (now.getMonth() - i);
+            let y = now.getFullYear();
+            if(m < 0) { m += 12; y -= 1; }
+            options += `<option value="${m+1}-${y}">${months[m]} ${y}</option>`;
+        }
+        select.innerHTML = options;
+    }
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
     function togglePassView() {
@@ -240,22 +269,41 @@
         if (newName && newName.trim() !== "") db.ref('users/' + auth.currentUser.uid + '/profile').update({ fullName: newName.trim().toUpperCase() });
     }
 
+    function updatePassword() {
+        const newPass = prompt("Geli Password-ka cusub:");
+        if(newPass && newPass.length >= 6) {
+            auth.currentUser.updatePassword(newPass).then(() => alert("Password-ka waa la beddelay!")).catch(e => alert(e.message));
+        } else if (newPass) {
+            alert("Password-ku waa inuu ka badnaadaa 6 xaraf.");
+        }
+    }
+
     async function scanInvoice(event) {
         const file = event.target.files[0]; if (!file) return;
         const loading = document.getElementById('scan-loading');
         loading.style.display = 'block';
         try {
+            // 1. Upload to Firebase Storage
+            const storageRef = storage.ref(`receipts/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
+            const uploadTask = await storageRef.put(file);
+            tempImgUrl = await uploadTask.ref.getDownloadURL();
+
+            // 2. OCR Text Recognition
             const result = await Tesseract.recognize(file, 'nor+eng');
             const text = result.data.text.toLowerCase();
             const matches = text.replace(/\s/g, '').replace(',', '.').match(/\d+\.\d{2}/g);
             let finalAmt = matches ? Math.max(...matches.map(m => parseFloat(m))) : 0;
+            
             if (finalAmt > 0) {
                 showTab('add');
                 document.getElementById('entry-amt').value = finalAmt;
-                document.getElementById('entry-desc').value = "Scanned: " + new Date().toLocaleDateString();
-                alert("Scanner-ku wuxuu helay: " + finalAmt + " kr.");
-            } else alert("Ma aqoonsan karo nambarka.");
-        } catch (e) { alert("Cillad Scanner."); }
+                document.getElementById('entry-desc').value = "Scanned Receipt";
+                alert("Scanner-ku wuxuu helay: " + finalAmt + " kr. Sawirkiina waa la keydiyay.");
+            } else {
+                showTab('add');
+                alert("Lacagta ma aqoonsan karo, laakiin sawirkii waa la upload gareeyay.");
+            }
+        } catch (e) { alert("Cillad Scanner/Upload."); console.error(e); }
         finally { loading.style.display = 'none'; event.target.value = ''; }
     }
 
@@ -263,12 +311,25 @@
         const desc = document.getElementById('entry-desc').value.trim();
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const subCat = document.getElementById('entry-category').value;
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('no-NO');
+        const filterKey = `${now.getMonth()+1}-${now.getFullYear()}`;
+
         if(!desc || !amt) return alert("Fyll ut!");
         
         const newRef = db.ref('users/' + auth.currentUser.uid + '/entries').push();
         lastSavedId = newRef.key;
-        newRef.set({ desc, amt, subCat, mainCat, date: new Date().toLocaleDateString('no-NO') });
+        newRef.set({ 
+            desc, 
+            amt, 
+            subCat, 
+            mainCat, 
+            date: dateStr, 
+            filterKey: filterKey,
+            img: tempImgUrl || null 
+        });
         
+        tempImgUrl = null; // reset
         document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
         showUndoToast(currentLang === 'so' ? "Waa la keydiyay!" : "Lagret!");
@@ -291,18 +352,23 @@
     }
 
     function loadData() {
+        const filterVal = document.getElementById('month-filter').value;
         db.ref('users/' + auth.currentUser.uid + '/profile/fullName').on('value', snap => {
             document.getElementById('user-display-name').innerText = snap.val() || "USER";
         });
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
             rawData = []; let ti=0, te=0, tmva=0, tfp=0;
             snap.forEach(child => {
-                const v = child.val(); v.id = child.key; rawData.push(v);
-                if(v.mainCat === 'income') {
-                    ti += v.amt; if(v.subCat === 'inc-mva') tmva += (v.amt * 0.20);
-                } else {
-                    te += v.amt; if(['exp-fuel', 'exp-fixed', 'exp-wash', 'exp-regnskap', 'exp-anet-mva'].includes(v.subCat)) tmva -= (v.amt * 0.20);
-                    if(v.subCat === 'exp-lonn') tfp += (v.amt * 0.102);
+                const v = child.val(); v.id = child.key;
+                // Apply Month Filter
+                if(filterVal === "all" || v.filterKey === filterVal) {
+                    rawData.push(v);
+                    if(v.mainCat === 'income') {
+                        ti += v.amt; if(v.subCat === 'inc-mva') tmva += (v.amt * 0.20);
+                    } else {
+                        te += v.amt; if(['exp-fuel', 'exp-fixed', 'exp-wash', 'exp-regnskap', 'exp-anet-mva'].includes(v.subCat)) tmva -= (v.amt * 0.20);
+                        if(v.subCat === 'exp-lonn') tfp += (v.amt * 0.102);
+                    }
                 }
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
@@ -322,10 +388,17 @@
             if (!acc[key]) acc[key] = { ...item, amt: 0 };
             acc[key].amt += item.amt; return acc;
         }, {})) : rawData;
+
         dataToDisplay.forEach(v => {
+            const imgBtn = v.img ? `<a href="${v.img}" target="_blank" class="receipt-link"><i class="fas fa-image"></i> Vis Bilag</a>` : '';
             list.innerHTML += `
             <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">
-                <div><small style="color:#888">${v.subCat.toUpperCase()}</small><h4>${v.desc}</h4><small>${v.date}</small></div>
+                <div>
+                    <small style="color:#888">${v.subCat.toUpperCase()}</small>
+                    <h4>${v.desc}</h4>
+                    <small>${v.date}</small>
+                    ${imgBtn}
+                </div>
                 <div style="text-align:right">
                     <span style="font-weight:bold; color:${v.mainCat==='income'?'var(--green)':'var(--red)'}">${v.amt.toLocaleString()} kr</span>
                     <i class="fas fa-ellipsis-v menu-dots" onclick="event.stopPropagation(); toggleM('${v.id}')"></i>
@@ -340,10 +413,10 @@
 
     function downloadReport() {
         if (rawData.length === 0) return alert("Xog ma jirto!");
-        let csv = "data:text/csv;charset=utf-8,Dato,Beskrivelse,Kategori,Type,Beloep\n";
-        rawData.forEach(v => csv += `${v.date},${v.desc},${v.subCat},${v.mainCat},${v.amt}\n`);
+        let csv = "data:text/csv;charset=utf-8,Dato,Beskrivelse,Kategori,Type,Beloep,BilagURL\n";
+        rawData.forEach(v => csv += `${v.date},${v.desc},${v.subCat},${v.mainCat},${v.amt},${v.img||''}\n`);
         const link = document.createElement("a"); link.href = encodeURI(csv);
-        link.download = `Report_${new Date().toLocaleDateString()}.csv`; link.click();
+        link.download = `Report_${document.getElementById('month-filter').value}.csv`; link.click();
     }
 
     function toggleM(id) { document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none'); document.getElementById('m-'+id).style.display = 'block'; }
@@ -362,7 +435,12 @@
     function logout() { auth.signOut().then(() => window.location.reload()); }
 
     auth.onAuthStateChanged(user => {
-        if(user) { document.getElementById('auth-page').style.display = 'none'; document.getElementById('main-app').style.display = 'block'; loadData(); }
+        if(user) { 
+            document.getElementById('auth-page').style.display = 'none'; 
+            document.getElementById('main-app').style.display = 'block'; 
+            setupFilter();
+            loadData(); 
+        }
         else { document.getElementById('auth-page').style.display = 'block'; document.getElementById('main-app').style.display = 'none'; }
     });
 
