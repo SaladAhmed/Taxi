@@ -217,20 +217,22 @@
     let undoTimer = null;
     let tempImgUrl = null;
 
-    // Fixed Month Filter Logic for 2026
+    // Filter-ka halkan waxaan ku xiray kaliya sanadka 2026
     function setupFilter() {
         const select = document.getElementById('month-filter');
         const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
-        const now = new Date(); // May 2026
+        const year2026 = 2026;
         let options = `<option value="all">Alt tid</option>`;
         
         for(let i = 0; i < 12; i++) {
-            let d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            let m = d.getMonth() + 1;
-            let y = d.getFullYear();
-            options += `<option value="${m}-${y}">${months[d.getMonth()]} ${y}</option>`;
+            let m = i + 1;
+            options += `<option value="${m}-${year2026}">${months[i]} ${year2026}</option>`;
         }
         select.innerHTML = options;
+        
+        // Si toos ah u dooro bisha hadda la joogo
+        const currentMonth = new Date().getMonth() + 1;
+        select.value = `${currentMonth}-2026`;
     }
 
     function toggleTheme() { document.getElementById('body-tag').classList.toggle('light-theme'); }
@@ -306,7 +308,9 @@
         const subCat = document.getElementById('entry-category').value;
         const now = new Date();
         const dateStr = now.toLocaleDateString('no-NO');
-        const filterKey = `${now.getMonth()+1}-${now.getFullYear()}`;
+        
+        // Halkan waxaa lagu xiray sanadka 2026
+        const filterKey = `${now.getMonth()+1}-2026`;
 
         if(!desc || !amt) return alert("Fyll ut!");
         
