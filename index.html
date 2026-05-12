@@ -5,115 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transport PRO - Full Regnskap</title>
     
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="TransportPRO">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
         .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
         
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--card); border-bottom: 1px solid var(--border); }
-        .lang-btn { cursor: pointer; font-size: 20px; margin-left: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; overflow-x: hidden; }
+        .rtl { direction: rtl; text-align: right; }
         
-        /* Stats Grid - 4 Columns */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 15px; }
-        .stat-box { background: var(--card); border: 2px solid; border-radius: 12px; padding: 15px; text-align: center; }
-        .stat-box small { font-size: 10px; display: block; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
+        .lang-btn { cursor: pointer; font-size: 18px; margin-left: 10px; }
+        .theme-toggle { cursor: pointer; font-size: 20px; color: var(--yellow); }
 
-        /* Summary Card */
-        .summary-card { background: var(--card); border: 3px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 20px; text-align: center; }
+        .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .mva-card { background: var(--card); border-radius: 15px; margin: 0 15px; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 1px solid var(--border); }
-        .mva-item { text-align: center; font-size: 12px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; max-width: 800px; margin: auto; }
+        .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
+        .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
 
-        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 10px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; }
+        .mva-card { background: var(--card); border: 2px solid var(--border); border-radius: 15px; margin: 10px auto; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 780px; }
+        .mva-item { text-align: center; border-right: 1px solid var(--border); }
+        .mva-item:last-child { border-right: none; }
+
+        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px auto; padding: 20px; text-align: center; max-width: 770px; }
         
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); }
-        .nav-item { text-align: center; color: #64748b; font-size: 11px; cursor: pointer; }
+        .view-toggle { display: flex; flex-wrap: wrap; justify-content: space-between; padding: 0 20px; gap: 10px; max-width: 800px; margin: auto; }
+        #month-filter { background: var(--card); color: var(--text); border: 1px solid var(--yellow); padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+
+        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--yellow); }
         
+        .pass-wrapper { position: relative; width: 100%; }
+        .pass-wrapper i { position: absolute; right: 15px; top: 18px; cursor: pointer; color: #64748b; }
+
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; background: var(--green); }
-        .auth-container { padding: 40px 20px; text-align: center; max-width: 400px; margin: auto; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body id="body-tag">
 
 <div id="auth-page" class="auth-container">
-    <h2 style="color:var(--yellow)">TRANSPORT PRO</h2>
-    <input type="email" id="email" placeholder="E-post">
-    <input type="password" id="pass" placeholder="Passord">
+    <h2 id="auth-title">LOGG INN</h2>
+    <input type="email" id="email" placeholder="E-post" onkeypress="handleAuthEnter(event)">
+    <div class="pass-wrapper">
+        <input type="password" id="pass" placeholder="Passord" onkeypress="handleAuthEnter(event)">
+        <i class="fas fa-eye" id="togglePass" onclick="togglePassView()"></i>
+    </div>
     <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
 </div>
 
 <div id="main-app" style="display:none">
     <div class="top-bar">
-        <i class="fas fa-moon" onclick="toggleTheme()"></i>
+        <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
         <div>
-            <span class="lang-btn" onclick="setLang('no')">🇳🇴</span>
-            <span class="lang-btn" onclick="setLang('so')">🇸🇴</span>
-            <span class="lang-btn" onclick="setLang('en')">🇺🇸</span>
+            <span class="lang-btn" onclick="updateLang('no')">🇳🇴</span>
+            <span class="lang-btn" onclick="updateLang('so')">🇸🇴</span>
+            <span class="lang-btn" onclick="updateLang('en')">🇺🇸</span>
+            <span class="lang-btn" onclick="updateLang('ar')">🇸🇦</span>
         </div>
     </div>
 
     <div id="page-dash" class="page">
-        <h3 style="text-align:center; color:var(--yellow)" id="u-name">MOHAMED SALAAD</h3>
+        <div class="header-title"><span id="user-display-name">Laster...</span></div>
         
         <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">Dakhli</small><span id="total-income">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">Kharash</small><span id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">Netto</small><span id="total-netto">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>MVA (25%)</small><span id="total-mva-25">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO (BRUTTO)</small><span id="total-netto">0 kr</span></div>
         </div>
-
+        
         <div class="mva-card">
-            <div class="mva-item"><small>Feriepenger (10.2%)</small><br><b id="res-fp">0 kr</b></div>
-            <div class="mva-item"><small>AGA (14.1%)</small><br><b id="res-aga">0 kr</b></div>
+            <div class="mva-item"><small id="l-mva">Skyldig MVA</small><br><b id="res-mva">0 kr</b></div>
+            <div class="mva-item"><small id="l-aga">AGA (14.1%)</small><br><b id="res-aga">0 kr</b></div>
+            <div class="mva-item"><small id="l-fp">Feriepenger</small><br><b id="res-fp">0 kr</b></div>
+            <div class="mva-item"><small id="l-avsk">Avskrivning</small><br><b id="res-avsk">0 kr</b></div>
         </div>
         
         <div class="summary-card">
-            <small style="color: var(--yellow); font-weight: bold;">TOTAL RESULTAT</small>
-            <h1 id="res-total" style="color:var(--green); margin: 10px 0;">0 kr</h1>
+            <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
+            <h1 id="res-total" style="color:var(--green)">0 kr</h1>
         </div>
         
-        <div style="padding: 0 15px;"><select id="month-filter" onchange="loadData()"></select></div>
+        <div class="view-toggle">
+            <select id="month-filter" onchange="loadData()"></select>
+            <button class="btn-save" style="width:auto; padding:8px 15px; background:var(--green)" onclick="downloadReport()">CSV</button>
+            <button id="toggle-hide" class="btn-save" style="width:auto; padding:8px 15px; background:var(--blue)" onclick="toggleHideValues()"><i class="fas fa-eye"></i></button>
+        </div>
+        
         <div id="entries-list"></div>
     </div>
 
     <div id="page-add" class="page" style="display:none; padding: 20px;">
-        <h3 id="l-add-title">REGISTRER DATA</h3>
+        <div class="header-title" id="l-add-title">REGISTRER DATA</div>
         <input type="date" id="entry-date">
         <select id="entry-category">
-            <optgroup label="DRIFTSINNTEKTER (Dakhli)">
+            <optgroup label="DRIFTSINNTEKTER" id="opt-inc">
                 <option value="3030">3030 - Kjøreinntekter, lav sats</option>
-                <option value="3031">3031 - Kjøreinntekter kontant</option>
-                <option value="3032">3032 - Kjøreinntekter NAV</option>
-                <option value="3033">3033 - Kjøreinntekter skole</option>
+                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
+                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
+                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
                 <option value="3039">3039 - Bomtur, lav sats</option>
                 <option value="3110">3110 - Tips</option>
             </optgroup>
-            <optgroup label="DRIFTSKOSTNADER (Kharash)">
+            <optgroup label="DRIFTSKOSTNADER" id="opt-exp">
                 <option value="5000">5000 - Lønn til ansatte</option>
                 <option value="5400">5400 - Arbeidsgiveravgift</option>
                 <option value="5920">5920 - Yrkesskadeforsikring</option>
-                <option value="6010">6010 - Avskrivning transport</option>
+                <option value="6010">6010 - Avskrivning på transportmidler</option>
+                <option value="6705">6705 - Regnskapshonorar</option>
+                <option value="6755">6755 - Sentralavgift</option>
+                <option value="6800">6800 - Kontorrekvisita</option>
+                <option value="6900">6900 - Telefon</option>
+                <option value="6907">6907 - Datakommunikasjon</option>
                 <option value="7000">7000 - Drivstoff</option>
-                <option value="7020">7020 - Vedlikehold</option>
-                <option value="7798">7798 - Annen kostnad</option>
+                <option value="7020">7020 - Vedlikehold transportmiddel</option>
+                <option value="7040">7040 - Forsikring transportmiddel</option>
+                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
+                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
+                <option value="7770">7770 - Bank- og kortgebyr</option>
+                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
         <input type="number" id="entry-amt" placeholder="Beløp (kr)">
-        <button class="btn-save" onclick="saveData()" id="l-save-btn">LAGRE</button>
+        <button class="btn-save" style="background:var(--green)" onclick="saveData()" id="l-save-btn">LAGRE</button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br><span id="n-dash">Oversikt</span></div>
-        <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
-        <div class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><br><span id="n-exit">Logg ut</span></div>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-th-large"></i><br><span id="n-dash">Oversikt</span></div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
+        <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logg ut</span></div>
     </div>
 </div>
 
@@ -131,22 +166,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    const lang = {
-        so: { inc: "Dakhli", exp: "Kharash", net: "Netto", dash: "Warbixin", add: "Ku dar", exit: "Kabax", save: "KAYDI", title: "DIIWAANGELI" },
-        no: { inc: "Inntekt", exp: "Utgifter", net: "Netto", dash: "Oversikt", add: "Legg til", exit: "Logg ut", save: "LAGRE", title: "REGISTRER DATA" },
-        en: { inc: "Income", exp: "Expense", net: "Netto", dash: "Dashboard", add: "Add Data", exit: "Logout", save: "SAVE", title: "REGISTER DATA" }
-    };
-
-    function setLang(l) {
-        document.getElementById('l-inc').innerText = lang[l].inc;
-        document.getElementById('l-exp').innerText = lang[l].exp;
-        document.getElementById('l-net').innerText = lang[l].net;
-        document.getElementById('n-dash').innerText = lang[l].dash;
-        document.getElementById('n-add').innerText = lang[l].add;
-        document.getElementById('n-exit').innerText = lang[l].exit;
-        document.getElementById('l-save-btn').innerText = lang[l].save;
-        document.getElementById('l-add-title').innerText = lang[l].title;
-    }
+    let isHidden = false;
 
     function setupFilter() {
         const select = document.getElementById('month-filter');
@@ -158,13 +178,30 @@
         document.getElementById('entry-date').valueAsDate = new Date();
     }
 
+    function togglePassView() {
+        const passInput = document.getElementById('pass');
+        const passIcon = document.getElementById('togglePass');
+        passInput.type = passInput.type === "password" ? "text" : "password";
+        passIcon.className = passInput.type === "password" ? "fas fa-eye" : "fas fa-eye-slash";
+    }
+
+    function toggleHideValues() {
+        isHidden = !isHidden;
+        const icon = document.querySelector('#toggle-hide i');
+        icon.className = isHidden ? "fas fa-eye-slash" : "fas fa-eye";
+        loadData();
+    }
+
+    function handleAuthEnter(e) { if (e.key === "Enter") handleAuth(); }
+
     function saveData() {
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const cat = document.getElementById('entry-category').value;
         const date = new Date(document.getElementById('entry-date').value);
-        if(!desc || isNaN(amt)) return alert("Gali xogta!");
         
+        if(!desc || isNaN(amt)) return alert("Gali xogta!");
+
         const mainCat = parseInt(cat) < 4000 ? 'income' : 'expense';
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
             desc, amt, subCat: cat, mainCat,
@@ -176,37 +213,84 @@
         showTab('dash');
     }
 
+    function formatVal(val) {
+        if (isHidden) return "**** kr";
+        return Math.round(val).toLocaleString() + " kr";
+    }
+
     function loadData() {
         const filter = document.getElementById('month-filter').value;
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
-            let ti=0, te=0, fp=0, aga=0;
+            let ti=0, te=0, mvaIn=0, mvaOut=0, aga=0, fp=0, avsk=0;
             const list = document.getElementById('entries-list');
             list.innerHTML = "";
+            
             snap.forEach(child => {
                 const v = child.val();
                 if(filter === "all" || v.filterKey === filter) {
-                    if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
-                    if(v.subCat == "5000") { fp += (v.amt * 0.102); aga += (v.amt * 0.141); }
-                    list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
-                        <div><b>${v.desc}</b><br><small>Kat: ${v.subCat}</small></div>
-                        <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${v.amt.toLocaleString()} kr</b></div>
-                    </div>`;
+                    if(v.mainCat === 'income') {
+                        ti += v.amt;
+                        if(v.subCat !== '3110') mvaIn += (v.amt * 0.1071); 
+                    } else {
+                        te += v.amt;
+                        if(['7000', '6755', '7020'].includes(v.subCat)) mvaOut += (v.amt * 0.20); 
+                        if(v.subCat === '5000') {
+                            aga += (v.amt * 0.141);
+                            fp += (v.amt * 0.102);
+                        }
+                        if(v.subCat === '6010') avsk += v.amt;
+                    }
+                    
+                    list.innerHTML += `
+                        <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
+                            <div><b>${v.desc}</b><br><small>${v.subCat} | ${v.date}</small></div>
+                            <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${formatVal(v.amt)}</b></div>
+                        </div>`;
                 }
             });
-            document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
-            document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
-            document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
-            document.getElementById('total-mva-25').innerText = (ti * 0.25).toLocaleString() + " kr";
-            document.getElementById('res-fp').innerText = fp.toLocaleString() + " kr";
-            document.getElementById('res-aga').innerText = aga.toLocaleString() + " kr";
-            document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
+
+            document.getElementById('total-income').innerText = formatVal(ti);
+            document.getElementById('total-expense').innerText = formatVal(te);
+            document.getElementById('total-netto').innerText = formatVal(ti - te);
+            document.getElementById('res-mva').innerText = formatVal(mvaIn - mvaOut);
+            document.getElementById('res-aga').innerText = formatVal(aga);
+            document.getElementById('res-fp').innerText = formatVal(fp);
+            document.getElementById('res-avsk').innerText = formatVal(avsk);
+            
+            const resultNetto = ti - te - aga - fp;
+            document.getElementById('res-total').innerText = formatVal(resultNetto);
         });
+    }
+
+    const dict = {
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", mva: "Skyldig MVA", aga: "AGA (14.1%)", fp: "Feriepenger", avsk: "Avskrivning", res: "TOTAL RESULTAT", add: "REGISTRER DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", save: "LAGRE" },
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", mva: "CANSHUUR MVA", aga: "AGA (14.1%)", fp: "LACAGTA FASAXA", avsk: "QIIME DHAC", res: "NATIIJADA GUUD", add: "GELI XOGTA", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", save: "KEYDI" },
+        en: { inc: "INCOME", exp: "EXPENSES", net: "NET", mva: "VAT OWED", aga: "PAYROLL TAX", fp: "VACATION PAY", avsk: "DEPRECIATION", res: "TOTAL RESULT", add: "REGISTER DATA", dash: "Overview", nadd: "Add Data", exit: "Logout", save: "SAVE" },
+        ar: { inc: "الدخل", exp: "المصاريف", net: "الصافي", mva: "الضريبة", aga: "ضريبة العمل", fp: "بدل الإجازة", avsk: "الإهلاك", res: "النتيجة النهائية", add: "تسجيل البيانات", dash: "نظرة عامة", nadd: "إضافة", exit: "خروج", save: "حفظ" }
+    };
+
+    function updateLang(l) {
+        const d = dict[l];
+        document.getElementById('l-inc').innerText = d.inc;
+        document.getElementById('l-exp').innerText = d.exp;
+        document.getElementById('l-net').innerText = d.net;
+        document.getElementById('l-mva').innerText = d.mva;
+        document.getElementById('l-aga').innerText = d.aga;
+        document.getElementById('l-fp').innerText = d.fp;
+        document.getElementById('l-avsk').innerText = d.avsk;
+        document.getElementById('l-res').innerText = d.res;
+        document.getElementById('l-add-title').innerText = d.add;
+        document.getElementById('n-dash').innerText = d.dash;
+        document.getElementById('n-add').innerText = d.nadd;
+        document.getElementById('n-exit').innerText = d.exit;
+        document.getElementById('l-save-btn').innerText = d.save;
     }
 
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('nav-'+t).classList.add('active');
     }
 
     function handleAuth() {
@@ -219,10 +303,11 @@
         if(user) {
             document.getElementById('auth-page').style.display='none';
             document.getElementById('main-app').style.display='block';
-            db.ref('users/'+user.uid+'/profile/fullName').on('value', s => {
-                if(s.exists()) document.getElementById('u-name').innerText = s.val().toUpperCase();
-            });
+            db.ref('users/'+user.uid+'/profile/fullName').on('value', s => document.getElementById('user-display-name').innerText = s.val() || "USER");
             setupFilter(); loadData();
+        } else {
+            document.getElementById('auth-page').style.display='block';
+            document.getElementById('main-app').style.display='none';
         }
     });
 
