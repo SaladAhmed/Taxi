@@ -59,7 +59,6 @@
         #scanner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
         #camera-feed { width: 90%; max-width: 400px; border-radius: 15px; }
 
-        /* Profile Style */
         .profile-pic-container { text-align: center; margin: 20px 0; position: relative; }
         .profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--yellow); }
         .upload-btn { position: absolute; bottom: 0; right: 35%; background: var(--blue); color: white; padding: 5px; border-radius: 50%; cursor: pointer; }
@@ -70,9 +69,9 @@
 <div id="auth-page" class="auth-container">
     <h2 id="auth-title">LOGG INN</h2>
     <input type="text" id="reg-name" placeholder="Fullt navn" style="display:none">
-    <input type="email" id="email" placeholder="E-post" onkeypress="handleAuthEnter(event)">
+    <input type="email" id="email" placeholder="E-post">
     <div class="pass-wrapper">
-        <input type="password" id="pass" placeholder="Passord" onkeypress="handleAuthEnter(event)">
+        <input type="password" id="pass" placeholder="Passord">
         <i class="fas fa-eye" id="togglePass" onclick="togglePassView()"></i>
     </div>
     <button id="auth-btn" class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
@@ -103,31 +102,26 @@
 
     <div id="page-dash" class="page">
         <div class="header-title"><span id="user-display-name">Laster...</span></div>
-        
         <div class="stats-grid">
             <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
-        
         <div class="mva-card">
             <div class="mva-item"><small id="l-mva">Skyldig MVA</small><br><b id="res-mva">0 kr</b></div>
             <div class="mva-item"><small id="l-aga">AGA (14.1%)</small><br><b id="res-aga">0 kr</b></div>
             <div class="mva-item"><small id="l-fp">Feriepenger</small><br><b id="res-fp">0 kr</b></div>
             <div class="mva-item"><small id="l-avsk">Avskrivning</small><br><b id="res-avsk">0 kr</b></div>
         </div>
-        
         <div class="summary-card">
             <small id="l-res">TOTAL RESULTAT</small>
             <h1 id="res-total" style="color:var(--green)">0 kr</h1>
         </div>
-        
         <div class="view-toggle">
             <select id="month-filter" onchange="loadData()"></select>
-            <button class="btn-save" style="width:auto; padding:8px 15px; background:var(--green)" onclick="downloadReport()">CSV</button>
+            <button class="btn-save" style="width:auto; padding:8px 15px; background:var(--green)" onclick="downloadReport()"><i class="fas fa-file-csv"></i> Report</button>
             <button id="toggle-hide" class="btn-save" style="width:auto; padding:8px 15px; background:var(--blue)" onclick="toggleHideValues()"><i class="fas fa-eye"></i></button>
         </div>
-        
         <div id="entries-list"></div>
     </div>
 
@@ -138,15 +132,31 @@
         </button>
         <input type="date" id="entry-date">
         <select id="entry-category" onchange="updateSaveBtnColor()">
-            <optgroup label="DRIFTSINNTEKTER" id="opt-inc">
-                <option value="3030">3030 - Kjøreinntekter (12%)</option>
+            <optgroup label="DRIFTSINNTEKTER">
+                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
+                <option value="3031">3031 - Kjøreinntekter kontant</option>
+                <option value="3032">3032 - Kjøreinntekter NAV</option>
+                <option value="3033">3033 - Kjøreinntekter skole</option>
+                <option value="3039">3039 - Bomtur, lav sats</option>
                 <option value="3110">3110 - Tips</option>
             </optgroup>
-            <optgroup label="DRIFTSKOSTNADER" id="opt-exp">
-                <option value="5000">5000 - Lønn</option>
-                <option value="7000">7000 - Drivstoff (25%)</option>
-                <option value="7040">7040 - Forsikring</option>
-                <option value="6755">6755 - Sentralavgift (25%)</option>
+            <optgroup label="DRIFTSKOSTNADER">
+                <option value="5000">5000 - Lønn til ansatte</option>
+                <option value="5400">5400 - Arbeidsgiveravgift</option>
+                <option value="5920">5920 - Yrkesskadeforsikring</option>
+                <option value="6010">6010 - Avskrivning på transport</option>
+                <option value="6705">6705 - Regnskapshonorar</option>
+                <option value="6755">6755 - Sentralavgift</option>
+                <option value="6800">6800 - Kontorrekvisita</option>
+                <option value="6900">6900 - Telefon</option>
+                <option value="6907">6907 - Datakommunikasjon</option>
+                <option value="7000">7000 - Drivstoff</option>
+                <option value="7020">7020 - Vedlikehold transport</option>
+                <option value="7040">7040 - Forsikring transport</option>
+                <option value="7140">7140 - Reisekostnad</option>
+                <option value="7400">7400 - Kontingent</option>
+                <option value="7770">7770 - Bank- og kortgebyr</option>
+                <option value="7798">7798 - Annen kostnad</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
@@ -174,7 +184,6 @@
 </div>
 
 <script>
-    // --- FIREBASE SETUP ---
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -193,23 +202,19 @@
     let isRegisterMode = false;
     let currentStream = null;
 
-    // --- AUTH LOGIC ---
     function toggleAuthMode() {
         isRegisterMode = !isRegisterMode;
         document.getElementById('reg-name').style.display = isRegisterMode ? 'block' : 'none';
         document.getElementById('auth-title').innerText = isRegisterMode ? 'REGISTRER DEG' : 'LOGG INN';
         document.getElementById('auth-btn').innerText = isRegisterMode ? 'REGISTRER' : 'LOGG INN';
-        document.getElementById('auth-toggle-text').innerText = isRegisterMode ? 'Har du konto? Logg inn' : 'Ingen konto? Registrer deg her';
     }
 
     function handleAuth() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        const n = document.getElementById('reg-name').value;
-
         if(isRegisterMode) {
             auth.createUserWithEmailAndPassword(e, p).then(cred => {
-                db.ref('users/' + cred.user.uid + '/profile').set({ fullName: n });
+                db.ref('users/' + cred.user.uid + '/profile').set({ fullName: document.getElementById('reg-name').value });
             }).catch(err => alert(err.message));
         } else {
             auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
@@ -218,22 +223,19 @@
 
     function forgotPassword() {
         const e = document.getElementById('email').value;
-        if(!e) return alert("Gali email-kaaga!");
-        auth.sendPasswordResetEmail(e).then(() => alert("Email dib u dajinta password-ka waa lagu soo diray!")).catch(err => alert(err.message));
+        if(!e) return alert("Skriv e-post!");
+        auth.sendPasswordResetEmail(e).then(() => alert("E-post sendt!")).catch(err => alert(err.message));
     }
 
-    function handleAuthEnter(e) { if (e.key === "Enter") handleAuth(); }
     function togglePassView() {
         const p = document.getElementById('pass');
         p.type = p.type === "password" ? "text" : "password";
     }
 
-    // --- PROFILE LOGIC ---
     function uploadProfilePic(input) {
         if (input.files && input.files[0]) {
-            const file = input.files[0];
             const ref = storage.ref('profile_pics/' + auth.currentUser.uid);
-            ref.put(file).then(() => {
+            ref.put(input.files[0]).then(() => {
                 ref.getDownloadURL().then(url => {
                     db.ref('users/' + auth.currentUser.uid + '/profile').update({ profilePic: url });
                     document.getElementById('user-profile-pic').src = url;
@@ -243,12 +245,9 @@
     }
 
     function updateProfileName() {
-        const newName = document.getElementById('profile-name-update').value;
-        if(!newName) return alert("Gali magaca!");
-        db.ref('users/' + auth.currentUser.uid + '/profile').update({ fullName: newName }).then(() => alert("Magaca waa la cusboonaysiiyay!"));
+        db.ref('users/' + auth.currentUser.uid + '/profile').update({ fullName: document.getElementById('profile-name-update').value });
     }
 
-    // --- SMART SCANNER ---
     async function startScanner() {
         document.getElementById('scanner-overlay').style.display = 'flex';
         currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -263,59 +262,40 @@
     function captureImage() {
         const video = document.getElementById('camera-feed');
         const canvas = document.getElementById('camera-canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        document.getElementById('scanner-status').innerText = "Analyserer...";
-        
-        Tesseract.recognize(canvas.toDataURL('image/jpeg'), 'eng')
-            .then(({ data: { text } }) => {
-                const numbers = text.match(/\d+[\.,]\d+/g);
-                if(numbers) {
-                    const highest = Math.max(...numbers.map(n => parseFloat(n.replace(',', '.'))));
-                    document.getElementById('entry-amt').value = highest;
-                    document.getElementById('entry-desc').value = "Scan: " + new Date().toLocaleTimeString();
-                }
-                stopScanner();
-            }).catch(e => {
-                alert("Scan-ka waa fashilmay");
-                stopScanner();
-            });
+        document.getElementById('scanner-status').innerText = "Scanner...";
+        Tesseract.recognize(canvas.toDataURL('image/jpeg'), 'eng').then(({ data: { text } }) => {
+            const numbers = text.match(/\d+[\.,]\d+/g);
+            if(numbers) document.getElementById('entry-amt').value = Math.max(...numbers.map(n => parseFloat(n.replace(',', '.'))));
+            stopScanner();
+        });
     }
 
-    // --- DATA LOGIC ---
     function updateSaveBtnColor() {
-        const cat = document.getElementById('entry-category').value;
-        const btn = document.getElementById('l-save-btn');
-        const mainCat = parseInt(cat) < 4000 ? 'income' : 'expense';
-        btn.style.background = mainCat === 'income' ? 'var(--green)' : 'var(--red)';
+        const cat = parseInt(document.getElementById('entry-category').value);
+        document.getElementById('l-save-btn').style.background = cat < 4000 ? 'var(--green)' : 'var(--red)';
     }
 
     function setupFilter() {
-        const select = document.getElementById('month-filter');
         const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
-        let options = `<option value="all">Alt tid</option>`;
+        let options = '<option value="all">Alt tid</option>';
         for(let i=0; i<12; i++) options += `<option value="${i+1}-2026">${months[i]} 2026</option>`;
-        select.innerHTML = options;
-        select.value = (new Date().getMonth()+1) + "-2026";
+        document.getElementById('month-filter').innerHTML = options;
+        document.getElementById('month-filter').value = (new Date().getMonth()+1) + "-2026";
         document.getElementById('entry-date').valueAsDate = new Date();
     }
 
     function saveData() {
-        const desc = document.getElementById('entry-desc').value;
-        const amt = parseFloat(document.getElementById('entry-amt').value);
         const cat = document.getElementById('entry-category').value;
+        const amt = parseFloat(document.getElementById('entry-amt').value);
         const date = new Date(document.getElementById('entry-date').value);
-        if(!desc || isNaN(amt)) return alert("Gali xogta!");
-
-        const mainCat = parseInt(cat) < 4000 ? 'income' : 'expense';
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
-            desc, amt, subCat: cat, mainCat,
+            desc: document.getElementById('entry-desc').value,
+            amt: amt, subCat: cat, mainCat: parseInt(cat) < 4000 ? 'income' : 'expense',
             date: date.toLocaleDateString('no-NO'),
             filterKey: (date.getMonth()+1) + "-" + date.getFullYear()
         });
-        document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
     }
 
@@ -333,11 +313,11 @@
                         if(v.subCat !== '3110') mvaIn += (v.amt * 0.1071);
                     } else {
                         te += v.amt;
-                        if(['7000', '6755'].includes(v.subCat)) mvaOut += (v.amt * 0.20);
+                        if(['7000', '6755', '7020'].includes(v.subCat)) mvaOut += (v.amt * 0.20);
                         if(v.subCat === '5000') { aga += (v.amt * 0.141); fp += (v.amt * 0.102); }
                     }
                     list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
-                        <div><b>${v.desc}</b><br><small>${v.subCat} | ${v.date}</small></div>
+                        <div><b>${v.desc || v.subCat}</b><br><small>${v.date}</small></div>
                         <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${formatVal(v.amt)}</b></div>
                     </div>`;
                 }
@@ -357,31 +337,19 @@
 
     function downloadReport() {
         db.ref('users/' + auth.currentUser.uid + '/entries').once('value', snap => {
-            let csv = "Dato,Kategori,Beskrivelse,Beloep\n";
-            snap.forEach(c => {
-                const v = c.val();
-                csv += `${v.date},${v.subCat},${v.desc},${v.amt}\n`;
-            });
-            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `Transport_Report_${new Date().toLocaleDateString()}.csv`;
-            a.click();
+            let csv = "\uFEFFDato,Kategori,Beskrivelse,Beloep\n";
+            snap.forEach(c => { const v = c.val(); csv += `${v.date},${v.subCat},${v.desc},${v.amt}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Regnskap_Report.csv";
+            link.click();
         });
     }
 
-    // --- LANG & UI ---
-    const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", mva: "Skyldig MVA", aga: "AGA (14.1%)", fp: "Feriepenger", avsk: "Avskrivning", res: "TOTAL RESULTAT", add: "REGISTRER DATA", dash: "Oversikt", nadd: "Legg til", prof: "Profil", exit: "Logg ut", save: "LAGRE" },
-        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", mva: "MVA", aga: "AGA", fp: "LACAG FASAX", avsk: "AVSK", res: "NATIIJADA", add: "GELI XOGTA", dash: "Guudmar", nadd: "Geli", prof: "Profile", exit: "Ka bax", save: "KEYDI" }
-    };
-
     function updateLang(l) {
         const d = dict[l] || dict.no;
-        for (let k in d) {
-            const el = document.getElementById('l-'+k) || document.getElementById('n-'+k);
-            if(el) el.innerText = d[k];
-        }
+        for (let k in d) { const el = document.getElementById('l-'+k) || document.getElementById('n-'+k); if(el) el.innerText = d[k]; }
     }
 
     function showTab(t) {
@@ -396,10 +364,9 @@
             document.getElementById('auth-page').style.display='none';
             document.getElementById('main-app').style.display='block';
             db.ref('users/'+user.uid+'/profile').on('value', s => {
-                const data = s.val() || {};
-                document.getElementById('user-display-name').innerText = data.fullName || "USER";
-                document.getElementById('profile-name-update').value = data.fullName || "";
-                if(data.profilePic) document.getElementById('user-profile-pic').src = data.profilePic;
+                const d = s.val() || {};
+                document.getElementById('user-display-name').innerText = d.fullName || "Bruker";
+                if(d.profilePic) document.getElementById('user-profile-pic').src = d.profilePic;
             });
             setupFilter(); loadData();
         } else {
