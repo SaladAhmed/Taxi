@@ -54,18 +54,34 @@
 
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
+        
+        /* Scanner UI */
+        #scanner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
+        #camera-feed { width: 90%; max-width: 400px; border-radius: 15px; }
     </style>
 </head>
 <body id="body-tag">
 
 <div id="auth-page" class="auth-container">
     <h2 id="auth-title">LOGG INN</h2>
+    <input type="text" id="reg-name" placeholder="Fullt navn (kun ved registrering)" style="display:none">
     <input type="email" id="email" placeholder="E-post" onkeypress="handleAuthEnter(event)">
     <div class="pass-wrapper">
         <input type="password" id="pass" placeholder="Passord" onkeypress="handleAuthEnter(event)">
         <i class="fas fa-eye" id="togglePass" onclick="togglePassView()"></i>
     </div>
-    <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
+    <button id="auth-btn" class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
+    <p id="auth-toggle-text" onclick="toggleAuthMode()" style="margin-top:20px; cursor:pointer; font-size:12px;">Ingen konto? Registrer deg her</p>
+</div>
+
+<div id="scanner-overlay">
+    <video id="camera-feed" autoplay playsinline></video>
+    <canvas id="camera-canvas" style="display:none;"></canvas>
+    <div style="margin-top:20px;">
+        <button class="btn-save" style="background:var(--green); width:auto;" onclick="captureImage()">SNAP</button>
+        <button class="btn-save" style="background:var(--red); width:auto;" onclick="stopScanner()">AVBRYT</button>
+    </div>
+    <p id="scanner-status" style="color:white; margin-top:10px;">Venter på bilde...</p>
 </div>
 
 <div id="main-app" style="display:none">
@@ -85,7 +101,7 @@
         <div class="stats-grid">
             <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO (BRUTTO)</small><span id="total-netto">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
         
         <div class="mva-card">
@@ -96,7 +112,7 @@
         </div>
         
         <div class="summary-card">
-            <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
+            <small id="l-res">TOTAL RESULTAT</small>
             <h1 id="res-total" style="color:var(--green)">0 kr</h1>
         </div>
         
@@ -111,33 +127,20 @@
 
     <div id="page-add" class="page" style="display:none; padding: 20px;">
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
+        <button class="btn-save" style="background:var(--blue); margin-bottom:15px;" onclick="startScanner()">
+            <i class="fas fa-camera"></i> SMART SCAN
+        </button>
         <input type="date" id="entry-date">
         <select id="entry-category">
             <optgroup label="DRIFTSINNTEKTER" id="opt-inc">
-                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
-                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
-                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
-                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
-                <option value="3039">3039 - Bomtur, lav sats</option>
+                <option value="3030">3030 - Kjøreinntekter (12%)</option>
                 <option value="3110">3110 - Tips</option>
             </optgroup>
             <optgroup label="DRIFTSKOSTNADER" id="opt-exp">
-                <option value="5000">5000 - Lønn til ansatte</option>
-                <option value="5400">5400 - Arbeidsgiveravgift</option>
-                <option value="5920">5920 - Yrkesskadeforsikring</option>
-                <option value="6010">6010 - Avskrivning på transportmidler</option>
-                <option value="6705">6705 - Regnskapshonorar</option>
-                <option value="6755">6755 - Sentralavgift</option>
-                <option value="6800">6800 - Kontorrekvisita</option>
-                <option value="6900">6900 - Telefon</option>
-                <option value="6907">6907 - Datakommunikasjon</option>
-                <option value="7000">7000 - Drivstoff</option>
-                <option value="7020">7020 - Vedlikehold transportmiddel</option>
-                <option value="7040">7040 - Forsikring transportmiddel</option>
-                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
-                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
-                <option value="7770">7770 - Bank- og kortgebyr</option>
-                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
+                <option value="5000">5000 - Lønn</option>
+                <option value="7000">7000 - Drivstoff (25%)</option>
+                <option value="7040">7040 - Forsikring</option>
+                <option value="6755">6755 - Sentralavgift (25%)</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
@@ -153,6 +156,7 @@
 </div>
 
 <script>
+    // --- FIREBASE SETUP ---
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -167,7 +171,75 @@
     const auth = firebase.auth();
 
     let isHidden = false;
+    let isRegisterMode = false;
+    let currentStream = null;
 
+    // --- AUTH LOGIC ---
+    function toggleAuthMode() {
+        isRegisterMode = !isRegisterMode;
+        document.getElementById('reg-name').style.display = isRegisterMode ? 'block' : 'none';
+        document.getElementById('auth-title').innerText = isRegisterMode ? 'REGISTRER DEG' : 'LOGG INN';
+        document.getElementById('auth-btn').innerText = isRegisterMode ? 'REGISTRER' : 'LOGG INN';
+        document.getElementById('auth-toggle-text').innerText = isRegisterMode ? 'Har du konto? Logg inn' : 'Ingen konto? Registrer deg her';
+    }
+
+    function handleAuth() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        const n = document.getElementById('reg-name').value;
+
+        if(isRegisterMode) {
+            auth.createUserWithEmailAndPassword(e, p).then(cred => {
+                db.ref('users/' + cred.user.uid + '/profile').set({ fullName: n });
+            }).catch(err => alert(err.message));
+        } else {
+            auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
+        }
+    }
+
+    function handleAuthEnter(e) { if (e.key === "Enter") handleAuth(); }
+    function togglePassView() {
+        const p = document.getElementById('pass');
+        p.type = p.type === "password" ? "text" : "password";
+    }
+
+    // --- SMART SCANNER ---
+    async function startScanner() {
+        document.getElementById('scanner-overlay').style.display = 'flex';
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        document.getElementById('camera-feed').srcObject = currentStream;
+    }
+
+    function stopScanner() {
+        if(currentStream) currentStream.getTracks().forEach(track => track.stop());
+        document.getElementById('scanner-overlay').style.display = 'none';
+    }
+
+    function captureImage() {
+        const video = document.getElementById('camera-feed');
+        const canvas = document.getElementById('camera-canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        document.getElementById('scanner-status').innerText = "Analyserer bilde (OCR)...";
+        
+        Tesseract.recognize(canvas.toDataURL('image/jpeg'), 'eng')
+            .then(({ data: { text } }) => {
+                const numbers = text.match(/\d+[\.,]\d+/g);
+                if(numbers) {
+                    const highest = Math.max(...numbers.map(n => parseFloat(n.replace(',', '.'))));
+                    document.getElementById('entry-amt').value = highest;
+                    document.getElementById('entry-desc').value = "Scannet Bilag";
+                }
+                stopScanner();
+            }).catch(e => {
+                alert("Kunne ikke lese bilde");
+                stopScanner();
+            });
+    }
+
+    // --- DATA LOGIC ---
     function setupFilter() {
         const select = document.getElementById('month-filter');
         const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
@@ -178,28 +250,11 @@
         document.getElementById('entry-date').valueAsDate = new Date();
     }
 
-    function togglePassView() {
-        const passInput = document.getElementById('pass');
-        const passIcon = document.getElementById('togglePass');
-        passInput.type = passInput.type === "password" ? "text" : "password";
-        passIcon.className = passInput.type === "password" ? "fas fa-eye" : "fas fa-eye-slash";
-    }
-
-    function toggleHideValues() {
-        isHidden = !isHidden;
-        const icon = document.querySelector('#toggle-hide i');
-        icon.className = isHidden ? "fas fa-eye-slash" : "fas fa-eye";
-        loadData();
-    }
-
-    function handleAuthEnter(e) { if (e.key === "Enter") handleAuth(); }
-
     function saveData() {
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const cat = document.getElementById('entry-category').value;
         const date = new Date(document.getElementById('entry-date').value);
-        
         if(!desc || isNaN(amt)) return alert("Gali xogta!");
 
         const mainCat = parseInt(cat) < 4000 ? 'income' : 'expense';
@@ -208,14 +263,8 @@
             date: date.toLocaleDateString('no-NO'),
             filterKey: (date.getMonth()+1) + "-" + date.getFullYear()
         });
-        document.getElementById('entry-desc').value = "";
-        document.getElementById('entry-amt').value = "";
+        document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         showTab('dash');
-    }
-
-    function formatVal(val) {
-        if (isHidden) return "**** kr";
-        return Math.round(val).toLocaleString() + " kr";
     }
 
     function loadData() {
@@ -224,44 +273,52 @@
             let ti=0, te=0, mvaIn=0, mvaOut=0, aga=0, fp=0, avsk=0;
             const list = document.getElementById('entries-list');
             list.innerHTML = "";
-            
             snap.forEach(child => {
                 const v = child.val();
                 if(filter === "all" || v.filterKey === filter) {
                     if(v.mainCat === 'income') {
                         ti += v.amt;
-                        if(v.subCat !== '3110') mvaIn += (v.amt * 0.1071); 
+                        if(v.subCat !== '3110') mvaIn += (v.amt * 0.1071);
                     } else {
                         te += v.amt;
-                        if(['7000', '6755', '7020'].includes(v.subCat)) mvaOut += (v.amt * 0.20); 
-                        if(v.subCat === '5000') {
-                            aga += (v.amt * 0.141);
-                            fp += (v.amt * 0.102);
-                        }
-                        if(v.subCat === '6010') avsk += v.amt;
+                        if(['7000', '6755'].includes(v.subCat)) mvaOut += (v.amt * 0.20);
+                        if(v.subCat === '5000') { aga += (v.amt * 0.141); fp += (v.amt * 0.102); }
                     }
-                    
-                    list.innerHTML += `
-                        <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
-                            <div><b>${v.desc}</b><br><small>${v.subCat} | ${v.date}</small></div>
-                            <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${formatVal(v.amt)}</b></div>
-                        </div>`;
+                    list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
+                        <div><b>${v.desc}</b><br><small>${v.subCat} | ${v.date}</small></div>
+                        <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${formatVal(v.amt)}</b></div>
+                    </div>`;
                 }
             });
-
             document.getElementById('total-income').innerText = formatVal(ti);
             document.getElementById('total-expense').innerText = formatVal(te);
             document.getElementById('total-netto').innerText = formatVal(ti - te);
             document.getElementById('res-mva').innerText = formatVal(mvaIn - mvaOut);
             document.getElementById('res-aga').innerText = formatVal(aga);
             document.getElementById('res-fp').innerText = formatVal(fp);
-            document.getElementById('res-avsk').innerText = formatVal(avsk);
-            
-            const resultNetto = ti - te - aga - fp;
-            document.getElementById('res-total').innerText = formatVal(resultNetto);
+            document.getElementById('res-total').innerText = formatVal(ti - te - aga - fp);
         });
     }
 
+    function formatVal(v) { return isHidden ? "**** kr" : Math.round(v).toLocaleString() + " kr"; }
+    function toggleHideValues() { isHidden = !isHidden; loadData(); }
+
+    function downloadReport() {
+        db.ref('users/' + auth.currentUser.uid + '/entries').once('value', snap => {
+            let csv = "Dato,Kategori,Beskrivelse,Beloep\n";
+            snap.forEach(c => {
+                const v = c.val();
+                csv += `${v.date},${v.subCat},${v.desc},${v.amt}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `Regnskap_${new Date().toLocaleDateString()}.csv`;
+            a.click();
+        });
+    }
+
+    // --- LANG & UI ---
     const dict = {
         no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", mva: "Skyldig MVA", aga: "AGA (14.1%)", fp: "Feriepenger", avsk: "Avskrivning", res: "TOTAL RESULTAT", add: "REGISTRER DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", save: "LAGRE" },
         so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", mva: "CANSHUUR MVA", aga: "AGA (14.1%)", fp: "LACAGTA FASAXA", avsk: "QIIME DHAC", res: "NATIIJADA GUUD", add: "GELI XOGTA", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", save: "KEYDI" },
@@ -271,19 +328,11 @@
 
     function updateLang(l) {
         const d = dict[l];
-        document.getElementById('l-inc').innerText = d.inc;
-        document.getElementById('l-exp').innerText = d.exp;
-        document.getElementById('l-net').innerText = d.net;
-        document.getElementById('l-mva').innerText = d.mva;
-        document.getElementById('l-aga').innerText = d.aga;
-        document.getElementById('l-fp').innerText = d.fp;
-        document.getElementById('l-avsk').innerText = d.avsk;
-        document.getElementById('l-res').innerText = d.res;
+        for (let k in d) {
+            const el = document.getElementById('l-'+k) || document.getElementById('n-'+k);
+            if(el) el.innerText = d[k];
+        }
         document.getElementById('l-add-title').innerText = d.add;
-        document.getElementById('n-dash').innerText = d.dash;
-        document.getElementById('n-add').innerText = d.nadd;
-        document.getElementById('n-exit').innerText = d.exit;
-        document.getElementById('l-save-btn').innerText = d.save;
     }
 
     function showTab(t) {
@@ -291,12 +340,6 @@
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-'+t).classList.add('active');
-    }
-
-    function handleAuth() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pass').value;
-        auth.signInWithEmailAndPassword(e,p).catch(err => alert(err.message));
     }
 
     auth.onAuthStateChanged(user => {
