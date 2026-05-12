@@ -44,7 +44,7 @@
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
         
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .profile-img-wrap { width: 80px; height: 80px; margin: 0 auto 10px; border: 2px solid var(--yellow); border-radius: 50%; overflow: hidden; background: #334155; }
+        .profile-img-wrap { width: 80px; height: 80px; margin: 0 auto 10px; border: 2px solid var(--yellow); border-radius: 50%; overflow: hidden; background: #334155; position: relative; cursor: pointer; }
         .profile-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         
         .entry-actions { display: flex; gap: 15px; }
@@ -52,11 +52,9 @@
         .fa-trash:hover { color: var(--red); }
         .fa-edit:hover { color: var(--yellow); }
 
-        /* Scanner Styles */
-        .scanner-preview { width: 100%; height: 200px; background: #000; border-radius: 10px; margin-bottom: 15px; display: none; object-fit: cover; border: 2px solid var(--yellow); }
+        .scanner-preview { width: 100%; height: 250px; background: #000; border-radius: 10px; margin-bottom: 15px; display: none; object-fit: cover; border: 2px solid var(--yellow); }
         .btn-scan { background: var(--blue); margin-bottom: 15px; }
 
-        /* Report Styles */
         .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); border-radius: 10px; overflow: hidden; }
         .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         .report-table th { background: var(--border); color: var(--yellow); }
@@ -69,134 +67,70 @@
     <input type="email" id="email" placeholder="E-post">
     <input type="password" id="pass" placeholder="Passord">
     <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
-    <p style="color:var(--yellow); cursor:pointer; font-size:12px; margin-top:15px;" onclick="forgotPassword()">Glemt passord?</p>
 </div>
 
 <div id="main-app" style="display:none">
     <div class="top-bar">
         <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
         <div id="user-display-name" style="font-weight:bold">Laster...</div>
-        <div>
-            <span onclick="updateLang('no')">🇳🇴</span>
-            <span onclick="updateLang('so')">🇸🇴</span>
-        </div>
+        <div><span onclick="updateLang('no')">🇳🇴</span> <span onclick="updateLang('so')">🇸🇴</span></div>
     </div>
 
     <!-- DASHBOARD -->
     <div id="page-dash" class="page">
         <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">TOTAL (TOTAL)</small><span id="total-netto">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INNTEKT</small><span id="total-income">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>UTGIFTER</small><span id="total-expense">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>NETTO</small><span id="total-netto">0 kr</span></div>
         </div>
-        
-        <div class="mva-card">
-            <div class="mva-item"><small id="l-mva">Skyldig MVA</small><br><b id="res-mva">0 kr</b></div>
-            <div class="mva-item"><small id="l-aga">AGA (14.1%)</small><br><b id="res-aga">0 kr</b></div>
-            <div class="mva-item"><small id="l-fp">Feriepenger</small><br><b id="res-fp">0 kr</b></div>
-            <div class="mva-item"><small id="l-avsk">Avskrivning</small><br><b id="res-avsk">0 kr</b></div>
-        </div>
-        
         <div class="summary-card">
-            <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
+            <small>RESULTAT FØR SKATT</small>
             <h1 id="res-total" style="color:var(--green)">0 kr</h1>
         </div>
-        
         <div id="entries-list"></div>
     </div>
 
-    <!-- REPORTS PAGE -->
-    <div id="page-reports" class="page" style="display:none; padding: 20px;">
-        <div class="header-title">REGNSKAP REPORTS</div>
-        <div id="report-content">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th>Dato</th>
-                        <th>Konto</th>
-                        <th>Beskrivelse</th>
-                        <th>Beløp</th>
-                    </tr>
-                </thead>
-                <tbody id="report-body"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ADD/EDIT DATA & SCANNER -->
+    <!-- ADD DATA & SCANNER -->
     <div id="page-add" class="page" style="display:none; padding: 20px;">
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
-        <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()"><i class="fas fa-camera"></i> SCAN RECEIPT</button>
         <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
-        <canvas id="scanner-canvas" style="display:none;"></canvas>
         <img id="scanned-img" class="scanner-preview" />
+        <canvas id="scanner-canvas" style="display:none;"></canvas>
+        
+        <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()"><i class="fas fa-camera"></i> SCAN RECEIPT</button>
         <button id="capture-btn" class="btn-save" style="display:none; background:var(--green); margin-bottom:15px;" onclick="capturePhoto()">TA SAWIRKA</button>
 
         <input type="hidden" id="edit-id">
         <input type="date" id="entry-date">
         <select id="entry-category">
-            <optgroup label="INNTEKT (DRIFTSINNTEKTER)">
-                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
-                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
-                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
-                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
-                <option value="3039">3039 - Bomtur, lav sats</option>
-                <option value="3110">3110 - Tips</option>
-            </optgroup>
-            <optgroup label="UTGIFTER (DRIFTSKOSTNADER)">
-                <option value="5000">5000 - Lønn til ansatte</option>
-                <option value="5400">5400 - Arbeidsgiveravgift</option>
-                <option value="5920">5920 - Yrkesskadeforsikring</option>
-                <option value="6010">6010 - Avskrivning på transportmidler</option>
-                <option value="6300">6300 - Leie lokale</option>
-                <option value="6340">6340 - Lys og varme</option>
-                <option value="6360">6360 - Renhold</option>
-                <option value="6540">6540 - Inventar (verktøy o.l)</option>
-                <option value="6705">6705 - Regnskapshonorar</option>
-                <option value="6755">6755 - Sentralavgift</option>
-                <option value="6800">6800 - Kontorrekvisita</option>
-                <option value="6900">6900 - Telefon</option>
-                <option value="6907">6907 - Datakommunikasjon</option>
-                <option value="7000">7000 - Drivstoff</option>
-                <option value="7020">7020 - Vedlikehold transportmiddel</option>
-                <option value="7040">7040 - Forsikring transportmiddel</option>
-                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
-                <option value="7320">7320 - Reklamekostnad</option>
-                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
-                <option value="7500">7500 - Forsikringspremie</option>
-                <option value="7770">7770 - Bank- og kortgebyr</option>
-                <option value="7790">7790 - Annen kostnad, fradragsberettiget</option>
-                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
-                <option value="8060">8060 - Valutagevinst (Agio)</option>
-                <option value="8160">8160 - Valutatap (Disagio)</option>
-            </optgroup>
+            <option value="3030">3030 - Kjøreinntekter</option>
+            <option value="7000">7000 - Drivstoff</option>
+            <option value="7020">7020 - Vedlikehold</option>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
         <input type="number" id="entry-amt" placeholder="Beløp (kr)">
         
         <div class="btn-group">
-            <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">LAGRE INNTEKT</button>
-            <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">LAGRE UTGIFT</button>
+            <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">INNTEKT</button>
+            <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">UTGIFT</button>
         </div>
     </div>
 
-    <!-- PROFILE PAGE -->
+    <!-- PROFILE -->
     <div id="page-profile" class="page" style="display:none; padding: 20px; text-align: center;">
-        <div class="header-title">MY PROFILE</div>
+        <div class="header-title">PROFIL</div>
         <div class="profile-img-wrap" onclick="document.getElementById('profile-upload').click()">
             <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-            <input type="file" id="profile-upload" style="display:none" onchange="uploadPhoto(this)">
         </div>
+        <input type="file" id="profile-upload" style="display:none" onchange="uploadProfilePhoto(this)">
         <h3 id="prof-name">User Name</h3>
-        <button class="btn-save" style="background:var(--blue); margin-bottom:10px" onclick="changePass()">Change Password</button>
-        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT (EXIT)</button>
+        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT</button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br><span>Dash</span></div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br><span>Add</span></div>
-        <div class="nav-item" id="nav-reports" onclick="showTab('reports')"><i class="fas fa-file-invoice"></i><br><span>Reports</span></div>
-        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br><span>Profil</span></div>
+        <div class="nav-item active" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br>Dash</div>
+        <div class="nav-item" onclick="showTab('add')"><i class="fas fa-plus"></i><br>Add</div>
+        <div class="nav-item" onclick="showTab('profile')"><i class="fas fa-user"></i><br>Profil</div>
     </div>
 </div>
 
@@ -212,19 +146,22 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
+    const storage = firebase.storage();
 
     let stream = null;
 
+    // --- SCANNER LOGIC ---
     async function startScanner() {
         const video = document.getElementById('scanner-video');
-        const captureBtn = document.getElementById('capture-btn');
+        const btn = document.getElementById('scan-btn');
+        const cap = document.getElementById('capture-btn');
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             video.srcObject = stream;
             video.style.display = 'block';
-            captureBtn.style.display = 'block';
-            document.getElementById('scanned-img').style.display = 'none';
-        } catch (err) { alert("Ma u ogolaatay camirada? " + err); }
+            cap.style.display = 'block';
+            btn.style.display = 'none';
+        } catch (err) { alert("Camera error: " + err); }
     }
 
     function capturePhoto() {
@@ -236,73 +173,91 @@
         canvas.getContext('2d').drawImage(video, 0, 0);
         img.src = canvas.toDataURL('image/png');
         img.style.display = 'block';
-        stream.getTracks().forEach(track => track.stop());
-        video.style.display = 'none';
+        stopCamera();
+    }
+
+    function stopCamera() {
+        if(stream) stream.getTracks().forEach(t => t.stop());
+        document.getElementById('scanner-video').style.display = 'none';
         document.getElementById('capture-btn').style.display = 'none';
+        document.getElementById('scan-btn').style.display = 'block';
+    }
+
+    // --- PROFILE PHOTO LOGIC ---
+    async function uploadProfilePhoto(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const ref = storage.ref('profiles/' + auth.currentUser.uid);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        db.ref('users/' + auth.currentUser.uid + '/profileUrl').set(url);
+        document.getElementById('profile-img').src = url;
+    }
+
+    // --- AUTH & DATA LOGIC ---
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            document.getElementById('auth-page').style.display='none';
+            document.getElementById('main-app').style.display='block';
+            document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
+            document.getElementById('prof-name').innerText = user.email;
+            
+            // Soo qaado sawirka profile-ka haduu jiro
+            db.ref('users/' + user.uid + '/profileUrl').on('value', s => {
+                if(s.val()) document.getElementById('profile-img').src = s.val();
+            });
+            loadData();
+        } else {
+            document.getElementById('auth-page').style.display='block';
+            document.getElementById('main-app').style.display='none';
+        }
+    });
+
+    function handleAuth() {
+        auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value)
+        .catch(err => alert(err.message));
     }
 
     function saveData(type) {
         const editId = document.getElementById('edit-id').value;
-        const desc = document.getElementById('entry-desc').value;
-        const amt = parseFloat(document.getElementById('entry-amt').value);
-        const cat = document.getElementById('entry-category').value;
-        const dateInput = document.getElementById('entry-date').value;
-        if(!desc || !amt || !dateInput) return alert("Fadlan buuxi meelaha banaan!");
-        const entryData = { desc, amt, subCat: cat, mainCat: type, date: new Date(dateInput).toLocaleDateString('no-NO'), timestamp: new Date(dateInput).getTime() };
-        if(editId) db.ref('users/' + auth.currentUser.uid + '/entries/' + editId).update(entryData);
-        else db.ref('users/' + auth.currentUser.uid + '/entries').push(entryData);
-        resetForm(); showTab('dash');
-    }
-
-    function resetForm() {
-        document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
-        document.getElementById('edit-id').value = ""; document.getElementById('scanned-img').style.display = 'none';
-        document.getElementById('l-add-title').innerText = "REGISTRER DATA";
+        const data = {
+            desc: document.getElementById('entry-desc').value,
+            amt: parseFloat(document.getElementById('entry-amt').value),
+            subCat: document.getElementById('entry-category').value,
+            mainCat: type,
+            date: document.getElementById('entry-date').value || new Date().toISOString().split('T')[0]
+        };
+        if(!data.desc || !data.amt) return alert("Fadlan buuxi xogta");
+        const ref = db.ref('users/' + auth.currentUser.uid + '/entries');
+        if(editId) ref.child(editId).update(data); else ref.push(data);
+        showTab('dash');
     }
 
     function loadData() {
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
-            let ti=0, te=0;
-            const list = document.getElementById('entries-list');
-            const reportBody = document.getElementById('report-body');
-            list.innerHTML = ""; reportBody.innerHTML = "";
-            snap.forEach(child => {
-                const v = child.val(); const key = child.key;
-                if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
-                list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
-                        <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date}</small></div>
-                        <div class="entry-actions"><span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt} kr</span>
-                        <i class="fas fa-edit" onclick="editEntry('${key}', '${v.desc}', ${v.amt}, '${v.subCat}')"></i>
-                        <i class="fas fa-trash" onclick="deleteEntry('${key}')"></i></div></div>`;
-                reportBody.innerHTML += `<tr><td>${v.date}</td><td>${v.subCat}</td><td>${v.desc}</td><td style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">${v.amt} kr</td></tr>`;
+            let ti=0, te=0, html="";
+            snap.forEach(c => {
+                const v = c.val();
+                v.mainCat === 'income' ? ti += v.amt : te += v.amt;
+                html += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
+                    <div><b>${v.desc}</b><br><small>${v.date}</small></div>
+                    <div style="font-weight:bold">${v.amt} kr</div>
+                </div>`;
             });
-            document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
-            document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
-            document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
-            document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
+            document.getElementById('entries-list').innerHTML = html;
+            document.getElementById('total-income').innerText = ti + " kr";
+            document.getElementById('total-expense').innerText = te + " kr";
+            document.getElementById('total-netto').innerText = (ti-te) + " kr";
+            document.getElementById('res-total').innerText = (ti-te) + " kr";
         });
     }
-
-    function deleteEntry(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
-    function editEntry(id, desc, amt, cat) {
-        document.getElementById('edit-id').value = id; document.getElementById('entry-desc').value = desc;
-        document.getElementById('entry-amt').value = amt; document.getElementById('entry-category').value = cat;
-        showTab('add'); document.getElementById('l-add-title').innerText = "EDIT ENTRY";
-    }
-
-    auth.onAuthStateChanged(user => {
-        if(user) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
-        else { document.getElementById('auth-page').style.display='block'; document.getElementById('main-app').style.display='none'; }
-    });
 
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-'+t).style.display = 'block';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('nav-'+t).classList.add('active');
+        stopCamera();
     }
 
-    function handleAuth() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message)); }
     function logout() { auth.signOut().then(() => location.reload()); }
     function toggleTheme() { document.body.classList.toggle('light-theme'); }
 </script>
