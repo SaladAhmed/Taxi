@@ -97,20 +97,42 @@
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
         <input type="date" id="entry-date">
         <select id="entry-category">
-            <optgroup label="INNTEKT" id="opt-inc">
-                <option value="inc-3030">3030 - Kjøreinntekt</option>
-                <option value="inc-3110">3110 - Tips</option>
+            <optgroup label="DRIFTSINNTEKTER" id="opt-inc">
+                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
+                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
+                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
+                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
+                <option value="3039">3039 - Bomtur, lav sats</option>
+                <option value="3110">3110 - Tips</option>
             </optgroup>
-            <optgroup label="UTGIFTER" id="opt-exp">
-                <option value="exp-7000">7000 - Drivstoff</option>
-                <option value="exp-6755">6755 - Sentralavgift</option>
-                <option value="exp-5000">5000 - Lønn</option>
+            <optgroup label="DRIFTSKOSTNADER" id="opt-exp">
+                <option value="5000">5000 - Lønn til ansatte</option>
+                <option value="5090">5090 - Påløpt, ikke utbetalt lønn</option>
+                <option value="5092">5092 - Feriepenger</option>
+                <option value="5400">5400 - Arbeidsgiveravgift</option>
+                <option value="5405">5405 - AGA på påløpte feriepenger</option>
+                <option value="5920">5920 - Yrkesskadeforsikring</option>
+                <option value="6010">6010 - Avskrivning på transportmidler</option>
+                <option value="6540">6540 - Inventar</option>
+                <option value="6560">6560 - Småanskaffelser</option>
+                <option value="6705">6705 - Regnskapshonorar</option>
+                <option value="6755">6755 - Sentralavgift</option>
+                <option value="6800">6800 - Kontorrekvisita</option>
+                <option value="6890">6890 - Annen kontorkostnad</option>
+                <option value="6900">6900 - Telefon</option>
+                <option value="6907">6907 - Datakommunikasjon</option>
+                <option value="7000">7000 - Drivstoff</option>
+                <option value="7020">7020 - Vedlikehold transportmiddel</option>
+                <option value="7040">7040 - Forsikring transportmiddel</option>
+                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
+                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
+                <option value="7770">7770 - Bank- og kortgebyrer</option>
+                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
         <input type="number" id="entry-amt" placeholder="Beløp (kr)">
         
-        <!-- CALAAMADDA GUDUUDKA OO LAGU DARAY -->
         <div class="btn-group">
             <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">LAGRE INNTEKT</button>
             <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">LAGRE UTGIFT</button>
@@ -176,7 +198,7 @@
                 if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
                 list.innerHTML += `
                     <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
-                        <div><b>${v.desc}</b><br><small>${v.date}</small></div>
+                        <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date}</small></div>
                         <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${v.amt} kr</b></div>
                     </div>`;
             });
