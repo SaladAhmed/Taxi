@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport PRO - Full Regnskap</title>
+    <title>Transport PRO - Full System</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -12,6 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
@@ -27,14 +29,21 @@
         .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
         .summary-card { background: var(--card); border: 3px solid var(--yellow); border-radius: 20px; margin: 15px; padding: 20px; text-align: center; }
 
-        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); }
+        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; }
+        .entry-actions { display: flex; gap: 10px; color: #64748b; cursor: pointer; }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000; }
         .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--yellow); }
         
-        input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; }
-        .btn-save { padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
+        input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
+        .btn-save { padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 14px; width: 100%; }
         .flex-btns { display: flex; gap: 10px; margin-top: 10px; }
+
+        /* Profile Styles */
+        .profile-pic-container { position: relative; width: 100px; height: 100px; margin: 0 auto 20px; border: 3px solid var(--yellow); border-radius: 50%; overflow: hidden; background: #334155; }
+        .profile-pic-container img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-pic-container i { font-size: 40px; line-height: 100px; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -43,7 +52,7 @@
     <h2 style="color:var(--yellow)">LOGG INN</h2>
     <input type="email" id="email" placeholder="E-post">
     <input type="password" id="pass" placeholder="Passord">
-    <button class="btn-save" style="background:var(--blue); width:100%" onclick="handleAuth()">LOGG INN</button>
+    <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
 </div>
 
 <div id="main-app" style="display:none">
@@ -76,13 +85,27 @@
         <input type="date" id="entry-date">
         <select id="entry-category">
             <optgroup label="DRIFTSINNTEKTER">
-                <option value="3030">3030 - Kjøreinntekter</option>
+                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
+                <option value="3031">3031 - Kjøreinntekter kontant</option>
+                <option value="3032">3032 - Kjøreinntekter NAV</option>
+                <option value="3033">3033 - Kjøreinntekter skole</option>
+                <option value="3039">3039 - Bomtur</option>
                 <option value="3110">3110 - Tips</option>
             </optgroup>
             <optgroup label="DRIFTSKOSTNADER">
+                <option value="5000">5000 - Lønn til ansatte</option>
+                <option value="5400">5400 - Arbeidsgiveravgift</option>
+                <option value="5920">5920 - Yrkesskadeforsikring</option>
+                <option value="6010">6010 - Avskrivning</option>
+                <option value="6705">6705 - Regnskapshonorar</option>
+                <option value="6755">6755 - Sentralavgift</option>
+                <option value="6800">6800 - Kontorrekvisita</option>
+                <option value="6900">6900 - Telefon</option>
                 <option value="7000">7000 - Drivstoff</option>
-                <option value="5000">5000 - Lønn</option>
+                <option value="7020">7020 - Vedlikehold</option>
+                <option value="7040">7040 - Forsikring</option>
                 <option value="7770">7770 - Bankgebyr</option>
+                <option value="7798">7798 - Annen kostnad</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
@@ -94,10 +117,33 @@
         </div>
     </div>
 
+    <div id="page-scan" class="page" style="display:none; padding: 20px; text-align: center;">
+        <div class="header-title">SMART SCAN</div>
+        <div style="border: 2px dashed var(--border); padding: 40px; border-radius: 15px; margin-bottom: 20px;">
+            <i class="fas fa-camera" style="font-size: 40px; color: var(--blue);"></i>
+            <p>Scan kvittering</p>
+            <input type="file" id="scan-input" accept="image/*" style="opacity: 0; position: absolute; width: 100px; height: 100px; cursor: pointer;">
+        </div>
+        <p id="scan-status" style="font-size: 12px; color: var(--yellow);"></p>
+    </div>
+
+    <div id="page-profile" class="page" style="display:none; padding: 20px; text-align: center;">
+        <div class="header-title">PROFILE</div>
+        <div class="profile-pic-container" onclick="document.getElementById('profile-upload').click()">
+            <img id="profile-img" src="" style="display:none">
+            <i id="profile-placeholder" class="fas fa-user"></i>
+            <input type="file" id="profile-upload" style="display:none" accept="image/*" onchange="uploadProfilePic(this)">
+        </div>
+        <h3 id="profile-name">Mohamed Salad</h3>
+        <button class="btn-save" style="background:var(--blue); margin-bottom: 10px;" onclick="changePassword()">Change Password</button>
+        <button class="btn-save" style="background:var(--red);" onclick="logout()">Logout</button>
+    </div>
+
     <div class="nav-bar">
         <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-th-large"></i><br><span id="n-dash">Oversikt</span></div>
+        <div class="nav-item" id="nav-scan" onclick="showTab('scan')"><i class="fas fa-camera"></i><br><span>Scanner</span></div>
         <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus-circle"></i><br><span id="n-add">Legg til</span></div>
-        <div class="nav-item" onclick="logout()"><i class="fas fa-power-off"></i><br><span id="n-exit">Logg ut</span></div>
+        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br><span>Profile</span></div>
     </div>
 </div>
 
@@ -106,22 +152,30 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
+    const storage = firebase.storage();
 
     function saveEntry(type) {
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const cat = document.getElementById('entry-category').value;
-        const date = document.getElementById('entry-date').value;
-        if(!desc || isNaN(amt)) return alert("Gali xogta!");
+        const dateInput = document.getElementById('entry-date').value;
+        if(!desc || isNaN(amt) || !dateInput) return alert("Fadlan buuxi meelaha banaan!");
 
+        const dateObj = new Date(dateInput);
         db.ref('users/' + auth.currentUser.uid + '/entries').push({
             desc, amt, subCat: cat, mainCat: type,
-            date: new Date(date).toLocaleDateString('no-NO'),
-            filterKey: (new Date(date).getMonth()+1) + "-" + new Date(date).getFullYear()
+            date: dateObj.toLocaleDateString('no-NO'),
+            filterKey: (dateObj.getMonth()+1) + "-" + dateObj.getFullYear()
         });
         document.getElementById('entry-desc').value = "";
         document.getElementById('entry-amt').value = "";
         showTab('dash');
+    }
+
+    function deleteEntry(id) {
+        if(confirm("Ma hubtaa inaad tirtirto?")) {
+            db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
+        }
     }
 
     function loadData() {
@@ -131,10 +185,17 @@
             list.innerHTML = "";
             snap.forEach(child => {
                 const v = child.val();
+                const id = child.key;
                 if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
-                list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
+                list.innerHTML += `
+                <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
                     <div><b>${v.desc}</b><br><small>${v.subCat} | ${v.date}</small></div>
-                    <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${v.amt.toLocaleString()} kr</b></div>
+                    <div style="text-align:right">
+                        <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${v.amt.toLocaleString()} kr</b></div>
+                        <div class="entry-actions">
+                            <i class="fas fa-trash" onclick="deleteEntry('${id}')"></i>
+                        </div>
+                    </div>
                 </div>`;
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
@@ -144,9 +205,28 @@
         });
     }
 
+    function uploadProfilePic(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const ref = storage.ref('users/' + auth.currentUser.uid + '/profile.jpg');
+        ref.put(file).then(() => ref.getDownloadURL().then(url => {
+            db.ref('users/' + auth.currentUser.uid + '/profile/photo').set(url);
+            document.getElementById('profile-img').src = url;
+            document.getElementById('profile-img').style.display = 'block';
+            document.getElementById('profile-placeholder').style.display = 'none';
+        }));
+    }
+
+    function changePassword() {
+        const newPass = prompt("Geli password-ka cusub:");
+        if(newPass && newPass.length >= 6) {
+            auth.currentUser.updatePassword(newPass).then(() => alert("Password-ka waa la bedelay!")).catch(e => alert(e.message));
+        }
+    }
+
     const dict = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", saveInc: "LAGRE INNTEKT", saveExp: "LAGRE UTGIFT" },
-        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA GUUD", add: "GELI XOGTA", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", saveInc: "KEYDI DAKHLI", saveExp: "KEYDI KHARASH" }
+        so: { inc: "DAKHLI", exp: "KHARASH", net: "NETTO", res: "NATIIJADA GUUD", add: "GELI XOGTA", dash: "Guudmar", nadd: "Geli Xog", exit: "Ka Bax", saveInc: "KEYDI DAKHLI", saveExp: "KEYDI KHARASH" },
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "NETTO", res: "TOTAL RESULTAT", add: "REGISTRER DATA", dash: "Oversikt", nadd: "Legg til", exit: "Logg ut", saveInc: "LAGRE INNTEKT", saveExp: "LAGRE UTGIFT" }
     };
 
     function updateLang(l) {
@@ -181,6 +261,13 @@
             document.getElementById('auth-page').style.display='none';
             document.getElementById('main-app').style.display='block';
             document.getElementById('entry-date').valueAsDate = new Date();
+            db.ref('users/' + user.uid + '/profile/photo').on('value', s => {
+                if(s.val()) {
+                    document.getElementById('profile-img').src = s.val();
+                    document.getElementById('profile-img').style.display = 'block';
+                    document.getElementById('profile-placeholder').style.display = 'none';
+                }
+            });
             loadData();
         } else {
             document.getElementById('auth-page').style.display='block';
