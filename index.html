@@ -43,16 +43,18 @@
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
         
-        /* NEW STYLES */
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .profile-img-wrap { width: 80px; height: 80px; margin: 0 auto 10px; border: 2px solid var(--yellow); border-radius: 50%; overflow: hidden; background: #334155; }
         .profile-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Edit/Delete Icons */
         .entry-actions { display: flex; gap: 15px; }
         .entry-actions i { cursor: pointer; transition: 0.2s; }
         .fa-trash:hover { color: var(--red); }
         .fa-edit:hover { color: var(--yellow); }
+
+        /* Scanner Styles */
+        .scanner-preview { width: 100%; height: 200px; background: #000; border-radius: 10px; margin-bottom: 15px; display: none; object-fit: cover; border: 2px solid var(--yellow); }
+        .btn-scan { background: var(--blue); margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -98,20 +100,36 @@
         <div id="entries-list"></div>
     </div>
 
-    <!-- ADD/EDIT DATA -->
+    <!-- ADD/EDIT DATA & SCANNER -->
     <div id="page-add" class="page" style="display:none; padding: 20px;">
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
-        <input type="hidden" id="edit-id"> <!-- Hidden field for editing -->
+        
+        <!-- Scanner Section -->
+        <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()"><i class="fas fa-camera"></i> SCAN RECEIPT</button>
+        <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
+        <canvas id="scanner-canvas" style="display:none;"></canvas>
+        <img id="scanned-img" class="scanner-preview" />
+        <button id="capture-btn" class="btn-save" style="display:none; background:var(--green); margin-bottom:15px;" onclick="capturePhoto()">TA SAWIRKA</button>
+
+        <input type="hidden" id="edit-id">
         <input type="date" id="entry-date">
         <select id="entry-category">
-            <optgroup label="INNTEKT" id="opt-inc">
-                <option value="inc-3030">3030 - Kjøreinntekt</option>
-                <option value="inc-3110">3110 - Tips</option>
+            <optgroup label="INNTEKT (DRIFTSINNTEKTER)">
+                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
+                <option value="3031">3031 - Kjøreinntekter kontant</option>
+                <option value="3032">3032 - Kjøreinntekter NAV</option>
+                <option value="3033">3033 - Kjøreinntekter skole</option>
+                <option value="3039">3039 - Bomtur</option>
+                <option value="3110">3110 - Tips</option>
             </optgroup>
-            <optgroup label="UTGIFTER" id="opt-exp">
-                <option value="exp-7000">7000 - Drivstoff</option>
-                <option value="exp-6755">6755 - Sentralavgift</option>
-                <option value="exp-5000">5000 - Lønn</option>
+            <optgroup label="UTGIFTER (DRIFTSKOSTNADER)">
+                <option value="5000">5000 - Lønn til ansatte</option>
+                <option value="7000">7000 - Drivstoff</option>
+                <option value="6755">6755 - Sentralavgift</option>
+                <option value="7020">7020 - Vedlikehold bil</option>
+                <option value="7040">7040 - Forsikring bil</option>
+                <option value="6010">6010 - Avskrivning</option>
+                <option value="7770">7770 - Bankgebyr</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
@@ -132,7 +150,6 @@
         </div>
         <h3 id="prof-name">User Name</h3>
         <button class="btn-save" style="background:var(--blue); margin-bottom:10px" onclick="changePass()">Change Password</button>
-        <!-- EXIT / LOGOUT BUTTON -->
         <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT (EXIT)</button>
     </div>
 
@@ -156,6 +173,43 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
+    let stream = null;
+
+    // --- SCANNER FUNCTIONS ---
+    async function startScanner() {
+        const video = document.getElementById('scanner-video');
+        const captureBtn = document.getElementById('capture-btn');
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            captureBtn.style.display = 'block';
+            document.getElementById('scanned-img').style.display = 'none';
+        } catch (err) {
+            alert("Ma u ogolaatay camirada? " + err);
+        }
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('scanner-video');
+        const canvas = document.getElementById('scanner-canvas');
+        const img = document.getElementById('scanned-img');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        img.src = dataUrl;
+        img.style.display = 'block';
+        
+        // Stop camera
+        stream.getTracks().forEach(track => track.stop());
+        video.style.display = 'none';
+        document.getElementById('capture-btn').style.display = 'none';
+    }
+
+    // --- DATA FUNCTIONS ---
     function saveData(type) {
         const editId = document.getElementById('edit-id').value;
         const desc = document.getElementById('entry-desc').value;
@@ -173,17 +227,21 @@
         };
 
         if(editId) {
-            // Update existing entry
             db.ref('users/' + auth.currentUser.uid + '/entries/' + editId).update(entryData);
-            document.getElementById('edit-id').value = "";
         } else {
-            // Push new entry
             db.ref('users/' + auth.currentUser.uid + '/entries').push(entryData);
         }
 
+        resetForm();
+        showTab('dash');
+    }
+
+    function resetForm() {
         document.getElementById('entry-desc').value = "";
         document.getElementById('entry-amt').value = "";
-        showTab('dash');
+        document.getElementById('edit-id').value = "";
+        document.getElementById('scanned-img').style.display = 'none';
+        document.getElementById('l-add-title').innerText = "REGISTRER DATA";
     }
 
     function loadData() {
@@ -195,13 +253,12 @@
                 const v = child.val();
                 const key = child.key;
                 if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
-                
                 list.innerHTML += `
                     <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
-                        <div><b>${v.desc}</b><br><small>${v.date}</small></div>
+                        <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date}</small></div>
                         <div class="entry-actions">
                             <span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}; font-weight:bold; margin-right:10px">${v.amt} kr</span>
-                            <i class="fas fa-edit" onclick="editEntry('${key}', '${v.desc}', ${v.amt}, '${v.subCat}', '${v.mainCat}')"></i>
+                            <i class="fas fa-edit" onclick="editEntry('${key}', '${v.desc}', ${v.amt}, '${v.subCat}')"></i>
                             <i class="fas fa-trash" onclick="deleteEntry('${key}')"></i>
                         </div>
                     </div>`;
@@ -213,15 +270,11 @@
         });
     }
 
-    // DELETE FUNCTION
     function deleteEntry(id) {
-        if(confirm("Ma hubtaa inaad tirtirto xogtan?")) {
-            db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
-        }
+        if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
     }
 
-    // EDIT FUNCTION
-    function editEntry(id, desc, amt, cat, type) {
+    function editEntry(id, desc, amt, cat) {
         document.getElementById('edit-id').value = id;
         document.getElementById('entry-desc').value = desc;
         document.getElementById('entry-amt').value = amt;
@@ -230,23 +283,12 @@
         document.getElementById('l-add-title').innerText = "WAX KA BEDEL (EDIT)";
     }
 
-    function forgotPassword() {
-        const email = document.getElementById('email').value;
-        if(!email) return alert("Fadlan marka hore email-ka qor!");
-        auth.sendPasswordResetEmail(email).then(() => alert("Email password reset ah waa lagu soo diray!"));
-    }
-
-    function changePass() {
-        const newPass = prompt("Geli Password-ka cusub:");
-        if(newPass) auth.currentUser.updatePassword(newPass).then(() => alert("Password-ka waa la bedelay!"));
-    }
-
+    // --- AUTH & NAV ---
     auth.onAuthStateChanged(user => {
         if(user) {
             document.getElementById('auth-page').style.display='none';
             document.getElementById('main-app').style.display='block';
             document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
-            document.getElementById('prof-name').innerText = user.email;
             document.getElementById('entry-date').valueAsDate = new Date();
             loadData();
         } else {
@@ -260,18 +302,14 @@
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-'+t).classList.add('active');
-        if(t !== 'add') {
-            document.getElementById('l-add-title').innerText = "REGISTRER DATA";
-            document.getElementById('edit-id').value = "";
-        }
+        if(t !== 'add') resetForm();
     }
 
     function handleAuth() {
         auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message));
     }
-    function toggleTheme() { document.body.classList.toggle('light-theme'); }
     function logout() { auth.signOut().then(() => location.reload()); }
-    function updateLang(l) { alert("Language changed to " + l); }
+    function toggleTheme() { document.body.classList.toggle('light-theme'); }
 </script>
 </body>
 </html>
