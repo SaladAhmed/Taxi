@@ -1,6 +1,3 @@
-
-
-```html
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -58,6 +55,11 @@
         /* Scanner Styles */
         .scanner-preview { width: 100%; height: 200px; background: #000; border-radius: 10px; margin-bottom: 15px; display: none; object-fit: cover; border: 2px solid var(--yellow); }
         .btn-scan { background: var(--blue); margin-bottom: 15px; }
+
+        /* Report Styles */
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); border-radius: 10px; overflow: hidden; }
+        .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .report-table th { background: var(--border); color: var(--yellow); }
     </style>
 </head>
 <body>
@@ -85,7 +87,7 @@
         <div class="stats-grid">
             <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">NETTO (BRUTTO)</small><span id="total-netto">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">TOTAL (TOTAL)</small><span id="total-netto">0 kr</span></div>
         </div>
         
         <div class="mva-card">
@@ -103,11 +105,27 @@
         <div id="entries-list"></div>
     </div>
 
+    <!-- REPORTS PAGE -->
+    <div id="page-reports" class="page" style="display:none; padding: 20px;">
+        <div class="header-title">REGNSKAP REPORTS</div>
+        <div id="report-content">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Konto</th>
+                        <th>Beskrivelse</th>
+                        <th>Beløp</th>
+                    </tr>
+                </thead>
+                <tbody id="report-body"></tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- ADD/EDIT DATA & SCANNER -->
     <div id="page-add" class="page" style="display:none; padding: 20px;">
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
-        
-        <!-- Scanner Section -->
         <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()"><i class="fas fa-camera"></i> SCAN RECEIPT</button>
         <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
         <canvas id="scanner-canvas" style="display:none;"></canvas>
@@ -175,8 +193,9 @@
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br><span id="n-dash">Dashboard</span></div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br><span id="n-add">Legg til</span></div>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br><span>Dash</span></div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br><span>Add</span></div>
+        <div class="nav-item" id="nav-reports" onclick="showTab('reports')"><i class="fas fa-file-invoice"></i><br><span>Reports</span></div>
         <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br><span>Profil</span></div>
     </div>
 </div>
@@ -196,7 +215,6 @@
 
     let stream = null;
 
-    // --- SCANNER FUNCTIONS ---
     async function startScanner() {
         const video = document.getElementById('scanner-video');
         const captureBtn = document.getElementById('capture-btn');
@@ -206,62 +224,39 @@
             video.style.display = 'block';
             captureBtn.style.display = 'block';
             document.getElementById('scanned-img').style.display = 'none';
-        } catch (err) {
-            alert("Ma u ogolaatay camirada? " + err);
-        }
+        } catch (err) { alert("Ma u ogolaatay camirada? " + err); }
     }
 
     function capturePhoto() {
         const video = document.getElementById('scanner-video');
         const canvas = document.getElementById('scanner-canvas');
         const img = document.getElementById('scanned-img');
-        
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        const dataUrl = canvas.toDataURL('image/png');
-        img.src = dataUrl;
+        img.src = canvas.toDataURL('image/png');
         img.style.display = 'block';
-        
-        // Stop camera
         stream.getTracks().forEach(track => track.stop());
         video.style.display = 'none';
         document.getElementById('capture-btn').style.display = 'none';
     }
 
-    // --- DATA FUNCTIONS ---
     function saveData(type) {
         const editId = document.getElementById('edit-id').value;
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const cat = document.getElementById('entry-category').value;
         const dateInput = document.getElementById('entry-date').value;
-        const date = new Date(dateInput);
-
         if(!desc || !amt || !dateInput) return alert("Fadlan buuxi meelaha banaan!");
-
-        const entryData = {
-            desc, amt, subCat: cat, mainCat: type,
-            date: date.toLocaleDateString('no-NO'),
-            timestamp: date.getTime()
-        };
-
-        if(editId) {
-            db.ref('users/' + auth.currentUser.uid + '/entries/' + editId).update(entryData);
-        } else {
-            db.ref('users/' + auth.currentUser.uid + '/entries').push(entryData);
-        }
-
-        resetForm();
-        showTab('dash');
+        const entryData = { desc, amt, subCat: cat, mainCat: type, date: new Date(dateInput).toLocaleDateString('no-NO'), timestamp: new Date(dateInput).getTime() };
+        if(editId) db.ref('users/' + auth.currentUser.uid + '/entries/' + editId).update(entryData);
+        else db.ref('users/' + auth.currentUser.uid + '/entries').push(entryData);
+        resetForm(); showTab('dash');
     }
 
     function resetForm() {
-        document.getElementById('entry-desc').value = "";
-        document.getElementById('entry-amt').value = "";
-        document.getElementById('edit-id').value = "";
-        document.getElementById('scanned-img').style.display = 'none';
+        document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
+        document.getElementById('edit-id').value = ""; document.getElementById('scanned-img').style.display = 'none';
         document.getElementById('l-add-title').innerText = "REGISTRER DATA";
     }
 
@@ -269,20 +264,17 @@
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
             let ti=0, te=0;
             const list = document.getElementById('entries-list');
-            list.innerHTML = "";
+            const reportBody = document.getElementById('report-body');
+            list.innerHTML = ""; reportBody.innerHTML = "";
             snap.forEach(child => {
-                const v = child.val();
-                const key = child.key;
+                const v = child.val(); const key = child.key;
                 if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
-                list.innerHTML += `
-                    <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
+                list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
                         <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date}</small></div>
-                        <div class="entry-actions">
-                            <span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}; font-weight:bold; margin-right:10px">${v.amt} kr</span>
-                            <i class="fas fa-edit" onclick="editEntry('${key}', '${v.desc}', ${v.amt}, '${v.subCat}')"></i>
-                            <i class="fas fa-trash" onclick="deleteEntry('${key}')"></i>
-                        </div>
-                    </div>`;
+                        <div class="entry-actions"><span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt} kr</span>
+                        <i class="fas fa-edit" onclick="editEntry('${key}', '${v.desc}', ${v.amt}, '${v.subCat}')"></i>
+                        <i class="fas fa-trash" onclick="deleteEntry('${key}')"></i></div></div>`;
+                reportBody.innerHTML += `<tr><td>${v.date}</td><td>${v.subCat}</td><td>${v.desc}</td><td style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">${v.amt} kr</td></tr>`;
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
             document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
@@ -291,31 +283,16 @@
         });
     }
 
-    function deleteEntry(id) {
-        if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
-    }
-
+    function deleteEntry(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
     function editEntry(id, desc, amt, cat) {
-        document.getElementById('edit-id').value = id;
-        document.getElementById('entry-desc').value = desc;
-        document.getElementById('entry-amt').value = amt;
-        document.getElementById('entry-category').value = cat;
-        showTab('add');
-        document.getElementById('l-add-title').innerText = "WAX KA BEDEL (EDIT)";
+        document.getElementById('edit-id').value = id; document.getElementById('entry-desc').value = desc;
+        document.getElementById('entry-amt').value = amt; document.getElementById('entry-category').value = cat;
+        showTab('add'); document.getElementById('l-add-title').innerText = "EDIT ENTRY";
     }
 
-    // --- AUTH & NAV ---
     auth.onAuthStateChanged(user => {
-        if(user) {
-            document.getElementById('auth-page').style.display='none';
-            document.getElementById('main-app').style.display='block';
-            document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
-            document.getElementById('entry-date').valueAsDate = new Date();
-            loadData();
-        } else {
-            document.getElementById('auth-page').style.display='block';
-            document.getElementById('main-app').style.display='none';
-        }
+        if(user) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
+        else { document.getElementById('auth-page').style.display='block'; document.getElementById('main-app').style.display='none'; }
     });
 
     function showTab(t) {
@@ -323,16 +300,11 @@
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-'+t).classList.add('active');
-        if(t !== 'add') resetForm();
     }
 
-    function handleAuth() {
-        auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message));
-    }
+    function handleAuth() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message)); }
     function logout() { auth.signOut().then(() => location.reload()); }
     function toggleTheme() { document.body.classList.toggle('light-theme'); }
 </script>
 </body>
 </html>
-
-```
