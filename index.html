@@ -47,6 +47,12 @@
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .profile-img-wrap { width: 80px; height: 80px; margin: 0 auto 10px; border: 2px solid var(--yellow); border-radius: 50%; overflow: hidden; background: #334155; }
         .profile-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Edit/Delete Icons */
+        .entry-actions { display: flex; gap: 15px; }
+        .entry-actions i { cursor: pointer; transition: 0.2s; }
+        .fa-trash:hover { color: var(--red); }
+        .fa-edit:hover { color: var(--yellow); }
     </style>
 </head>
 <body>
@@ -92,42 +98,20 @@
         <div id="entries-list"></div>
     </div>
 
-    <!-- ADD DATA -->
+    <!-- ADD/EDIT DATA -->
     <div id="page-add" class="page" style="display:none; padding: 20px;">
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
+        <input type="hidden" id="edit-id"> <!-- Hidden field for editing -->
         <input type="date" id="entry-date">
         <select id="entry-category">
-            <optgroup label="DRIFTSINNTEKTER" id="opt-inc">
-                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
-                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
-                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
-                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
-                <option value="3039">3039 - Bomtur, lav sats</option>
-                <option value="3110">3110 - Tips</option>
+            <optgroup label="INNTEKT" id="opt-inc">
+                <option value="inc-3030">3030 - Kjøreinntekt</option>
+                <option value="inc-3110">3110 - Tips</option>
             </optgroup>
-            <optgroup label="DRIFTSKOSTNADER" id="opt-exp">
-                <option value="5000">5000 - Lønn til ansatte</option>
-                <option value="5090">5090 - Påløpt, ikke utbetalt lønn</option>
-                <option value="5092">5092 - Feriepenger</option>
-                <option value="5400">5400 - Arbeidsgiveravgift</option>
-                <option value="5405">5405 - AGA på påløpte feriepenger</option>
-                <option value="5920">5920 - Yrkesskadeforsikring</option>
-                <option value="6010">6010 - Avskrivning på transportmidler</option>
-                <option value="6540">6540 - Inventar</option>
-                <option value="6560">6560 - Småanskaffelser</option>
-                <option value="6705">6705 - Regnskapshonorar</option>
-                <option value="6755">6755 - Sentralavgift</option>
-                <option value="6800">6800 - Kontorrekvisita</option>
-                <option value="6890">6890 - Annen kontorkostnad</option>
-                <option value="6900">6900 - Telefon</option>
-                <option value="6907">6907 - Datakommunikasjon</option>
-                <option value="7000">7000 - Drivstoff</option>
-                <option value="7020">7020 - Vedlikehold transportmiddel</option>
-                <option value="7040">7040 - Forsikring transportmiddel</option>
-                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
-                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
-                <option value="7770">7770 - Bank- og kortgebyrer</option>
-                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
+            <optgroup label="UTGIFTER" id="opt-exp">
+                <option value="exp-7000">7000 - Drivstoff</option>
+                <option value="exp-6755">6755 - Sentralavgift</option>
+                <option value="exp-5000">5000 - Lønn</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
@@ -148,7 +132,8 @@
         </div>
         <h3 id="prof-name">User Name</h3>
         <button class="btn-save" style="background:var(--blue); margin-bottom:10px" onclick="changePass()">Change Password</button>
-        <button class="btn-save" style="background:var(--red)" onclick="logout()">Logout</button>
+        <!-- EXIT / LOGOUT BUTTON -->
+        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT (EXIT)</button>
     </div>
 
     <div class="nav-bar">
@@ -172,17 +157,30 @@
     const auth = firebase.auth();
 
     function saveData(type) {
+        const editId = document.getElementById('edit-id').value;
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const cat = document.getElementById('entry-category').value;
-        const date = new Date(document.getElementById('entry-date').value);
-        if(!desc || !amt) return alert("Gali xogta!");
+        const dateInput = document.getElementById('entry-date').value;
+        const date = new Date(dateInput);
 
-        db.ref('users/' + auth.currentUser.uid + '/entries').push({
+        if(!desc || !amt || !dateInput) return alert("Fadlan buuxi meelaha banaan!");
+
+        const entryData = {
             desc, amt, subCat: cat, mainCat: type,
             date: date.toLocaleDateString('no-NO'),
             timestamp: date.getTime()
-        });
+        };
+
+        if(editId) {
+            // Update existing entry
+            db.ref('users/' + auth.currentUser.uid + '/entries/' + editId).update(entryData);
+            document.getElementById('edit-id').value = "";
+        } else {
+            // Push new entry
+            db.ref('users/' + auth.currentUser.uid + '/entries').push(entryData);
+        }
+
         document.getElementById('entry-desc').value = "";
         document.getElementById('entry-amt').value = "";
         showTab('dash');
@@ -195,11 +193,17 @@
             list.innerHTML = "";
             snap.forEach(child => {
                 const v = child.val();
+                const key = child.key;
                 if(v.mainCat === 'income') ti += v.amt; else te += v.amt;
+                
                 list.innerHTML += `
                     <div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
-                        <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date}</small></div>
-                        <div style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}"><b>${v.amt} kr</b></div>
+                        <div><b>${v.desc}</b><br><small>${v.date}</small></div>
+                        <div class="entry-actions">
+                            <span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}; font-weight:bold; margin-right:10px">${v.amt} kr</span>
+                            <i class="fas fa-edit" onclick="editEntry('${key}', '${v.desc}', ${v.amt}, '${v.subCat}', '${v.mainCat}')"></i>
+                            <i class="fas fa-trash" onclick="deleteEntry('${key}')"></i>
+                        </div>
                     </div>`;
             });
             document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
@@ -207,6 +211,23 @@
             document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
             document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
         });
+    }
+
+    // DELETE FUNCTION
+    function deleteEntry(id) {
+        if(confirm("Ma hubtaa inaad tirtirto xogtan?")) {
+            db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
+        }
+    }
+
+    // EDIT FUNCTION
+    function editEntry(id, desc, amt, cat, type) {
+        document.getElementById('edit-id').value = id;
+        document.getElementById('entry-desc').value = desc;
+        document.getElementById('entry-amt').value = amt;
+        document.getElementById('entry-category').value = cat;
+        showTab('add');
+        document.getElementById('l-add-title').innerText = "WAX KA BEDEL (EDIT)";
     }
 
     function forgotPassword() {
@@ -239,6 +260,10 @@
         document.getElementById('page-'+t).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-'+t).classList.add('active');
+        if(t !== 'add') {
+            document.getElementById('l-add-title').innerText = "REGISTRER DATA";
+            document.getElementById('edit-id').value = "";
+        }
     }
 
     function handleAuth() {
