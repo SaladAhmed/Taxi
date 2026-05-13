@@ -16,9 +16,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- OCR LIBRARY ADDED HERE -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-    
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
         .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
@@ -57,7 +54,6 @@
 
         .scanner-preview { width: 100%; height: 200px; background: #000; border-radius: 10px; margin-bottom: 15px; display: none; object-fit: cover; border: 2px solid var(--yellow); }
         .btn-scan { background: var(--blue); margin-bottom: 15px; }
-        #ocr-status { font-size: 12px; color: var(--yellow); text-align: center; margin-bottom: 10px; }
 
         .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); border-radius: 10px; overflow: hidden; }
         .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
@@ -79,8 +75,8 @@
         <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
         <div id="user-display-name" style="font-weight:bold">Laster...</div>
         <div>
-            <span onclick="updateLang('no')">🇳🇴</span>
-            <span onclick="updateLang('so')">🇸🇴</span>
+            <span onclick="updateLang('no')" style="cursor:pointer">🇳🇴</span>
+            <span onclick="updateLang('so')" style="cursor:pointer">🇸🇴</span>
         </div>
     </div>
 
@@ -89,7 +85,7 @@
         <div class="stats-grid">
             <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small id="l-inc">INNTEKT</small><span id="total-income">0 kr</span></div>
             <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small id="l-exp">UTGIFTER</small><span id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">TOTAL (TOTAL)</small><span id="total-netto">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">TOTAL (NETTO)</small><span id="total-netto">0 kr</span></div>
         </div>
         
         <div class="mva-card">
@@ -100,7 +96,7 @@
         </div>
         
         <div class="summary-card">
-            <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
+            <small id="l-res">RESULTAT FØR SKATT</small>
             <h1 id="res-total" style="color:var(--green)">0 kr</h1>
         </div>
         
@@ -109,15 +105,15 @@
 
     <!-- REPORTS PAGE -->
     <div id="page-reports" class="page" style="display:none; padding: 20px;">
-        <div class="header-title">REGNSKAP REPORTS</div>
+        <div class="header-title" id="l-rep-title">REGNSKAP REPORTS</div>
         <div id="report-content">
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th>Dato</th>
-                        <th>Konto</th>
-                        <th>Beskrivelse</th>
-                        <th>Beløp</th>
+                        <th id="th-date">Dato</th>
+                        <th id="th-acc">Konto</th>
+                        <th id="th-desc">Beskrivelse</th>
+                        <th id="th-amt">Beløp</th>
                     </tr>
                 </thead>
                 <tbody id="report-body"></tbody>
@@ -125,17 +121,14 @@
         </div>
     </div>
 
-    <!-- ADD/EDIT DATA & SCANNER -->
+    <!-- ADD/EDIT DATA -->
     <div id="page-add" class="page" style="display:none; padding: 20px;">
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
-        
-        <!-- SCANNER UI -->
         <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()"><i class="fas fa-camera"></i> SCAN RECEIPT</button>
-        <div id="ocr-status"></div>
         <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
         <canvas id="scanner-canvas" style="display:none;"></canvas>
         <img id="scanned-img" class="scanner-preview" />
-        <button id="capture-btn" class="btn-save" style="display:none; background:var(--green); margin-bottom:15px;" onclick="capturePhoto()">TA SAWIRKA & AQRI</button>
+        <button id="capture-btn" class="btn-save" style="display:none; background:var(--green); margin-bottom:15px;" onclick="capturePhoto()">TA SAWIRKA</button>
 
         <input type="hidden" id="edit-id">
         <input type="date" id="entry-date">
@@ -143,34 +136,58 @@
             <optgroup label="INNTEKT (DRIFTSINNTEKTER)">
                 <option value="3030">3030 - Kjøreinntekter, lav sats</option>
                 <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
+                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
+                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
+                <option value="3039">3039 - Bomtur, lav sats</option>
                 <option value="3110">3110 - Tips</option>
             </optgroup>
             <optgroup label="UTGIFTER (DRIFTSKOSTNADER)">
-                <option value="7000">7000 - Drivstoff</option>
+                <option value="5000">5000 - Lønn til ansatte</option>
+                <option value="5400">5400 - Arbeidsgiveravgift</option>
+                <option value="5920">5920 - Yrkesskadeforsikring</option>
+                <option value="6010">6010 - Avskrivning på transportmidler</option>
+                <option value="6300">6300 - Leie lokale</option>
+                <option value="6340">6340 - Lys og varme</option>
+                <option value="6360">6360 - Renhold</option>
+                <option value="6540">6540 - Inventar (verktøy o.l)</option>
+                <option value="6705">6705 - Regnskapshonorar</option>
                 <option value="6755">6755 - Sentralavgift</option>
+                <option value="6800">6800 - Kontorrekvisita</option>
+                <option value="6900">6900 - Telefon</option>
+                <option value="6907">6907 - Datakommunikasjon</option>
+                <option value="7000">7000 - Drivstoff</option>
                 <option value="7020">7020 - Vedlikehold transportmiddel</option>
                 <option value="7040">7040 - Forsikring transportmiddel</option>
+                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
+                <option value="7320">7320 - Reklamekostnad</option>
+                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
+                <option value="7500">7500 - Forsikringspremie</option>
                 <option value="7770">7770 - Bank- og kortgebyr</option>
+                <option value="7790">7790 - Annen kostnad, fradragsberettiget</option>
+                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
+                <option value="8060">8060 - Valutagevinst (Agio)</option>
+                <option value="8160">8160 - Valutatap (Disagio)</option>
             </optgroup>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
         <input type="number" id="entry-amt" placeholder="Beløp (kr)">
         
         <div class="btn-group">
-            <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">LAGRE INNTEKT</button>
-            <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">LAGRE UTGIFT</button>
+            <button id="btn-save-inc" class="btn-save" style="background:var(--green)" onclick="saveData('income')">LAGRE INNTEKT</button>
+            <button id="btn-save-exp" class="btn-save" style="background:var(--red)" onclick="saveData('expense')">LAGRE UTGIFT</button>
         </div>
     </div>
 
     <!-- PROFILE PAGE -->
     <div id="page-profile" class="page" style="display:none; padding: 20px; text-align: center;">
-        <div class="header-title">MY PROFILE</div>
+        <div class="header-title" id="l-prof-title">MY PROFILE</div>
         <div class="profile-img-wrap" onclick="document.getElementById('profile-upload').click()">
             <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
             <input type="file" id="profile-upload" style="display:none" onchange="uploadPhoto(this)">
         </div>
         <h3 id="prof-name">User Name</h3>
-        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT (EXIT)</button>
+        <button class="btn-save" style="background:var(--blue); margin-bottom:10px" onclick="changePass()" id="l-chg-pass">Change Password</button>
+        <button class="btn-save" style="background:var(--red)" onclick="logout()" id="l-logout">LOGG UT (EXIT)</button>
     </div>
 
     <div class="nav-bar">
@@ -196,6 +213,23 @@
 
     let stream = null;
 
+    // Translation Logic
+    const langData = {
+        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "TOTAL (NETTO)", mva: "Skyldig MVA", res: "RESULTAT FØR SKATT", add: "REGISTRER DATA", logout: "LOGG UT" },
+        so: { inc: "DAKHIL", exp: "KHARASH", net: "NETTO", mva: "CASHUURTA (MVA)", res: "NURIIJADA (FAA'IDO)", add: "GALII XOGTA", logout: "KABAX" }
+    };
+
+    function updateLang(l) {
+        const d = langData[l];
+        document.getElementById('l-inc').innerText = d.inc;
+        document.getElementById('l-exp').innerText = d.exp;
+        document.getElementById('l-net').innerText = d.net;
+        document.getElementById('l-mva').innerText = d.mva;
+        document.getElementById('l-res').innerText = d.res;
+        document.getElementById('l-add-title').innerText = d.add;
+        document.getElementById('l-logout').innerText = d.logout;
+    }
+
     async function startScanner() {
         const video = document.getElementById('scanner-video');
         const captureBtn = document.getElementById('capture-btn');
@@ -205,62 +239,21 @@
             video.style.display = 'block';
             captureBtn.style.display = 'block';
             document.getElementById('scanned-img').style.display = 'none';
-            document.getElementById('ocr-status').innerText = "Camerada waa diyaar...";
         } catch (err) { alert("Error: " + err); }
     }
 
-    async function capturePhoto() {
+    function capturePhoto() {
         const video = document.getElementById('scanner-video');
         const canvas = document.getElementById('scanner-canvas');
         const img = document.getElementById('scanned-img');
-        
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        const dataUrl = canvas.toDataURL('image/png');
-        img.src = dataUrl;
+        img.src = canvas.toDataURL('image/png');
         img.style.display = 'block';
-        
-        if(stream) stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => track.stop());
         video.style.display = 'none';
         document.getElementById('capture-btn').style.display = 'none';
-        
-        document.getElementById('ocr-status').innerText = "Waan aqrinayaa qoraalka... (Processing)";
-
-        // OCR Start
-        Tesseract.recognize(dataUrl, 'nor+eng').then(({ data: { text } }) => {
-            processOCR(text);
-        }).catch(err => {
-            document.getElementById('ocr-status').innerText = "Waan ku guuldareystay aqrinta.";
-        });
-    }
-
-    function processOCR(text) {
-        const lower = text.toLowerCase();
-        
-        // Match Amount (e.g. 500,00 or 500.00)
-        const amountMatch = text.match(/[\d\s]{2,}(?=[.,]00)/);
-        if(amountMatch) document.getElementById('entry-amt').value = amountMatch[0].replace(/\s/g, '');
-
-        // Match Date (DD.MM.YYYY)
-        const dateMatch = text.match(/\d{2}\.\d{2}\.\d{4}/);
-        if(dateMatch) {
-            const parts = dateMatch[0].split('.');
-            document.getElementById('entry-date').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-
-        // Logic for categories
-        if(lower.includes("drivstoff") || lower.includes("shell") || lower.includes("circle k")) {
-            document.getElementById('entry-category').value = "7000";
-            document.getElementById('entry-desc').value = "Drivstoff";
-        } else if(lower.includes("forsikring")) {
-            document.getElementById('entry-category').value = "7040";
-        } else if(lower.includes("taxi") || lower.includes("kjøring")) {
-            document.getElementById('entry-category').value = "3030";
-        }
-
-        document.getElementById('ocr-status').innerText = "Waa la dhameeyay aqrinta!";
     }
 
     function saveData(type) {
@@ -279,7 +272,7 @@
     function resetForm() {
         document.getElementById('entry-desc').value = ""; document.getElementById('entry-amt').value = "";
         document.getElementById('edit-id').value = ""; document.getElementById('scanned-img').style.display = 'none';
-        document.getElementById('ocr-status').innerText = "";
+        document.getElementById('l-add-title').innerText = "REGISTRER DATA";
     }
 
     function loadData() {
@@ -302,19 +295,34 @@
             document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
             document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
             document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
+            
+            // Calc MVA (simplified 25%)
+            document.getElementById('res-mva').innerText = (te * 0.25).toLocaleString() + " kr";
         });
     }
 
     function deleteEntry(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
+    
     function editEntry(id, desc, amt, cat) {
-        document.getElementById('edit-id').value = id; document.getElementById('entry-desc').value = desc;
-        document.getElementById('entry-amt').value = amt; document.getElementById('entry-category').value = cat;
-        showTab('add');
+        document.getElementById('edit-id').value = id; 
+        document.getElementById('entry-desc').value = desc;
+        document.getElementById('entry-amt').value = amt; 
+        document.getElementById('entry-category').value = cat;
+        showTab('add'); 
+        document.getElementById('l-add-title').innerText = "EDIT ENTRY";
     }
 
     auth.onAuthStateChanged(user => {
-        if(user) { document.getElementById('auth-page').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
-        else { document.getElementById('auth-page').style.display='block'; document.getElementById('main-app').style.display='none'; }
+        if(user) { 
+            document.getElementById('auth-page').style.display='none'; 
+            document.getElementById('main-app').style.display='block'; 
+            document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
+            document.getElementById('prof-name').innerText = user.email;
+            loadData(); 
+        } else { 
+            document.getElementById('auth-page').style.display='block'; 
+            document.getElementById('main-app').style.display='none'; 
+        }
     });
 
     function showTab(t) {
@@ -324,9 +332,19 @@
         document.getElementById('nav-'+t).classList.add('active');
     }
 
-    function handleAuth() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message)); }
+    function handleAuth() { 
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+        auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message)); 
+    }
+    
     function logout() { auth.signOut().then(() => location.reload()); }
     function toggleTheme() { document.body.classList.toggle('light-theme'); }
+    function forgotPassword() {
+        const email = document.getElementById('email').value;
+        if(!email) return alert("Fadlan qor e-mailkaaga!");
+        auth.sendPasswordResetEmail(email).then(() => alert("Email dib u dajin ah waa loo soo diray!")).catch(err => alert(err.message));
+    }
 </script>
 </body>
 </html>
