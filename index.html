@@ -459,6 +459,39 @@
             padding: 12px 22px;
             font-size: 13px;
         }
+
+        /* ===== SHOW/HIDE LACAGAHA ===== */
+        .hidden-amount {
+            filter: blur(6px);
+            user-select: none;
+            transition: filter 0.3s;
+        }
+
+        .eye-toggle {
+            background: none;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            color: var(--text);
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .eye-toggle:hover {
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+
+        .eye-toggle-row {
+            display: flex;
+            justify-content: flex-end;
+            padding: 6px 12px 0;
+        }
     </style>
 </head>
 <body>
@@ -501,6 +534,14 @@
             </div>
         </div>
 
+        <!-- SHOW/HIDE LACAGAHA BUTTON -->
+        <div class="eye-toggle-row">
+            <button class="eye-toggle" onclick="toggleAmounts()">
+                <i class="fas fa-eye" id="eye-icon"></i>
+                <span id="eye-label">Qari Lacagaha</span>
+            </button>
+        </div>
+
         <div class="period-filter" id="period-filter">
             <button class="period-btn active" onclick="setPeriod('today', this)">I dag</button>
             <button class="period-btn" onclick="setPeriod('week', this)">Uke</button>
@@ -516,32 +557,32 @@
         <div class="stats-grid">
             <div class="stat-box" style="border-color:var(--green);color:var(--green)">
                 <small id="l-inc">INNTEKT</small>
-                <span id="total-income">0 kr</span>
+                <span id="total-income" class="amount-field">0 kr</span>
             </div>
             <div class="stat-box" style="border-color:var(--red);color:var(--red)">
                 <small id="l-exp">UTGIFTER</small>
-                <span id="total-expense">0 kr</span>
+                <span id="total-expense" class="amount-field">0 kr</span>
             </div>
             <div class="stat-box" style="border-color:var(--blue);color:var(--blue)">
                 <small id="l-net">NETTO</small>
-                <span id="total-netto">0 kr</span>
+                <span id="total-netto" class="amount-field">0 kr</span>
             </div>
         </div>
 
         <div class="mva-card">
             <div class="mva-item">
                 <small id="l-mva">Skyldig MVA</small><br>
-                <b id="res-mva">0 kr</b>
+                <b id="res-mva" class="amount-field">0 kr</b>
             </div>
             <div class="mva-item">
                 <small id="l-avsk">Avskrivning</small><br>
-                <b id="res-avsk">0 kr</b>
+                <b id="res-avsk" class="amount-field">0 kr</b>
             </div>
         </div>
 
         <div class="summary-card">
             <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
-            <h1 id="res-total" style="color:var(--green)">0 kr</h1>
+            <h1 id="res-total" class="amount-field" style="color:var(--green)">0 kr</h1>
         </div>
 
         <div id="entries-list"></div>
@@ -730,6 +771,29 @@
     let customFrom = null;
     let customTo = null;
 
+    // ===== SHOW/HIDE LACAGAHA =====
+    let amountsHidden = false;
+
+    function toggleAmounts() {
+        amountsHidden = !amountsHidden;
+        const icon = document.getElementById('eye-icon');
+        const label = document.getElementById('eye-label');
+        if (amountsHidden) {
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+            label.textContent = 'Tus Lacagaha';
+        } else {
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+            label.textContent = 'Qari Lacagaha';
+        }
+        document.querySelectorAll('.amount-field').forEach(el => {
+            el.classList.toggle('hidden-amount', amountsHidden);
+        });
+        document.querySelectorAll('.entry-amount').forEach(el => {
+            el.classList.toggle('hidden-amount', amountsHidden);
+        });
+    }
+
+    // ===== MODUS =====
     function setModus(modus) {
         currentModus = modus;
         document.getElementById('btn-modus-total').classList.toggle('active', modus === 'total');
@@ -947,7 +1011,7 @@
                     <div style="font-size:11px;color:#94a3b8">${e.date || ''}</div>
                 </div>
                 <div class="entry-actions">
-                    <span style="color:${color};font-weight:bold">${sign}${amt.toLocaleString('nb-NO')} kr</span>
+                    <span class="entry-amount${amountsHidden ? ' hidden-amount' : ''}" style="color:${color};font-weight:bold">${sign}${amt.toLocaleString('nb-NO')} kr</span>
                     <i class="fas fa-edit" onclick="editEntry('${e.id}')"></i>
                     <i class="fas fa-trash" onclick="deleteEntry('${e.id}')"></i>
                 </div>`;
@@ -962,6 +1026,12 @@
         document.getElementById('res-avsk').textContent = avsk.toLocaleString('nb-NO') + ' kr';
         document.getElementById('res-total').textContent = netto.toLocaleString('nb-NO') + ' kr';
         document.getElementById('res-total').style.color = netto >= 0 ? 'var(--green)' : 'var(--red)';
+
+        // Re-apply blur state after re-render
+        if (amountsHidden) {
+            document.querySelectorAll('.amount-field').forEach(el => el.classList.add('hidden-amount'));
+            document.querySelectorAll('.entry-amount').forEach(el => el.classList.add('hidden-amount'));
+        }
     }
 
     function renderReports(entries) {
