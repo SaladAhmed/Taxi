@@ -76,7 +76,6 @@
             letter-spacing: 1px;
         }
 
-        /* ===== MODUS TOGGLE ===== */
         .modus-bar {
             display: flex;
             align-items: center;
@@ -111,7 +110,6 @@
             color: #0f172a;
         }
 
-        /* ===== DATE FILTER (Individuell) ===== */
         .period-filter {
             display: none;
             justify-content: center;
@@ -158,7 +156,6 @@
             margin-bottom: 0;
         }
 
-        /* ===== STATS ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -434,7 +431,6 @@
 
         #file-upload-input { display: none; }
 
-        /* Modus label badge */
         .modus-label {
             display: flex;
             align-items: center;
@@ -448,6 +444,20 @@
         .modus-label span {
             color: var(--yellow);
             font-weight: bold;
+        }
+
+        .download-btns {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            padding: 0 5px;
+        }
+
+        .download-btns .btn-save {
+            width: auto;
+            padding: 12px 22px;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -479,7 +489,6 @@
     <!-- ===== DASHBOARD ===== -->
     <div id="page-dash" class="page">
 
-        <!-- MODUS TOGGLE -->
         <div style="padding: 10px 15px 0;">
             <div class="modus-label">MODUS: <span id="modus-label-text">TOTAL</span></div>
             <div class="modus-bar">
@@ -492,7 +501,6 @@
             </div>
         </div>
 
-        <!-- PERIOD FILTER (only in Individuell mode) -->
         <div class="period-filter" id="period-filter">
             <button class="period-btn active" onclick="setPeriod('today', this)">I dag</button>
             <button class="period-btn" onclick="setPeriod('week', this)">Uke</button>
@@ -542,6 +550,17 @@
     <!-- ===== REPORTS ===== -->
     <div id="page-reports" class="page" style="display:none; padding:20px;">
         <div class="header-title">REGNSKAP REPORTS</div>
+
+        <!-- DOWNLOAD BUTTONS -->
+        <div class="download-btns">
+            <button class="btn-save" style="background:var(--green)" onclick="downloadCSV()">
+                <i class="fas fa-file-csv"></i> Last ned CSV
+            </button>
+            <button class="btn-save" style="background:var(--blue)" onclick="downloadPDF()">
+                <i class="fas fa-file-pdf"></i> Last ned PDF
+            </button>
+        </div>
+
         <table class="report-table">
             <thead>
                 <tr>
@@ -706,13 +725,11 @@
     let ocrDetectedItems = [];
     let allEntries = [];
 
-    // ===== MODUS STATE =====
-    let currentModus = 'total';   // 'total' | 'individuell'
-    let currentPeriod = 'today';  // 'today' | 'week' | 'month' | 'year' | 'custom'
+    let currentModus = 'total';
+    let currentPeriod = 'today';
     let customFrom = null;
     let customTo = null;
 
-    // ===== MODUS FUNCTIONS =====
     function setModus(modus) {
         currentModus = modus;
         document.getElementById('btn-modus-total').classList.toggle('active', modus === 'total');
@@ -737,7 +754,6 @@
         document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
         if (btnEl) btnEl.classList.add('active');
         else {
-            // Activate matching button
             document.querySelectorAll('.period-btn').forEach(b => {
                 if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${period}'`)) {
                     b.classList.add('active');
@@ -770,7 +786,7 @@
             return { from: t, to: t };
         }
         if (currentPeriod === 'week') {
-            const day = now.getDay() || 7; // Mon=1
+            const day = now.getDay() || 7;
             const mon = new Date(now);
             mon.setDate(now.getDate() - day + 1);
             return { from: fmt(mon), to: fmt(now) };
@@ -800,7 +816,6 @@
         renderDashboard(filtered);
     }
 
-    // ===== PROFILE =====
     function toggleProfileEdit(show) {
         document.getElementById('profile-view').style.display = show ? 'none' : 'block';
         document.getElementById('profile-edit-form').style.display = show ? 'block' : 'none';
@@ -839,7 +854,6 @@
         }
     }
 
-    // ===== AUTH =====
     auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('auth-page').style.display = 'none';
@@ -888,11 +902,9 @@
     }
 
     function updateLang(lang) {
-        // Placeholder for language switching
         console.log('Lang:', lang);
     }
 
-    // ===== DATA =====
     function loadData() {
         const user = auth.currentUser;
         if (!user) return;
@@ -901,7 +913,6 @@
             snap.forEach(child => {
                 allEntries.push({ id: child.key, ...child.val() });
             });
-            // Sort by date desc
             allEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
             if (currentModus === 'individuell') {
@@ -923,7 +934,6 @@
             if (e.type === 'income') income += amt;
             else expense += amt;
             if (e.category === '6010') avsk += amt;
-            // Simple MVA estimate 12%
             if (e.type === 'income') mva += amt * 0.12;
 
             const color = e.type === 'income' ? 'var(--green)' : 'var(--red)';
@@ -1011,7 +1021,6 @@
         showTab('add');
     }
 
-    // ===== NAV =====
     function showTab(tab) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1020,7 +1029,6 @@
         if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     }
 
-    // ===== OCR / SCANNER =====
     function updateStatus(msg) {
         const box = document.getElementById('ocr-status');
         box.style.display = 'block';
@@ -1085,7 +1093,6 @@
     function parseOCRText(text) {
         updateStatus("✅ OCR Dhammaatay - La falanqeynayaa...");
 
-        // Date
         const dateMatch = text.match(/\b(\d{2})[.\-\/](\d{2})[.\-\/](\d{2,4})\b/);
         let dateVal = '';
         if (dateMatch) {
@@ -1095,7 +1102,6 @@
             document.getElementById('entry-date').value = dateVal;
         }
 
-        // Total amount
         const totalMatch = text.match(/(?:total|beløp|sum|å betale)[^\d]*(\d[\d\s,.]+)/i);
         let totalAmt = 0;
         if (totalMatch) {
@@ -1103,25 +1109,21 @@
             document.getElementById('ocr-total-display').textContent = totalAmt.toLocaleString('nb-NO') + ' kr';
         }
 
-        // MVA
         const mva12 = text.match(/mva\s*12[^\d]*(\d[\d,.]+)/i);
         const mva25 = text.match(/mva\s*25[^\d]*(\d[\d,.]+)/i);
         if (mva12) document.getElementById('ocr-mva12-display').textContent = parseFloat(mva12[1].replace(',', '.')) + ' kr';
         if (mva25) document.getElementById('ocr-mva25-display').textContent = parseFloat(mva25[1].replace(',', '.')) + ' kr';
 
-        // Invoice number
         const invMatch = text.match(/(?:faktura|invoice|bilag)[^\d]*(\d+)/i);
         if (invMatch) document.getElementById('ocr-invoice-display').textContent = invMatch[1];
 
         document.getElementById('ocr-results').style.display = 'block';
 
-        // Build detected entries list
         ocrDetectedItems = [];
         if (totalAmt > 0) {
             ocrDetectedItems.push({ desc: 'Faktura total', amount: totalAmt, type: 'expense', date: dateVal });
         }
 
-        // Line items
         const lines = text.split('\n');
         lines.forEach(line => {
             const m = line.match(/^(.+?)\s+(\d[\d,.]+)\s*kr?\s*$/i);
@@ -1170,7 +1172,7 @@
     function importSelected() {
         const user = auth.currentUser;
         if (!user) return;
-        document.querySelectorAll('.ocr-entry-item.selected').forEach((el, idx) => {
+        document.querySelectorAll('.ocr-entry-item.selected').forEach((el) => {
             const i = parseInt(el.id.replace('ocr-item-', ''));
             const item = ocrDetectedItems[i];
             db.ref(`entries/${user.uid}`).push({
@@ -1185,6 +1187,81 @@
         document.getElementById('ocr-entry-list').style.display = 'none';
         document.getElementById('ocr-results').style.display = 'none';
         showTab('dash');
+    }
+
+    // ===== DOWNLOAD FUNCTIONS =====
+
+    function downloadCSV() {
+        const rows = [['Dato', 'Konto', 'Beskrivelse', 'Type', 'Beløp']];
+        allEntries.forEach(e => {
+            rows.push([
+                e.date || '',
+                e.category || '',
+                (e.description || '').replace(/,/g, ' '),
+                e.type === 'income' ? 'Inntekt' : 'Utgift',
+                parseFloat(e.amount || 0).toFixed(2)
+            ]);
+        });
+        const csv = rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'regnskap-' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadPDF() {
+        const win = window.open('', '_blank');
+        const rows = allEntries.map(e => {
+            const sign = e.type === 'income' ? '+' : '-';
+            const color = e.type === 'income' ? '#2ecc71' : '#ff4757';
+            return `<tr>
+                <td>${e.date || ''}</td>
+                <td>${e.category || ''}</td>
+                <td>${e.description || ''}</td>
+                <td style="color:${color};font-weight:bold">${sign}${parseFloat(e.amount || 0).toLocaleString('nb-NO')} kr</td>
+            </tr>`;
+        }).join('');
+
+        const totalIncome = allEntries.filter(e => e.type === 'income').reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+        const totalExpense = allEntries.filter(e => e.type === 'expense').reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+        const netto = totalIncome - totalExpense;
+
+        win.document.write(`<!DOCTYPE html><html><head>
+            <meta charset="UTF-8">
+            <title>Regnskap Report - Transport PRO</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 30px; color: #1e293b; }
+                h1 { color: #0f172a; border-bottom: 3px solid #f1c40f; padding-bottom: 10px; }
+                .meta { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+                .summary { display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
+                .sum-box { background: #f1f5f9; border-radius: 10px; padding: 15px 25px; text-align: center; min-width: 120px; }
+                .sum-box small { display: block; font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 5px; }
+                .sum-box b { font-size: 18px; }
+                table { width: 100%; border-collapse: collapse; }
+                th { background: #1e293b; color: #f1c40f; padding: 10px 12px; text-align: left; font-size: 13px; }
+                td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+                tr:nth-child(even) { background: #f8fafc; }
+                .print-btn { background: #1e293b; color: #f1c40f; border: none; padding: 12px 28px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 20px; }
+                @media print { .print-btn { display: none; } }
+            </style>
+        </head><body>
+            <h1>🚖 Transport PRO — Regnskap Report</h1>
+            <p class="meta">Generert: ${new Date().toLocaleString('nb-NO')}</p>
+            <div class="summary">
+                <div class="sum-box"><small>INNTEKT</small><b style="color:#2ecc71">${totalIncome.toLocaleString('nb-NO')} kr</b></div>
+                <div class="sum-box"><small>UTGIFTER</small><b style="color:#ff4757">${totalExpense.toLocaleString('nb-NO')} kr</b></div>
+                <div class="sum-box"><small>NETTO</small><b style="color:${netto >= 0 ? '#2ecc71' : '#ff4757'}">${netto.toLocaleString('nb-NO')} kr</b></div>
+            </div>
+            <table>
+                <thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <button class="print-btn" onclick="window.print()">🖨️ PRINT / LAGRE SOM PDF</button>
+        </body></html>`);
+        win.document.close();
     }
 </script>
 </body>
