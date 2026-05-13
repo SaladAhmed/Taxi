@@ -1,363 +1,364 @@
 <!DOCTYPE html>
+
 <html lang="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transport PRO - Regnskap Edition</title>
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="TransportPRO">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
+```
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="TransportPRO">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --yellow: #f1c40f;
-            --green: #2ecc71;
-            --red: #ff4757;
-            --blue: #3b82f6;
-            --text: #f8fafc;
-            --border: #334155;
-        }
+<style>
+    :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --yellow: #f1c40f;
+        --green: #2ecc71;
+        --red: #ff4757;
+        --blue: #3b82f6;
+        --text: #f8fafc;
+        --border: #334155;
+    }
 
-        .light-theme {
-            --bg: #f1f5f9;
-            --card: #ffffff;
-            --text: #1e293b;
-            --border: #cbd5e1;
-        }
+    .light-theme {
+        --bg: #f1f5f9;
+        --card: #ffffff;
+        --text: #1e293b;
+        --border: #cbd5e1;
+    }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding-bottom: 100px;
-            transition: 0.3s;
-            overflow-x: hidden;
-        }
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding-bottom: 100px;
+        transition: 0.3s;
+        overflow-x: hidden;
+    }
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            background: var(--card);
-            border-bottom: 1px solid var(--border);
-        }
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+    }
 
-        .auth-container {
-            padding: 30px;
-            text-align: center;
-            max-width: 400px;
-            margin: 40px auto;
-            background: var(--card);
-            border-radius: 15px;
-        }
+    .auth-container {
+        padding: 30px;
+        text-align: center;
+        max-width: 400px;
+        margin: 40px auto;
+        background: var(--card);
+        border-radius: 15px;
+    }
 
-        .header-title {
-            text-align: center;
-            color: var(--yellow);
-            font-weight: bold;
-            padding: 20px 0;
-            font-size: 18px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+    .header-title {
+        text-align: center;
+        color: var(--yellow);
+        font-weight: bold;
+        padding: 20px 0;
+        font-size: 18px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 10px;
-            max-width: 800px;
-            margin: auto;
-        }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        padding: 10px;
+        max-width: 800px;
+        margin: auto;
+    }
 
-        .stat-box {
-            background: var(--card);
-            border: 1.5px solid;
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-        }
+    .stat-box {
+        background: var(--card);
+        border: 1.5px solid;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+    }
 
-        .stat-box small {
-            font-size: 9px;
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+    .stat-box small {
+        font-size: 9px;
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
 
-        .mva-card {
-            background: var(--card);
-            border: 2px solid var(--border);
-            border-radius: 15px;
-            margin: 10px auto;
-            padding: 15px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            max-width: 780px;
-        }
+    .mva-card {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 15px;
+        margin: 10px auto;
+        padding: 15px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        max-width: 780px;
+    }
 
-        .mva-item {
-            text-align: center;
-            border-right: 1px solid var(--border);
-        }
+    .mva-item {
+        text-align: center;
+        border-right: 1px solid var(--border);
+    }
 
-        .mva-item:last-child { border-right: none; }
+    .mva-item:last-child { border-right: none; }
 
-        .summary-card {
-            background: var(--card);
-            border: 2px solid var(--yellow);
-            border-radius: 20px;
-            margin: 10px auto;
-            padding: 20px;
-            text-align: center;
-            max-width: 770px;
-        }
+    .summary-card {
+        background: var(--card);
+        border: 2px solid var(--yellow);
+        border-radius: 20px;
+        margin: 10px auto;
+        padding: 20px;
+        text-align: center;
+        max-width: 770px;
+    }
 
-        .entry-card {
-            background: var(--card);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 0 15px 12px 15px;
-            border-left: 6px solid;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .entry-card {
+        background: var(--card);
+        border-radius: 15px;
+        padding: 15px;
+        margin: 0 15px 12px 15px;
+        border-left: 6px solid;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: var(--card);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            border-top: 1px solid var(--border);
-            z-index: 1000;
-        }
+    .nav-bar {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background: var(--card);
+        display: flex;
+        justify-content: space-around;
+        padding: 12px 0;
+        border-top: 1px solid var(--border);
+        z-index: 1000;
+    }
 
-        .nav-item {
-            text-align: center;
-            color: #64748b;
-            font-size: 10px;
-            cursor: pointer;
-            flex: 1;
-        }
+    .nav-item {
+        text-align: center;
+        color: #64748b;
+        font-size: 10px;
+        cursor: pointer;
+        flex: 1;
+    }
 
-        .nav-item.active { color: var(--yellow); }
+    .nav-item.active { color: var(--yellow); }
 
-        input, select {
-            width: 100%;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
+    input, select {
+        width: 100%;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        margin-bottom: 15px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
 
-        .btn-save {
-            width: 100%;
-            padding: 18px;
-            border-radius: 12px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            color: white;
-            font-size: 14px;
-        }
+    .btn-save {
+        width: 100%;
+        padding: 18px;
+        border-radius: 12px;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+        font-size: 14px;
+    }
 
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
+    .btn-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 10px;
+    }
 
-        .profile-img-wrap {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 10px;
-            border: 2px solid var(--yellow);
-            border-radius: 50%;
-            overflow: hidden;
-            background: #334155;
-        }
+    .profile-img-wrap {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 10px;
+        border: 2px solid var(--yellow);
+        border-radius: 50%;
+        overflow: hidden;
+        background: #334155;
+    }
 
-        .profile-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+    .profile-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
-        .entry-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
+    .entry-actions {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
 
-        .entry-actions i { cursor: pointer; transition: 0.2s; }
-        .fa-trash:hover { color: var(--red); }
-        .fa-edit:hover { color: var(--yellow); }
+    .entry-actions i { cursor: pointer; transition: 0.2s; }
+    .fa-trash:hover { color: var(--red); }
+    .fa-edit:hover { color: var(--yellow); }
 
-        .scanner-preview {
-            width: 100%;
-            height: 220px;
-            background: #000;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-            object-fit: cover;
-            border: 2px solid var(--yellow);
-        }
+    .scanner-preview {
+        width: 100%;
+        height: 220px;
+        background: #000;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        display: none;
+        object-fit: cover;
+        border: 2px solid var(--yellow);
+    }
 
-        .btn-scan {
-            background: var(--blue);
-            margin-bottom: 15px;
-        }
+    .btn-scan {
+        background: var(--blue);
+        margin-bottom: 15px;
+    }
 
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: var(--card);
-            border-radius: 10px;
-            overflow: hidden;
-        }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background: var(--card);
+        border-radius: 10px;
+        overflow: hidden;
+    }
 
-        .report-table th,
-        .report-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
-        }
+    .report-table th,
+    .report-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
 
-        .report-table th {
-            background: var(--border);
-            color: var(--yellow);
-        }
+    .report-table th {
+        background: var(--border);
+        color: var(--yellow);
+    }
 
-        .status-box {
-            display: none;
-            background: #111827;
-            border: 2px solid var(--yellow);
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            color: var(--yellow);
-            font-weight: bold;
-            text-align: center;
-            font-size: 13px;
-        }
+    .status-box {
+        display: none;
+        background: #111827;
+        border: 2px solid var(--yellow);
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        color: var(--yellow);
+        font-weight: bold;
+        text-align: center;
+        font-size: 13px;
+    }
 
-        /* OCR RESULT PREVIEW CARDS */
-        .ocr-results {
-            display: none;
-            background: var(--card);
-            border: 2px solid var(--green);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
+    .ocr-results {
+        display: none;
+        background: var(--card);
+        border: 2px solid var(--green);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
 
-        .ocr-results h4 {
-            color: var(--green);
-            margin: 0 0 12px 0;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+    .ocr-results h4 {
+        color: var(--green);
+        margin: 0 0 12px 0;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
-        .ocr-field {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
-        }
+    .ocr-field {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
 
-        .ocr-field:last-child { border-bottom: none; }
-        .ocr-field label { color: #94a3b8; font-size: 11px; }
-        .ocr-field span { font-weight: bold; color: var(--yellow); }
+    .ocr-field:last-child { border-bottom: none; }
+    .ocr-field label { color: #94a3b8; font-size: 11px; }
+    .ocr-field span { font-weight: bold; color: var(--yellow); }
 
-        /* MULTI-ENTRY LIST FROM OCR */
-        .ocr-entry-list {
-            display: none;
-            margin-bottom: 15px;
-        }
+    .ocr-entry-list {
+        display: none;
+        margin-bottom: 15px;
+    }
 
-        .ocr-entry-item {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+    .ocr-entry-item {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
 
-        .ocr-entry-item:hover {
-            border-color: var(--yellow);
-        }
+    .ocr-entry-item:hover { border-color: var(--yellow); }
 
-        .ocr-entry-item.selected {
-            border-color: var(--green);
-            background: rgba(46, 204, 113, 0.1);
-        }
+    .ocr-entry-item.selected {
+        border-color: var(--green);
+        background: rgba(46, 204, 113, 0.1);
+    }
 
-        .ocr-entry-item .amt-positive { color: var(--green); font-weight: bold; }
-        .ocr-entry-item .amt-negative { color: var(--red); font-weight: bold; }
+    .ocr-entry-item .amt-positive { color: var(--green); font-weight: bold; }
+    .ocr-entry-item .amt-negative { color: var(--red); font-weight: bold; }
 
-        .btn-import-selected {
-            background: var(--green);
-            margin-bottom: 15px;
-            display: none;
-        }
+    .btn-import-selected {
+        background: var(--green);
+        margin-bottom: 15px;
+        display: none;
+    }
 
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+    .upload-area {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
 
-        .upload-area:hover { border-color: var(--yellow); }
-        .upload-area i { font-size: 30px; color: #64748b; display: block; margin-bottom: 8px; }
-        .upload-area p { margin: 0; font-size: 12px; color: #64748b; }
+    .upload-area:hover { border-color: var(--yellow); }
+    .upload-area i { font-size: 30px; color: #64748b; display: block; margin-bottom: 8px; }
+    .upload-area p { margin: 0; font-size: 12px; color: #64748b; }
 
-        #file-upload-input { display: none; }
-    </style>
+    #file-upload-input { display: none; }
+</style>
+```
+
 </head>
 <body>
 
 <!-- AUTH PAGE -->
+
 <div id="auth-page" class="auth-container">
     <h2 id="auth-title" style="color:var(--yellow)">🚖 TRANSPORT PRO</h2>
     <br>
@@ -370,236 +371,223 @@
 </div>
 
 <!-- MAIN APP -->
+
 <div id="main-app" style="display:none">
 
-    <div class="top-bar">
-        <i class="fas fa-moon theme-toggle" style="cursor:pointer" onclick="toggleTheme()"></i>
-        <div id="user-display-name" style="font-weight:bold">Laster...</div>
-        <div>
-            <span style="cursor:pointer" onclick="updateLang('no')">🇳🇴</span>
-            <span style="cursor:pointer" onclick="updateLang('so')">🇸🇴</span>
-        </div>
-    </div>
-
-    <!-- ===== DASHBOARD ===== -->
-    <div id="page-dash" class="page">
-
-        <div class="stats-grid">
-            <div class="stat-box" style="border-color:var(--green);color:var(--green)">
-                <small id="l-inc">INNTEKT</small>
-                <span id="total-income">0 kr</span>
-            </div>
-            <div class="stat-box" style="border-color:var(--red);color:var(--red)">
-                <small id="l-exp">UTGIFTER</small>
-                <span id="total-expense">0 kr</span>
-            </div>
-            <div class="stat-box" style="border-color:var(--blue);color:var(--blue)">
-                <small id="l-net">NETTO</small>
-                <span id="total-netto">0 kr</span>
-            </div>
-        </div>
-
-        <div class="mva-card">
-            <div class="mva-item">
-                <small id="l-mva">Skyldig MVA</small><br>
-                <b id="res-mva">0 kr</b>
-            </div>
-            <div class="mva-item">
-                <small id="l-aga">AGA (14.1%)</small><br>
-                <b id="res-aga">0 kr</b>
-            </div>
-            <div class="mva-item">
-                <small id="l-fp">Feriepenger</small><br>
-                <b id="res-fp">0 kr</b>
-            </div>
-            <div class="mva-item">
-                <small id="l-avsk">Avskrivning</small><br>
-                <b id="res-avsk">0 kr</b>
-            </div>
-        </div>
-
-        <div class="summary-card">
-            <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
-            <h1 id="res-total" style="color:var(--green)">0 kr</h1>
-        </div>
-
-        <div id="entries-list"></div>
-    </div>
-
-    <!-- ===== REPORTS ===== -->
-    <div id="page-reports" class="page" style="display:none; padding:20px;">
-        <div class="header-title">REGNSKAP REPORTS</div>
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th>Dato</th>
-                    <th>Konto</th>
-                    <th>Beskrivelse</th>
-                    <th>Beløp</th>
-                </tr>
-            </thead>
-            <tbody id="report-body"></tbody>
-        </table>
-    </div>
-
-    <!-- ===== ADD PAGE ===== -->
-    <div id="page-add" class="page" style="display:none; padding:20px;">
-
-        <div class="header-title" id="l-add-title">REGISTRER DATA</div>
-
-        <!-- STATUS BOX -->
-        <div id="ocr-status" class="status-box">OCR READY</div>
-
-        <!-- CAMERA SCAN -->
-        <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()">
-            <i class="fas fa-camera"></i> SCAN RECEIPT (KAMERA)
-        </button>
-
-        <!-- FILE UPLOAD -->
-        <div class="upload-area" onclick="document.getElementById('file-upload-input').click()">
-            <i class="fas fa-file-image"></i>
-            <p>Riix halkan si aad sawir u soo geliso fakturada</p>
-            <p style="color:var(--yellow);margin-top:5px;font-weight:bold">JPG / PNG / PDF</p>
-        </div>
-        <input type="file" id="file-upload-input" accept="image/*,application/pdf" onchange="handleFileUpload(this)">
-
-        <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
-        <canvas id="scanner-canvas" style="display:none;"></canvas>
-        <img id="scanned-img" class="scanner-preview"/>
-
-        <button id="capture-btn" class="btn-save"
-            style="display:none; background:var(--green); margin-bottom:15px;"
-            onclick="capturePhoto()">
-            📸 TA SAWIRKA
-        </button>
-
-        <!-- OCR DETECTED SUMMARY -->
-        <div id="ocr-results" class="ocr-results">
-            <h4>✅ Faktura La Aqriyay</h4>
-            <div class="ocr-field">
-                <label>TAARIIKHDA</label>
-                <span id="ocr-date-display">—</span>
-            </div>
-            <div class="ocr-field">
-                <label>FAKTURA NR</label>
-                <span id="ocr-invoice-display">—</span>
-            </div>
-            <div class="ocr-field">
-                <label>BELØP INKL. MVA</label>
-                <span id="ocr-total-display">—</span>
-            </div>
-            <div class="ocr-field">
-                <label>MVA 12%</label>
-                <span id="ocr-mva12-display">—</span>
-            </div>
-            <div class="ocr-field">
-                <label>MVA 25%</label>
-                <span id="ocr-mva25-display">—</span>
-            </div>
-        </div>
-
-        <!-- MULTI-LINE ITEMS FROM INVOICE -->
-        <div id="ocr-entry-list" class="ocr-entry-list">
-            <div style="color:var(--yellow);font-weight:bold;font-size:13px;margin-bottom:8px;text-transform:uppercase">
-                📋 Dooro entries aad rabto in la keydiyo:
-            </div>
-            <div id="ocr-items-container"></div>
-            <button class="btn-save btn-import-selected" id="btn-import-selected" onclick="importSelected()">
-                <i class="fas fa-file-import"></i> KEYDI ENTRIES LA XUSHAY
-            </button>
-        </div>
-
-        <!-- MANUAL FORM -->
-        <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--border)">
-            <div style="color:#94a3b8;font-size:12px;margin-bottom:12px;text-transform:uppercase">
-                ✏️ Geli Gacanta ama Saxar OCR:
-            </div>
-        </div>
-
-        <input type="hidden" id="edit-id">
-        <input type="date" id="entry-date">
-
-        <select id="entry-category">
-            <optgroup label="INNTEKT (DRIFTSINNTEKTER)">
-                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
-                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
-                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
-                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
-                <option value="3039">3039 - Bomtur, lav sats</option>
-                <option value="3110">3110 - Tips</option>
-            </optgroup>
-            <optgroup label="UTGIFTER (DRIFTSKOSTNADER)">
-                <option value="5000">5000 - Lønn til ansatte</option>
-                <option value="5400">5400 - Arbeidsgiveravgift</option>
-                <option value="5920">5920 - Yrkesskadeforsiking</option>
-                <option value="6010">6010 - Avskrivning på transportmidler</option>
-                <option value="6705">6705 - Regnskapshonorar</option>
-                <option value="6755">6755 - Sentralavgift</option>
-                <option value="6800">6800 - Kontorrekvisita</option>
-                <option value="6900">6900 - Telefon</option>
-                <option value="6907">6907 - Datakommunikasjon</option>
-                <option value="7000">7000 - Drivstoff</option>
-                <option value="7020">7020 - Vedlikehold transportmiddel</option>
-                <option value="7040">7040 - Forsikring transportmiddel</option>
-                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
-                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
-                <option value="7770">7770 - Bank- og kortgebyr</option>
-                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
-                <option value="7790">7790 - Annen kostnad</option>
-            </optgroup>
-        </select>
-
-        <input type="text" id="entry-desc" placeholder="Beskrivelse">
-        <input type="number" id="entry-amt" placeholder="Beløp (kr)" step="0.01">
-
-        <div class="btn-group">
-            <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">
-                LAGRE INNTEKT
-            </button>
-            <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">
-                LAGRE UTGIFT
-            </button>
-        </div>
-    </div>
-
-    <!-- ===== PROFILE ===== -->
-    <div id="page-profile" class="page" style="display:none; padding:20px; text-align:center;">
-        <div class="header-title">MY PROFILE</div>
-        <div class="profile-img-wrap" onclick="document.getElementById('profile-upload').click()">
-            <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-            <input type="file" id="profile-upload" style="display:none" onchange="uploadPhoto(this)">
-        </div>
-        <h3 id="prof-name">User Name</h3>
-        <button class="btn-save" style="background:var(--blue);margin-bottom:10px" onclick="changePass()">
-            Change Password
-        </button>
-        <button class="btn-save" style="background:var(--red)" onclick="logout()">
-            LOGG UT (EXIT)
-        </button>
-    </div>
-
-    <!-- NAV BAR -->
-    <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')">
-            <i class="fas fa-chart-line"></i><br><span>Dash</span>
-        </div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')">
-            <i class="fas fa-plus"></i><br><span>Add</span>
-        </div>
-        <div class="nav-item" id="nav-reports" onclick="showTab('reports')">
-            <i class="fas fa-file-invoice"></i><br><span>Reports</span>
-        </div>
-        <div class="nav-item" id="nav-profile" onclick="showTab('profile')">
-            <i class="fas fa-user"></i><br><span>Profil</span>
-        </div>
+```
+<div class="top-bar">
+    <i class="fas fa-moon theme-toggle" style="cursor:pointer" onclick="toggleTheme()"></i>
+    <div id="user-display-name" style="font-weight:bold">Laster...</div>
+    <div>
+        <span style="cursor:pointer" onclick="updateLang('no')">🇳🇴</span>
+        <span style="cursor:pointer" onclick="updateLang('so')">🇸🇴</span>
     </div>
 </div>
 
-<script>
+<!-- ===== DASHBOARD ===== -->
+<div id="page-dash" class="page">
 
-    // =============================================
-    // FIREBASE SETUP
-    // =============================================
+    <div class="stats-grid">
+        <div class="stat-box" style="border-color:var(--green);color:var(--green)">
+            <small id="l-inc">INNTEKT</small>
+            <span id="total-income">0 kr</span>
+        </div>
+        <div class="stat-box" style="border-color:var(--red);color:var(--red)">
+            <small id="l-exp">UTGIFTER</small>
+            <span id="total-expense">0 kr</span>
+        </div>
+        <div class="stat-box" style="border-color:var(--blue);color:var(--blue)">
+            <small id="l-net">NETTO</small>
+            <span id="total-netto">0 kr</span>
+        </div>
+    </div>
+
+    <!-- MVA CARD: only Skyldig MVA + Avskrivning -->
+    <div class="mva-card">
+        <div class="mva-item">
+            <small id="l-mva">Skyldig MVA</small><br>
+            <b id="res-mva">0 kr</b>
+        </div>
+        <div class="mva-item">
+            <small id="l-avsk">Avskrivning</small><br>
+            <b id="res-avsk">0 kr</b>
+        </div>
+    </div>
+
+    <div class="summary-card">
+        <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
+        <h1 id="res-total" style="color:var(--green)">0 kr</h1>
+    </div>
+
+    <div id="entries-list"></div>
+</div>
+
+<!-- ===== REPORTS ===== -->
+<div id="page-reports" class="page" style="display:none; padding:20px;">
+    <div class="header-title">REGNSKAP REPORTS</div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Dato</th>
+                <th>Konto</th>
+                <th>Beskrivelse</th>
+                <th>Beløp</th>
+            </tr>
+        </thead>
+        <tbody id="report-body"></tbody>
+    </table>
+</div>
+
+<!-- ===== ADD PAGE ===== -->
+<div id="page-add" class="page" style="display:none; padding:20px;">
+
+    <div class="header-title" id="l-add-title">REGISTRER DATA</div>
+
+    <div id="ocr-status" class="status-box">OCR READY</div>
+
+    <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()">
+        <i class="fas fa-camera"></i> SCAN RECEIPT (KAMERA)
+    </button>
+
+    <div class="upload-area" onclick="document.getElementById('file-upload-input').click()">
+        <i class="fas fa-file-image"></i>
+        <p>Riix halkan si aad sawir u soo geliso fakturada</p>
+        <p style="color:var(--yellow);margin-top:5px;font-weight:bold">JPG / PNG / PDF</p>
+    </div>
+    <input type="file" id="file-upload-input" accept="image/*,application/pdf" onchange="handleFileUpload(this)">
+
+    <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
+    <canvas id="scanner-canvas" style="display:none;"></canvas>
+    <img id="scanned-img" class="scanner-preview"/>
+
+    <button id="capture-btn" class="btn-save"
+        style="display:none; background:var(--green); margin-bottom:15px;"
+        onclick="capturePhoto()">
+        📸 TA SAWIRKA
+    </button>
+
+    <div id="ocr-results" class="ocr-results">
+        <h4>✅ Faktura La Aqriyay</h4>
+        <div class="ocr-field">
+            <label>TAARIIKHDA</label>
+            <span id="ocr-date-display">—</span>
+        </div>
+        <div class="ocr-field">
+            <label>FAKTURA NR</label>
+            <span id="ocr-invoice-display">—</span>
+        </div>
+        <div class="ocr-field">
+            <label>BELØP INKL. MVA</label>
+            <span id="ocr-total-display">—</span>
+        </div>
+        <div class="ocr-field">
+            <label>MVA 12%</label>
+            <span id="ocr-mva12-display">—</span>
+        </div>
+        <div class="ocr-field">
+            <label>MVA 25%</label>
+            <span id="ocr-mva25-display">—</span>
+        </div>
+    </div>
+
+    <div id="ocr-entry-list" class="ocr-entry-list">
+        <div style="color:var(--yellow);font-weight:bold;font-size:13px;margin-bottom:8px;text-transform:uppercase">
+            📋 Dooro entries aad rabto in la keydiyo:
+        </div>
+        <div id="ocr-items-container"></div>
+        <button class="btn-save btn-import-selected" id="btn-import-selected" onclick="importSelected()">
+            <i class="fas fa-file-import"></i> KEYDI ENTRIES LA XUSHAY
+        </button>
+    </div>
+
+    <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--border)">
+        <div style="color:#94a3b8;font-size:12px;margin-bottom:12px;text-transform:uppercase">
+            ✏️ Geli Gacanta ama Saxar OCR:
+        </div>
+    </div>
+
+    <input type="hidden" id="edit-id">
+    <input type="date" id="entry-date">
+
+    <select id="entry-category">
+        <optgroup label="INNTEKT (DRIFTSINNTEKTER)">
+            <option value="3030">3030 - Kjøreinntekter, lav sats</option>
+            <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
+            <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
+            <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
+            <option value="3039">3039 - Bomtur, lav sats</option>
+            <option value="3110">3110 - Tips</option>
+        </optgroup>
+        <optgroup label="UTGIFTER (DRIFTSKOSTNADER)">
+            <option value="5000">5000 - Lønn til ansatte</option>
+            <option value="5400">5400 - Arbeidsgiveravgift</option>
+            <option value="5920">5920 - Yrkesskadeforsiking</option>
+            <option value="6010">6010 - Avskrivning på transportmidler</option>
+            <option value="6705">6705 - Regnskapshonorar</option>
+            <option value="6755">6755 - Sentralavgift</option>
+            <option value="6800">6800 - Kontorrekvisita</option>
+            <option value="6900">6900 - Telefon</option>
+            <option value="6907">6907 - Datakommunikasjon</option>
+            <option value="7000">7000 - Drivstoff</option>
+            <option value="7020">7020 - Vedlikehold transportmiddel</option>
+            <option value="7040">7040 - Forsikring transportmiddel</option>
+            <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
+            <option value="7400">7400 - Kontingent, fradragsberettiget</option>
+            <option value="7770">7770 - Bank- og kortgebyr</option>
+            <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
+            <option value="7790">7790 - Annen kostnad</option>
+        </optgroup>
+    </select>
+
+    <input type="text" id="entry-desc" placeholder="Beskrivelse">
+    <input type="number" id="entry-amt" placeholder="Beløp (kr)" step="0.01">
+
+    <div class="btn-group">
+        <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">
+            LAGRE INNTEKT
+        </button>
+        <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">
+            LAGRE UTGIFT
+        </button>
+    </div>
+</div>
+
+<!-- ===== PROFILE ===== -->
+<div id="page-profile" class="page" style="display:none; padding:20px; text-align:center;">
+    <div class="header-title">MY PROFILE</div>
+    <div class="profile-img-wrap" onclick="document.getElementById('profile-upload').click()">
+        <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+        <input type="file" id="profile-upload" style="display:none" onchange="uploadPhoto(this)">
+    </div>
+    <h3 id="prof-name">User Name</h3>
+    <button class="btn-save" style="background:var(--blue);margin-bottom:10px" onclick="changePass()">
+        Change Password
+    </button>
+    <button class="btn-save" style="background:var(--red)" onclick="logout()">
+        LOGG UT (EXIT)
+    </button>
+</div>
+
+<!-- NAV BAR -->
+<div class="nav-bar">
+    <div class="nav-item active" id="nav-dash" onclick="showTab('dash')">
+        <i class="fas fa-chart-line"></i><br><span>Dash</span>
+    </div>
+    <div class="nav-item" id="nav-add" onclick="showTab('add')">
+        <i class="fas fa-plus"></i><br><span>Add</span>
+    </div>
+    <div class="nav-item" id="nav-reports" onclick="showTab('reports')">
+        <i class="fas fa-file-invoice"></i><br><span>Reports</span>
+    </div>
+    <div class="nav-item" id="nav-profile" onclick="showTab('profile')">
+        <i class="fas fa-user"></i><br><span>Profil</span>
+    </div>
+</div>
+```
+
+</div>
+
+<script>
 
     const firebaseConfig = {
         apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
@@ -616,24 +604,15 @@
     let stream = null;
     let ocrDetectedItems = [];
 
-    // =============================================
-    // STATUS BOX
-    // =============================================
-
     function updateStatus(message, show = true) {
         const box = document.getElementById('ocr-status');
         box.style.display = show ? 'block' : 'none';
         box.innerText = message;
     }
 
-    // =============================================
-    // FILE UPLOAD HANDLER
-    // =============================================
-
     function handleFileUpload(input) {
         const file = input.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = document.getElementById('scanned-img');
@@ -643,10 +622,6 @@
         };
         reader.readAsDataURL(file);
     }
-
-    // =============================================
-    // START CAMERA
-    // =============================================
 
     async function startScanner() {
         const video = document.getElementById('scanner-video');
@@ -663,10 +638,6 @@
         }
     }
 
-    // =============================================
-    // CAPTURE PHOTO
-    // =============================================
-
     async function capturePhoto() {
         const video = document.getElementById('scanner-video');
         const canvas = document.getElementById('scanner-canvas');
@@ -682,15 +653,8 @@
         await runOCR(img.src);
     }
 
-    // =============================================
-    // SMART CATEGORY MAPPER
-    // Maps Norwegian invoice keywords to account codes
-    // =============================================
-
     function smartCategory(description) {
         const d = description.toLowerCase();
-
-        // INCOME
         if (d.includes('pasienttransport') || d.includes('pasient')) return { cat: '3032', type: 'income' };
         if (d.includes('emv') || d.includes('app-betaling') || d.includes('vipps')) return { cat: '3030', type: 'income' };
         if (d.includes('tt rogaland') || d.includes('tt-rogaland')) return { cat: '3033', type: 'income' };
@@ -700,8 +664,6 @@
         if (d.includes('bomtur') || d.includes('bom')) return { cat: '3039', type: 'income' };
         if (d.includes('tips')) return { cat: '3110', type: 'income' };
         if (d.includes('ikke m tt') || d.includes('ikke m') || d.includes('ikke mtt')) return { cat: '3030', type: 'income' };
-
-        // EXPENSES
         if (d.includes('bilforsikring') || d.includes('forsikring')) return { cat: '7040', type: 'expense' };
         if (d.includes('sentralavgift') || d.includes('sentral')) return { cat: '6755', type: 'expense' };
         if (d.includes('el bil') || d.includes('lading') || d.includes('elbil')) return { cat: '7000', type: 'expense' };
@@ -718,28 +680,16 @@
         if (d.includes('kontor')) return { cat: '6800', type: 'expense' };
         if (d.includes('data') || d.includes('internett')) return { cat: '6907', type: 'expense' };
         if (d.includes('reise')) return { cat: '7140', type: 'expense' };
-
-        // DEFAULT: ukjent kostnad
         return { cat: '7798', type: 'expense' };
     }
 
-    // =============================================
-    // PARSE DATE from Norwegian format
-    // =============================================
-
     function parseNorwegianDate(raw) {
-        // Try DD.MM.YYYY
         let m = raw.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
         if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
-        // Try YYYY-MM-DD already
         m = raw.match(/(\d{4})-(\d{2})-(\d{2})/);
         if (m) return raw;
         return '';
     }
-
-    // =============================================
-    // SMART OCR PARSER — reads Agder Taxi invoices
-    // =============================================
 
     function parseInvoiceText(text) {
         const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
@@ -752,7 +702,6 @@
             items: []
         };
 
-        // ---- DATE ----
         const datePatterns = [
             /fakturadato[:\s]+(\d{1,2}[.\/-]\d{1,2}[.\/-]\d{4})/i,
             /dato[:\s]+(\d{1,2}[.\/-]\d{1,2}[.\/-]\d{4})/i,
@@ -763,18 +712,14 @@
             if (m) { result.date = parseNorwegianDate(m[1]); break; }
         }
 
-        // ---- INVOICE NUMBER ----
         const invM = text.match(/faktura[\/\s]*(?:nr|no)?[:\s#]*(\d{5,})/i)
                   || text.match(/(?:faktura|bilag)[\/\s]+(\d{5,})/i);
         if (invM) result.invoiceNo = invM[1];
 
-        // ---- TOTALS ----
         const totalM = text.match(/beløp\s+inkl\.?\s*mva[:\s]*(-?[\d\s]+[,.]?\d*)/i)
                     || text.match(/inkl\.?\s*mva[:\s]*(-?[\d\s.,]+)/i)
                     || text.match(/total[:\s]+(-?[\d\s.,]+\s*kr)/i);
-        if (totalM) {
-            result.totalInklMva = parseNorwegianNumber(totalM[1]);
-        }
+        if (totalM) result.totalInklMva = parseNorwegianNumber(totalM[1]);
 
         const mva12M = text.match(/mva\s+12\s*%[:\s]*(-?[\d\s.,]+)/i);
         if (mva12M) result.mva12 = parseNorwegianNumber(mva12M[1]);
@@ -782,25 +727,11 @@
         const mva25M = text.match(/mva\s+25\s*%[:\s]*(-?[\d\s.,]+)/i);
         if (mva25M) result.mva25 = parseNorwegianNumber(mva25M[1]);
 
-        // ---- LINE ITEMS ----
-        // Agder Taxi format: "Description  AG-NNN  count  price  amount  mva%"
-        // We look for lines with amounts (numbers with comma/dot)
-        const itemPatterns = [
-            // "Bilforsikring juni 26   AG-270   1   2 167,00   2 167,00"
-            /^(.+?)\s+(AG-\d+)\s+(-?[\d#,. ]+)\s+(-?[\d ,]+[,.]?\d{0,2})\s+(-?[\d ,]+[,.]?\d{2})\s*(\d*)$/,
-            // Simpler: description + amount at end
-            /^([A-Za-zÆØÅæøå][A-Za-zÆØÅæøå\s\d]+?)\s+(-?[\d ]+[,.]?\d{2})\s*(\d*)$/
-        ];
-
-        // Process lines looking for invoice line items
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-
-            // Skip header lines and summary lines
             if (/^(sum|beskrivelse|dato|ant\.|pris|beløp|mva|faktura|avgi|gjelder|utbetales|bankkonto|kid|etter|side|foretaks|bankgiro|kunde|e-post|telefon|deres|hånes|arendal|kristian|mohamed)/i.test(line)) continue;
             if (line.length < 5) continue;
 
-            // Try to match Agder Taxi line: has AG- reference
             const agMatch = line.match(/^(.+?)\s+AG-(\d+)\s+([-#\d]+)\s+([-\d ,]+[,.]?\d{2})\s+([-\d ,]+[,.]?\d{2})\s*(\d*)$/);
             if (agMatch) {
                 const desc = agMatch[1].trim();
@@ -808,19 +739,13 @@
                 if (amt !== null && desc.length > 2) {
                     const cat = smartCategory(desc);
                     result.items.push({
-                        desc: desc,
-                        amt: Math.abs(amt),
-                        rawAmt: amt,
-                        cat: cat.cat,
-                        type: amt < 0 ? 'income' : cat.type,
-                        date: result.date
+                        desc, amt: Math.abs(amt), rawAmt: amt,
+                        cat: cat.cat, type: amt < 0 ? 'income' : cat.type, date: result.date
                     });
                 }
                 continue;
             }
 
-            // Match lines with just description + amount (no AG-)
-            // Look for lines ending in a number like "2 167,00" or "-13 122,00"
             const simpleMatch = line.match(/^([A-Za-zÆØÅæøå][^0-9]{3,}?)\s+(-?[\d ]+[,]\d{2})\s*(\d*)$/);
             if (simpleMatch) {
                 const desc = simpleMatch[1].trim();
@@ -828,26 +753,19 @@
                 if (amt !== null && Math.abs(amt) > 0 && desc.length > 3) {
                     const cat = smartCategory(desc);
                     result.items.push({
-                        desc: desc,
-                        amt: Math.abs(amt),
-                        rawAmt: amt,
-                        cat: cat.cat,
-                        type: amt < 0 ? 'income' : cat.type,
-                        date: result.date
+                        desc, amt: Math.abs(amt), rawAmt: amt,
+                        cat: cat.cat, type: amt < 0 ? 'income' : cat.type, date: result.date
                     });
                 }
             }
         }
 
-        // If no items parsed but we have a total, create one summary entry
         if (result.items.length === 0 && result.totalInklMva !== null) {
             const desc = result.invoiceNo
                 ? 'Agder Taxi Faktura #' + result.invoiceNo
                 : 'Agder Taxi Faktura';
             result.items.push({
-                desc: desc,
-                amt: Math.abs(result.totalInklMva),
-                rawAmt: result.totalInklMva,
+                desc, amt: Math.abs(result.totalInklMva), rawAmt: result.totalInklMva,
                 cat: result.totalInklMva < 0 ? '3030' : '7798',
                 type: result.totalInklMva < 0 ? 'income' : 'expense',
                 date: result.date
@@ -859,9 +777,7 @@
 
     function parseNorwegianNumber(str) {
         if (!str) return null;
-        // Remove spaces used as thousand separator
         let s = str.toString().replace(/\s/g, '').replace(/,/g, '.');
-        // Handle -100.723.00 → last dot is decimal
         const parts = s.split('.');
         if (parts.length > 2) {
             const dec = parts.pop();
@@ -870,10 +786,6 @@
         const n = parseFloat(s);
         return isNaN(n) ? null : n;
     }
-
-    // =============================================
-    // MAIN OCR FUNCTION
-    // =============================================
 
     async function runOCR(imageData) {
         updateStatus("🔍 Aqrinaya fakturada...");
@@ -895,7 +807,6 @@
             const parsed = parseInvoiceText(text);
             console.log("=== PARSED ===", parsed);
 
-            // ---- FILL SUMMARY BOX ----
             const ocrBox = document.getElementById('ocr-results');
             ocrBox.style.display = 'block';
 
@@ -905,32 +816,23 @@
                 parsed.invoiceNo || '—';
             document.getElementById('ocr-total-display').innerText =
                 parsed.totalInklMva !== null
-                    ? parsed.totalInklMva.toLocaleString('no-NO', {minimumFractionDigits:2}) + ' kr'
-                    : '—';
+                    ? parsed.totalInklMva.toLocaleString('no-NO', {minimumFractionDigits:2}) + ' kr' : '—';
             document.getElementById('ocr-mva12-display').innerText =
                 parsed.mva12 !== null
-                    ? parsed.mva12.toLocaleString('no-NO', {minimumFractionDigits:2}) + ' kr'
-                    : '—';
+                    ? parsed.mva12.toLocaleString('no-NO', {minimumFractionDigits:2}) + ' kr' : '—';
             document.getElementById('ocr-mva25-display').innerText =
                 parsed.mva25 !== null
-                    ? parsed.mva25.toLocaleString('no-NO', {minimumFractionDigits:2}) + ' kr'
-                    : '—';
+                    ? parsed.mva25.toLocaleString('no-NO', {minimumFractionDigits:2}) + ' kr' : '—';
 
-            // ---- FILL MAIN FORM (first/best entry) ----
             if (parsed.date) document.getElementById('entry-date').value = parsed.date;
 
-            // ---- SHOW MULTI-ENTRY LIST ----
             ocrDetectedItems = parsed.items;
             if (parsed.items.length > 0) {
                 showOcrItems(parsed.items);
             } else {
-                // Fallback: try to at least fill amount
                 const amtFallback = findBiggestAmount(text);
                 if (amtFallback) document.getElementById('entry-amt').value = amtFallback;
-
-                const descFallback = parsed.invoiceNo
-                    ? 'Agder Taxi #' + parsed.invoiceNo
-                    : 'Faktura';
+                const descFallback = parsed.invoiceNo ? 'Agder Taxi #' + parsed.invoiceNo : 'Faktura';
                 document.getElementById('entry-desc').value = descFallback;
             }
 
@@ -960,10 +862,6 @@
         return biggest > 0 ? biggest : null;
     }
 
-    // =============================================
-    // SHOW OCR DETECTED LINE ITEMS
-    // =============================================
-
     function showOcrItems(items) {
         const container = document.getElementById('ocr-items-container');
         container.innerHTML = '';
@@ -989,7 +887,6 @@
         document.getElementById('ocr-entry-list').style.display = 'block';
         document.getElementById('btn-import-selected').style.display = 'block';
 
-        // Auto-fill form with first item
         if (items.length > 0) {
             fillFormWithItem(items[0]);
             document.getElementById('ocr-item-0').classList.add('selected');
@@ -999,8 +896,6 @@
     function toggleOcrItem(idx) {
         const el = document.getElementById('ocr-item-' + idx);
         el.classList.toggle('selected');
-
-        // Fill form with last clicked
         if (el.classList.contains('selected')) {
             fillFormWithItem(ocrDetectedItems[idx]);
         }
@@ -1013,17 +908,11 @@
         document.getElementById('entry-category').value = item.cat;
     }
 
-    // =============================================
-    // IMPORT SELECTED OCR ITEMS TO FIREBASE
-    // =============================================
-
     function importSelected() {
         const selected = [];
         ocrDetectedItems.forEach((item, idx) => {
             const el = document.getElementById('ocr-item-' + idx);
-            if (el && el.classList.contains('selected')) {
-                selected.push(item);
-            }
+            if (el && el.classList.contains('selected')) selected.push(item);
         });
 
         if (selected.length === 0) {
@@ -1053,26 +942,19 @@
         showTab('dash');
     }
 
-    // =============================================
-    // SAVE SINGLE ENTRY (manual / form)
-    // =============================================
-
     function saveData(type) {
-        const editId   = document.getElementById('edit-id').value;
-        const desc     = document.getElementById('entry-desc').value;
-        const amt      = parseFloat(document.getElementById('entry-amt').value);
-        const cat      = document.getElementById('entry-category').value;
-        const dateInput= document.getElementById('entry-date').value;
+        const editId    = document.getElementById('edit-id').value;
+        const desc      = document.getElementById('entry-desc').value;
+        const amt       = parseFloat(document.getElementById('entry-amt').value);
+        const cat       = document.getElementById('entry-category').value;
+        const dateInput = document.getElementById('entry-date').value;
 
         if (!desc || !amt || !dateInput) {
             return alert("Fadlan buuxi meelaha banaan!");
         }
 
         const entryData = {
-            desc,
-            amt,
-            subCat: cat,
-            mainCat: type,
+            desc, amt, subCat: cat, mainCat: type,
             date: new Date(dateInput).toLocaleDateString('no-NO'),
             timestamp: new Date(dateInput).getTime()
         };
@@ -1098,10 +980,6 @@
         document.getElementById('l-add-title').innerText = "REGISTRER DATA";
         ocrDetectedItems = [];
     }
-
-    // =============================================
-    // LOAD DATA FROM FIREBASE
-    // =============================================
 
     function loadData() {
         db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
@@ -1151,30 +1029,18 @@
             document.getElementById('res-total').innerText     = (ti - te).toLocaleString('no-NO') + " kr";
             document.getElementById('res-total').style.color   = (ti - te) >= 0 ? 'var(--green)' : 'var(--red)';
 
-            // MVA calculations
-            const mva  = Math.round(ti * 0.12);
-            const aga  = Math.round(ti * 0.141);
-            const fp   = Math.round(ti * 0.102);
+            // Only MVA — AGA and Feriepenger removed
+            const mva = Math.round(ti * 0.12);
             document.getElementById('res-mva').innerText  = mva.toLocaleString('no-NO') + " kr";
-            document.getElementById('res-aga').innerText  = aga.toLocaleString('no-NO') + " kr";
-            document.getElementById('res-fp').innerText   = fp.toLocaleString('no-NO') + " kr";
             document.getElementById('res-avsk').innerText = "0 kr";
         });
     }
-
-    // =============================================
-    // DELETE ENTRY
-    // =============================================
 
     function deleteEntry(id) {
         if (confirm("Ma hubtaa inaad tirtirto?")) {
             db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove();
         }
     }
-
-    // =============================================
-    // EDIT ENTRY
-    // =============================================
 
     function editEntry(id, desc, amt, cat) {
         document.getElementById('edit-id').value = id;
@@ -1184,10 +1050,6 @@
         showTab('add');
         document.getElementById('l-add-title').innerText = "EDIT ENTRY";
     }
-
-    // =============================================
-    // AUTH
-    // =============================================
 
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -1239,10 +1101,6 @@
         });
     }
 
-    // =============================================
-    // TABS
-    // =============================================
-
     function showTab(t) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById('page-' + t).style.display = 'block';
@@ -1250,19 +1108,15 @@
         document.getElementById('nav-' + t).classList.add('active');
     }
 
-    // =============================================
-    // THEME
-    // =============================================
-
     function toggleTheme() {
         document.body.classList.toggle('light-theme');
     }
 
     function updateLang(lang) {
-        // Placeholder for future language switching
         console.log('Lang:', lang);
     }
 
 </script>
+
 </body>
 </html>
