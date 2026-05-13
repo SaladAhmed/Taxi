@@ -76,6 +76,89 @@
             letter-spacing: 1px;
         }
 
+        /* ===== MODUS TOGGLE ===== */
+        .modus-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin: 12px auto 4px;
+            max-width: 320px;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 30px;
+            overflow: hidden;
+            padding: 3px;
+        }
+
+        .modus-btn {
+            flex: 1;
+            padding: 9px 0;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+        }
+
+        .modus-btn.active {
+            background: var(--yellow);
+            color: #0f172a;
+        }
+
+        /* ===== DATE FILTER (Individuell) ===== */
+        .period-filter {
+            display: none;
+            justify-content: center;
+            gap: 8px;
+            margin: 6px 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .period-filter.visible { display: flex; }
+
+        .period-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .period-btn.active {
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+
+        .custom-date-row {
+            display: none;
+            gap: 8px;
+            margin: 6px 15px 0;
+        }
+
+        .custom-date-row.visible { display: flex; }
+
+        .custom-date-row input {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 12px;
+            margin-bottom: 0;
+        }
+
+        /* ===== STATS ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -350,6 +433,22 @@
         .upload-area p { margin: 0; font-size: 12px; color: #64748b; }
 
         #file-upload-input { display: none; }
+
+        /* Modus label badge */
+        .modus-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+
+        .modus-label span {
+            color: var(--yellow);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -379,6 +478,33 @@
 
     <!-- ===== DASHBOARD ===== -->
     <div id="page-dash" class="page">
+
+        <!-- MODUS TOGGLE -->
+        <div style="padding: 10px 15px 0;">
+            <div class="modus-label">MODUS: <span id="modus-label-text">TOTAL</span></div>
+            <div class="modus-bar">
+                <button class="modus-btn" id="btn-modus-individuell" onclick="setModus('individuell')">
+                    <i class="fas fa-user"></i> Individuell
+                </button>
+                <button class="modus-btn active" id="btn-modus-total" onclick="setModus('total')">
+                    <i class="fas fa-globe"></i> Total
+                </button>
+            </div>
+        </div>
+
+        <!-- PERIOD FILTER (only in Individuell mode) -->
+        <div class="period-filter" id="period-filter">
+            <button class="period-btn active" onclick="setPeriod('today', this)">I dag</button>
+            <button class="period-btn" onclick="setPeriod('week', this)">Uke</button>
+            <button class="period-btn" onclick="setPeriod('month', this)">Måned</button>
+            <button class="period-btn" onclick="setPeriod('year', this)">År</button>
+            <button class="period-btn" onclick="setPeriod('custom', this)">Egendefinert</button>
+        </div>
+        <div class="custom-date-row" id="custom-date-row">
+            <input type="date" id="filter-from" onchange="applyCustomFilter()">
+            <input type="date" id="filter-to" onchange="applyCustomFilter()">
+        </div>
+
         <div class="stats-grid">
             <div class="stat-box" style="border-color:var(--green);color:var(--green)">
                 <small id="l-inc">INNTEKT</small>
@@ -518,7 +644,7 @@
             <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
             <input type="file" id="profile-upload" style="display:none" onchange="uploadPhoto(this)">
         </div>
-        
+
         <div id="profile-view">
             <h3 id="prof-name" style="margin-bottom: 5px;">User Name</h3>
             <p id="prof-email" style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">email@example.com</p>
@@ -538,7 +664,7 @@
         </div>
 
         <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-        
+
         <button class="btn-save" style="background:var(--blue);margin-bottom:10px" onclick="changePass()">
             Change Password
         </button>
@@ -572,20 +698,114 @@
     const storage = firebase.storage();
     let stream = null;
     let ocrDetectedItems = [];
+    let allEntries = [];
 
-    // --- Profile Edit Functions ---
+    // ===== MODUS STATE =====
+    let currentModus = 'total';   // 'total' | 'individuell'
+    let currentPeriod = 'today';  // 'today' | 'week' | 'month' | 'year' | 'custom'
+    let customFrom = null;
+    let customTo = null;
+
+    // ===== MODUS FUNCTIONS =====
+    function setModus(modus) {
+        currentModus = modus;
+        document.getElementById('btn-modus-total').classList.toggle('active', modus === 'total');
+        document.getElementById('btn-modus-individuell').classList.toggle('active', modus === 'individuell');
+        document.getElementById('modus-label-text').textContent = modus === 'total' ? 'TOTAL' : 'INDIVIDUELL';
+
+        const pf = document.getElementById('period-filter');
+        const cdr = document.getElementById('custom-date-row');
+
+        if (modus === 'individuell') {
+            pf.classList.add('visible');
+            setPeriod(currentPeriod);
+        } else {
+            pf.classList.remove('visible');
+            cdr.classList.remove('visible');
+            renderDashboard(allEntries);
+        }
+    }
+
+    function setPeriod(period, btnEl) {
+        currentPeriod = period;
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        else {
+            // Activate matching button
+            document.querySelectorAll('.period-btn').forEach(b => {
+                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${period}'`)) {
+                    b.classList.add('active');
+                }
+            });
+        }
+
+        const cdr = document.getElementById('custom-date-row');
+        if (period === 'custom') {
+            cdr.classList.add('visible');
+        } else {
+            cdr.classList.remove('visible');
+            applyPeriodFilter();
+        }
+    }
+
+    function applyCustomFilter() {
+        customFrom = document.getElementById('filter-from').value;
+        customTo = document.getElementById('filter-to').value;
+        if (customFrom && customTo) applyPeriodFilter();
+    }
+
+    function getDateRange() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+        if (currentPeriod === 'today') {
+            const t = fmt(now);
+            return { from: t, to: t };
+        }
+        if (currentPeriod === 'week') {
+            const day = now.getDay() || 7; // Mon=1
+            const mon = new Date(now);
+            mon.setDate(now.getDate() - day + 1);
+            return { from: fmt(mon), to: fmt(now) };
+        }
+        if (currentPeriod === 'month') {
+            return {
+                from: `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`,
+                to: fmt(now)
+            };
+        }
+        if (currentPeriod === 'year') {
+            return { from: `${now.getFullYear()}-01-01`, to: fmt(now) };
+        }
+        if (currentPeriod === 'custom') {
+            return { from: customFrom, to: customTo };
+        }
+        return null;
+    }
+
+    function applyPeriodFilter() {
+        if (currentModus !== 'individuell') return;
+        const range = getDateRange();
+        if (!range || !range.from || !range.to) return;
+        const filtered = allEntries.filter(e => {
+            return e.date >= range.from && e.date <= range.to;
+        });
+        renderDashboard(filtered);
+    }
+
+    // ===== PROFILE =====
     function toggleProfileEdit(show) {
         document.getElementById('profile-view').style.display = show ? 'none' : 'block';
         document.getElementById('profile-edit-form').style.display = show ? 'block' : 'none';
-        if(show) {
+        if (show) {
             document.getElementById('edit-display-name').value = auth.currentUser.displayName || "";
         }
     }
 
     async function updateProfileInfo() {
         const newName = document.getElementById('edit-display-name').value;
-        if(!newName) return alert("Fadlan magac qor!");
-        
+        if (!newName) return alert("Fadlan magac qor!");
         try {
             await auth.currentUser.updateProfile({ displayName: newName });
             document.getElementById('prof-name').innerText = newName;
@@ -602,9 +822,7 @@
         if (!file) return;
         const user = auth.currentUser;
         const ref = storage.ref(`profiles/${user.uid}`);
-        
         try {
-            updateStatus("Deyrinaya sawirka...");
             await ref.put(file);
             const url = await ref.getDownloadURL();
             await user.updateProfile({ photoURL: url });
@@ -615,7 +833,7 @@
         }
     }
 
-    // --- Original Logic Continued ---
+    // ===== AUTH =====
     auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('auth-page').style.display = 'none';
@@ -623,7 +841,7 @@
             document.getElementById('user-display-name').innerText = user.displayName || user.email;
             document.getElementById('prof-name').innerText = user.displayName || "User Name";
             document.getElementById('prof-email').innerText = user.email;
-            if(user.photoURL) document.getElementById('profile-img').src = user.photoURL;
+            if (user.photoURL) document.getElementById('profile-img').src = user.photoURL;
             loadData();
         } else {
             document.getElementById('auth-page').style.display = 'block';
@@ -631,26 +849,30 @@
         }
     });
 
-    // Hadaba halkaan ka sii wad dhamaan functions-kaaga kale (handleAuth, saveData, showTab, ocr logic iwm)
-    // Waxba kama bedelin functions-kii aad horey u laheyd, kaliya ku dar kuwa profile-ka sare ku xusan.
-
-    function showTab(tab) {
-        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('page-' + tab).style.display = 'block';
-        document.getElementById('nav-' + tab).classList.add('active');
-        if (stream) { stream.getTracks().forEach(t => t.stop()); }
-    }
-
     function handleAuth() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('pass').value;
-        auth.signInWithEmailAndPassword(email, pass).catch(err => {
+        auth.signInWithEmailAndPassword(email, pass).catch(() => {
             auth.createUserWithEmailAndPassword(email, pass).catch(e => alert(e.message));
         });
     }
 
+    function forgotPassword() {
+        const email = document.getElementById('email').value;
+        if (!email) return alert("Skriv inn e-postadressen din først.");
+        auth.sendPasswordResetEmail(email)
+            .then(() => alert("Tilbakestillingslenke sendt til " + email))
+            .catch(e => alert(e.message));
+    }
+
     function logout() { auth.signOut(); }
+
+    function changePass() {
+        const user = auth.currentUser;
+        auth.sendPasswordResetEmail(user.email)
+            .then(() => alert("Endringslenke sendt til " + user.email))
+            .catch(e => alert(e.message));
+    }
 
     function toggleTheme() {
         document.body.classList.toggle('light-theme');
@@ -659,9 +881,305 @@
         icon.classList.toggle('fa-sun');
     }
 
-    // Ku dar halkan dhamaan logic-gii kale ee OCR iyo Data-da ee aad haysatay...
-    // (Fiiro gaar ah: Sababo la xiriira dhererka code-ka, qaybaha kale ee OCR-ka iyo database-ka sidoodii u daay)
+    function updateLang(lang) {
+        // Placeholder for language switching
+        console.log('Lang:', lang);
+    }
 
+    // ===== DATA =====
+    function loadData() {
+        const user = auth.currentUser;
+        if (!user) return;
+        db.ref(`entries/${user.uid}`).on('value', snap => {
+            allEntries = [];
+            snap.forEach(child => {
+                allEntries.push({ id: child.key, ...child.val() });
+            });
+            // Sort by date desc
+            allEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+            if (currentModus === 'individuell') {
+                applyPeriodFilter();
+            } else {
+                renderDashboard(allEntries);
+            }
+            renderReports(allEntries);
+        });
+    }
+
+    function renderDashboard(entries) {
+        let income = 0, expense = 0, mva = 0, avsk = 0;
+        const list = document.getElementById('entries-list');
+        list.innerHTML = '';
+
+        entries.forEach(e => {
+            const amt = parseFloat(e.amount) || 0;
+            if (e.type === 'income') income += amt;
+            else expense += amt;
+            if (e.category === '6010') avsk += amt;
+            // Simple MVA estimate 12%
+            if (e.type === 'income') mva += amt * 0.12;
+
+            const color = e.type === 'income' ? 'var(--green)' : 'var(--red)';
+            const sign = e.type === 'income' ? '+' : '-';
+            const card = document.createElement('div');
+            card.className = 'entry-card';
+            card.style.borderColor = color;
+            card.innerHTML = `
+                <div>
+                    <div style="font-weight:bold;font-size:13px">${e.category || ''} - ${e.description || ''}</div>
+                    <div style="font-size:11px;color:#94a3b8">${e.date || ''}</div>
+                </div>
+                <div class="entry-actions">
+                    <span style="color:${color};font-weight:bold">${sign}${amt.toLocaleString('nb-NO')} kr</span>
+                    <i class="fas fa-edit" onclick="editEntry('${e.id}')"></i>
+                    <i class="fas fa-trash" onclick="deleteEntry('${e.id}')"></i>
+                </div>`;
+            list.appendChild(card);
+        });
+
+        const netto = income - expense;
+        document.getElementById('total-income').textContent = income.toLocaleString('nb-NO') + ' kr';
+        document.getElementById('total-expense').textContent = expense.toLocaleString('nb-NO') + ' kr';
+        document.getElementById('total-netto').textContent = netto.toLocaleString('nb-NO') + ' kr';
+        document.getElementById('res-mva').textContent = mva.toLocaleString('nb-NO', { maximumFractionDigits: 0 }) + ' kr';
+        document.getElementById('res-avsk').textContent = avsk.toLocaleString('nb-NO') + ' kr';
+        document.getElementById('res-total').textContent = netto.toLocaleString('nb-NO') + ' kr';
+        document.getElementById('res-total').style.color = netto >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+
+    function renderReports(entries) {
+        const tbody = document.getElementById('report-body');
+        tbody.innerHTML = '';
+        entries.forEach(e => {
+            const tr = document.createElement('tr');
+            const sign = e.type === 'income' ? '+' : '-';
+            const color = e.type === 'income' ? 'var(--green)' : 'var(--red)';
+            tr.innerHTML = `
+                <td>${e.date || ''}</td>
+                <td>${e.category || ''}</td>
+                <td>${e.description || ''}</td>
+                <td style="color:${color};font-weight:bold">${sign}${parseFloat(e.amount || 0).toLocaleString('nb-NO')} kr</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function saveData(type) {
+        const user = auth.currentUser;
+        if (!user) return;
+        const editId = document.getElementById('edit-id').value;
+        const entry = {
+            date: document.getElementById('entry-date').value,
+            category: document.getElementById('entry-category').value,
+            description: document.getElementById('entry-desc').value,
+            amount: parseFloat(document.getElementById('entry-amt').value) || 0,
+            type: type
+        };
+        if (!entry.date || !entry.amount) return alert("Fadlan buuxi dhammaan bannaanaha.");
+        const ref = editId
+            ? db.ref(`entries/${user.uid}/${editId}`)
+            : db.ref(`entries/${user.uid}`).push();
+        ref.set(entry).then(() => {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('entry-date').value = '';
+            document.getElementById('entry-desc').value = '';
+            document.getElementById('entry-amt').value = '';
+            showTab('dash');
+        }).catch(e => alert(e.message));
+    }
+
+    function deleteEntry(id) {
+        if (!confirm("Ma hubtaa inaad tirtirto?")) return;
+        const user = auth.currentUser;
+        db.ref(`entries/${user.uid}/${id}`).remove();
+    }
+
+    function editEntry(id) {
+        const entry = allEntries.find(e => e.id === id);
+        if (!entry) return;
+        document.getElementById('edit-id').value = id;
+        document.getElementById('entry-date').value = entry.date;
+        document.getElementById('entry-category').value = entry.category;
+        document.getElementById('entry-desc').value = entry.description;
+        document.getElementById('entry-amt').value = entry.amount;
+        showTab('add');
+    }
+
+    // ===== NAV =====
+    function showTab(tab) {
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + tab).style.display = 'block';
+        document.getElementById('nav-' + tab).classList.add('active');
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    }
+
+    // ===== OCR / SCANNER =====
+    function updateStatus(msg) {
+        const box = document.getElementById('ocr-status');
+        box.style.display = 'block';
+        box.textContent = msg;
+    }
+
+    async function startScanner() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            const video = document.getElementById('scanner-video');
+            video.style.display = 'block';
+            video.srcObject = stream;
+            document.getElementById('capture-btn').style.display = 'block';
+            document.getElementById('scan-btn').style.display = 'none';
+        } catch (err) {
+            alert("Kamera ma furan karo: " + err.message);
+        }
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('scanner-video');
+        const canvas = document.getElementById('scanner-canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const imgSrc = canvas.toDataURL('image/jpeg');
+        document.getElementById('scanned-img').src = imgSrc;
+        document.getElementById('scanned-img').style.display = 'block';
+        video.style.display = 'none';
+        document.getElementById('capture-btn').style.display = 'none';
+        document.getElementById('scan-btn').style.display = 'block';
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        runOCR(imgSrc);
+    }
+
+    function handleFileUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const src = e.target.result;
+            document.getElementById('scanned-img').src = src;
+            document.getElementById('scanned-img').style.display = 'block';
+            runOCR(src);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function runOCR(imgSrc) {
+        updateStatus("OCR waa socota...");
+        try {
+            const result = await Tesseract.recognize(imgSrc, 'nor+eng', {
+                logger: m => { if (m.status === 'recognizing text') updateStatus(`OCR: ${Math.round(m.progress * 100)}%`); }
+            });
+            const text = result.data.text;
+            parseOCRText(text);
+        } catch (err) {
+            updateStatus("OCR khalad: " + err.message);
+        }
+    }
+
+    function parseOCRText(text) {
+        updateStatus("✅ OCR Dhammaatay - La falanqeynayaa...");
+
+        // Date
+        const dateMatch = text.match(/\b(\d{2})[.\-\/](\d{2})[.\-\/](\d{2,4})\b/);
+        let dateVal = '';
+        if (dateMatch) {
+            const y = dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3];
+            dateVal = `${y}-${dateMatch[2]}-${dateMatch[1]}`;
+            document.getElementById('ocr-date-display').textContent = dateVal;
+            document.getElementById('entry-date').value = dateVal;
+        }
+
+        // Total amount
+        const totalMatch = text.match(/(?:total|beløp|sum|å betale)[^\d]*(\d[\d\s,.]+)/i);
+        let totalAmt = 0;
+        if (totalMatch) {
+            totalAmt = parseFloat(totalMatch[1].replace(/\s/g, '').replace(',', '.'));
+            document.getElementById('ocr-total-display').textContent = totalAmt.toLocaleString('nb-NO') + ' kr';
+        }
+
+        // MVA
+        const mva12 = text.match(/mva\s*12[^\d]*(\d[\d,.]+)/i);
+        const mva25 = text.match(/mva\s*25[^\d]*(\d[\d,.]+)/i);
+        if (mva12) document.getElementById('ocr-mva12-display').textContent = parseFloat(mva12[1].replace(',', '.')) + ' kr';
+        if (mva25) document.getElementById('ocr-mva25-display').textContent = parseFloat(mva25[1].replace(',', '.')) + ' kr';
+
+        // Invoice number
+        const invMatch = text.match(/(?:faktura|invoice|bilag)[^\d]*(\d+)/i);
+        if (invMatch) document.getElementById('ocr-invoice-display').textContent = invMatch[1];
+
+        document.getElementById('ocr-results').style.display = 'block';
+
+        // Build detected entries list
+        ocrDetectedItems = [];
+        if (totalAmt > 0) {
+            ocrDetectedItems.push({ desc: 'Faktura total', amount: totalAmt, type: 'expense', date: dateVal });
+        }
+
+        // Line items
+        const lines = text.split('\n');
+        lines.forEach(line => {
+            const m = line.match(/^(.+?)\s+(\d[\d,.]+)\s*kr?\s*$/i);
+            if (m) {
+                const amt = parseFloat(m[2].replace(',', '.'));
+                if (amt > 0 && amt !== totalAmt) {
+                    ocrDetectedItems.push({ desc: m[1].trim(), amount: amt, type: 'expense', date: dateVal });
+                }
+            }
+        });
+
+        renderOCRItems();
+    }
+
+    function renderOCRItems() {
+        if (ocrDetectedItems.length === 0) return;
+        const container = document.getElementById('ocr-items-container');
+        container.innerHTML = '';
+        ocrDetectedItems.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = 'ocr-entry-item';
+            div.id = `ocr-item-${i}`;
+            div.onclick = () => {
+                div.classList.toggle('selected');
+                updateImportBtn();
+            };
+            div.innerHTML = `
+                <div>
+                    <div style="font-weight:bold">${item.desc}</div>
+                    <div style="font-size:11px;color:#94a3b8">${item.date}</div>
+                </div>
+                <span class="amt-${item.type === 'income' ? 'positive' : 'negative'}">
+                    ${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString('nb-NO')} kr
+                </span>`;
+            container.appendChild(div);
+        });
+        document.getElementById('ocr-entry-list').style.display = 'block';
+    }
+
+    function updateImportBtn() {
+        const selected = document.querySelectorAll('.ocr-entry-item.selected').length;
+        const btn = document.getElementById('btn-import-selected');
+        btn.style.display = selected > 0 ? 'block' : 'none';
+    }
+
+    function importSelected() {
+        const user = auth.currentUser;
+        if (!user) return;
+        document.querySelectorAll('.ocr-entry-item.selected').forEach((el, idx) => {
+            const i = parseInt(el.id.replace('ocr-item-', ''));
+            const item = ocrDetectedItems[i];
+            db.ref(`entries/${user.uid}`).push({
+                date: item.date,
+                category: '7000',
+                description: item.desc,
+                amount: item.amount,
+                type: item.type
+            });
+        });
+        alert("Entries la keydiay!");
+        document.getElementById('ocr-entry-list').style.display = 'none';
+        document.getElementById('ocr-results').style.display = 'none';
+        showTab('dash');
+    }
 </script>
 </body>
 </html>
