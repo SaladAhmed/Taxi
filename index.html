@@ -1,39 +1,131 @@
-<!-- UTGIFTER BREAKDOWN -->
-<div class="summary-card" style="border:2px solid var(--red)">
-    <small style="color:var(--red)">UTGIFTER TOTAL</small>
-    <h2 id="expense-total-big" style="color:var(--red)">0 kr</h2>
+function loadData() {
+    db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
 
-    <div style="margin-top:15px;text-align:left;font-size:13px">
+        let ti = 0, te = 0;
 
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span>⛽ Drivstoff</span>
-            <b id="exp-7000">0 kr</b>
-        </div>
+        let exp7000 = 0;
+        let exp7020 = 0;
+        let exp7040 = 0;
+        let exp6900 = 0;
+        let exp6755 = 0;
+        let expOther = 0;
 
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span>🔧 Vedlikehold</span>
-            <b id="exp-7020">0 kr</b>
-        </div>
+        const list = document.getElementById('entries-list');
+        const reportBody = document.getElementById('report-body');
 
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span>🛡️ Forsikring</span>
-            <b id="exp-7040">0 kr</b>
-        </div>
+        list.innerHTML = "";
+        reportBody.innerHTML = "";
 
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span>📱 Telefon</span>
-            <b id="exp-6900">0 kr</b>
-        </div>
+        snap.forEach(child => {
 
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span>🏢 Sentralavgift</span>
-            <b id="exp-6755">0 kr</b>
-        </div>
+            const v = child.val();
+            const key = child.key;
 
-        <div style="display:flex;justify-content:space-between;padding:6px 0">
-            <span>📦 Andre Utgifter</span>
-            <b id="exp-other">0 kr</b>
-        </div>
+            if (v.mainCat === 'income') {
+                ti += v.amt;
+            } else {
+                te += v.amt;
 
-    </div>
-</div>
+                if(v.subCat === '7000'){
+                    exp7000 += v.amt;
+                }
+                else if(v.subCat === '7020'){
+                    exp7020 += v.amt;
+                }
+                else if(v.subCat === '7040'){
+                    exp7040 += v.amt;
+                }
+                else if(v.subCat === '6900'){
+                    exp6900 += v.amt;
+                }
+                else if(v.subCat === '6755'){
+                    exp6755 += v.amt;
+                }
+                else{
+                    expOther += v.amt;
+                }
+            }
+
+            list.innerHTML += `
+                <div class="entry-card"
+                    style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
+
+                    <div>
+                        <b>${v.subCat} - ${v.desc}</b><br>
+                        <small>${v.date}</small>
+                    </div>
+
+                    <div class="entry-actions">
+
+                        <span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'};font-weight:bold;">
+                            ${v.amt.toLocaleString('no-NO',{minimumFractionDigits:2})} kr
+                        </span>
+
+                        <i class="fas fa-edit"
+                           onclick="editEntry('${key}','${v.desc.replace(/'/g,"\\'")}',${v.amt},'${v.subCat}')"></i>
+
+                        <i class="fas fa-trash"
+                           onclick="deleteEntry('${key}')"></i>
+
+                    </div>
+                </div>`;
+
+            reportBody.innerHTML += `
+                <tr>
+                    <td>${v.date}</td>
+                    <td>${v.subCat}</td>
+                    <td>${v.desc}</td>
+
+                    <td style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
+                        ${v.amt.toLocaleString('no-NO',{minimumFractionDigits:2})} kr
+                    </td>
+                </tr>`;
+        });
+
+        document.getElementById('total-income').innerText =
+            ti.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('total-expense').innerText =
+            te.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('total-netto').innerText =
+            (ti - te).toLocaleString('no-NO') + " kr";
+
+        document.getElementById('res-total').innerText =
+            (ti - te).toLocaleString('no-NO') + " kr";
+
+        document.getElementById('res-total').style.color =
+            (ti - te) >= 0 ? 'var(--green)' : 'var(--red)';
+
+        const mva = Math.round(ti * 0.12);
+
+        document.getElementById('res-mva').innerText =
+            mva.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('res-avsk').innerText =
+            "0 kr";
+
+        // ===== UTGIFTER TOTAL =====
+
+        document.getElementById('expense-total-big').innerText =
+            te.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('exp-7000').innerText =
+            exp7000.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('exp-7020').innerText =
+            exp7020.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('exp-7040').innerText =
+            exp7040.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('exp-6900').innerText =
+            exp6900.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('exp-6755').innerText =
+            exp6755.toLocaleString('no-NO') + " kr";
+
+        document.getElementById('exp-other').innerText =
+            expOther.toLocaleString('no-NO') + " kr";
+    });
+}
