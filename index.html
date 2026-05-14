@@ -430,6 +430,7 @@
         .upload-area p { margin: 0; font-size: 12px; color: #64748b; }
 
         #file-upload-input { display: none; }
+        #csv-upload-input { display: none; }
 
         .modus-label {
             display: flex;
@@ -460,7 +461,6 @@
             font-size: 13px;
         }
 
-        /* ===== SHOW/HIDE LACAGAHA ===== */
         .hidden-amount {
             filter: blur(6px);
             user-select: none;
@@ -491,6 +491,78 @@
             display: flex;
             justify-content: flex-end;
             padding: 6px 12px 0;
+        }
+
+        /* ===== DNB CSV IMPORT ===== */
+        .csv-import-box {
+            background: var(--card);
+            border: 2px solid var(--blue);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .csv-import-box h4 {
+            color: var(--blue);
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .csv-preview-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 7px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .csv-preview-item:hover { border-color: var(--yellow); }
+
+        .csv-preview-item.selected {
+            border-color: var(--green);
+            background: rgba(46, 204, 113, 0.08);
+        }
+
+        .csv-select-all-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .csv-select-all-row button {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .csv-select-all-row button:hover { border-color: var(--yellow); color: var(--yellow); }
+
+        .csv-status {
+            display: none;
+            background: #111827;
+            border: 2px solid var(--blue);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            color: var(--blue);
+            font-weight: bold;
+            text-align: center;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -534,7 +606,6 @@
             </div>
         </div>
 
-        <!-- SHOW/HIDE LACAGAHA BUTTON -->
         <div class="eye-toggle-row">
             <button class="eye-toggle" onclick="toggleAmounts()">
                 <i class="fas fa-eye" id="eye-icon"></i>
@@ -591,8 +662,6 @@
     <!-- ===== REPORTS ===== -->
     <div id="page-reports" class="page" style="display:none; padding:20px;">
         <div class="header-title">REGNSKAP REPORTS</div>
-
-        <!-- DOWNLOAD BUTTONS -->
         <div class="download-btns">
             <button class="btn-save" style="background:var(--green)" onclick="downloadCSV()">
                 <i class="fas fa-file-csv"></i> Last ned CSV
@@ -601,7 +670,6 @@
                 <i class="fas fa-file-pdf"></i> Last ned PDF
             </button>
         </div>
-
         <table class="report-table">
             <thead>
                 <tr>
@@ -618,6 +686,34 @@
     <!-- ===== ADD PAGE ===== -->
     <div id="page-add" class="page" style="display:none; padding:20px;">
         <div class="header-title" id="l-add-title">REGISTRER DATA</div>
+
+        <!-- ===== DNB CSV IMPORT ===== -->
+        <div class="csv-import-box">
+            <h4><i class="fas fa-university"></i> DNB Bank CSV Import</h4>
+            <div id="csv-status" class="csv-status">Aqrinaya CSV...</div>
+            <div class="upload-area" onclick="document.getElementById('csv-upload-input').click()" style="border-color:var(--blue); margin-bottom:10px;">
+                <i class="fas fa-file-csv" style="color:var(--blue)"></i>
+                <p style="color:var(--blue); font-weight:bold;">DNB CSV File ku soo geli</p>
+                <p>Nettbank → Transaksjoner → Last ned CSV</p>
+            </div>
+            <input type="file" id="csv-upload-input" accept=".csv,text/csv" onchange="handleCSVUpload(this)">
+
+            <div id="csv-preview-container" style="display:none;">
+                <div class="csv-select-all-row">
+                    <span id="csv-count-label">0 transactions</span>
+                    <div style="display:flex;gap:6px;">
+                        <button onclick="csvSelectAll()">Dooro Dhammaan</button>
+                        <button onclick="csvSelectNone()">Tirtir Xushka</button>
+                    </div>
+                </div>
+                <div id="csv-items-container"></div>
+                <button class="btn-save" id="btn-import-csv" style="background:var(--blue);display:none;margin-top:8px;" onclick="importCSVSelected()">
+                    <i class="fas fa-file-import"></i> KEYDI TRANSACTIONS LA XUSHAY
+                </button>
+            </div>
+        </div>
+        <!-- ===== END DNB CSV IMPORT ===== -->
+
         <div id="ocr-status" class="status-box">OCR READY</div>
         <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()">
             <i class="fas fa-camera"></i> SCAN RECEIPT (KAMERA)
@@ -765,6 +861,7 @@
     let stream = null;
     let ocrDetectedItems = [];
     let allEntries = [];
+    let csvDetectedItems = [];
 
     let currentModus = 'total';
     let currentPeriod = 'today';
@@ -791,6 +888,262 @@
         document.querySelectorAll('.entry-amount').forEach(el => {
             el.classList.toggle('hidden-amount', amountsHidden);
         });
+    }
+
+    // ===== DNB CSV IMPORT =====
+    function handleCSVUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const statusBox = document.getElementById('csv-status');
+        statusBox.style.display = 'block';
+        statusBox.textContent = 'Aqrinaya CSV...';
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                parseCSV(e.target.result);
+            } catch (err) {
+                statusBox.textContent = 'Khalad: ' + err.message;
+            }
+        };
+        reader.readAsText(file, 'UTF-8');
+        input.value = '';
+    }
+
+    function parseCSV(text) {
+        const statusBox = document.getElementById('csv-status');
+        csvDetectedItems = [];
+
+        // Normalize line endings
+        const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+        // Find header row - DNB uses semicolon separator
+        // DNB format: "Bokføringsdato";"Forklaringstekst";"Rentedato";"Inn på konto";"Ut fra konto"
+        let headerIdx = -1;
+        let separator = ';';
+
+        for (let i = 0; i < Math.min(10, lines.length); i++) {
+            const l = lines[i].toLowerCase();
+            if (l.includes('bokføringsdato') || l.includes('forklaringstekst') || l.includes('dato')) {
+                headerIdx = i;
+                separator = l.includes(';') ? ';' : ',';
+                break;
+            }
+        }
+
+        if (headerIdx === -1) {
+            // Try comma separated
+            for (let i = 0; i < Math.min(10, lines.length); i++) {
+                const l = lines[i].toLowerCase();
+                if (l.includes('dato') || l.includes('description') || l.includes('amount')) {
+                    headerIdx = i;
+                    separator = ',';
+                    break;
+                }
+            }
+        }
+
+        if (headerIdx === -1) {
+            statusBox.textContent = '⚠️ CSV format la garanwayay. Hubso inaad DNB CSV isticmaashay.';
+            return;
+        }
+
+        const headers = splitCSVLine(lines[headerIdx], separator).map(h =>
+            h.replace(/['"]/g, '').trim().toLowerCase()
+        );
+
+        // Map column indices
+        let dateCol = -1, descCol = -1, innCol = -1, utCol = -1, amtCol = -1;
+
+        headers.forEach((h, i) => {
+            if (h.includes('bokføringsdato') || h.includes('dato') || h.includes('date')) dateCol = i;
+            if (h.includes('forklaringstekst') || h.includes('tekst') || h.includes('description') || h.includes('beskrivelse')) descCol = i;
+            if (h.includes('inn') || h.includes('credit') || h.includes('innskudd')) innCol = i;
+            if (h.includes('ut') || h.includes('debit') || h.includes('uttak')) utCol = i;
+            if (h.includes('beløp') || h.includes('amount') || h.includes('sum')) amtCol = i;
+        });
+
+        for (let i = headerIdx + 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const cols = splitCSVLine(line, separator).map(c => c.replace(/['"]/g, '').trim());
+            if (cols.length < 2) continue;
+
+            // Date
+            let rawDate = dateCol >= 0 ? cols[dateCol] : cols[0];
+            let dateVal = parseDNBDate(rawDate);
+            if (!dateVal) continue;
+
+            // Description
+            let desc = descCol >= 0 ? cols[descCol] : (cols[1] || 'Transaksjon');
+
+            // Amount - try inn/ut columns first, then single amount col
+            let amount = 0;
+            let type = 'expense';
+
+            if (innCol >= 0 || utCol >= 0) {
+                const innVal = innCol >= 0 ? parseNorwegianNumber(cols[innCol]) : 0;
+                const utVal = utCol >= 0 ? parseNorwegianNumber(cols[utCol]) : 0;
+                if (innVal > 0) { amount = innVal; type = 'income'; }
+                else if (utVal > 0) { amount = utVal; type = 'expense'; }
+            } else if (amtCol >= 0) {
+                const val = parseNorwegianNumber(cols[amtCol]);
+                if (val > 0) { amount = val; type = 'income'; }
+                else if (val < 0) { amount = Math.abs(val); type = 'expense'; }
+            }
+
+            if (amount <= 0) continue;
+
+            // Auto-suggest category
+            const category = autoCategory(desc, type);
+
+            csvDetectedItems.push({ date: dateVal, desc, amount, type, category });
+        }
+
+        if (csvDetectedItems.length === 0) {
+            statusBox.textContent = '⚠️ Transactions lama helin. Format-ka hubso.';
+            return;
+        }
+
+        statusBox.textContent = '✅ ' + csvDetectedItems.length + ' transactions la helay!';
+        renderCSVItems();
+    }
+
+    function splitCSVLine(line, sep) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') {
+                inQuotes = !inQuotes;
+            } else if (ch === sep && !inQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += ch;
+            }
+        }
+        result.push(current);
+        return result;
+    }
+
+    function parseDNBDate(raw) {
+        if (!raw) return null;
+        raw = raw.trim();
+        // DD.MM.YYYY
+        let m = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+        if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+        // DD.MM.YY
+        m = raw.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);
+        if (m) return `20${m[3]}-${m[2]}-${m[1]}`;
+        // YYYY-MM-DD
+        m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return raw;
+        // DD/MM/YYYY
+        m = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+        return null;
+    }
+
+    function parseNorwegianNumber(raw) {
+        if (!raw || raw.trim() === '' || raw.trim() === '-') return 0;
+        // Norwegian: 1.234,56 or 1234,56 or 1234.56
+        let s = raw.trim().replace(/\s/g, '');
+        // If both . and , present
+        if (s.includes(',') && s.includes('.')) {
+            // Remove thousands separator (.) keep decimal (,)
+            s = s.replace(/\./g, '').replace(',', '.');
+        } else if (s.includes(',')) {
+            s = s.replace(',', '.');
+        }
+        return parseFloat(s) || 0;
+    }
+
+    function autoCategory(desc, type) {
+        const d = desc.toLowerCase();
+        if (type === 'income') return '3030';
+        if (d.includes('drivstoff') || d.includes('shell') || d.includes('circle k') || d.includes('uno-x') || d.includes('esso') || d.includes('best')) return '7000';
+        if (d.includes('forsikring') || d.includes('if ') || d.includes('gjensidige') || d.includes('tryg')) return '7040';
+        if (d.includes('vedlikehold') || d.includes('service') || d.includes('dekk') || d.includes('bil')) return '7020';
+        if (d.includes('telefon') || d.includes('telenor') || d.includes('telia') || d.includes('ice.net')) return '6900';
+        if (d.includes('gebyr') || d.includes('kortgebyr') || d.includes('vipps')) return '7770';
+        if (d.includes('regnskap') || d.includes('revisjon')) return '6705';
+        if (d.includes('taxi') || d.includes('agder')) return '7796';
+        if (d.includes('lønn') || d.includes('salary')) return '5000';
+        return '7790';
+    }
+
+    function renderCSVItems() {
+        const container = document.getElementById('csv-items-container');
+        container.innerHTML = '';
+        document.getElementById('csv-preview-container').style.display = 'block';
+        document.getElementById('csv-count-label').textContent = csvDetectedItems.length + ' transactions';
+
+        csvDetectedItems.forEach((item, i) => {
+            const color = item.type === 'income' ? 'var(--green)' : 'var(--red)';
+            const sign = item.type === 'income' ? '+' : '-';
+            const div = document.createElement('div');
+            div.className = 'csv-preview-item selected';
+            div.id = 'csv-item-' + i;
+            div.onclick = () => {
+                div.classList.toggle('selected');
+                updateCSVImportBtn();
+            };
+            div.innerHTML = `
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:bold;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.desc}</div>
+                    <div style="font-size:11px;color:#94a3b8;">${item.date} · ${item.category}</div>
+                </div>
+                <span style="color:${color};font-weight:bold;margin-left:10px;white-space:nowrap;">${sign}${item.amount.toLocaleString('nb-NO')} kr</span>`;
+            container.appendChild(div);
+        });
+
+        updateCSVImportBtn();
+    }
+
+    function updateCSVImportBtn() {
+        const selected = document.querySelectorAll('.csv-preview-item.selected').length;
+        const btn = document.getElementById('btn-import-csv');
+        btn.style.display = selected > 0 ? 'block' : 'none';
+        document.getElementById('csv-count-label').textContent =
+            selected + ' / ' + csvDetectedItems.length + ' valgt';
+    }
+
+    function csvSelectAll() {
+        document.querySelectorAll('.csv-preview-item').forEach(el => el.classList.add('selected'));
+        updateCSVImportBtn();
+    }
+
+    function csvSelectNone() {
+        document.querySelectorAll('.csv-preview-item').forEach(el => el.classList.remove('selected'));
+        updateCSVImportBtn();
+    }
+
+    function importCSVSelected() {
+        const user = auth.currentUser;
+        if (!user) return;
+        const selected = document.querySelectorAll('.csv-preview-item.selected');
+        if (selected.length === 0) return;
+
+        let count = 0;
+        selected.forEach(el => {
+            const i = parseInt(el.id.replace('csv-item-', ''));
+            const item = csvDetectedItems[i];
+            db.ref(`entries/${user.uid}`).push({
+                date: item.date,
+                category: item.category,
+                description: item.desc,
+                amount: item.amount,
+                type: item.type
+            });
+            count++;
+        });
+
+        document.getElementById('csv-status').textContent = '✅ ' + count + ' transactions la keydiay!';
+        document.getElementById('csv-preview-container').style.display = 'none';
+        csvDetectedItems = [];
+        setTimeout(() => showTab('dash'), 1000);
     }
 
     // ===== MODUS =====
@@ -845,10 +1198,7 @@
         const pad = n => String(n).padStart(2, '0');
         const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
-        if (currentPeriod === 'today') {
-            const t = fmt(now);
-            return { from: t, to: t };
-        }
+        if (currentPeriod === 'today') { const t = fmt(now); return { from: t, to: t }; }
         if (currentPeriod === 'week') {
             const day = now.getDay() || 7;
             const mon = new Date(now);
@@ -856,17 +1206,10 @@
             return { from: fmt(mon), to: fmt(now) };
         }
         if (currentPeriod === 'month') {
-            return {
-                from: `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`,
-                to: fmt(now)
-            };
+            return { from: `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`, to: fmt(now) };
         }
-        if (currentPeriod === 'year') {
-            return { from: `${now.getFullYear()}-01-01`, to: fmt(now) };
-        }
-        if (currentPeriod === 'custom') {
-            return { from: customFrom, to: customTo };
-        }
+        if (currentPeriod === 'year') { return { from: `${now.getFullYear()}-01-01`, to: fmt(now) }; }
+        if (currentPeriod === 'custom') { return { from: customFrom, to: customTo }; }
         return null;
     }
 
@@ -874,18 +1217,14 @@
         if (currentModus !== 'individuell') return;
         const range = getDateRange();
         if (!range || !range.from || !range.to) return;
-        const filtered = allEntries.filter(e => {
-            return e.date >= range.from && e.date <= range.to;
-        });
+        const filtered = allEntries.filter(e => e.date >= range.from && e.date <= range.to);
         renderDashboard(filtered);
     }
 
     function toggleProfileEdit(show) {
         document.getElementById('profile-view').style.display = show ? 'none' : 'block';
         document.getElementById('profile-edit-form').style.display = show ? 'block' : 'none';
-        if (show) {
-            document.getElementById('edit-display-name').value = auth.currentUser.displayName || "";
-        }
+        if (show) document.getElementById('edit-display-name').value = auth.currentUser.displayName || "";
     }
 
     async function updateProfileInfo() {
@@ -897,9 +1236,7 @@
             document.getElementById('user-display-name').innerText = newName;
             toggleProfileEdit(false);
             alert("Magaca si guul leh ayaa loogu bedelay!");
-        } catch (err) {
-            alert("Cilad: " + err.message);
-        }
+        } catch (err) { alert("Cilad: " + err.message); }
     }
 
     async function uploadPhoto(input) {
@@ -913,9 +1250,7 @@
             await user.updateProfile({ photoURL: url });
             document.getElementById('profile-img').src = url;
             alert("Sawirka profile-ka waa la bedelay!");
-        } catch (err) {
-            alert("Cilad sawirka: " + err.message);
-        }
+        } catch (err) { alert("Cilad sawirka: " + err.message); }
     }
 
     auth.onAuthStateChanged(user => {
@@ -965,25 +1300,16 @@
         icon.classList.toggle('fa-sun');
     }
 
-    function updateLang(lang) {
-        console.log('Lang:', lang);
-    }
+    function updateLang(lang) { console.log('Lang:', lang); }
 
     function loadData() {
         const user = auth.currentUser;
         if (!user) return;
         db.ref(`entries/${user.uid}`).on('value', snap => {
             allEntries = [];
-            snap.forEach(child => {
-                allEntries.push({ id: child.key, ...child.val() });
-            });
+            snap.forEach(child => { allEntries.push({ id: child.key, ...child.val() }); });
             allEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
-            if (currentModus === 'individuell') {
-                applyPeriodFilter();
-            } else {
-                renderDashboard(allEntries);
-            }
+            if (currentModus === 'individuell') { applyPeriodFilter(); } else { renderDashboard(allEntries); }
             renderReports(allEntries);
         });
     }
@@ -1027,7 +1353,6 @@
         document.getElementById('res-total').textContent = netto.toLocaleString('nb-NO') + ' kr';
         document.getElementById('res-total').style.color = netto >= 0 ? 'var(--green)' : 'var(--red)';
 
-        // Re-apply blur state after re-render
         if (amountsHidden) {
             document.querySelectorAll('.amount-field').forEach(el => el.classList.add('hidden-amount'));
             document.querySelectorAll('.entry-amount').forEach(el => el.classList.add('hidden-amount'));
@@ -1113,9 +1438,7 @@
             video.srcObject = stream;
             document.getElementById('capture-btn').style.display = 'block';
             document.getElementById('scan-btn').style.display = 'none';
-        } catch (err) {
-            alert("Kamera ma furan karo: " + err.message);
-        }
+        } catch (err) { alert("Kamera ma furan karo: " + err.message); }
     }
 
     function capturePhoto() {
@@ -1153,16 +1476,12 @@
             const result = await Tesseract.recognize(imgSrc, 'nor+eng', {
                 logger: m => { if (m.status === 'recognizing text') updateStatus(`OCR: ${Math.round(m.progress * 100)}%`); }
             });
-            const text = result.data.text;
-            parseOCRText(text);
-        } catch (err) {
-            updateStatus("OCR khalad: " + err.message);
-        }
+            parseOCRText(result.data.text);
+        } catch (err) { updateStatus("OCR khalad: " + err.message); }
     }
 
     function parseOCRText(text) {
         updateStatus("✅ OCR Dhammaatay - La falanqeynayaa...");
-
         const dateMatch = text.match(/\b(\d{2})[.\-\/](\d{2})[.\-\/](\d{2,4})\b/);
         let dateVal = '';
         if (dateMatch) {
@@ -1171,40 +1490,29 @@
             document.getElementById('ocr-date-display').textContent = dateVal;
             document.getElementById('entry-date').value = dateVal;
         }
-
         const totalMatch = text.match(/(?:total|beløp|sum|å betale)[^\d]*(\d[\d\s,.]+)/i);
         let totalAmt = 0;
         if (totalMatch) {
             totalAmt = parseFloat(totalMatch[1].replace(/\s/g, '').replace(',', '.'));
             document.getElementById('ocr-total-display').textContent = totalAmt.toLocaleString('nb-NO') + ' kr';
         }
-
         const mva12 = text.match(/mva\s*12[^\d]*(\d[\d,.]+)/i);
         const mva25 = text.match(/mva\s*25[^\d]*(\d[\d,.]+)/i);
         if (mva12) document.getElementById('ocr-mva12-display').textContent = parseFloat(mva12[1].replace(',', '.')) + ' kr';
         if (mva25) document.getElementById('ocr-mva25-display').textContent = parseFloat(mva25[1].replace(',', '.')) + ' kr';
-
         const invMatch = text.match(/(?:faktura|invoice|bilag)[^\d]*(\d+)/i);
         if (invMatch) document.getElementById('ocr-invoice-display').textContent = invMatch[1];
-
         document.getElementById('ocr-results').style.display = 'block';
-
         ocrDetectedItems = [];
-        if (totalAmt > 0) {
-            ocrDetectedItems.push({ desc: 'Faktura total', amount: totalAmt, type: 'expense', date: dateVal });
-        }
-
+        if (totalAmt > 0) ocrDetectedItems.push({ desc: 'Faktura total', amount: totalAmt, type: 'expense', date: dateVal });
         const lines = text.split('\n');
         lines.forEach(line => {
             const m = line.match(/^(.+?)\s+(\d[\d,.]+)\s*kr?\s*$/i);
             if (m) {
                 const amt = parseFloat(m[2].replace(',', '.'));
-                if (amt > 0 && amt !== totalAmt) {
-                    ocrDetectedItems.push({ desc: m[1].trim(), amount: amt, type: 'expense', date: dateVal });
-                }
+                if (amt > 0 && amt !== totalAmt) ocrDetectedItems.push({ desc: m[1].trim(), amount: amt, type: 'expense', date: dateVal });
             }
         });
-
         renderOCRItems();
     }
 
@@ -1216,10 +1524,7 @@
             const div = document.createElement('div');
             div.className = 'ocr-entry-item';
             div.id = `ocr-item-${i}`;
-            div.onclick = () => {
-                div.classList.toggle('selected');
-                updateImportBtn();
-            };
+            div.onclick = () => { div.classList.toggle('selected'); updateImportBtn(); };
             div.innerHTML = `
                 <div>
                     <div style="font-weight:bold">${item.desc}</div>
@@ -1235,23 +1540,16 @@
 
     function updateImportBtn() {
         const selected = document.querySelectorAll('.ocr-entry-item.selected').length;
-        const btn = document.getElementById('btn-import-selected');
-        btn.style.display = selected > 0 ? 'block' : 'none';
+        document.getElementById('btn-import-selected').style.display = selected > 0 ? 'block' : 'none';
     }
 
     function importSelected() {
         const user = auth.currentUser;
         if (!user) return;
-        document.querySelectorAll('.ocr-entry-item.selected').forEach((el) => {
+        document.querySelectorAll('.ocr-entry-item.selected').forEach(el => {
             const i = parseInt(el.id.replace('ocr-item-', ''));
             const item = ocrDetectedItems[i];
-            db.ref(`entries/${user.uid}`).push({
-                date: item.date,
-                category: '7000',
-                description: item.desc,
-                amount: item.amount,
-                type: item.type
-            });
+            db.ref(`entries/${user.uid}`).push({ date: item.date, category: '7000', description: item.desc, amount: item.amount, type: item.type });
         });
         alert("Entries la keydiay!");
         document.getElementById('ocr-entry-list').style.display = 'none';
@@ -1260,17 +1558,10 @@
     }
 
     // ===== DOWNLOAD FUNCTIONS =====
-
     function downloadCSV() {
         const rows = [['Dato', 'Konto', 'Beskrivelse', 'Type', 'Beløp']];
         allEntries.forEach(e => {
-            rows.push([
-                e.date || '',
-                e.category || '',
-                (e.description || '').replace(/,/g, ' '),
-                e.type === 'income' ? 'Inntekt' : 'Utgift',
-                parseFloat(e.amount || 0).toFixed(2)
-            ]);
+            rows.push([e.date || '', e.category || '', (e.description || '').replace(/,/g, ' '), e.type === 'income' ? 'Inntekt' : 'Utgift', parseFloat(e.amount || 0).toFixed(2)]);
         });
         const csv = rows.map(r => r.join(',')).join('\n');
         const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1287,49 +1578,23 @@
         const rows = allEntries.map(e => {
             const sign = e.type === 'income' ? '+' : '-';
             const color = e.type === 'income' ? '#2ecc71' : '#ff4757';
-            return `<tr>
-                <td>${e.date || ''}</td>
-                <td>${e.category || ''}</td>
-                <td>${e.description || ''}</td>
-                <td style="color:${color};font-weight:bold">${sign}${parseFloat(e.amount || 0).toLocaleString('nb-NO')} kr</td>
-            </tr>`;
+            return `<tr><td>${e.date||''}</td><td>${e.category||''}</td><td>${e.description||''}</td><td style="color:${color};font-weight:bold">${sign}${parseFloat(e.amount||0).toLocaleString('nb-NO')} kr</td></tr>`;
         }).join('');
-
-        const totalIncome = allEntries.filter(e => e.type === 'income').reduce((s, e) => s + parseFloat(e.amount || 0), 0);
-        const totalExpense = allEntries.filter(e => e.type === 'expense').reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+        const totalIncome = allEntries.filter(e => e.type==='income').reduce((s,e) => s+parseFloat(e.amount||0), 0);
+        const totalExpense = allEntries.filter(e => e.type==='expense').reduce((s,e) => s+parseFloat(e.amount||0), 0);
         const netto = totalIncome - totalExpense;
-
-        win.document.write(`<!DOCTYPE html><html><head>
-            <meta charset="UTF-8">
-            <title>Regnskap Report - Transport PRO</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 30px; color: #1e293b; }
-                h1 { color: #0f172a; border-bottom: 3px solid #f1c40f; padding-bottom: 10px; }
-                .meta { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-                .summary { display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
-                .sum-box { background: #f1f5f9; border-radius: 10px; padding: 15px 25px; text-align: center; min-width: 120px; }
-                .sum-box small { display: block; font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 5px; }
-                .sum-box b { font-size: 18px; }
-                table { width: 100%; border-collapse: collapse; }
-                th { background: #1e293b; color: #f1c40f; padding: 10px 12px; text-align: left; font-size: 13px; }
-                td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-                tr:nth-child(even) { background: #f8fafc; }
-                .print-btn { background: #1e293b; color: #f1c40f; border: none; padding: 12px 28px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 20px; }
-                @media print { .print-btn { display: none; } }
-            </style>
+        win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Regnskap Report - Transport PRO</title>
+        <style>body{font-family:Arial,sans-serif;padding:30px;color:#1e293b}h1{color:#0f172a;border-bottom:3px solid #f1c40f;padding-bottom:10px}.meta{color:#64748b;font-size:13px;margin-bottom:20px}.summary{display:flex;gap:20px;margin-bottom:25px;flex-wrap:wrap}.sum-box{background:#f1f5f9;border-radius:10px;padding:15px 25px;text-align:center;min-width:120px}.sum-box small{display:block;font-size:11px;color:#64748b;font-weight:bold;margin-bottom:5px}.sum-box b{font-size:18px}table{width:100%;border-collapse:collapse}th{background:#1e293b;color:#f1c40f;padding:10px 12px;text-align:left;font-size:13px}td{padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:13px}tr:nth-child(even){background:#f8fafc}.print-btn{background:#1e293b;color:#f1c40f;border:none;padding:12px 28px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:14px;margin-top:20px}@media print{.print-btn{display:none}}</style>
         </head><body>
-            <h1>🚖 Transport PRO — Regnskap Report</h1>
-            <p class="meta">Generert: ${new Date().toLocaleString('nb-NO')}</p>
-            <div class="summary">
-                <div class="sum-box"><small>INNTEKT</small><b style="color:#2ecc71">${totalIncome.toLocaleString('nb-NO')} kr</b></div>
-                <div class="sum-box"><small>UTGIFTER</small><b style="color:#ff4757">${totalExpense.toLocaleString('nb-NO')} kr</b></div>
-                <div class="sum-box"><small>NETTO</small><b style="color:${netto >= 0 ? '#2ecc71' : '#ff4757'}">${netto.toLocaleString('nb-NO')} kr</b></div>
-            </div>
-            <table>
-                <thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-            <button class="print-btn" onclick="window.print()">🖨️ PRINT / LAGRE SOM PDF</button>
+        <h1>🚖 Transport PRO — Regnskap Report</h1>
+        <p class="meta">Generert: ${new Date().toLocaleString('nb-NO')}</p>
+        <div class="summary">
+            <div class="sum-box"><small>INNTEKT</small><b style="color:#2ecc71">${totalIncome.toLocaleString('nb-NO')} kr</b></div>
+            <div class="sum-box"><small>UTGIFTER</small><b style="color:#ff4757">${totalExpense.toLocaleString('nb-NO')} kr</b></div>
+            <div class="sum-box"><small>NETTO</small><b style="color:${netto>=0?'#2ecc71':'#ff4757'}">${netto.toLocaleString('nb-NO')} kr</b></div>
+        </div>
+        <table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr></thead><tbody>${rows}</tbody></table>
+        <button class="print-btn" onclick="window.print()">🖨️ PRINT / LAGRE SOM PDF</button>
         </body></html>`);
         win.document.close();
     }
