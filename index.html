@@ -570,6 +570,43 @@ function showBankStatus(msg) {
     s.textContent=msg;
 }
 
+function categoryOptions() {
+    return `
+        <optgroup label="INNTEKT">
+            <option value="3030">3030 - Kjøreinntekter, lav sats</option>
+            <option value="3031">3031 - Kjøreinntekter kontant</option>
+            <option value="3032">3032 - Kjøreinntekter NAV</option>
+            <option value="3033">3033 - Kjøreinntekter skole</option>
+            <option value="3039">3039 - Bomtur</option>
+            <option value="3110">3110 - Tips</option>
+        </optgroup>
+        <optgroup label="UTGIFTER">
+            <option value="5000">5000 - Lønn til ansatte</option>
+            <option value="5400">5400 - Arbeidsgiveravgift</option>
+            <option value="5920">5920 - Yrkesskadeforsiking</option>
+            <option value="6010">6010 - Avskrivning transportmidler</option>
+            <option value="6705">6705 - Regnskapshonorar</option>
+            <option value="6755">6755 - Sentralavgift</option>
+            <option value="6800">6800 - Kontorrekvisita</option>
+            <option value="6900">6900 - Telefon</option>
+            <option value="6907">6907 - Datakommunikasjon</option>
+            <option value="7000">7000 - Drivstoff</option>
+            <option value="7020">7020 - Vedlikehold transportmiddel</option>
+            <option value="7040">7040 - Forsikring transportmiddel</option>
+            <option value="7140">7140 - Reisekostnad</option>
+            <option value="7400">7400 - Kontingent</option>
+            <option value="7770">7770 - Bank- og kortgebyr</option>
+            <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
+            <option value="7790">7790 - Annen kostnad</option>
+            <option value="7791">7791 - Spesialtur</option>
+            <option value="7792">7792 - General kreditt</option>
+            <option value="7793">7793 - Pasienttransport</option>
+            <option value="7794">7794 - Ikke møtte</option>
+            <option value="7795">7795 - Adm: gebyr trukket</option>
+            <option value="7796">7796 - Faktura Agder Taxi</option>
+        </optgroup>`;
+}
+
 function renderBankItems() {
     const container=document.getElementById('bank-items-container');
     container.innerHTML='';
@@ -581,15 +618,35 @@ function renderBankItems() {
         const div=document.createElement('div');
         div.className='csv-preview-item selected';
         div.id='bank-item-'+i;
-        div.onclick=()=>{div.classList.toggle('selected');updateBankImportBtn();};
+        div.style.flexDirection='column';
+        div.style.alignItems='stretch';
+        div.style.gap='6px';
         div.innerHTML=`
-            <div style="flex:1;min-width:0;">
-                <div style="font-weight:bold;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.desc}</div>
-                <div style="font-size:11px;color:#94a3b8;">${item.date} · ${item.category}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleBankItem(${i})">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:bold;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.desc}</div>
+                    <div style="font-size:11px;color:#94a3b8;">${item.date}</div>
+                </div>
+                <span style="color:${color};font-weight:bold;margin-left:10px;white-space:nowrap;">${sign}${item.amount.toLocaleString('nb-NO')} kr</span>
             </div>
-            <span style="color:${color};font-weight:bold;margin-left:10px;white-space:nowrap;">${sign}${item.amount.toLocaleString('nb-NO')} kr</span>`;
+            <select id="cat-select-${i}" onclick="event.stopPropagation()"
+                onchange="bankDetectedItems[${i}].category=this.value"
+                style="margin-bottom:0;padding:7px 10px;font-size:11px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;">
+                ${categoryOptions()}
+            </select>`;
         container.appendChild(div);
+        // Set selected category
+        setTimeout(()=>{
+            const sel=document.getElementById('cat-select-'+i);
+            if (sel) sel.value=item.category;
+        },0);
     });
+    updateBankImportBtn();
+}
+
+function toggleBankItem(i) {
+    const div=document.getElementById('bank-item-'+i);
+    div.classList.toggle('selected');
     updateBankImportBtn();
 }
 
