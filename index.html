@@ -843,7 +843,168 @@ function showTab(tab){document.querySelectorAll('.page').forEach(p=>p.style.disp
 function updateStatus(msg){const box=document.getElementById('ocr-status');box.style.display='block';box.textContent=msg;}
 async function startScanner(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const video=document.getElementById('scanner-video');video.style.display='block';video.srcObject=stream;document.getElementById('capture-btn').style.display='block';document.getElementById('scan-btn').style.display='none';}catch(err){alert('Kamera ma furan karo: '+err.message);}}
 function capturePhoto(){const video=document.getElementById('scanner-video');const canvas=document.getElementById('scanner-canvas');canvas.width=video.videoWidth;canvas.height=video.videoHeight;canvas.getContext('2d').drawImage(video,0,0);const imgSrc=canvas.toDataURL('image/jpeg');document.getElementById('scanned-img').src=imgSrc;document.getElementById('scanned-img').style.display='block';video.style.display='none';document.getElementById('capture-btn').style.display='none';document.getElementById('scan-btn').style.display='block';if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}runOCR(imgSrc);}
-function handleFileUpload(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{const src=e.target.result;document.getElementById('scanned-img').src=src;document.getElementById('scanned-img').style.display='block';runOCR(src);};reader.readAsDataURL(file);}
+function handleFileUpload(input){
+    const file=input.files[0];if(!file)return;
+    // PDF faylka? Hubi in Agder Taxi yahay
+    if(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf')){
+        updateStatus('📄 PDF faktura aqrinaya...');
+        parseAgderTaxiPDF(file);
+        return;
+    }
+    const reader=new FileReader();
+    reader.onload=e=>{const src=e.target.result;document.getElementById('scanned-img').src=src;document.getElementById('scanned-img').style.display='block';runOCR(src);};
+    reader.readAsDataURL(file);
+}
+
+// ===== AGDER TAXI PDF PARSER =====
+async function parseAgderTaxiPDF(file){
+    try{
+        const arrayBuffer=await file.arrayBuffer();
+        const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+        // Aqri items-ka oo leh coordinates (x,y) si loo kala sooco safaf
+        let allItems=[];
+        for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
+            const page=await pdf.getPage(pageNum);
+            const content=await page.getTextContent();
+            const vp=page.getViewport({scale:1});
+            content.items.forEach(it=>{
+                if(it.str.trim())allItems.push({
+                    text:it.str.trim(),
+                    x:Math.round(it.transform[4]),
+                    y:Math.round(vp.height-it.transform[5]),
+                    page:pageNum
+                });
+            });
+        }
+        updateStatus('✅ PDF la aqriyay — Agder Taxi faktura la falanqeynayaa...');
+        parseAgderTaxiItems(allItems);
+    }catch(err){updateStatus('❌ PDF khalad: '+err.message);}
+}
+
+function parseAgderTaxiItems(items){
+    ocrDetectedItems=[];
+
+    // Sort by page, then y, then x
+    items.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+
+    // Group into lines (within 6px y = same line)
+    const lines=[];
+    let curLine=[],lastY=-999,lastPage=-1;
+    for(const it of items){
+        if(it.page!==lastPage||Math.abs(it.y-lastY)>7){
+            if(curLine.length)lines.push(curLine);
+            curLine=[it];
+        }else curLine.push(it);
+        lastY=it.y;lastPage=it.page;
+    }
+    if(curLine.length)lines.push(curLine);
+
+    // Get full text for header parsing
+    const fullText=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
+
+    // --- TAARIIKHDA ---
+    let dateVal='';
+    const dateM=fullText.match(/Fakturadato[:\s]+(\d{2})\.(\d{2})\.(\d{4})/i)||fullText.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    if(dateM&&dateM[3])dateVal=dateM[3]+'-'+dateM[2]+'-'+dateM[1];
+    if(dateVal){document.getElementById('ocr-date-display').textContent=dateVal;document.getElementById('entry-date').value=dateVal;}
+
+    // --- FAKTURA NR ---
+    const invM=fullText.match(/(?:Faktura|bilag)[\/\s]+(\d+)/i);
+    if(invM)document.getElementById('ocr-invoice-display').textContent=invM[1];
+
+    // --- TOTAL / MVA ---
+    const totalM=fullText.match(/[Bb]el[øo]p\s+inkl[.\s]+mva[.:\s]+([-]?\d[\d\s.,]+)/i);
+    let totalAmt=0,totalIsIncome=false;
+    if(totalM){const raw=totalM[1].trim();totalIsIncome=raw.startsWith('-');totalAmt=parseNorwegianNumber(raw.replace('-',''));document.getElementById('ocr-total-display').textContent=(totalIsIncome?'+':'-')+totalAmt.toLocaleString('nb-NO')+' kr';}
+    const mva12M=fullText.match(/[Mm]va\s+12\s*%[:\s]+([-]?\d[\d\s.,]+)/i);
+    const mva25M=fullText.match(/[Mm]va\s+25\s*%[:\s]+([-]?\d[\d\s.,]+)/i);
+    if(mva12M){document.getElementById('ocr-mva12-display').textContent=parseNorwegianNumber(mva12M[1].replace('-','')).toLocaleString('nb-NO')+' kr';}
+    if(mva25M){document.getElementById('ocr-mva25-display').textContent=parseNorwegianNumber(mva25M[1].replace('-','')).toLocaleString('nb-NO')+' kr';}
+
+    // --- CATEGORY MAP ---
+    const agderMap=[
+        {pattern:/EMV\s*N/i,             cat:'3030', label:'EMV N'},
+        {pattern:/TT\s*Rogaland/i,        cat:'3030', label:'TT Rogaland'},
+        {pattern:/VIPPS/i,                cat:'3030', label:'VIPPS'},
+        {pattern:/APP.BETALING/i,         cat:'3031', label:'APP-betaling'},
+        {pattern:/Spesialtur/i,           cat:'7791', label:'Spesialtur'},
+        {pattern:/Generell\s*kreditt/i,   cat:'7792', label:'Generell kreditt'},
+        {pattern:/Pasienttransport/i,     cat:'7793', label:'Pasienttransport'},
+        {pattern:/Ikke\s*m[ø\s]tt/i,     cat:'7794', label:'Ikke møtte'},
+        {pattern:/Adm\s*gebyr/i,         cat:'7795', label:'Adm gebyr trukket'},
+        {pattern:/Sentralavgift/i,        cat:'6755', label:'Sentralavgift'},
+        {pattern:/Bilforsikring/i,        cat:'7040', label:'Bilforsikring'},
+        {pattern:/El\s*bil\s*lad/i,      cat:'7000', label:'El bil lading'},
+        {pattern:/Avgiftsfritt/i,         cat:'3039', label:'Avgiftsfritt'},
+    ];
+
+    // --- PARSE EACH LINE: find AG-XXX lines ---
+    // Each line has: Description | AG-XXX | [Ant] | [Pris] | Beløp | [MVA%]
+    // Negative beløp = income (taxi pays you), Positive = expense (you pay)
+    const seen=new Set();
+
+    for(const lineItems of lines){
+        const lineText=lineItems.map(i=>i.text).join(' ').trim();
+        if(lineText.length<5)continue;
+
+        // Must have AG- pattern
+        const carMatch=lineText.match(/\b(AG-\d{3,4})\b/i);
+        if(!carMatch)continue;
+        const carPlate=carMatch[1].toUpperCase(); // e.g. "AG-270" or "AG-368"
+
+        // Skip Sum lines
+        if(/^Sum\b/i.test(lineText))continue;
+
+        // Find all Norwegian amounts in line
+        const amtMatches=[...lineText.matchAll(/([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];
+        if(!amtMatches.length)continue;
+
+        // Last amount = beløp (the one we want)
+        const lastRaw=amtMatches[amtMatches.length-1][1];
+        const isNeg=lastRaw.startsWith('-');
+        const amount=parseNorwegianNumber(lastRaw.replace('-',''));
+        if(amount<1)continue;
+
+        // Determine category & label from description
+        let cat='7796',label='Agder Taxi';
+        for(const map of agderMap){
+            if(map.pattern.test(lineText)){cat=map.cat;label=map.label;break;}
+        }
+
+        // Sign logic:
+        // Negative in faktura = taxi paying us = INCOME
+        // Positive in faktura = we pay taxi = EXPENSE
+        const type=isNeg?'income':'expense';
+        if(type==='income'&&parseInt(cat)>=6000)cat='3030';
+        if(type==='expense'&&parseInt(cat)<4000)cat='7796';
+
+        // Description includes car plate
+        const desc=label;
+        const key=cat+'|'+amount+'|'+desc;
+        if(!seen.has(key)){
+            seen.add(key);
+            ocrDetectedItems.push({desc,amount,type,date:dateVal,category:cat});
+        }
+    }
+
+    // Fallback if nothing parsed
+    if(ocrDetectedItems.length===0&&totalAmt>0){
+        ocrDetectedItems.push({desc:'Agder Taxi Faktura',amount:totalAmt,type:totalIsIncome?'income':'expense',date:dateVal,category:'7796'});
+    }
+
+    document.getElementById('ocr-results').style.display='block';
+    updateStatus('✅ '+ocrDetectedItems.length+' entries la helay — dhammaan waa xushmeysan yihiin!');
+
+    // Sort: by car plate, then income first
+    ocrDetectedItems.sort((a,b)=>{
+        if(a.type!==b.type)return a.type==='income'?-1:1;
+        return b.amount-a.amount;
+    });
+
+
+    renderOCRItems();
+}
+
 async function runOCR(imgSrc){updateStatus('OCR waa socota...');try{const result=await Tesseract.recognize(imgSrc,'nor+eng',{logger:m=>{if(m.status==='recognizing text')updateStatus('OCR: '+Math.round(m.progress*100)+'%');}});parseOCRText(result.data.text);}catch(err){updateStatus('OCR khalad: '+err.message);}}
 function parseOCRText(text){
     updateStatus('✅ OCR Dhammaatay - La falanqeynayaa...');
@@ -862,9 +1023,57 @@ function parseOCRText(text){
     text.split('\n').forEach(line=>{const m=line.match(/^(.+?)\s+(\d[\d,.]+)\s*kr?\s*$/i);if(m){const amt=parseFloat(m[2].replace(',','.'));if(amt>0&&amt!==totalAmt)ocrDetectedItems.push({desc:m[1].trim(),amount:amt,type:'expense',date:dateVal});}});
     renderOCRItems();
 }
-function renderOCRItems(){if(ocrDetectedItems.length===0)return;const container=document.getElementById('ocr-items-container');container.innerHTML='';ocrDetectedItems.forEach((item,i)=>{const div=document.createElement('div');div.className='ocr-entry-item';div.id='ocr-item-'+i;div.onclick=()=>{div.classList.toggle('selected');updateImportBtn();};div.innerHTML='<div><div style="font-weight:bold">'+item.desc+'</div><div style="font-size:11px;color:#94a3b8">'+item.date+'</div></div><span class="amt-'+(item.type==='income'?'positive':'negative')+'">'+(item.type==='income'?'+':'-')+item.amount.toLocaleString('nb-NO')+' kr</span>';container.appendChild(div);});document.getElementById('ocr-entry-list').style.display='block';}
+function renderOCRItems(){
+    if(ocrDetectedItems.length===0)return;
+    const container=document.getElementById('ocr-items-container');container.innerHTML='';
+    ocrDetectedItems.forEach((item,i)=>{
+        const isIncome=item.type==='income';
+        const color=isIncome?'var(--green)':'var(--red)';
+        const sign=isIncome?'+':'-';
+        const div=document.createElement('div');
+        div.className='ocr-entry-item selected';div.id='ocr-item-'+i;
+        div.onclick=()=>{div.classList.toggle('selected');updateImportBtn();};
+        div.innerHTML='<div style="flex:1;min-width:0">'
+            +'<div style="font-weight:bold;font-size:13px">'+item.desc+'</div>'
+            +'<div style="font-size:11px;color:#64748b">'+item.category+' — '+(isIncome?'INNTEKT':'UTGIFT')+'</div>'
+            +'</div>'
+            +'<span style="color:'+color+';font-weight:bold;white-space:nowrap;margin-left:8px">'+sign+item.amount.toLocaleString('nb-NO')+' kr</span>';
+        container.appendChild(div);
+    });
+    const grandIncome=ocrDetectedItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+    const grandExpense=ocrDetectedItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+    const grandNetto=grandIncome-grandExpense;
+    const tot=document.createElement('div');
+    tot.style.cssText='background:var(--card);border:2px solid var(--yellow);border-radius:12px;padding:12px 14px;margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;';
+    tot.innerHTML='<div><div style="font-size:10px;color:#94a3b8">INNTEKT</div><div style="color:var(--green);font-weight:bold">+'+grandIncome.toLocaleString('nb-NO')+' kr</div></div>'
+        +'<div><div style="font-size:10px;color:#94a3b8">UTGIFT</div><div style="color:var(--red);font-weight:bold">-'+grandExpense.toLocaleString('nb-NO')+' kr</div></div>'
+        +'<div><div style="font-size:10px;color:#94a3b8">NETTO</div><div style="color:'+(grandNetto>=0?'var(--green)':'var(--red)')+';font-weight:bold">'+(grandNetto>=0?'+':'')+grandNetto.toLocaleString('nb-NO')+' kr</div></div>';
+    container.appendChild(tot);
+    document.getElementById('ocr-entry-list').style.display='block';
+    updateImportBtn();
+}
 function updateImportBtn(){const selected=document.querySelectorAll('.ocr-entry-item.selected').length;document.getElementById('btn-import-selected').style.display=selected>0?'block':'none';}
-function importSelected(){const user=auth.currentUser;if(!user)return;document.querySelectorAll('.ocr-entry-item.selected').forEach(el=>{const i=parseInt(el.id.replace('ocr-item-',''));const item=ocrDetectedItems[i];db.ref('entries/'+user.uid).push({date:item.date,category:'7000',description:item.desc,amount:item.amount,type:item.type});});alert('Entries la keydiay!');document.getElementById('ocr-entry-list').style.display='none';document.getElementById('ocr-results').style.display='none';showTab('dash');}
+function importSelected(){
+    const user=auth.currentUser;if(!user)return;
+    let count=0;
+    document.querySelectorAll('.ocr-entry-item.selected').forEach(el=>{
+        const i=parseInt(el.id.replace('ocr-item-',''));
+        const item=ocrDetectedItems[i];
+        const cat=item.category||'7796';
+        db.ref('entries/'+user.uid).push({
+            date:item.date,
+            category:cat,
+            description:item.desc,
+            amount:item.amount,
+            type:item.type
+        });
+        count++;
+    });
+    alert('✅ '+count+' entries la keydiay!');
+    document.getElementById('ocr-entry-list').style.display='none';
+    document.getElementById('ocr-results').style.display='none';
+    showTab('dash');
+}
 
 // ===== DOWNLOADS =====
 function downloadCSV(){
