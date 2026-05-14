@@ -777,7 +777,7 @@ function handleAuth(){
 function forgotPassword(){
     const email=document.getElementById('email').value;
     if (!email) return alert("Skriv inn e-postadressen din først.");
-    auth.sendPasswordResetEmail(email).then(()=>alert("Tilbakestillingslenke sendt til "+email)).catch(e=>alert(e.message));
+    auth.sendPasswordResetEmail(email.trim().toLowerCase()).then(()=>alert("✅ Reset link la diray: "+email.trim().toLowerCase())).catch(e=>alert("❌ Khalad: "+e.message));
 }
 function logout(){auth.signOut();}
 function changePass(){const user=auth.currentUser;auth.sendPasswordResetEmail(user.email).then(()=>alert("Endringslenke sendt til "+user.email)).catch(e=>alert(e.message));}
