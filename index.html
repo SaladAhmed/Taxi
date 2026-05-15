@@ -116,36 +116,39 @@ async function handlePDF(inp) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async function() {
-        const pdf = await pdfjsLib.getDocument({data: new Uint8Array(this.result)}).promise;
-        let text = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            text += content.items.map(s => s.str).join(" ") + "\n";
+        try {
+            const pdf = await pdfjsLib.getDocument({data: new Uint8Array(this.result)}).promise;
+            let text = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                text += content.items.map(s => s.str).join(" ") + "\n";
+            }
+            processDNB(text);
+        } catch (e) {
+            alert("PDF-ka waa la aqrin waayay.");
         }
-        processDNB(text);
     };
     reader.readAsArrayBuffer(file);
 }
 
 function processDNB(t) {
     bItems = [];
-    // Habka loo raadinayo xogta DNB (Date - Desc - Out - In)
     const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/æøåÆØÅ]+?)\s+([\d\.\,]+)(?:\s+([\d\.\,]+))?/g;
     let m;
     while ((m = regex.exec(t)) !== null) {
         const date = m[1];
         const desc = m[2].trim();
-        const val1 = m[3].replace(/\./g, '').replace(',', '.');
-        const val2 = m[4] ? m[4].replace(/\./g, '').replace(',', '.') : null;
+        const outAmtStr = m[3].replace(/\./g, '').replace(',', '.');
+        const inAmtStr = m[4] ? m[4].replace(/\./g, '').replace(',', '.') : null;
 
         let type = "expense";
-        let amount = parseFloat(val1);
+        let amount = parseFloat(outAmtStr);
 
-        // Haddii uu yahay Agder Taxi ama uu jiro qiimaha labaad (Inn på konto)
-        if (desc.toLowerCase().includes("agder taxi") || val2) {
+        // Haddii uu jiro qiimo 'Inn på konto' ama magaca 'Agder Taxi'
+        if (inAmtStr || desc.toLowerCase().includes("agder taxi")) {
             type = "income";
-            amount = val2 ? parseFloat(val2) : parseFloat(val1);
+            amount = inAmtStr ? parseFloat(inAmtStr) : parseFloat(outAmtStr);
         }
 
         if (!isNaN(amount) && amount > 0) {
@@ -157,10 +160,10 @@ function processDNB(t) {
 
 function renderPreview() {
     const container = document.getElementById('bprev');
-    container.innerHTML = `<h4 style="color:var(--y)">La helay (${bItems.length} meelood)</h4>`;
+    container.innerHTML = `<h4 style="color:var(--y)">Liiska Hordhaca ah (${bItems.length})</h4>`;
     bItems.forEach(item => {
         const color = item.type === 'income' ? 'var(--g)' : 'var(--r)';
-        container.innerHTML += `<div class="pitem" style="border-right: 5px solid ${color}">
+        container.innerHTML += `<div class="pitem" style="border-left: 5px solid ${color}">
             <div style="font-size:13px"><b>${item.description}</b><br>${item.date}</div>
             <b style="color:${color}">${item.amount.toLocaleString('nb-NO')} kr</b>
         </div>`;
@@ -174,7 +177,7 @@ async function importBank() {
     for (let item of bItems) {
         await ref.push(item);
     }
-    alert("Waa la soo kiciyay!");
+    alert("Xogtii waa la keydiyay!");
     bItems = [];
     document.getElementById('bprev').innerHTML = "";
     document.getElementById('btn-bi').style.display = 'none';
@@ -194,8 +197,8 @@ function renderDash(list) {
     container.innerHTML = "";
     let inc = 0, exp = 0;
     
-    // Sort xogta (date) - kan ugu dambeeya xagga sare
-    list.reverse().forEach(e => {
+    // Kan ugu dambeeya kor keen
+    [...list].reverse().forEach(e => {
         const color = e.type === 'income' ? 'var(--g)' : 'var(--r)';
         if (e.type === 'income') inc += e.amount; else exp += e.amount;
         
