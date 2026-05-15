@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport PRO - Full List Fix</title>
+<title>Transport PRO - Utgifter Fix</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -32,8 +32,8 @@ body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margi
     <div style="display:flex;justify-content:center;align-items:center;height:100vh">
         <div style="background:var(--card);padding:40px;border-radius:20px;text-align:center;width:340px">
             <h2 style="color:var(--y)">LOGIN</h2>
-            <input type="email" id="em" placeholder="E-mail">
-            <input type="password" id="pw" placeholder="Password">
+            <input type="email" id="em" placeholder="E-mail" style="width:100%;padding:10px;margin-bottom:10px">
+            <input type="password" id="pw" placeholder="Password" style="width:100%;padding:10px;margin-bottom:20px">
             <button class="btn" style="background:var(--b)" onclick="doLogin()">SOO GAL</button>
         </div>
     </div>
@@ -57,11 +57,11 @@ body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margi
     <div id="pg-add" class="pg" style="display:none">
         <div class="uarea" onclick="document.getElementById('pdfi').click()">
             <i class="fas fa-file-pdf" style="font-size:40px;color:var(--r)"></i>
-            <p>Soo geli DNB PDF-ka halkan</p>
+            <p>Soo geli DNB PDF-ka</p>
         </div>
         <input type="file" id="pdfi" accept=".pdf" onchange="handlePDF(this)">
         <div id="bprev" style="padding:15px;max-height:400px;overflow-y:auto"></div>
-        <button id="btn-bi" class="btn" style="background:var(--g);display:none" onclick="importBank()">KEYDI DHAMMAAN (${bItems.length})</button>
+        <button id="btn-bi" class="btn" style="background:var(--g);display:none" onclick="importBank()">KEYDI DHAMMAAN</button>
     </div>
 
     <div class="navbar">
@@ -98,7 +98,7 @@ auth.onAuthStateChanged(u => {
 
 function doLogin() {
     auth.signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value)
-    .catch(e => alert("Khalad: " + e.message));
+    .catch(e => alert("Login Failed: " + e.message));
 }
 
 function doLogout() { if(confirm("Ma hubtaa?")) auth.signOut(); }
@@ -120,6 +120,7 @@ async function handlePDF(inp) {
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
+            // In nidaamku u aqriyo sidii ay u qornaayeen (safka iyo booska)
             text += content.items.map(s => s.str).join(" ") + "\n";
         }
         processDNB(text);
@@ -129,25 +130,25 @@ async function handlePDF(inp) {
 
 function processDNB(t) {
     bItems = [];
-    // Raadi qaabka: Date - Description - Amount
-    const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/æøåÆØÅ]+?)\s+([\d\.\,]+)(?:\s+([\d\.\,]+))?/g;
+    const lines = t.split('\n');
+    
+    // Habka cusub: Kaliya 'Agder Taxi' ayaa cagaar ah, inta kale waa gaduud
+    const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/æøåÆØÅ]+?)\s+([\d\.\,]+)/g;
     let m;
     while ((m = regex.exec(t)) !== null) {
         const date = m[1];
         const desc = m[2].trim();
-        const outVal = m[3].replace(/\./g, '').replace(',', '.');
-        const inVal = m[4] ? m[4].replace(/\./g, '').replace(',', '.') : null;
+        const amountStr = m[3].replace(/\./g, '').replace(',', '.');
+        const amount = parseFloat(amountStr);
 
-        let type = "expense";
-        let amount = parseFloat(outVal);
+        if (!isNaN(amount)) {
+            // XEELLAD: Agder Taxi kaliya ayaa ah Income (Cagaar)
+            // Kuwa kale ee aad soo sheegtay (Tesla, Vibb, Santander, etc.) waa Utgifter (Gaduud)
+            let type = "expense"; 
+            if (desc.toLowerCase().includes("agder taxi")) {
+                type = "income";
+            }
 
-        // Agder Taxi iyo Inn på konto waa dakhli (Cagaar)
-        if (inVal || desc.toLowerCase().includes("agder taxi")) {
-            type = "income";
-            amount = inVal ? parseFloat(inVal) : parseFloat(outVal);
-        }
-
-        if (!isNaN(amount) && amount > 0) {
             bItems.push({ date, description: desc, amount, type });
         }
     }
@@ -156,7 +157,7 @@ function processDNB(t) {
 
 function renderPreview() {
     const container = document.getElementById('bprev');
-    container.innerHTML = `<h4 style="color:var(--y)">La helay ${bItems.length} meelood</h4>`;
+    container.innerHTML = `<h4 style="color:var(--y)">Hordhac: ${bItems.length} meelood</h4>`;
     bItems.forEach(item => {
         const color = item.type === 'income' ? 'var(--g)' : 'var(--r)';
         container.innerHTML += `<div class="pitem" style="border-left: 5px solid ${color}">
@@ -164,9 +165,7 @@ function renderPreview() {
             <b style="color:${color}">${item.amount.toLocaleString('nb-NO')} kr</b>
         </div>`;
     });
-    const btn = document.getElementById('btn-bi');
-    btn.textContent = `KEYDI DHAMMAAN (${bItems.length})`;
-    btn.style.display = bItems.length ? 'block' : 'none';
+    document.getElementById('btn-bi').style.display = bItems.length ? 'block' : 'none';
 }
 
 async function importBank() {
@@ -175,7 +174,7 @@ async function importBank() {
     for (let item of bItems) {
         await ref.push(item);
     }
-    alert("Dhammaan xogta waa la keydiyay!");
+    alert("Xogta waa la keydiyay!");
     bItems = [];
     document.getElementById('bprev').innerHTML = "";
     document.getElementById('btn-bi').style.display = 'none';
