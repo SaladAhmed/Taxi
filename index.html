@@ -423,139 +423,144 @@ async function handlePDFUpload(input){
     try{
         const arrayBuffer=await file.arrayBuffer();
         const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
-        let allPageItems=[];
-        // Use scale:2 for better coordinate precision
+        // Extract full plain text page by page
+        let fullText='';
         for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
             const page=await pdf.getPage(pageNum);
-            const viewport=page.getViewport({scale:2});
             const content=await page.getTextContent();
-            content.items.forEach(item=>{
-                const t=item.str.trim();
-                if(!t)return;
-                // transform[4]=x, transform[5]=y (from bottom), flip to top-down
-                const x=Math.round(item.transform[4]*2);
-                const y=Math.round(viewport.height - item.transform[5]*2);
-                allPageItems.push({text:t,x,y,page:pageNum});
-            });
+            // Join items preserving their order; add newline between items with large Y gap
+            let prevY=null;
+            for(const item of content.items){
+                const t=item.str;
+                if(!t.trim())continue;
+                const y=item.transform[5];
+                if(prevY!==null&&Math.abs(y-prevY)>3) fullText+='\n';
+                else fullText+=' ';
+                fullText+=t;
+                prevY=y;
+            }
+            fullText+='\n---PAGE---\n';
         }
         showBankStatus('✅ PDF la aqriyay — transactions la raadinayaa...');
-        parseDNBPDFItems(allPageItems);
+        parseDNBText(fullText);
     }catch(err){showBankStatus('❌ PDF khalad: '+err.message);console.error(err);}
     input.value='';
 }
 
-function parseDNBPDFItems(items){
+function parseDNBText(fullText){
     bankDetectedItems=[];
+    const seen=new Set();
 
-    // Sort: page → Y (top-to-bottom) → X (left-to-right)
-    items.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+    // Normalise whitespace
+    const text=fullText.replace(/\r/g,'').replace(/[ \t]+/g,' ');
 
-    // Group into lines (items within 10px Y of each other = same line, scaled x2)
-    const lines=[];
-    let curLine=[],lastY=-9999,lastPage=-1;
-    for(const item of items){
-        if(item.page!==lastPage||Math.abs(item.y-lastY)>10){
-            if(curLine.length)lines.push(curLine);
-            curLine=[item];
-        }else curLine.push(item);
-        lastY=item.y;lastPage=item.page;
-    }
-    if(curLine.length)lines.push(curLine);
-
-    // ---- Find the HEADER line to get exact column X positions ----
-    // DNB header: "Dato | Forklarende tekst | Ut av konto | Inn på konto | Rentedato | Arkivref."
-    let utColX=-1,innColX=-1,saldoColX=-1;
-    for(const line of lines){
-        const joined=line.map(i=>i.text).join(' ');
-        if(/ut av konto/i.test(joined)&&/inn p[åa] konto/i.test(joined)){
-            for(const item of line){
-                const t=item.text.toLowerCase().trim();
-                if(/^ut$/i.test(t)||/ut av/i.test(t))  utColX=item.x;
-                if(/^inn$/i.test(t)||/inn p/i.test(t)) innColX=item.x;
-                if(/rentedato/i.test(t))               saldoColX=item.x;
-            }
-            break;
-        }
-    }
-    // Fallback at scale:2 (DNB standard A4 layout)
-    if(utColX<0)  utColX=590;
-    if(innColX<0) innColX=760;
-    if(saldoColX<0) saldoColX=920;
+    // Skip metadata lines
+    const skipLine=(l)=>/kontoutskrift for|bedriftskonto|internasjonalt konto|bic\s*\(swift|saldo forrige|ny saldo|renter.*gebyr|opptjente renter|skyldige renter|provisjon|rapportering til|foretaksreg|dnb\.no|pb\.\s*1600|dronning euf|telefon.*915|side \d+ av|---page---|inn p[åa] konto|ut av konto|forklarende tekst|rentedato|arkivref|bruk\s+bokf/i.test(l);
 
     const dateRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
-    const amtRe=/^-?\d{1,3}(?:\.\d{3})*,\d{2}$/;   // 1.234,56 or 34.663,00
+    // Norwegian amount: 1.234,56  or  147.888,00  or  28,45
+    const amtRe=/^\d{1,3}(?:\.\d{3})*,\d{2}$/;
 
-    const isMetaLine=(t)=>/inn p[åa] konto|ut av konto|forklarende tekst|rentedato|arkivref|bruk\s+bokf|kontoutskrift for|bedriftskonto|internasjonalt konto|bic\s*\(swift|saldo forrige|ny saldo|renter.*gebyr|opptjente renter|skyldige renter|provisjon|rapportering til|foretaksregister|dnb\.no|pb\.\s*1600|dronning euf|telefon.*915|side \d+ av/i.test(t);
+    // Split into clean lines
+    const rawLines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
 
-    // ---- Build transaction blocks ----
-    // DNB layout per transaction:
-    //   Line 1 (date line):  bruksdato  bokfdato  [type text]  [Ut amount]  [Inn amount]  rentedato  arkivref
-    //   Line 2 (name line):  vendor/payee name (x starts ~same as type text)
+    // Build structured lines: each line → array of tokens
+    const lines=rawLines
+        .filter(l=>!skipLine(l))
+        .map(l=>l.split(' ').filter(t=>t.length>0));
+
+    // DNB transaction structure (per row in the table):
+    //   bruksdato  bokfdato  [type_word(s)]  [ut_amount]  [inn_amount]  rentedato  arkivref
+    //   (next line) vendor_name
+    //
+    // Strategy: find lines that start with TWO dates → that is a transaction header line
+    // Then the NEXT non-date line = vendor name
+    // Amounts on the header line: collect all Norwegian-format numbers,
+    //   EXCLUDE the last one (= saldo), then:
+    //     if 1 number left → could be ut or inn (check context)
+    //     if 2 numbers → first=ut, second=inn  (DNB column order: Ut before Inn)
+
+    // We also need to handle the case where amounts appear BEFORE the rentedato
+    // DNB order: ... Ut_amount  Inn_amount  rentedato  arkivref
+    // rentedato looks like DD.MM.YY — same as dateRe
+
+    // Pass 1: group lines into transaction blocks
     const blocks=[];
-    let cur=null;
-    for(const line of lines){
-        if(!line.length)continue;
-        const lineText=line.map(i=>i.text).join(' ').trim();
-        if(isMetaLine(lineText)){cur=null;continue;}
-        const first=line[0];
-        if(dateRe.test(first.text)){
-            if(cur)blocks.push(cur);
-            cur={lines:[line]};
-        }else if(cur){
-            // Only attach if line is clearly left-side text (description area), not numbers-only
-            const hasText=line.some(i=>!/^[\d.,\s]+$/.test(i.text));
-            if(hasText)cur.lines.push(line);
+    let i=0;
+    while(i<lines.length){
+        const tokens=lines[i];
+        // Transaction header: starts with date  date  (at least 2 tokens that are dates)
+        if(tokens.length>=2&&dateRe.test(tokens[0])&&dateRe.test(tokens[1])){
+            const block={header:tokens,nameLines:[]};
+            i++;
+            // Collect following name lines (non-header lines until next header)
+            while(i<lines.length){
+                const next=lines[i];
+                if(next.length>=2&&dateRe.test(next[0])&&dateRe.test(next[1]))break;
+                // Stop if line looks like a new section header
+                if(skipLine(next.join(' ')))break;
+                block.nameLines.push(next);
+                i++;
+            }
+            blocks.push(block);
+        }else{
+            i++;
         }
     }
-    if(cur)blocks.push(cur);
-
-    const seen=new Set();
-    const COL_TOL=80; // tolerance in px (at scale:2)
 
     for(const block of blocks){
-        const firstLine=block.lines[0];
-        const dateVal=parseDNBDate(firstLine[0].text);
+        const tokens=block.header;
+        // tokens[0] = bruksdato, tokens[1] = bokfdato
+        const dateVal=parseDNBDate(tokens[0]);
         if(!dateVal)continue;
 
-        const allItems=block.lines.flat();
-
-        let utAmt=0,innAmt=0;
-        const descParts=[];
-
-        for(const item of allItems){
-            const t=item.text.trim();
-            if(!t)continue;
-            if(dateRe.test(t))continue;           // skip date tokens (bruk + bokf)
-            if(/^\d{7,}$/.test(t))continue;       // skip archive refs
-
+        // Extract all Norwegian amounts from header tokens (skip first 2 = dates)
+        // Also skip tokens that look like dates (rentedato at end)
+        const amts=[];
+        const descTokens=[];
+        for(let j=2;j<tokens.length;j++){
+            const t=tokens[j];
+            if(dateRe.test(t))continue;          // skip rentedato
+            if(/^\d{6,}$/.test(t))continue;      // skip arkivref (pure long number)
             if(amtRe.test(t)){
-                const num=parseNorwegianNumber(t);
-                if(num<0.01)continue;
-                // Skip saldo column (right of inn col)
-                if(item.x>innColX+COL_TOL)continue;
-                const dUt=Math.abs(item.x-utColX);
-                const dInn=Math.abs(item.x-innColX);
-                if(dUt<COL_TOL&&dUt<=dInn){
-                    utAmt=num;   // Ut av konto → EXPENSE
-                }else if(dInn<COL_TOL&&dInn<dUt){
-                    innAmt=num;  // Inn på konto → INCOME
-                }
-                // else: saldo or other column → ignore
+                amts.push(parseNorwegianNumber(t));
             }else{
-                // Description: only items whose x < utColX (left side of page)
-                if(item.x<utColX-20){
-                    descParts.push(t);
-                }
+                descTokens.push(t);
             }
         }
 
-        // Clean description: remove dates, long numbers, join
-        const desc=descParts
-            .filter(p=>!dateRe.test(p)&&!/^\d{6,}$/.test(p))
+        // Vendor name from next line(s)
+        const vendorName=block.nameLines
+            .map(l=>l.filter(t=>!dateRe.test(t)&&!/^\d{6,}$/.test(t)).join(' '))
             .join(' ').replace(/\s+/g,' ').trim();
+
+        // Full description = type words + vendor name
+        const desc=[...descTokens,vendorName].join(' ').replace(/\s+/g,' ').trim();
         if(desc.length<2)continue;
 
-        // Inn på konto = INCOME (green)
+        // Amount logic:
+        // DNB columns: Ut av konto | Inn på konto | Rentedato | (Saldo implicit, not shown as column but sometimes appears)
+        // amts array contains only the transaction amounts (not saldo, not rentedato)
+        // If we have the saldo too it will be the LAST amount — drop it if 3+ amounts
+        let utAmt=0,innAmt=0;
+        if(amts.length===0){
+            // no amounts — skip
+            continue;
+        }else if(amts.length===1){
+            // Only one amount — determine direction from keywords
+            // Agder Taxi overføring = inn, most others = ut
+            const dLow=desc.toLowerCase();
+            const isInn=dLow.includes('agder taxi')||dLow.includes('overføring innland nr.111')||dLow.includes('nr.1117');
+            if(isInn)innAmt=amts[0]; else utAmt=amts[0];
+        }else if(amts.length===2){
+            // Two amounts: first=Ut, second=Inn (DNB column order)
+            utAmt=amts[0];innAmt=amts[1];
+        }else{
+            // 3 amounts: first=Ut, second=Inn, third=Saldo (drop saldo)
+            utAmt=amts[0];innAmt=amts[1];
+        }
+
+        // Inn på konto → INCOME (cagaar)
         if(innAmt>0.01){
             const key=dateVal+'|inn|'+innAmt;
             if(!seen.has(key)){
@@ -563,7 +568,7 @@ function parseDNBPDFItems(items){
                 bankDetectedItems.push({date:dateVal,desc,amount:innAmt,type:'income',category:autoCategory(desc,'income')});
             }
         }
-        // Ut av konto = money OUT = EXPENSE
+        // Ut av konto → EXPENSE (cas)
         if(utAmt>0.01){
             const key=dateVal+'|ut|'+utAmt;
             if(!seen.has(key)){
@@ -574,8 +579,7 @@ function parseDNBPDFItems(items){
     }
 
     if(bankDetectedItems.length===0){
-        const fullText=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
-        parseDNBRawText(fullText);
+        showBankStatus('⚠️ Transactions lama helin. Fadlan isku day CSV.');
         return;
     }
     showBankStatus('✅ '+bankDetectedItems.length+' transactions la helay!');
