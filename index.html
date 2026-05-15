@@ -965,14 +965,17 @@ function parseAgderItems(all){
   if(im){invNr=im[1];T('at-inv',invNr);}
 
   // ---- Extract MVA totals from summary ----
-  // Raw total (belop inkl mva) — can be negative in Agder Taxi (negative = they pay YOU)
+  // In Agder Taxi: negative "Beløp inkl mva" = they PAY YOU (income to driver)
+  // positive = you owe them
   let rawTotal=0,rawIsNeg=false;
-  const tm=ft.match(/[Bb]el[o]p\s+inkl[\s.]+mva[.:\s]+([-]?\d[\d\s.,]+)/i);
-  if(tm){
-    const raw=tm[1].trim();
+  // Try to find the summary line — look for the LAST occurrence near "Beløp inkl. mva"
+  const tmAll=[...ft.matchAll(/[Bb]el[o]p\s+inkl[\s.]+mva[.:\s]+([-]?\d[\d\s.,]+)/gi)];
+  if(tmAll.length>0){
+    const raw=tmAll[tmAll.length-1][1].trim();
     rawIsNeg=raw.startsWith('-');
     rawTotal=norNum(raw.replace('-',''));
-    T('at-tot',(rawIsNeg?'-':'')+rawTotal.toLocaleString('nb-NO')+' kr');
+    // Display: negative means Agder PAYS YOU, so show as positive income
+    T('at-tot',(rawIsNeg?'+ (Agder bixiyaa) ':'')+rawTotal.toLocaleString('nb-NO')+' kr');
   }
 
   // MVA 12% grunnlag & mva amount
@@ -990,19 +993,27 @@ function parseAgderItems(all){
   if(frim){avgiftsfritt=norNum(frim[1].replace('-',''));T('at-free',avgiftsfritt.toLocaleString('nb-NO')+' kr');}
 
   // ---- Calculate netto etter MVA ----
-  // rawTotal (negative in Agder context) means Agder pays YOU
-  // MVA amounts are what you owe in VAT
-  // Netto to driver = |rawTotal| - mva12 - mva25
-  const totalMva=mva12+mva25;
-  const nettoAfterMva=rawTotal-totalMva; // rawTotal is already the payout amount
+  // Agder Taxi logic:
+  //   "Beløp inkl mva" is NEGATIVE → means Agder PAYS THE DRIVER this amount
+  //   MVA 12% and MVA 25% = VAT the driver must pay to the state (deducted from payout)
+  //   Netto to driver = rawTotal - mva12 - mva25
+  const totalMva=Math.round(mva12+mva25);
+  const nettoAfterMva=Math.round(rawTotal-mva12-mva25);
 
   // Show big netto card
   const nettoEl=E('atnetto');
   if(nettoEl){
     nettoEl.style.display='block';
-    T('at-netto-big',(rawIsNeg?'+':'')+nettoAfterMva.toLocaleString('nb-NO')+' kr');
-    E('at-netto-big').style.color=nettoAfterMva>=0?'var(--g)':'var(--r)';
-    T('at-netto-sub','Belop: '+rawTotal.toLocaleString('nb-NO')+' - MVA 12%: '+mva12.toLocaleString('nb-NO')+' - MVA 25%: '+mva25.toLocaleString('nb-NO'));
+    // If rawIsNeg (Agder pays you), netto is positive income
+    const displayNetto=rawIsNeg?nettoAfterMva:-nettoAfterMva;
+    T('at-netto-big',(displayNetto>=0?'+':'')+displayNetto.toLocaleString('nb-NO')+' kr');
+    E('at-netto-big').style.color=displayNetto>=0?'var(--g)':'var(--r)';
+    T('at-netto-sub',
+      'Belop: '+rawTotal.toLocaleString('nb-NO')+' kr'
+      +' − MVA 12%: '+Math.round(mva12).toLocaleString('nb-NO')+' kr'
+      +' − MVA 25%: '+Math.round(mva25).toLocaleString('nb-NO')+' kr'
+      +' = '+displayNetto.toLocaleString('nb-NO')+' kr'
+    );
   }
   E('atcard').style.display='block';
 
@@ -1068,12 +1079,13 @@ function parseAgderItems(all){
 
   // Save bill summary to bills collection
   if(auth.currentUser&&invNr){
+    const displayNetto=rawIsNeg?nettoAfterMva:-nettoAfterMva;
     const billData={
       invNr,date:dv,payDate,
-      rawTotal,totalMva:Math.round(totalMva),
+      rawTotal,totalMva,
       mva12:Math.round(mva12),mva25:Math.round(mva25),
       avgiftsfritt,
-      nettoAfterMva:Math.round(nettoAfterMva),
+      nettoAfterMva:displayNetto,
       entryCount:oItems.length,
       savedAt:new Date().toISOString()
     };
@@ -1213,19 +1225,4 @@ function dlPDF(){
     +'tr:nth-child(even){background:#f8fafc}'
     +'.pbtn{background:#1e293b;color:#f1c40f;border:none;padding:10px 22px;border-radius:7px;font-weight:bold;cursor:pointer;margin-top:14px}'
     +'@media print{.pbtn{display:none}}</style></head><body>'
-    +'<h1>&#128662; Transport PRO - Regnskap</h1>'
-    +'<p style="color:#64748b;font-size:12px">'+new Date().toLocaleString('nb-NO')+'</p>'
-    +'<div class="sum">'
-    +'<div class="box"><small>INNTEKT</small><b style="color:#2ecc71">'+ti.toLocaleString('nb-NO')+' kr</b></div>'
-    +'<div class="box"><small>UTGIFTER</small><b style="color:#ff4757">'+te.toLocaleString('nb-NO')+' kr</b></div>'
-    +'<div class="box"><small>NETTO</small><b style="color:'+(net>=0?'#2ecc71':'#ff4757')+'">'+net.toLocaleString('nb-NO')+' kr</b></div>'
-    +'</div>'
-    +'<table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Bil #</th><th>Belop</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table>'
-    +'<button class="pbtn" onclick="window.print()">PRINT / LAGRE SOM PDF</button>'
-    +'</body></html>';
-  win.document.write(page);win.document.close();
-}
-</script>
-</body>
-</html>
+    +'<h1>&#128662; T
