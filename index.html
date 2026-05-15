@@ -513,56 +513,61 @@ function parseD(r){
 }
 function dnbType(desc){
   const d=(desc||'').toLowerCase();
-  // --- EXPENSE: lacag baxday ---
-  if(/^visa\b/i.test(desc))return'expense';
-  if(d.includes('mastercard')||d.includes('mc '))return'expense';
-  if(d.includes('shell')||d.includes('circle k')||d.includes('uno-x')||d.includes('esso')||d.includes('best '))return'expense';
-  if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('if '))return'expense';
-  if(d.includes('skatt')||d.includes('skatteinnkrevin'))return'expense';
-  if(d.includes('arbeidsgiver'))return'expense';
-  if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele')||d.includes('ice.net'))return'expense';
-  if(d.includes('autosync')||d.includes('msg cleaning')||d.includes('tyholmen'))return'expense';
-  if(d.includes('eviny')||d.includes('fortum')||d.includes('strom')||d.includes('strem'))return'expense';
-  if(d.includes('arendal kommune')||d.includes('kristiansand kommune'))return'expense';
-  if(d.includes('vibb')||d.includes('nextgentel'))return'expense';
-  if(d.includes('wash')||d.includes('vask')||d.includes('carwash'))return'expense';
-  if(d.includes('haytham')||d.includes('kamal')||d.includes('altaieb'))return'expense';
-  if(d.includes('til ')&&d.includes('overf'))return'expense';
-  if(d.includes('kontoregulering til'))return'expense';
-  if(d.includes('nettbank')||d.includes('mobilepay'))return'expense';
-  if(d.includes('ra forsikring')||d.includes('tryg forsikring'))return'expense';
-  if(d.includes('tesla')&&/^visa/i.test(desc))return'expense';
-  // --- INCOME: lacag timid ---
+  // === INCOME (Inn pa konto) ===
   if(d.includes('agder taxi'))return'income';
-  if(/giro\s*nr/i.test(desc))return'income';
-  if(d.includes('overf')&&d.includes('innland')&&!d.includes('til '))return'income';
-  if(d.includes('kontoregulering')&&!d.includes('til '))return'income';
-  if(d.includes('innskudd'))return'income';
-  if(d.includes('overf')&&!d.includes('til '))return'income';
-  // Default: unknown = expense (safer)
+  if(d.includes('giro nr')&&!d.includes('uno-x')&&!d.includes('nextgentel')&&!d.includes('autosync')&&!d.includes('fortum')&&!d.includes('lyse')&&!d.includes('forsikring')&&!d.includes('vibb')&&!d.includes('tyholmen')&&!d.includes('santander')&&!d.includes('msg')&&!d.includes('livsforsikring')&&!d.includes('kommune'))return'income';
+  if(d.includes('overf')&&d.includes('innland')&&!d.includes('kamal')&&!d.includes('haytham')&&!d.includes('altaieb')&&!d.includes('salad ahmed')&&!d.includes('til '))return'income';
+  // === EXPENSE (Ut av konto) ===
+  if(/^visa/i.test(desc))return'expense';
+  if(d.includes('mastercard'))return'expense';
+  if(d.includes('tesla'))return'expense';
+  if(d.includes('wash world')||d.includes('carwash'))return'expense';
+  if(d.includes('skatt')||d.includes('skatteinnkrevin')||d.includes('arbeidsavgift'))return'expense';
+  if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb'))return'expense';
+  if(d.includes('salad ahmed'))return'expense';
+  if(d.includes('kontoregulering'))return'expense';
+  if(d.includes('santander'))return'expense';
+  if(d.includes('uno-x')||d.includes('nextgentel')||d.includes('autosync'))return'expense';
+  if(d.includes('fortum')||d.includes('strom')||d.includes('eviny'))return'expense';
+  if(d.includes('lyse tele')||d.includes('lyse as'))return'expense';
+  if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('ra forsikring'))return'expense';
+  if(d.includes('vibb'))return'expense';
+  if(d.includes('tyholmen')||d.includes('leringsverkstedet'))return'expense';
+  if(d.includes('msg cleaning'))return'expense';
+  if(d.includes('livsforsikring'))return'expense';
+  if(d.includes('arendal kommune')||d.includes('kommune'))return'expense';
+  if(d.includes('nettbank')||d.includes('omkostning'))return'expense';
+  if(d.includes('til ')&&d.includes('overf'))return'expense';
+  if(d.includes('betaling'))return'expense';
+  if(d.includes('telenor')||d.includes('telia')||d.includes('ice.net'))return'expense';
+  if(d.includes('shell')||d.includes('circle k')||d.includes('esso'))return'expense';
   return'expense';
 }
 function autocat(desc,type){
   const d=(desc||'').toLowerCase();
   if(type==='income'){
-    if(d.includes('agder')||d.includes('taxi'))return'7796';
-    if(d.includes('giro')||d.includes('overf')||d.includes('innland'))return'3030';
+    if(d.includes('agder taxi')||d.includes('agder  taxi'))return'7796';
     return'3030';
   }
-  // EXPENSES - uten MVA (bank transactions)
-  if(d.includes('shell')||d.includes('circle k')||d.includes('uno-x')||d.includes('drivstoff')||d.includes('esso'))return'7000';
-  if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('ra forsikring'))return'7040';
+  // Expenses
+  if(d.includes('tesla')||d.includes('visa'))return'7000';
+  if(d.includes('shell')||d.includes('circle k')||d.includes('uno-x')||d.includes('esso')||d.includes('drivstoff'))return'7000';
+  if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('ra forsikring')||d.includes('livsforsikring'))return'7040';
   if(d.includes('vedlikehold')||d.includes('service')||d.includes('dekk')||d.includes('autosync')||d.includes('wash'))return'7020';
-  if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele')||d.includes('ice.net'))return'6900';
+  if(d.includes('msg cleaning'))return'7020';
+  if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele'))return'6900';
+  if(d.includes('vibb')||d.includes('nextgentel'))return'6907';
   if(d.includes('gebyr')||d.includes('kortgebyr'))return'7770';
-  if(d.includes('vipps'))return'7770';
   if(d.includes('regnskap')||d.includes('revisjon'))return'6705';
-  if(d.includes('lonn')||d.includes('lonnskjoring'))return'5000';
+  if(d.includes('lonn'))return'5000';
   if(d.includes('skatt')||d.includes('arbeidsgiver')||d.includes('skatteinnkrevin'))return'5400';
   if(d.includes('eviny')||d.includes('fortum')||d.includes('strom'))return'7000';
   if(d.includes('arendal kommune')||d.includes('kommune'))return'7400';
-  if(d.includes('vibb')||d.includes('nextgentel')||d.includes('data'))return'6907';
-  if(d.includes('overf')||d.includes('kontoregulering'))return'7797';
+  if(d.includes('santander'))return'7790';
+  if(d.includes('kontoregulering')||d.includes('overf'))return'7797';
+  if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb')||d.includes('salad ahmed'))return'7790';
+  if(d.includes('tyholmen')||d.includes('leringsverkstedet'))return'7140';
+  if(d.includes('omkostning')||d.includes('nettbank'))return'7770';
   return'7790';
 }
 function catOpts(){
@@ -584,97 +589,166 @@ async function handlePDF(inp){
   try{
     const buf=await f.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-    // Extract ALL text keeping spatial layout via items with coordinates
-    let pageTexts=[];
+    let allItems=[];
     for(let p=1;p<=pdf.numPages;p++){
       const pg=await pdf.getPage(p);
       const con=await pg.getTextContent();
       const vp=pg.getViewport({scale:1});
-      // Group items by Y row
-      let rowMap={};
+      const pgW=vp.width;
       con.items.forEach(it=>{
         if(!it.str.trim())return;
-        const y=Math.round(vp.height-it.transform[5]);
-        const x=Math.round(it.transform[4]);
-        const key=Math.floor(y/8)*8; // group within 8px
-        if(!rowMap[key])rowMap[key]=[];
-        rowMap[key].push({x,text:it.str.trim()});
+        allItems.push({
+          text:it.str.trim(),
+          x:it.transform[4]/pgW, // normalize 0-1
+          y:Math.round(vp.height-it.transform[5]),
+          page:p,
+          pgW
+        });
       });
-      // Sort rows by Y, items within row by X
-      const rows=Object.keys(rowMap).sort((a,b)=>a-b).map(k=>{
-        return rowMap[k].sort((a,b)=>a.x-b.x).map(i=>i.text).join(' ');
-      });
-      pageTexts.push(rows.join('\n'));
     }
-    const fullText=pageTexts.join('\n');
-    parseDNBText(fullText);
+    parseDNBColumns(allItems);
   }catch(err){showBS('Khalad: '+err.message);console.error(err);}
   inp.value='';
 }
 
-function parseDNBText(text){
+function parseDNBColumns(items){
   bItems=[];
+  // DNB PDF has 4 columns by x position (normalized 0-1):
+  // Col A: Date+Description  x < 0.55
+  // Col B: Ut av konto       x 0.55-0.68
+  // Col C: Inn på konto      x 0.68-0.80
+  // Col D: Rentedato+Arkiv   x > 0.80
+  
+  // Group by page then by y-row (within 6px)
+  const pages={};
+  for(const it of items){
+    if(!pages[it.page])pages[it.page]={desc:[],ut:[],inn:[]};
+    const xn=it.x;
+    // Skip header/footer patterns
+    if(/^(side|dato|bruk|bokf|forklarende|ut av|inn pa|rentedato|arkivref|kontoutskrift|bedriftskonto|returadresse|dronning|pb\.|telefon|foretaks|dnb\.no|no \d|renter|innskudd|kreditt|opptjente|skyldige|provisjon|rapportering|henhold|lovdata|saldo|iban|bic|utskriftsnummer|internasjonalt|møllebakken|arendal|oslo)/i.test(it.text))continue;
+    if(/^\d{2}\.\d{2}\.\d{4}$/.test(it.text))continue; // standalone date
+    if(/^NOK\s/.test(it.text))continue;
+    if(/^\d+$/.test(it.text)&&it.text.length<=3)continue; // page numbers
+    if(xn<0.55){
+      pages[it.page].desc.push({y:it.y,text:it.text});
+    }else if(xn<0.70){
+      pages[it.page].ut.push({y:it.y,text:it.text});
+    }else if(xn<0.83){
+      pages[it.page].inn.push({y:it.y,text:it.text});
+    }
+  }
+
   const seen=new Set();
-  const lines=text.split('\n');
+  const norAmtRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+  const dateLineRe=/^(\d{2}\.\d{2}\.\d{2})\s+(\d{2}\.\d{2}\.\d{2})\s+(.+)$/;
+  const dateOnlyRe=/^\d{2}\.\d{2}\.\d{2}$/;
 
-  // DNB Kontoutskrift patterns:
-  // "DD.MM.YY Description Amount Saldo"  (2-digit year)
-  // "DD.MM.YYYY Description Amount Saldo"  (4-digit year)
-  // Amount is Norwegian format: 1.234,56
-  const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})\s+/;
-  const amtRe=/(\d{1,3}(?:[.\s]\d{3})*,\d{2})/g;
+  for(const page of Object.values(pages)){
+    // Parse descriptions: find transactions by date lines
+    const descItems=page.desc.sort((a,b)=>a.y-b.y);
+    const utItems=page.ut.filter(i=>norAmtRe.test(i.text)).sort((a,b)=>a.y-b.y);
+    const innItems=page.inn.filter(i=>norAmtRe.test(i.text)).sort((a,b)=>a.y-b.y);
 
-  for(const line of lines){
-    const trimmed=line.trim();
-    if(!trimmed||trimmed.length<8)continue;
-    // Must start with date
-    const dm=trimmed.match(/^(\d{2})\.(\d{2})\.(\d{2,4})\s+([\s\S]+)$/);
-    if(!dm)continue;
-    const dv=parseD(dm[1]+'.'+dm[2]+'.'+dm[3]);
-    if(!dv)continue;
-    const rest=dm[4].trim();
-    if(!rest)continue;
-    // Find all amounts in the line
-    const allAmts=[...rest.matchAll(/(\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];
-    if(!allAmts.length)continue;
-    // Description = everything before the first amount
-    const firstAmtIdx=rest.indexOf(allAmts[0][0]);
-    const desc=rest.substring(0,firstAmtIdx).trim().replace(/\s+/g,' ');
-    if(!desc||desc.length<2)continue;
-    // Transaction amount = first amount found (before saldo)
-    const txAmt=norNum(allAmts[0][0]);
-    if(txAmt<0.01||txAmt>9999999)continue;
-    // Skip header/footer lines
-    if(/^(dato|tekst|saldo|side|iban|bic|utskrift|kontoutskrift|bokf|rente)/i.test(desc))continue;
-    const type=dnbType(desc);
-    const key=dv+'|'+txAmt+'|'+desc.substring(0,20);
-    if(!seen.has(key)){
-      seen.add(key);
-      bItems.push({date:dv,desc,amount:txAmt,type,category:autocat(desc,type)});
+    // Build transactions from description column
+    const txDescs=[];
+    let currentTx=null;
+    for(const item of descItems){
+      // Date line: "DD.MM.YY DD.MM.YY TypeName" or "DD.MM.YY DD.MM.YY"
+      const m=item.text.match(/^(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s*(.*)$/);
+      if(m){
+        if(currentTx)txDescs.push(currentTx);
+        const bokDate=m[2]; // Use bokforingsdato
+        const dv=parseD(bokDate);
+        const firstPart=m[3].trim();
+        currentTx={date:dv,parts:[firstPart],y:item.y};
+      }else if(currentTx){
+        // continuation line (company name etc)
+        if(item.text&&item.text.length>0)currentTx.parts.push(item.text);
+      }
+    }
+    if(currentTx)txDescs.push(currentTx);
+
+    // Now match transactions with amounts
+    // Strategy: Ut amounts sorted by y, Inn amounts sorted by y
+    // Each transaction has a y position - find closest amount
+    // Actually: the amounts are ordered same as descriptions on the page
+    
+    // Build combined amount list: {y, amount, isInn}
+    const allAmts=[];
+    for(const u of utItems)allAmts.push({y:u.y,amount:norNum(u.text),isInn:false});
+    for(const i of innItems)allAmts.push({y:i.y,amount:norNum(i.text),isInn:true});
+    allAmts.sort((a,b)=>a.y-b.y);
+
+    // Match by index order (descriptions and amounts are in same order)
+    for(let i=0;i<txDescs.length;i++){
+      const tx=txDescs[i];
+      if(!tx.date)continue;
+      const desc=tx.parts.filter(p=>p.length>0).join(' ').replace(/\s+/g,' ').trim();
+      if(!desc||desc.length<2)continue;
+      
+      // Find the amount: try by y-position proximity first
+      let bestAmt=null,bestIsInn=false,minDist=9999;
+      for(const a of allAmts){
+        const dist=Math.abs(a.y-tx.y);
+        if(dist<minDist){minDist=dist;bestAmt=a.amount;bestIsInn=a.isInn;}
+      }
+      
+      // Override with description-based type detection
+      const type=bestIsInn?'income':dnbType(desc);
+      // If Agder Taxi = always income regardless
+      const finalType=desc.toLowerCase().includes('agder taxi')?'income':type;
+      
+      if(!bestAmt||bestAmt<0.01||bestAmt>9999999)continue;
+      
+      const key=tx.date+'|'+bestAmt+'|'+desc.substring(0,20);
+      if(!seen.has(key)){
+        seen.add(key);
+        bItems.push({date:tx.date,desc,amount:bestAmt,type:finalType,category:autocat(desc,finalType)});
+      }
     }
   }
 
-  // FALLBACK: try multi-pattern if nothing found
-  if(bItems.length===0){
-    // Try: date anywhere followed by desc and amount
-    const re2=/(\d{2}\.\d{2}\.\d{2,4})\s+([A-Za-z\u00C0-\u00FF][^\d\n]{2,50}?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})/g;
-    let m;
-    while((m=re2.exec(text))!==null){
-      const dv=parseD(m[1]);if(!dv)continue;
-      const desc=m[2].trim().replace(/\s+/g,' ');
-      const amt=norNum(m[3]);
-      if(amt<0.01||amt>9999999||desc.length<2)continue;
-      if(/^(dato|tekst|saldo|side)/i.test(desc))continue;
-      const type=dnbType(desc);
-      const key=dv+'|'+amt+'|'+desc.substring(0,18);
-      if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
-    }
+  if(!bItems.length){
+    // FALLBACK: use description-based parsing from raw text
+    showBS('Column parse ma shaqaynin — raw text isku dayaya...');
+    parseDNBRawFallback(items);
+    return;
   }
-
-  if(!bItems.length){showBS('Transactions lama helin PDF-ka. Isku day CSV tab-ka.');return;}
   showBS('✅ '+bItems.length+' transactions la helay!');
   renderBItems();
 }
+
+function parseDNBRawFallback(items){
+  bItems=[];
+  const seen=new Set();
+  // Combine all text sorted by page,y,x
+  items.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+  const lines=[];let cur=[],ly=-999,lp=-1;
+  for(const it of items){
+    if(it.page!==lp||Math.abs(it.y-ly)>8){if(cur.length)lines.push(cur.map(i=>i.text).join(' '));cur=[it];}
+    else cur.push(it);
+    ly=it.y;lp=it.page;
+  }
+  if(cur.length)lines.push(cur.map(i=>i.text).join(' '));
+  
+  const re=/(\d{2}\.\d{2}\.\d{2})\s+(\d{2}\.\d{2}\.\d{2})\s+([A-Za-z\u00C0-\u00FF][^0-9\n]{2,60}?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})/g;
+  const fullText=lines.join('\n');
+  let m;
+  while((m=re.exec(fullText))!==null){
+    const dv=parseD(m[2]);if(!dv)continue;
+    const desc=(m[3]+' ').trim().replace(/\s+/g,' ');
+    const amt=norNum(m[4]);
+    if(amt<0.01||amt>9999999||desc.length<2)continue;
+    if(/^(dato|tekst|saldo|side|ut av|inn pa)/i.test(desc))continue;
+    const type=dnbType(desc);
+    const key=dv+'|'+amt+'|'+desc.substring(0,18);
+    if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
+  }
+  if(!bItems.length){showBS('Transactions lama helin. Isku day CSV tab-ka.');return;}
+  showBS('✅ '+bItems.length+' transactions (fallback)');
+  renderBItems();
+}
+
 function handleCSV(inp){
   const f=inp.files[0];if(!f)return;showBS('CSV aqrinaya...');
   const r=new FileReader();
