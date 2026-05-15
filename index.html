@@ -579,68 +579,101 @@ function switchTab(t){
 function showBS(m){const s=E('bstat');s.style.display='block';s.textContent=m;}
 
 async function handlePDF(inp){
-  const f=inp.files[0];if(!f)return;showBS('PDF aqrinaya...');
+  const f=inp.files[0];if(!f)return;
+  showBS('PDF aqrinaya...');
   try{
     const buf=await f.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-    let all=[];
+    // Extract ALL text keeping spatial layout via items with coordinates
+    let pageTexts=[];
     for(let p=1;p<=pdf.numPages;p++){
       const pg=await pdf.getPage(p);
       const con=await pg.getTextContent();
       const vp=pg.getViewport({scale:1});
-      con.items.forEach(it=>{if(it.str.trim())all.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p});});
+      // Group items by Y row
+      let rowMap={};
+      con.items.forEach(it=>{
+        if(!it.str.trim())return;
+        const y=Math.round(vp.height-it.transform[5]);
+        const x=Math.round(it.transform[4]);
+        const key=Math.floor(y/8)*8; // group within 8px
+        if(!rowMap[key])rowMap[key]=[];
+        rowMap[key].push({x,text:it.str.trim()});
+      });
+      // Sort rows by Y, items within row by X
+      const rows=Object.keys(rowMap).sort((a,b)=>a-b).map(k=>{
+        return rowMap[k].sort((a,b)=>a.x-b.x).map(i=>i.text).join(' ');
+      });
+      pageTexts.push(rows.join('\n'));
     }
-    parseDNBItems(all);
-  }catch(err){showBS('Khalad: '+err.message);}
+    const fullText=pageTexts.join('\n');
+    parseDNBText(fullText);
+  }catch(err){showBS('Khalad: '+err.message);console.error(err);}
   inp.value='';
 }
-function parseDNBItems(all){
+
+function parseDNBText(text){
   bItems=[];
-  all.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
-  const lines=[];let cur=[],ly=-999,lp=-1;
-  for(const it of all){if(it.page!==lp||Math.abs(it.y-ly)>8){if(cur.length)lines.push(cur);cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}
-  if(cur.length)lines.push(cur);
   const seen=new Set();
-  const dRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
-  const nRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+  const lines=text.split('\n');
+
+  // DNB Kontoutskrift patterns:
+  // "DD.MM.YY Description Amount Saldo"  (2-digit year)
+  // "DD.MM.YYYY Description Amount Saldo"  (4-digit year)
+  // Amount is Norwegian format: 1.234,56
+  const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})\s+/;
+  const amtRe=/(\d{1,3}(?:[.\s]\d{3})*,\d{2})/g;
+
   for(const line of lines){
-    const f=line[0];if(!f||!dRe.test(f.text))continue;
-    const dv=parseD(f.text);if(!dv)continue;
-    const nums=[],txts=[];
-    for(const it of line){
-      if(dRe.test(it.text))continue;
-      if(nRe.test(it.text.trim()))nums.push(norNum(it.text));
-      else if(it.text.trim())txts.push(it.text.trim());
+    const trimmed=line.trim();
+    if(!trimmed||trimmed.length<8)continue;
+    // Must start with date
+    const dm=trimmed.match(/^(\d{2})\.(\d{2})\.(\d{2,4})\s+([\s\S]+)$/);
+    if(!dm)continue;
+    const dv=parseD(dm[1]+'.'+dm[2]+'.'+dm[3]);
+    if(!dv)continue;
+    const rest=dm[4].trim();
+    if(!rest)continue;
+    // Find all amounts in the line
+    const allAmts=[...rest.matchAll(/(\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];
+    if(!allAmts.length)continue;
+    // Description = everything before the first amount
+    const firstAmtIdx=rest.indexOf(allAmts[0][0]);
+    const desc=rest.substring(0,firstAmtIdx).trim().replace(/\s+/g,' ');
+    if(!desc||desc.length<2)continue;
+    // Transaction amount = first amount found (before saldo)
+    const txAmt=norNum(allAmts[0][0]);
+    if(txAmt<0.01||txAmt>9999999)continue;
+    // Skip header/footer lines
+    if(/^(dato|tekst|saldo|side|iban|bic|utskrift|kontoutskrift|bokf|rente)/i.test(desc))continue;
+    const type=dnbType(desc);
+    const key=dv+'|'+txAmt+'|'+desc.substring(0,20);
+    if(!seen.has(key)){
+      seen.add(key);
+      bItems.push({date:dv,desc,amount:txAmt,type,category:autocat(desc,type)});
     }
-    const desc=txts.join(' ').replace(/\s+/g,' ').trim();
-    if(desc.length<2||!nums.length)continue;
-    let amt=nums.length===1?nums[0]:Math.min(nums[0],nums[1]);
-    if(amt<0.01||amt>9999999)continue;
-    const type=dnbType(desc);
-    const key=dv+'|'+amt+'|'+desc.substring(0,18);
-    if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
   }
-  if(!bItems.length){
-    const ft=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
-    parseDNBRaw(ft);return;
+
+  // FALLBACK: try multi-pattern if nothing found
+  if(bItems.length===0){
+    // Try: date anywhere followed by desc and amount
+    const re2=/(\d{2}\.\d{2}\.\d{2,4})\s+([A-Za-z\u00C0-\u00FF][^\d\n]{2,50}?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})/g;
+    let m;
+    while((m=re2.exec(text))!==null){
+      const dv=parseD(m[1]);if(!dv)continue;
+      const desc=m[2].trim().replace(/\s+/g,' ');
+      const amt=norNum(m[3]);
+      if(amt<0.01||amt>9999999||desc.length<2)continue;
+      if(/^(dato|tekst|saldo|side)/i.test(desc))continue;
+      const type=dnbType(desc);
+      const key=dv+'|'+amt+'|'+desc.substring(0,18);
+      if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
+    }
   }
-  showBS(bItems.length+' transactions la helay!');renderBItems();
-}
-function parseDNBRaw(text){
-  bItems=[];const seen=new Set();
-  const re=/(\d{2}\.\d{2}\.\d{2,4})\s+\d{2}\.\d{2}\.\d{2,4}\s+(.+?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})\s+\d{1,3}(?:[.\s]\d{3})*,\d{2}/g;
-  let m;
-  while((m=re.exec(text))!==null){
-    const dv=parseD(m[1]);if(!dv)continue;
-    const desc=m[2].trim().replace(/\s+/g,' ');
-    const amt=norNum(m[3]);
-    if(amt<0.01||amt>9999999||desc.length<2)continue;
-    const type=dnbType(desc);
-    const key=dv+'|'+amt+'|'+desc.substring(0,15);
-    if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
-  }
-  if(!bItems.length){showBS('Transactions lama helin. Isku day CSV.');return;}
-  showBS(bItems.length+' transactions!');renderBItems();
+
+  if(!bItems.length){showBS('Transactions lama helin PDF-ka. Isku day CSV tab-ka.');return;}
+  showBS('✅ '+bItems.length+' transactions la helay!');
+  renderBItems();
 }
 function handleCSV(inp){
   const f=inp.files[0];if(!f)return;showBS('CSV aqrinaya...');
