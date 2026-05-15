@@ -1,305 +1,170 @@
-<!DOCTYPE html>
-<html lang="no">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport PRO</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TransportPRO">
-<meta name="theme-color" content="#0f172a">
-<meta name="color-scheme" content="dark">
-<style>html,body{background:#0f172a!important;color:#f8fafc!important}</style>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root{--bg:#0f172a;--card:#1e293b;--y:#f1c40f;--g:#2ecc71;--r:#ff4757;--b:#3b82f6;--t:#f8fafc;--br:#334155;--p:#a855f7;color-scheme:dark}
-.lt{--bg:#f1f5f9;--card:#fff;--t:#1e293b;--br:#cbd5e1}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{background:#0f172a}body{font-family:-apple-system,"Segoe UI",sans-serif;background:#0f172a;background:var(--bg);color:#f8fafc;color:var(--t);margin:0;padding-bottom:90px;overflow-x:hidden;-webkit-text-size-adjust:100%}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:var(--card);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100}
-.awrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-.abox{background:var(--card);border-radius:16px;padding:28px;width:100%;max-width:360px;text-align:center}
-.sbox{background:var(--card);border:2px solid var(--y);border-radius:16px;padding:24px;width:100%;max-width:380px}
-input,select,textarea{width:100%;padding:13px;border-radius:10px;border:1px solid #334155;border:1px solid var(--br);background:#0f172a;background:var(--bg);color:#f8fafc;color:var(--t);margin-bottom:11px;font-size:14px;font-family:inherit;-webkit-appearance:none;appearance:none}
-.btn{width:100%;padding:15px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;color:#fff;font-size:14px}
-.btn2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:7px}
-.htitle{text-align:center;color:var(--y);font-weight:bold;padding:13px 0 8px;font-size:16px;text-transform:uppercase;letter-spacing:1px}
-.mbar{display:flex;margin:9px auto 3px;max-width:280px;background:var(--card);border:1.5px solid var(--br);border-radius:30px;overflow:hidden;padding:3px}
-.mbtn{flex:1;padding:8px 0;border:none;background:transparent;color:#64748b;font-weight:bold;font-size:11px;cursor:pointer;border-radius:25px;transition:.2s;text-transform:uppercase}
-.mbtn.on{background:var(--y);color:#0f172a}
-.pfil{display:none;justify-content:center;gap:6px;margin:5px 9px 0;flex-wrap:wrap}
-.pfil.vis{display:flex}
-.pbtn{padding:5px 11px;border-radius:20px;border:1.5px solid var(--br);background:transparent;color:var(--t);font-size:11px;font-weight:bold;cursor:pointer}
-.pbtn.on{border-color:var(--y);color:var(--y)}
-.drow{display:none;gap:7px;margin:5px 13px 0}
-.drow.vis{display:flex}
-.drow input{flex:1;padding:7px;font-size:12px;margin:0}
-.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:9px;max-width:780px;margin:auto}
-.sb{background:var(--card);border:1.5px solid;border-radius:11px;padding:10px;text-align:center}
-.sb small{font-size:9px;display:block;margin-bottom:3px;font-weight:bold;letter-spacing:.5px}
-.sb span{font-size:14px;font-weight:bold}
-.mvacard{background:var(--card);border:2px solid var(--br);border-radius:13px;margin:7px 9px;padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr}
-.mvai{text-align:center}
-.mvai small{font-size:10px;color:#94a3b8;display:block;margin-bottom:3px}
-.mvai b{font-size:13px}
-.netcard{background:var(--card);border:2px solid var(--p);border-radius:13px;margin:7px 9px;padding:12px;text-align:center}
-.netcard small{font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;display:block}
-.netcard b{font-size:22px;display:block;margin-top:4px}
-.sumcard{background:var(--card);border:2px solid var(--y);border-radius:17px;margin:7px 9px;padding:15px;text-align:center}
-.sumcard small{font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase}
-.sumcard h1{margin:7px 0 0;font-size:27px}
-.ecard{background:var(--card);border-radius:11px;padding:12px 13px;margin:0 9px 9px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.einfo{flex:1;min-width:0}
-.einfo .et{font-weight:bold;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.einfo .ed{font-size:11px;color:#94a3b8;margin-top:2px}
-.einfo .ebil{font-size:10px;color:var(--p);margin-top:1px;font-weight:bold}
-.eact{display:flex;gap:10px;align-items:center;flex-shrink:0}
-.eamt{font-weight:bold;font-size:13px;white-space:nowrap}
-.eact i{cursor:pointer;color:#64748b;font-size:13px}
-.navbar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:9px 0 12px;border-top:1px solid var(--br);z-index:200}
-.ni{text-align:center;color:#64748b;font-size:10px;cursor:pointer;flex:1}
-.ni.on{color:var(--y)}
-.ni i{display:block;font-size:18px;margin-bottom:2px}
-.eyerow{display:flex;justify-content:flex-end;padding:4px 11px 0}
-.eyebtn{background:none;border:1.5px solid var(--br);border-radius:20px;color:var(--t);padding:5px 11px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:5px}
-.ha{filter:blur(6px);user-select:none}
-.bbox{background:var(--card);border:2px solid var(--b);border-radius:13px;padding:13px;margin-bottom:12px}
-.bbox h4{color:var(--b);margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px}
-.btabs{display:flex;gap:5px;margin-bottom:8px}
-.btab{flex:1;padding:7px;border:1.5px solid var(--br);border-radius:8px;background:transparent;color:#64748b;font-size:12px;font-weight:bold;cursor:pointer;text-align:center}
-.btab.on{border-color:var(--b);color:var(--b);background:rgba(59,130,246,.08)}
-.uarea{border:2px dashed var(--br);border-radius:10px;padding:16px;text-align:center;margin-bottom:11px;cursor:pointer}
-.uarea:hover{border-color:var(--y)}
-.uarea i{font-size:24px;color:#64748b;display:block;margin-bottom:5px}
-.uarea p{margin:3px 0;font-size:12px;color:#64748b}
-.sarow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:#94a3b8}
-.sarow button{background:none;border:1px solid var(--br);border-radius:7px;color:var(--t);padding:3px 9px;font-size:11px;cursor:pointer}
-.ostat{display:none;background:#111827;border:2px solid var(--y);padding:10px;border-radius:10px;margin-bottom:10px;color:var(--y);font-weight:bold;text-align:center;font-size:13px}
-.atcard{background:var(--card);border:2px solid var(--y);border-radius:14px;padding:14px;margin-bottom:12px;display:none}
-.atcard h4{color:var(--y);margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:6px}
-.atrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br);font-size:13px;align-items:center}
-.atrow:last-child{border-bottom:none}
-.atrow label{color:#94a3b8;font-size:11px}
-.atrow span{font-weight:bold}
-.atnetto{background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(59,130,246,.10));border:2px solid var(--p);border-radius:14px;padding:16px;margin-bottom:12px;text-align:center;display:none}
-.atnetto small{font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;display:block}
-.atnetto .big{font-size:32px;font-weight:bold;display:block;margin:6px 0 2px}
-.ocrlist{display:none;margin-bottom:10px}
-.oi{background:var(--card);border:1px solid var(--br);border-radius:9px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.oi.sel{border-color:var(--g);background:rgba(46,204,113,.08)}
-.oii{flex:1;min-width:0}
-.oii .nm{font-weight:bold;font-size:12px}
-.oiamt{font-weight:bold;font-size:13px;white-space:nowrap;margin-left:7px}
-.pimgw{width:85px;height:85px;margin:0 auto 11px;border:3px solid var(--y);border-radius:50%;overflow:hidden;background:#334155;cursor:pointer}
-.pimgw img{width:100%;height:100%;object-fit:cover}
-.bilrow{background:var(--card);border:1px solid var(--br);border-radius:9px;padding:10px 12px;margin-bottom:7px}
-.bilrow .bt{font-weight:bold;font-size:13px;color:var(--y)}
-.bilrow .bd{font-size:11px;color:#94a3b8;margin-top:3px}
-#fui,#csvi,#pdfi,#pup{display:none}
-</style>
-</head>
-<body>
-
-<div id="pg-auth" style="display:none"><div class="awrap"><div class="abox">
-<h2 style="color:var(--y);margin-bottom:4px">&#128662; TRANSPORT PRO</h2>
-<input type="email" id="em" placeholder="E-post">
-<input type="password" id="pw" placeholder="Passord">
-<button class="btn" style="background:var(--b);margin-bottom:9px" onclick="doLogin()">LOGG INN</button>
-<p style="font-size:12px;color:#94a3b8;margin:7px 0">Cusub? <span style="color:var(--y);cursor:pointer;font-weight:bold" onclick="goSetup()">DIIWAANGELI</span></p>
-</div></div></div>
-
-<div id="pg-setup" style="display:none"><div class="awrap"><div class="sbox">
-<h2 style="color:var(--y);text-align:center;margin-bottom:3px">&#128662; TRANSPORT PRO</h2>
-<input type="text" id="sf" placeholder="First name">
-<input type="text" id="sl" placeholder="Last name">
-<input type="email" id="se" placeholder="email@example.com">
-<input type="password" id="sp" placeholder="Password">
-<input type="password" id="sp2" placeholder="Confirm Password">
-<button class="btn" style="background:var(--g)" onclick="doSetup()">SAMEE AKOON</button>
-<p style="text-align:center;font-size:12px;color:#94a3b8;margin-top:10px">Akoon horey? <span style="color:var(--y);cursor:pointer;font-weight:bold" onclick="goAuth()">SOOG GAL</span></p>
-</div></div></div>
-
-<div id="app" style="display:none">
-<div class="topbar">
-<i class="fas fa-moon" style="cursor:pointer;font-size:16px" onclick="toggleTheme()"></i>
-<span id="uname" style="font-weight:bold;font-size:14px">...</span>
-<div><span style="cursor:pointer;font-size:18px">&#127475;&#127476;</span></div>
-</div>
-
-<div id="pg-dash" class="pg">
-<div class="mbar">
-<button class="mbtn" id="mb-i" onclick="setModus('i')">Individuell</button>
-<button class="mbtn on" id="mb-t" onclick="setModus('t')">Total</button>
-</div>
-<div class="eyerow"><button class="eyebtn" onclick="toggleAmt()"><i class="fas fa-eye" id="ei"></i><span id="el">Qari</span></button></div>
-<div class="sgrid">
-<div class="sb" style="border-color:var(--g);color:var(--g)"><small>INNTEKT</small><span id="s-inc" class="af">0 kr</span></div>
-<div class="sb" style="border-color:var(--r);color:var(--r)"><small>UTGIFTER</small><span id="s-exp" class="af">0 kr</span></div>
-<div class="sb" style="border-color:var(--b);color:var(--b)"><small>NETTO</small><span id="s-net" class="af">0 kr</span></div>
-</div>
-<div class="sumcard"><h1 id="s-tot" class="af" style="color:var(--g)">0 kr</h1></div>
-<div id="elist"></div>
-</div>
-
-<div id="pg-add" class="pg" style="display:none;padding:14px">
-<div class="htitle">REGISTRER DATA</div>
-
-<div class="bbox">
-<h4>DNB Bank Import</h4>
-<div class="sarow">
-    <button onclick="bAll()" style="background:var(--g);color:white"><i class="fas fa-check-double"></i> ADD ALL</button>
-    <button onclick="bNone()" style="background:var(--r);color:white"><i class="fas fa-trash-alt"></i> DELETE ALL</button>
-</div>
-<div class="uarea" onclick="document.getElementById('pdfi').click()">
-<i class="fas fa-file-pdf"></i><p>DNB PDF Kontoutskrift</p>
-</div>
-<input type="file" id="pdfi" onchange="handlePDF(this)">
-<div id="bitems"></div>
-<button class="btn" id="btn-bi" style="background:var(--b);display:none" onclick="importBank()">KEYDI LA XUSHAY</button>
-</div>
-
-<div class="uarea" onclick="document.getElementById('fui').click()">
-<i class="fas fa-file-invoice"></i><p>Agder Taxi PDF</p>
-</div>
-<input type="file" id="fui" onchange="handleFile(this)">
-
-<div id="oitems"></div>
-<button class="btn" id="btn-oi" style="background:var(--g);display:none" onclick="importOCR()">KEYDI LA XUSHAY</button>
-
-<input type="date" id="edate">
-<select id="ecat">
-<option value="3030">Kjoreinntekter</option>
-<option value="7000">Drivstoff</option>
-<option value="7796">Faktura Agder Taxi</option>
-</select>
-<input type="text" id="edesc" placeholder="Beskrivelse">
-<input type="number" id="eamt" placeholder="Belop">
-<div class="btn2">
-<button class="btn" style="background:var(--g)" onclick="saveE('income')">INNTEKT</button>
-<button class="btn" style="background:var(--r)" onclick="saveE('expense')">UTGIFT</button>
-</div>
-</div>
-
-<div id="pg-bills" class="pg" style="display:none;padding:14px">
-<div class="htitle">&#128196; FAKTURA TARIIKH</div>
-<div id="billlist"></div>
-</div>
-
-<div id="pg-profile" class="pg" style="display:none;padding:14px;text-align:center">
-<div class="pimgw"><img id="pimg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"></div>
-<h3 id="pname">User</h3>
-<button class="btn" style="background:var(--r)" onclick="doLogout()">LOGG UT</button>
-</div>
-
-<div class="navbar">
-<div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i>Dash</div>
-<div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus"></i>Add</div>
-<div class="ni" id="ni-bills" onclick="showPg('bills')"><i class="fas fa-file-invoice"></i>Bil</div>
-<div class="ni" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user"></i>Profil</div>
-</div>
-
 <script>
-// FIREBASE CONFIG - (Xogtaadii saxda ahayd)
-firebase.initializeApp({
-  apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-  authDomain: "mohamed-salad-transport.firebaseapp.com",
-  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mohamed-salad-transport",
-  storageBucket: "mohamed-salad-transport.firebasestorage.app",
-  messagingSenderId: "608716442795",
-  appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
-});
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-const db=firebase.database(), auth=firebase.auth();
-let entries=[], bItems=[], oItems=[], amtHid=false;
+// DNB PDF READER
+async function handlePDF(input){
+    const file = input.files[0];
+    if(!file) return;
 
-// AUTH LOGIC
-auth.onAuthStateChanged(u=>{
-  if(u){ document.getElementById('pg-auth').style.display='none'; document.getElementById('app').style.display='block'; loadData(); }
-  else { document.getElementById('pg-auth').style.display='block'; document.getElementById('app').style.display='none'; }
-});
+    const reader = new FileReader();
 
-function doLogin(){
-  const e=document.getElementById('em').value, p=document.getElementById('pw').value;
-  auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message));
+    reader.onload = async function(e){
+        const typedarray = new Uint8Array(e.target.result);
+
+        const pdf = await pdfjsLib.getDocument({data:typedarray}).promise;
+
+        let fullText = '';
+
+        for(let p=1;p<=pdf.numPages;p++){
+            const page = await pdf.getPage(p);
+            const txt = await page.getTextContent();
+
+            fullText += txt.items.map(i=>i.str).join(' ') + '\n';
+        }
+
+        parseDNB(fullText);
+    };
+
+    reader.readAsArrayBuffer(file);
 }
 
-// DELETE ALL & ADD ALL FUNCTIONS
-function bAll(){
-    const items = document.querySelectorAll('.oi');
-    items.forEach(i => i.classList.add('sel'));
+function parseDNB(text){
+
+    bItems = [];
+
+    const lines = text.split('\n');
+
+    lines.forEach(line=>{
+
+        // AGDER TAXI = INCOME
+        if(line.includes('Agder Taxi AS')){
+
+            const amt = line.match(/(\d{1,3}(\.\d{3})*,\d{2})/g);
+
+            if(amt && amt.length){
+
+                const amount = amt[amt.length-1]
+                    .replace(/\./g,'')
+                    .replace(',','.');
+
+                bItems.push({
+                    type:'income',
+                    desc:'Agder Taxi AS',
+                    amount:parseFloat(amount),
+                    category:'3030',
+                    date:new Date().toISOString().split('T')[0]
+                });
+            }
+        }
+
+        // ALL EXPENSES
+        else if(
+            line.includes('Tesla') ||
+            line.includes('Uno-x') ||
+            line.includes('Circle k') ||
+            line.includes('Skatteetaten') ||
+            line.includes('Fortum') ||
+            line.includes('Santander') ||
+            line.includes('Fevik') ||
+            line.includes('Vibb') ||
+            line.includes('Lyse') ||
+            line.includes('DNB Livsforsikring') ||
+            line.includes('Power Arendal') ||
+            line.includes('Nextgentel') ||
+            line.includes('Arendal Kommune') ||
+            line.includes('Matrix Insurance') ||
+            line.includes('Regnskapstjenester')
+        ){
+
+            const amt = line.match(/(\d{1,3}(\.\d{3})*,\d{2})/g);
+
+            if(amt && amt.length){
+
+                const amount = amt[amt.length-1]
+                    .replace(/\./g,'')
+                    .replace(',','.');
+
+                bItems.push({
+                    type:'expense',
+                    desc:line.substring(0,40),
+                    amount:parseFloat(amount),
+                    category:'7000',
+                    date:new Date().toISOString().split('T')[0]
+                });
+            }
+        }
+
+    });
+
+    renderBankItems();
+}
+
+function renderBankItems(){
+
+    const wrap = document.getElementById('bitems');
+
+    wrap.innerHTML = '';
+
+    if(!bItems.length){
+        wrap.innerHTML = '<p style="color:red">Wax xog ah lama helin</p>';
+        return;
+    }
+
+    bItems.forEach((i,idx)=>{
+
+        wrap.innerHTML += `
+        <div class="oi sel" onclick="this.classList.toggle('sel');checkBtns()">
+
+            <div class="oii">
+
+                <div class="nm" style="color:${i.type==='income'?'#2ecc71':'#ff4757'}">
+                    ${i.desc}
+                </div>
+
+                <small>
+                    ${i.type==='income'?'INNTEKT':'UTGIFT'}
+                </small>
+
+            </div>
+
+            <div class="oiamt"
+                 style="color:${i.type==='income'?'#2ecc71':'#ff4757'}">
+
+                 ${i.amount} kr
+
+            </div>
+
+        </div>
+        `;
+    });
+
+    document.getElementById('btn-bi').style.display='block';
+
     checkBtns();
 }
 
-function bNone(){
-    const items = document.querySelectorAll('.oi');
-    items.forEach(i => i.classList.remove('sel'));
-    checkBtns();
-}
+function importBank(){
 
-function checkBtns(){
-    const selCount = document.querySelectorAll('.oi.sel').length;
-    document.getElementById('btn-bi').style.display = selCount > 0 ? 'block' : 'none';
-    document.getElementById('btn-oi').style.display = selCount > 0 ? 'block' : 'none';
-}
+    const uid = auth.currentUser.uid;
 
-function showPg(pg){
-  document.querySelectorAll('.pg').forEach(p=>p.style.display='none');
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
-  document.getElementById('pg-'+pg).style.display='block';
-  document.getElementById('ni-'+pg).classList.add('on');
-}
+    const sels = document.querySelectorAll('#bitems .oi.sel');
 
-function loadData(){
-  const uid = auth.currentUser.uid;
-  db.ref('entries/'+uid).on('value', snap=>{
-    entries = [];
-    snap.forEach(c=> entries.push({id:c.key, ...c.val()}));
-    renderDash();
-  });
-}
+    let saved = 0;
 
-function renderDash(){
-  const list = document.getElementById('elist'); list.innerHTML = '';
-  let inc=0, exp=0;
-  entries.forEach(e=>{
-    if(e.type==='income') inc += parseFloat(e.amount); else exp += parseFloat(e.amount);
-    list.innerHTML += `<div class="ecard" style="border-color:${e.type==='income'?'var(--g)':'var(--r)'}">
-      <div><b>${e.desc}</b><br><small>${e.date}</small></div>
-      <b class="af ${amtHid?'ha':''}">${e.amount} kr</b>
-    </div>`;
-  });
-  document.getElementById('s-inc').innerText = inc + ' kr';
-  document.getElementById('s-exp').innerText = exp + ' kr';
-  document.getElementById('s-net').innerText = (inc-exp) + ' kr';
-  document.getElementById('s-tot').innerText = (inc-exp) + ' kr';
-}
+    sels.forEach((el,idx)=>{
 
-function saveE(type){
-  const uid=auth.currentUser.uid;
-  const data = {
-    date: document.getElementById('edate').value,
-    category: document.getElementById('ecat').value,
-    desc: document.getElementById('edesc').value,
-    amount: document.getElementById('eamt').value,
-    type: type
-  };
-  db.ref('entries/'+uid).push(data).then(()=>{ alert("Waa la keydiyay!"); });
-}
+        const item = bItems[idx];
 
-function toggleAmt(){
-  amtHid = !amtHid;
-  document.getElementById('el').innerText = amtHid ? 'Tus' : 'Qari';
-  renderDash();
-}
+        db.ref('entries/'+uid).push(item);
 
-function toggleTheme(){ document.body.classList.toggle('lt'); }
-function doLogout(){ auth.signOut(); }
+        saved++;
+    });
+
+    alert(saved + ' transaksjoner waa la keydiyay');
+
+    document.getElementById('bitems').innerHTML='';
+
+    document.getElementById('btn-bi').style.display='none';
+}
 </script>
-</body>
-</html>
