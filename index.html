@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport PRO - Utgifter Fix</title>
+<title>Transport PRO - DNB Fix</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -47,7 +47,7 @@ body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margi
 
     <div id="pg-dash" class="pg">
         <div class="sgrid">
-            <div class="sb" style="border-color:var(--g);color:var(--g)"><small>INCOME</small><span id="s-inc">0 kr</span></div>
+            <div class="sb" style="border-color:var(--g);color:var(--g)"><small>INNTEKT</small><span id="s-inc">0 kr</span></div>
             <div class="sb" style="border-color:var(--r);color:var(--r)"><small>UTGIFTER</small><span id="s-exp">0 kr</span></div>
             <div class="sb" style="border-color:var(--b);color:var(--b)"><small>NETTO</small><span id="s-net">0 kr</span></div>
         </div>
@@ -98,7 +98,7 @@ auth.onAuthStateChanged(u => {
 
 function doLogin() {
     auth.signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value)
-    .catch(e => alert("Login Failed: " + e.message));
+    .catch(e => alert("Noget gikk galt: " + e.message));
 }
 
 function doLogout() { if(confirm("Ma hubtaa?")) auth.signOut(); }
@@ -120,7 +120,6 @@ async function handlePDF(inp) {
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            // In nidaamku u aqriyo sidii ay u qornaayeen (safka iyo booska)
             text += content.items.map(s => s.str).join(" ") + "\n";
         }
         processDNB(text);
@@ -130,25 +129,28 @@ async function handlePDF(inp) {
 
 function processDNB(t) {
     bItems = [];
-    const lines = t.split('\n');
-    
-    // Habka cusub: Kaliya 'Agder Taxi' ayaa cagaar ah, inta kale waa gaduud
-    const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/æøåÆØÅ]+?)\s+([\d\.\,]+)/g;
+    // Habka cusub wuxuu raadinayaa: Date + Text + Ut_Amount + [Inn_Amount]
+    const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/æøåÆØÅ]+?)\s+([\d\.\,]+)(?:\s+([\d\.\,]+))?/g;
     let m;
     while ((m = regex.exec(t)) !== null) {
         const date = m[1];
         const desc = m[2].trim();
-        const amountStr = m[3].replace(/\./g, '').replace(',', '.');
-        const amount = parseFloat(amountStr);
+        const firstVal = m[3].replace(/\./g, '').replace(',', '.');
+        const secondVal = m[4] ? m[4].replace(/\./g, '').replace(',', '.') : null;
 
-        if (!isNaN(amount)) {
-            // XEELLAD: Agder Taxi kaliya ayaa ah Income (Cagaar)
-            // Kuwa kale ee aad soo sheegtay (Tesla, Vibb, Santander, etc.) waa Utgifter (Gaduud)
-            let type = "expense"; 
-            if (desc.toLowerCase().includes("agder taxi")) {
-                type = "income";
-            }
+        let type = "expense";
+        let amount = parseFloat(firstVal);
 
+        // Haddii uu jiro qiimo labaad, ka hore waa Utgifter, ka dambe waa Inn-konto (Income)
+        if (secondVal) {
+            type = "income";
+            amount = parseFloat(secondVal);
+        } else if (desc.toLowerCase().includes("agder taxi")) {
+            // Mararka qaarkood Agder Taxi wuxuu ku jiraa hal tiir laakiin waa dakhli
+            type = "income";
+        }
+
+        if (!isNaN(amount) && amount > 0) {
             bItems.push({ date, description: desc, amount, type });
         }
     }
@@ -174,7 +176,7 @@ async function importBank() {
     for (let item of bItems) {
         await ref.push(item);
     }
-    alert("Xogta waa la keydiyay!");
+    alert("Xogtii waa la keydiyay!");
     bItems = [];
     document.getElementById('bprev').innerHTML = "";
     document.getElementById('btn-bi').style.display = 'none';
