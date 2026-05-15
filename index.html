@@ -424,17 +424,19 @@ async function handlePDFUpload(input){
         const arrayBuffer=await file.arrayBuffer();
         const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
         let allPageItems=[];
+        // Use scale:2 for better coordinate precision
         for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
             const page=await pdf.getPage(pageNum);
+            const viewport=page.getViewport({scale:2});
             const content=await page.getTextContent();
-            const viewport=page.getViewport({scale:1});
-            const items=content.items.map(item=>({
-                text:item.str.trim(),
-                x:Math.round(item.transform[4]),
-                y:Math.round(viewport.height-item.transform[5]),
-                page:pageNum
-            })).filter(item=>item.text.length>0);
-            allPageItems.push(...items);
+            content.items.forEach(item=>{
+                const t=item.str.trim();
+                if(!t)return;
+                // transform[4]=x, transform[5]=y (from bottom), flip to top-down
+                const x=Math.round(item.transform[4]*2);
+                const y=Math.round(viewport.height - item.transform[5]*2);
+                allPageItems.push({text:t,x,y,page:pageNum});
+            });
         }
         showBankStatus('✅ PDF la aqriyay — transactions la raadinayaa...');
         parseDNBPDFItems(allPageItems);
@@ -445,14 +447,14 @@ async function handlePDFUpload(input){
 function parseDNBPDFItems(items){
     bankDetectedItems=[];
 
-    // Sort by page, then Y (top to bottom), then X (left to right)
+    // Sort: page → Y (top-to-bottom) → X (left-to-right)
     items.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
 
-    // Group items into lines (same Y within 6px = same line)
+    // Group into lines (items within 10px Y of each other = same line, scaled x2)
     const lines=[];
-    let curLine=[],lastY=-999,lastPage=-1;
+    let curLine=[],lastY=-9999,lastPage=-1;
     for(const item of items){
-        if(item.page!==lastPage||Math.abs(item.y-lastY)>6){
+        if(item.page!==lastPage||Math.abs(item.y-lastY)>10){
             if(curLine.length)lines.push(curLine);
             curLine=[item];
         }else curLine.push(item);
@@ -460,117 +462,100 @@ function parseDNBPDFItems(items){
     }
     if(curLine.length)lines.push(curLine);
 
-    // ---- Detect column X positions for "Ut av konto" and "Inn på konto" ----
-    // Look for the header row that contains both words
-    let utColX=-1,innColX=-1,rentColX=-1;
+    // ---- Find the HEADER line to get exact column X positions ----
+    // DNB header: "Dato | Forklarende tekst | Ut av konto | Inn på konto | Rentedato | Arkivref."
+    let utColX=-1,innColX=-1,saldoColX=-1;
     for(const line of lines){
         const joined=line.map(i=>i.text).join(' ');
-        if(/ut av konto/i.test(joined)&&/inn på konto/i.test(joined)){
+        if(/ut av konto/i.test(joined)&&/inn p[åa] konto/i.test(joined)){
             for(const item of line){
                 const t=item.text.toLowerCase().trim();
-                if(t==='ut'||t==='ut av'||t.startsWith('ut av'))utColX=item.x;
-                if(t==='inn'||t==='inn på'||t.startsWith('inn på'))innColX=item.x;
-                if(t==='rentedato')rentColX=item.x;
+                if(/^ut$/i.test(t)||/ut av/i.test(t))  utColX=item.x;
+                if(/^inn$/i.test(t)||/inn p/i.test(t)) innColX=item.x;
+                if(/rentedato/i.test(t))               saldoColX=item.x;
             }
             break;
         }
     }
-    // DNB typical layout fallback (measured from real DNB PDFs at scale:1)
-    if(utColX<0) utColX=295;
-    if(innColX<0) innColX=385;
-    if(rentColX<0) rentColX=460;
+    // Fallback at scale:2 (DNB standard A4 layout)
+    if(utColX<0)  utColX=590;
+    if(innColX<0) innColX=760;
+    if(saldoColX<0) saldoColX=920;
 
     const dateRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
-    // Norwegian amount: optional minus, digits with . or space as thousands sep, comma as decimal
-    const amtRe=/^-?\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+    const amtRe=/^-?\d{1,3}(?:\.\d{3})*,\d{2}$/;   // 1.234,56 or 34.663,00
 
-    // Skip lines that are clearly metadata / header / footer
-    const isMetaLine=(txt)=>/inn på konto|ut av konto|forklarende tekst|rentedato|arkivref|bruk\s+bokf|kontoutskrift for|bedriftskonto|internasjonalt konto|bic \(swift|saldo forrige|ny saldo|renter,?\s*gebyr|innskudd|opptjente|skyldige|provisjon|rapportering|foretaksreg|dnb\.no|pb\.\s*1600|dronning euf/i.test(txt);
+    const isMetaLine=(t)=>/inn p[åa] konto|ut av konto|forklarende tekst|rentedato|arkivref|bruk\s+bokf|kontoutskrift for|bedriftskonto|internasjonalt konto|bic\s*\(swift|saldo forrige|ny saldo|renter.*gebyr|opptjente renter|skyldige renter|provisjon|rapportering til|foretaksregister|dnb\.no|pb\.\s*1600|dronning euf|telefon.*915|side \d+ av/i.test(t);
 
     // ---- Build transaction blocks ----
-    // A block starts when we see a line whose FIRST token is a date (bruksdato)
-    // The block continues with non-date lines until the next date line
-    // Each block = one transaction row in the DNB statement
+    // DNB layout per transaction:
+    //   Line 1 (date line):  bruksdato  bokfdato  [type text]  [Ut amount]  [Inn amount]  rentedato  arkivref
+    //   Line 2 (name line):  vendor/payee name (x starts ~same as type text)
     const blocks=[];
     let cur=null;
     for(const line of lines){
-        const first=line[0];
-        if(!first)continue;
+        if(!line.length)continue;
         const lineText=line.map(i=>i.text).join(' ').trim();
         if(isMetaLine(lineText)){cur=null;continue;}
-
+        const first=line[0];
         if(dateRe.test(first.text)){
             if(cur)blocks.push(cur);
             cur={lines:[line]};
         }else if(cur){
-            cur.lines.push(line);
+            // Only attach if line is clearly left-side text (description area), not numbers-only
+            const hasText=line.some(i=>!/^[\d.,\s]+$/.test(i.text));
+            if(hasText)cur.lines.push(line);
         }
     }
     if(cur)blocks.push(cur);
 
     const seen=new Set();
+    const COL_TOL=80; // tolerance in px (at scale:2)
 
     for(const block of blocks){
-        // First line: bruksdato [bokføringsdato] [type] [amounts] [rentedato] [arkivref]
-        // Subsequent lines: continuation of description (e.g. company name on next line)
         const firstLine=block.lines[0];
         const dateVal=parseDNBDate(firstLine[0].text);
         if(!dateVal)continue;
 
-        // Collect ALL items across all lines in block
         const allItems=block.lines.flat();
 
-        // Separate amounts from description words
-        // Key insight: amounts are RIGHT-ALIGNED in specific columns
-        // Description items are LEFT-ALIGNED (x < utColX - margin)
-        const descThreshold=utColX-30; // items left of this = description
-        const amtTolerance=60;         // items within this of a column = that column
-
         let utAmt=0,innAmt=0;
-        const descWords=[];
+        const descParts=[];
 
         for(const item of allItems){
             const t=item.text.trim();
             if(!t)continue;
-            if(dateRe.test(t))continue;                    // skip date tokens
-            if(/^\d{6,}$/.test(t))continue;               // skip archive refs (pure long numbers)
+            if(dateRe.test(t))continue;           // skip date tokens (bruk + bokf)
+            if(/^\d{7,}$/.test(t))continue;       // skip archive refs
 
-            // Is this token a Norwegian-format amount?
             if(amtRe.test(t)){
                 const num=parseNorwegianNumber(t);
-                if(num<=0.01)continue;
-                const distUt=Math.abs(item.x-utColX);
-                const distInn=Math.abs(item.x-innColX);
-                const distRent=rentColX>0?Math.abs(item.x-rentColX):999;
-                // Skip saldo column (to the right of inn column)
-                if(item.x>innColX+amtTolerance+10)continue;
-                // Skip rentedato column numbers (dates that look like amounts won't match amtRe anyway)
-                if(distRent<30)continue;
-                if(distUt<=distInn&&distUt<amtTolerance){
-                    utAmt=num;
-                }else if(distInn<distUt&&distInn<amtTolerance){
-                    innAmt=num;
+                if(num<0.01)continue;
+                // Skip saldo column (right of inn col)
+                if(item.x>innColX+COL_TOL)continue;
+                const dUt=Math.abs(item.x-utColX);
+                const dInn=Math.abs(item.x-innColX);
+                if(dUt<COL_TOL&&dUt<=dInn){
+                    utAmt=num;   // Ut av konto → EXPENSE
+                }else if(dInn<COL_TOL&&dInn<dUt){
+                    innAmt=num;  // Inn på konto → INCOME
                 }
-                // If neither column matches closely, skip (likely saldo or other)
+                // else: saldo or other column → ignore
             }else{
-                // Description token — only collect if it's in the description area
-                // or it's a known text keyword (like "Visa", "Giro", company names)
-                if(item.x<descThreshold+60){
-                    descWords.push(t);
+                // Description: only items whose x < utColX (left side of page)
+                if(item.x<utColX-20){
+                    descParts.push(t);
                 }
             }
         }
 
-        // Build clean description: join words, remove duplicate adjacent tokens
-        const rawDesc=descWords.join(' ').replace(/\s+/g,' ').trim();
-        // Remove leading "Visa", "Giro nr.XXXXXX" prefix noise if it duplicates
-        const desc=rawDesc
-            .replace(/^(Visa|Giro nr\.\d+|Overføring innland nr\.\d+|Kontoregulering nr\.\d+|Skatt\/arbeidsavgift)\s*/i,'$1 ')
-            .replace(/\s{2,}/g,' ').trim();
-
+        // Clean description: remove dates, long numbers, join
+        const desc=descParts
+            .filter(p=>!dateRe.test(p)&&!/^\d{6,}$/.test(p))
+            .join(' ').replace(/\s+/g,' ').trim();
         if(desc.length<2)continue;
 
-        // Inn på konto = money IN = INCOME
+        // Inn på konto = INCOME (green)
         if(innAmt>0.01){
             const key=dateVal+'|inn|'+innAmt;
             if(!seen.has(key)){
