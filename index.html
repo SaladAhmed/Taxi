@@ -4,40 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Transport PRO</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TransportPRO">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
 :root{--bg:#0f172a;--card:#1e293b;--y:#f1c40f;--g:#2ecc71;--r:#ff4757;--b:#3b82f6;--t:#f8fafc;--br:#334155}
-.lt{--bg:#f1f5f9;--card:#fff;--t:#1e293b;--br:#cbd5e1}
-*{box-sizing:border-box}
-body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margin:0;padding-bottom:90px;overflow-x:hidden}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:var(--card);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100}
-.awrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-.abox{background:var(--card);border-radius:16px;padding:28px;width:100%;max-width:360px;text-align:center}
-input,select{width:100%;padding:13px;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--t);margin-bottom:11px;font-size:14px}
-.btn{width:100%;padding:15px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;color:#fff;font-size:14px}
-.htitle{text-align:center;color:var(--y);font-weight:bold;padding:13px 0 8px;font-size:16px;text-transform:uppercase}
-.mbar{display:flex;margin:9px auto;max-width:280px;background:var(--card);border:1.5px solid var(--br);border-radius:30px;padding:3px}
-.mbtn{flex:1;padding:8px;border:none;background:transparent;color:#64748b;font-weight:bold;cursor:pointer;border-radius:25px}
-.mbtn.on{background:var(--y);color:#0f172a}
-.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:9px}
-.sb{background:var(--card);border:1.5px solid;border-radius:11px;padding:10px;text-align:center}
-.sb small{font-size:9px;display:block}
-.sumcard{background:var(--card);border:2px solid var(--y);border-radius:17px;margin:7px 9px;padding:15px;text-align:center}
-.ecard{background:var(--card);border-radius:11px;padding:12px;margin:0 9px 9px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center}
-.navbar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:9px 0;border-top:1px solid var(--br)}
-.ni{text-align:center;color:#64748b;font-size:10px;cursor:pointer}
+body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margin:0;padding-bottom:90px}
+.topbar{display:flex;justify-content:space-between;padding:15px;background:var(--card);border-bottom:1px solid var(--br)}
+.awrap{display:flex;justify-content:center;align-items:center;height:100vh}
+.abox{background:var(--card);padding:30px;border-radius:15px;text-align:center;width:320px}
+input,select{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid var(--br);background:var(--bg);color:var(--t)}
+.btn{width:100%;padding:15px;border-radius:10px;border:none;font-weight:bold;cursor:pointer;color:#fff}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:15px}
+.sb{background:var(--card);border:2px solid;border-radius:12px;padding:10px;text-align:center}
+.sb small{font-size:10px;display:block}
+.ecard{background:var(--card);border-radius:10px;padding:12px;margin:8px 15px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center}
+.navbar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid var(--br)}
+.ni{text-align:center;color:#64748b;font-size:12px;cursor:pointer}
 .ni.on{color:var(--y)}
-.ni i{display:block;font-size:18px}
-.uarea{border:2px dashed var(--br);border-radius:10px;padding:20px;text-align:center;margin-bottom:11px;cursor:pointer}
-.pitem{background:var(--bg);border:1px solid var(--br);border-radius:9px;padding:10px;margin-bottom:6px}
-#pdfi, #fui { display: none; }
+.uarea{border:2px dashed var(--y);padding:25px;text-align:center;margin:15px;border-radius:10px;cursor:pointer}
+.pitem{background:var(--card);padding:10px;margin-bottom:5px;border-radius:5px;display:flex;justify-content:space-between}
+#pdfi{display:none}
 </style>
 </head>
 <body>
@@ -45,7 +34,7 @@ input,select{width:100%;padding:13px;border-radius:10px;border:1px solid var(--b
 <div id="pg-auth" style="display:none">
     <div class="awrap">
         <div class="abox">
-            <h2 style="color:var(--y)">&#128662; LOGG INN</h2>
+            <h2 style="color:var(--y)">TRANSPORT PRO</h2>
             <input type="email" id="em" placeholder="E-post">
             <input type="password" id="pw" placeholder="Passord">
             <button class="btn" style="background:var(--b)" onclick="doLogin()">SOO GAL</button>
@@ -55,82 +44,52 @@ input,select{width:100%;padding:13px;border-radius:10px;border:1px solid var(--b
 
 <div id="app" style="display:none">
     <div class="topbar">
-        <i class="fas fa-bars"></i>
         <span id="uname">...</span>
-        <span>&#127475;&#127476;</span>
+        <i class="fas fa-sign-out-alt" onclick="doLogout()"></i>
     </div>
 
     <div id="pg-dash" class="pg">
-        <div class="mbar">
-            <button class="mbtn" onclick="setModus('i')">Individuell</button>
-            <button class="mbtn on" onclick="setModus('t')">Total</button>
-        </div>
         <div class="sgrid">
             <div class="sb" style="border-color:var(--g);color:var(--g)"><small>INNTEKT</small><span id="s-inc">0 kr</span></div>
             <div class="sb" style="border-color:var(--r);color:var(--r)"><small>UTGIFTER</small><span id="s-exp">0 kr</span></div>
             <div class="sb" style="border-color:var(--b);color:var(--b)"><small>NETTO</small><span id="s-net">0 kr</span></div>
         </div>
-        <div class="sumcard">
-            <small>RESULTAT FOR SKATT</small>
-            <h1 id="s-tot">0 kr</h1>
-        </div>
         <div id="elist"></div>
     </div>
 
-    <div id="pg-add" class="pg" style="display:none;padding:15px">
-        <div class="htitle">IMPORT DNB PDF</div>
+    <div id="pg-add" class="pg" style="display:none">
         <div class="uarea" onclick="document.getElementById('pdfi').click()">
-            <i class="fas fa-file-pdf" style="font-size:30px;color:var(--r)"></i>
-            <p>Riix halkan si aad u soo geliso Kontoutskrift</p>
+            <i class="fas fa-file-upload" style="font-size:30px"></i>
+            <p>Soo geli DNB Kontoutskrift (PDF)</p>
         </div>
         <input type="file" id="pdfi" accept=".pdf" onchange="handlePDF(this)">
-        <div id="bprev"></div>
-        <button id="btn-bi" class="btn" style="background:var(--g);display:none" onclick="importBank()">KEYDI XOGTA PDF-KA</button>
-        <hr>
-        <div class="htitle">GELI GACANTA</div>
-        <input type="date" id="edate">
-        <input type="text" id="edesc" placeholder="Beskrivelse">
-        <input type="number" id="eamt" placeholder="Belop">
-        <button class="btn" style="background:var(--b)" onclick="saveManual()">LAGRE</button>
-    </div>
-
-    <div id="pg-profile" class="pg" style="display:none;padding:20px;text-align:center">
-        <div class="htitle">MY PROFILE</div>
-        <p id="pemail">...</p>
-        <button class="btn" style="background:var(--r);margin-bottom:15px" onclick="delAllEntries()">
-            <i class="fas fa-trash"></i> TIRTIR DHAMMAAN XOGTA
-        </button>
-        <button class="btn" style="background:var(--br)" onclick="doLogout()">
-            <i class="fas fa-sign-out-alt"></i> LOGG UT (KA BAX)
-        </button>
+        <div id="bprev" style="padding:15px"></div>
+        <button id="btn-bi" class="btn" style="background:var(--g);display:none;width:90%;margin:0 auto 20px" onclick="importBank()">KEYDI DHAMMAAN</button>
     </div>
 
     <div class="navbar">
-        <div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-home"></i>Dash</div>
-        <div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus"></i>Add</div>
-        <div class="ni" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user"></i>Profil</div>
+        <div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-bar"></i><br>Dash</div>
+        <div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus-circle"></i><br>Add</div>
+        <div class="ni" onclick="delAll()"><i class="fas fa-trash"></i><br>Clear</div>
     </div>
 </div>
 
 <script>
-// CONFIG
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 firebase.initializeApp({
     apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
     authDomain: "mohamed-salad-transport.firebaseapp.com",
     databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mohamed-salad-transport",
-    storageBucket: "mohamed-salad-transport.firebasestorage.app"
+    projectId: "mohamed-salad-transport"
 });
 const db = firebase.database(), auth = firebase.auth();
 let bItems = [];
 
-// AUTH TRACKING
 auth.onAuthStateChanged(u => {
     if (u) {
         document.getElementById('pg-auth').style.display = 'none';
         document.getElementById('app').style.display = 'block';
-        document.getElementById('pemail').textContent = u.email;
+        document.getElementById('uname').textContent = u.email;
         loadData();
     } else {
         document.getElementById('pg-auth').style.display = 'block';
@@ -139,29 +98,11 @@ auth.onAuthStateChanged(u => {
 });
 
 function doLogin() {
-    const e = document.getElementById('em').value, p = document.getElementById('pw').value;
-    auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
+    auth.signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
 }
 
-// LOGOUT FUNCTION (HALKAN AYAA MUHIIM AH)
-function doLogout() {
-    if (confirm("Ma hubtaa inaad rabto inaad ka baxdo (Logout)?")) {
-        auth.signOut().then(() => {
-            console.log("User signed out.");
-        }).catch(err => alert("Khalad ayaa dhacay: " + err.message));
-    }
-}
+function doLogout() { auth.signOut(); }
 
-// DELETE ALL DATA
-function delAllEntries() {
-    if (confirm("DIGNIIN: Ma hubtaa inaad tirtirto DHAMMAAN xogta? Ma heli kartid mar kale.")) {
-        db.ref('entries/' + auth.currentUser.uid).remove().then(() => {
-            alert("Dhammaan xogtii waa la tirtiray.");
-        });
-    }
-}
-
-// NAVIGATION
 function showPg(pg) {
     document.querySelectorAll('.pg').forEach(p => p.style.display = 'none');
     document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
@@ -169,72 +110,63 @@ function showPg(pg) {
     document.getElementById('ni-' + pg).classList.add('on');
 }
 
-// LOAD & RENDER
-function loadData() {
-    db.ref('entries/' + auth.currentUser.uid).on('value', snap => {
-        const list = [];
-        snap.forEach(c => { list.push({id: c.key, ...c.val()}); });
-        renderDash(list);
-    });
-}
-
-function renderDash(list) {
-    const container = document.getElementById('elist');
-    container.innerHTML = '';
-    let inc = 0, exp = 0;
-    list.forEach(e => {
-        const amt = parseFloat(e.amount);
-        if (e.type === 'income') inc += amt; else exp += amt;
-        const div = document.createElement('div');
-        div.className = 'ecard';
-        div.style.borderColor = e.type === 'income' ? 'var(--g)' : 'var(--r)';
-        div.innerHTML = `<div><b>${e.description}</b><br><small>${e.date}</small></div>
-                         <b style="color:${e.type === 'income' ? 'var(--g)' : 'var(--r)'}">${amt.toLocaleString()} kr</b>`;
-        container.appendChild(div);
-    });
-    document.getElementById('s-inc').textContent = inc.toLocaleString() + " kr";
-    document.getElementById('s-exp').textContent = exp.toLocaleString() + " kr";
-    document.getElementById('s-tot').textContent = (inc - exp).toLocaleString() + " kr";
-}
-
-// PDF IMPORT
 async function handlePDF(inp) {
     const file = inp.files[0];
     if (!file) return;
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-    let fullText = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        fullText += content.items.map(item => item.str).join(" ") + "\n";
-    }
-    
-    // Simple regex for DNB PDF lines (Date Description Amount)
-    const pattern = /(\d{2}\.\d{2}\.\d{2})\s+([A-Za-zÆØÅæøå\s\-]+)\s+([\d\.\,]+)/g;
-    let match;
-    bItems = [];
-    while ((match = pattern.exec(fullText)) !== null) {
-        const amt = parseFloat(match[3].replace('.', '').replace(',', '.'));
-        if (isNaN(amt)) continue;
-        bItems.push({
-            date: "20" + match[1].split('.').reverse().join('-'),
-            description: match[2].trim(),
-            amount: amt,
-            type: match[2].toLowerCase().includes('taxi') ? 'income' : 'expense'
-        });
-    }
-    renderBPreview();
+    const reader = new FileReader();
+    reader.onload = async function() {
+        const pdf = await pdfjsLib.getDocument({data: new Uint8Array(this.result)}).promise;
+        let text = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map(s => s.str).join(" ") + "\n";
+        }
+        processText(text);
+    };
+    reader.readAsArrayBuffer(file);
 }
 
-function renderBPreview() {
+function processText(t) {
+    bItems = [];
+    // Regex to capture Date, Description, and Amounts (DNB format) [cite: 20, 33]
+    const lines = t.split('\n');
+    const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/]+)\s+([\d\.\,]+)\s+([\d\.\,]+)?/;
+
+    lines.forEach(line => {
+        const m = line.match(regex);
+        if (m) {
+            const date = m[1];
+            const desc = m[2].trim();
+            const outAmt = m[3]; // Ut av konto [cite: 20, 33]
+            const inAmt = m[4];  // Inn på konto [cite: 20, 33]
+
+            let type = "expense";
+            let amount = parseFloat(outAmt.replace('.', '').replace(',', '.'));
+
+            // If there's an "Inn på konto" or description is Agder Taxi, it's Income 
+            if (inAmt || desc.toLowerCase().includes("agder taxi")) {
+                type = "income";
+                amount = parseFloat((inAmt || outAmt).replace('.', '').replace(',', '.'));
+            }
+
+            if (!isNaN(amount)) {
+                bItems.push({ date, description: desc, amount, type });
+            }
+        }
+    });
+    renderPreview();
+}
+
+function renderPreview() {
     const container = document.getElementById('bprev');
-    container.innerHTML = '<h4>Dhaqdhaqaaqyada la helay:</h4>';
+    container.innerHTML = '<h3>Liiska hordhaca ah:</h3>';
     bItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'pitem';
-        div.innerHTML = `<span>${item.date} - ${item.description}</span> <b>${item.amount} kr</b>`;
-        container.appendChild(div);
+        const color = item.type === 'income' ? 'var(--g)' : 'var(--r)';
+        container.innerHTML += `<div class="pitem" style="border-left: 4px solid ${color}">
+            <span>${item.date} - ${item.description}</span>
+            <b style="color:${color}">${item.amount.toLocaleString()} kr</b>
+        </div>`;
     });
     document.getElementById('btn-bi').style.display = bItems.length ? 'block' : 'none';
 }
@@ -244,21 +176,42 @@ async function importBank() {
     for (let item of bItems) {
         await db.ref('entries/' + u.uid).push(item);
     }
-    alert("Waa la soo kiciyay xogtii!");
+    alert("Dhammaan xogtii waa la keydiyay!");
     bItems = [];
-    renderBPreview();
+    document.getElementById('bprev').innerHTML = "";
+    document.getElementById('btn-bi').style.display = 'none';
     showPg('dash');
 }
 
-function saveManual() {
-    const u = auth.currentUser;
-    db.ref('entries/' + u.uid).push({
-        date: document.getElementById('edate').value,
-        description: document.getElementById('edesc').value,
-        amount: document.getElementById('eamt').value,
-        type: 'expense'
+function loadData() {
+    db.ref('entries/' + auth.currentUser.uid).on('value', snap => {
+        const list = [];
+        snap.forEach(child => { list.push(child.val()); });
+        renderDash(list);
     });
-    alert("Waa la keydiyay");
+}
+
+function renderDash(list) {
+    const container = document.getElementById('elist');
+    container.innerHTML = "";
+    let inc = 0, exp = 0;
+    list.forEach(e => {
+        const color = e.type === 'income' ? 'var(--g)' : 'var(--r)';
+        if (e.type === 'income') inc += e.amount; else exp += e.amount;
+        container.innerHTML += `<div class="ecard" style="border-color:${color}">
+            <div><b>${e.description}</b><br><small>${e.date}</small></div>
+            <b style="color:${color}">${e.amount.toLocaleString()} kr</b>
+        </div>`;
+    });
+    document.getElementById('s-inc').textContent = inc.toLocaleString() + " kr";
+    document.getElementById('s-exp').textContent = exp.toLocaleString() + " kr";
+    document.getElementById('s-net').textContent = (inc - exp).toLocaleString() + " kr";
+}
+
+function delAll() {
+    if (confirm("Ma hubtaa inaad tirtirto dhammaan xogta?")) {
+        db.ref('entries/' + auth.currentUser.uid).remove();
+    }
 }
 </script>
 </body>
