@@ -6,6 +6,9 @@
 <title>Transport PRO</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="TransportPRO">
+<meta name="theme-color" content="#0f172a">
+<meta name="color-scheme" content="dark">
+<style>html,body{background:#0f172a!important;color:#f8fafc!important}</style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -14,15 +17,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-:root{--bg:#0f172a;--card:#1e293b;--y:#f1c40f;--g:#2ecc71;--r:#ff4757;--b:#3b82f6;--t:#f8fafc;--br:#334155;--p:#a855f7}
+:root{--bg:#0f172a;--card:#1e293b;--y:#f1c40f;--g:#2ecc71;--r:#ff4757;--b:#3b82f6;--t:#f8fafc;--br:#334155;--p:#a855f7;color-scheme:dark}
 .lt{--bg:#f1f5f9;--card:#fff;--t:#1e293b;--br:#cbd5e1}
-*{box-sizing:border-box}
-body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margin:0;padding-bottom:90px;overflow-x:hidden}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#0f172a}body{font-family:-apple-system,"Segoe UI",sans-serif;background:#0f172a;background:var(--bg);color:#f8fafc;color:var(--t);margin:0;padding-bottom:90px;overflow-x:hidden;-webkit-text-size-adjust:100%}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:var(--card);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100}
 .awrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
 .abox{background:var(--card);border-radius:16px;padding:28px;width:100%;max-width:360px;text-align:center}
 .sbox{background:var(--card);border:2px solid var(--y);border-radius:16px;padding:24px;width:100%;max-width:380px}
-input,select{width:100%;padding:13px;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--t);margin-bottom:11px;font-size:14px;font-family:inherit}
+input,select,textarea{width:100%;padding:13px;border-radius:10px;border:1px solid #334155;border:1px solid var(--br);background:#0f172a;background:var(--bg);color:#f8fafc;color:var(--t);margin-bottom:11px;font-size:14px;font-family:inherit;-webkit-appearance:none;appearance:none}
 .btn{width:100%;padding:15px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;color:#fff;font-size:14px}
 .btn2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:7px}
 .htitle{text-align:center;color:var(--y);font-weight:bold;padding:13px 0 8px;font-size:16px;text-transform:uppercase;letter-spacing:1px}
@@ -1225,4 +1228,19 @@ function dlPDF(){
     +'tr:nth-child(even){background:#f8fafc}'
     +'.pbtn{background:#1e293b;color:#f1c40f;border:none;padding:10px 22px;border-radius:7px;font-weight:bold;cursor:pointer;margin-top:14px}'
     +'@media print{.pbtn{display:none}}</style></head><body>'
-    +'<h1>&#128662; T
+    +'<h1>&#128662; Transport PRO - Regnskap</h1>'
+    +'<p style="color:#64748b;font-size:12px">'+new Date().toLocaleString('nb-NO')+'</p>'
+    +'<div class="sum">'
+    +'<div class="box"><small>INNTEKT</small><b style="color:#2ecc71">'+ti.toLocaleString('nb-NO')+' kr</b></div>'
+    +'<div class="box"><small>UTGIFTER</small><b style="color:#ff4757">'+te.toLocaleString('nb-NO')+' kr</b></div>'
+    +'<div class="box"><small>NETTO</small><b style="color:'+(net>=0?'#2ecc71':'#ff4757')+'">'+net.toLocaleString('nb-NO')+' kr</b></div>'
+    +'</div>'
+    +'<table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Bil #</th><th>Belop</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table>'
+    +'<button class="pbtn" onclick="window.print()">PRINT / LAGRE SOM PDF</button>'
+    +'</body></html>';
+  win.document.write(page);win.document.close();
+}
+</script>
+</body>
+</html>
