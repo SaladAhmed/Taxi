@@ -99,8 +99,6 @@
         .setup-container h2{color:var(--yellow);text-align:center;margin-bottom:5px;font-size:22px}
         .setup-container p{color:#94a3b8;text-align:center;font-size:13px;margin-bottom:25px}
         .setup-step{font-size:11px;color:var(--yellow);font-weight:bold;text-transform:uppercase;margin-bottom:5px;letter-spacing:1px}
-        /* DEBUG box */
-        .debug-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px;margin-bottom:10px;font-family:monospace;font-size:10px;color:#58a6ff;max-height:150px;overflow-y:auto;display:none}
     </style>
 </head>
 <body>
@@ -426,12 +424,10 @@ async function handlePDFUpload(input){
         const arrayBuffer=await file.arrayBuffer();
         const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
         let allPageItems=[];
-        // Aqri dhammaan pages oo collect items-ka oo leh x,y coordinates
         for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
             const page=await pdf.getPage(pageNum);
             const content=await page.getTextContent();
             const viewport=page.getViewport({scale:1});
-            // Normalize y coordinate (flip since PDF y is bottom-up)
             const items=content.items.map(item=>({
                 text:item.str.trim(),
                 x:Math.round(item.transform[4]),
@@ -450,7 +446,7 @@ function parseDNBPDFItems(items){
     bankDetectedItems=[];
     items.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
 
-    // Group into lines by y-coordinate
+    // Group into lines by y-coordinate (within 8px = same line)
     const lines=[];
     let curLine=[],lastY=-999,lastPage=-1;
     for(const item of items){
@@ -462,74 +458,114 @@ function parseDNBPDFItems(items){
     }
     if(curLine.length)lines.push(curLine);
 
-    // Detect column X positions for Inn/Ut from header line
-    // DNB kontoutskrift has columns: Dato | Forklarende tekst | Ut fra konto | Inn på konto | Rentedato | Arkivref
+    // --- Find column X positions for Inn/Ut from header line ---
     let innColX=-1,utColX=-1;
     for(const line of lines){
         const txt=line.map(i=>i.text).join(' ').toLowerCase();
-        if(txt.includes('inn') && txt.includes('ut')){
+        if(txt.includes('inn')&&txt.includes('ut')){
             for(const item of line){
-                const t=item.text.toLowerCase();
+                const t=item.text.toLowerCase().trim();
                 if(t==='inn'||t.includes('inn på'))innColX=item.x;
-                if(t==='ut'||t.includes('ut fra'))utColX=item.x;
+                if(t==='ut'||t.includes('ut av')||t.includes('ut fra'))utColX=item.x;
             }
             if(innColX>0||utColX>0)break;
         }
     }
-    // Fallback column positions for DNB (typical layout)
-    if(innColX<0&&utColX<0){innColX=380;utColX=280;}
+    // DNB standard fallback columns
+    if(innColX<0&&utColX<0){utColX=310;innColX=420;}
 
     const seen=new Set();
     const dateRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
+    const amtRe=/^-?\d{1,3}(?:[.,\s]\d{3})*[.,]\d{2}$/;
 
+    // --- Build transaction blocks ---
+    // Each block: a line starting with a date + all following non-date lines until next date line
+    let blocks=[];
+    let curBlock=null;
     for(const line of lines){
         const lineText=line.map(i=>i.text).join(' ').trim();
-        // Must start with a date
         const firstItem=line[0];
-        if(!firstItem||!dateRe.test(firstItem.text))continue;
-        const dateVal=parseDNBDate(firstItem.text);
+        if(!firstItem)continue;
+        // Skip pure header lines
+        if(/inn på konto|ut av konto|forklarende|rentedato|arkivref|bruk\s+bokf/i.test(lineText))continue;
+        // Is this a date line?
+        if(dateRe.test(firstItem.text)){
+            if(curBlock)blocks.push(curBlock);
+            curBlock={dateItems:line,extraLines:[],allItems:[...line]};
+        }else if(curBlock){
+            curBlock.extraLines.push(line);
+            curBlock.allItems.push(...line);
+        }
+    }
+    if(curBlock)blocks.push(curBlock);
+
+    for(const block of blocks){
+        const dateVal=parseDNBDate(block.dateItems[0].text);
         if(!dateVal)continue;
 
-        // Skip header rows
-        if(/inn|ut fra|saldo|rentedato|arkivref/i.test(lineText))continue;
+        const allText=block.allItems.map(i=>i.text).join(' ').trim();
+        if(/inn på konto|ut av konto|forklarende|rentedato|arkivref/i.test(allText))continue;
 
-        // Find amounts in this line - check their x position
         let innAmt=0,utAmt=0;
-        let descParts=[];
-        for(const item of line){
-            if(dateRe.test(item.text))continue; // skip date cells
-            // Is this item a Norwegian number?
-            const numVal=parseNorwegianNumber(item.text);
-            if(numVal>0.01&&/^\d[\d.,\s]+$/.test(item.text.trim())){
-                // Determine which column based on x position
-                if(innColX>0&&Math.abs(item.x-innColX)<60){
-                    innAmt=numVal;
-                }else if(utColX>0&&Math.abs(item.x-utColX)<60){
-                    utAmt=numVal;
+        const descParts=[];
+
+        for(const item of block.allItems){
+            const t=item.text.trim();
+            if(!t)continue;
+            if(dateRe.test(t))continue;
+            const num=parseNorwegianNumber(t);
+            if(num>0.01&&amtRe.test(t)){
+                const distInn=Math.abs(item.x-innColX);
+                const distUt=Math.abs(item.x-utColX);
+                if(distInn<distUt&&distInn<80){
+                    innAmt=num;
+                }else if(distUt<=distInn&&distUt<80){
+                    utAmt=num;
                 }else{
-                    // Use relative position: right side = inn, left of right = ut
-                    // If we have two numbers, last one might be saldo
-                    if(innAmt===0)innAmt=numVal; else utAmt=innAmt,innAmt=numVal;
+                    if(utAmt===0)utAmt=num; else innAmt=num;
                 }
-            }else{
-                descParts.push(item.text);
+            }else if(!/^\d{6,}$/.test(t)){
+                descParts.push(t);
             }
         }
 
-        const desc=descParts.join(' ').replace(/\s+/g,' ').trim();
+        // Build description: skip date tokens and archive refs
+        const desc=descParts
+            .filter(p=>!dateRe.test(p)&&!/^\d{9,}$/.test(p))
+            .join(' ').replace(/\s+/g,' ').trim();
         if(desc.length<2)continue;
 
+        // Inn på konto = money coming IN = INCOME (green)
         if(innAmt>0.01){
-            const key=dateVal+'|inn|'+innAmt;
-            if(!seen.has(key)){seen.add(key);bankDetectedItems.push({date:dateVal,desc,amount:innAmt,type:'income',category:autoCategory(desc,'income')});}
+            const key=dateVal+'|inn|'+innAmt+'|'+desc.substring(0,20);
+            if(!seen.has(key)){
+                seen.add(key);
+                bankDetectedItems.push({
+                    date:dateVal,
+                    desc:desc,
+                    amount:innAmt,
+                    type:'income',
+                    category:autoCategory(desc,'income')
+                });
+            }
         }
+        // Ut av konto = money going OUT = EXPENSE (red)
         if(utAmt>0.01){
-            const key=dateVal+'|ut|'+utAmt;
-            if(!seen.has(key)){seen.add(key);bankDetectedItems.push({date:dateVal,desc,amount:utAmt,type:'expense',category:autoCategory(desc,'expense')});}
+            const key=dateVal+'|ut|'+utAmt+'|'+desc.substring(0,20);
+            if(!seen.has(key)){
+                seen.add(key);
+                bankDetectedItems.push({
+                    date:dateVal,
+                    desc:desc,
+                    amount:utAmt,
+                    type:'expense',
+                    category:autoCategory(desc,'expense')
+                });
+            }
         }
     }
 
-    // Fallback to raw text if coordinate approach failed
+    // Fallback to raw text if coordinate approach found nothing
     if(bankDetectedItems.length===0){
         const fullText=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
         parseDNBRawText(fullText);
@@ -539,15 +575,12 @@ function parseDNBPDFItems(items){
     renderBankItems();
 }
 
-// Fallback: parse DNB kontoutskrift as raw text 
-// DNB format: "DD.MM.YYYY DD.MM.YYYY Description Amount Balance"
+// Fallback: parse DNB kontoutskrift as raw text
 function parseDNBRawText(fullText){
     bankDetectedItems=[];
     const seen=new Set();
-    
-    // DNB kontoutskrift pattern: bokføringsdato + rentedato + description + inn/ut + saldo
-    // "08.01.26 09.01.26 Overføring innland nr.3799396 Haytham 10.000,00 ..."
-    // Try multi-date pattern (bokf + rente date)
+
+    // DNB pattern: bokføringsdato + rentedato + description + inn/ut + saldo
     const p1=/(\d{2}\.\d{2}\.\d{2,4})\s+\d{2}\.\d{2}\.\d{2,4}\s+(.+?)\s+([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})\s+\d{1,3}(?:[.\s]\d{3})*,\d{2}/g;
     let m;
     while((m=p1.exec(fullText))!==null){
@@ -562,8 +595,7 @@ function parseDNBRawText(fullText){
         const key=dateVal+'|'+amount+'|'+desc.substring(0,15);
         if(!seen.has(key)){seen.add(key);bankDetectedItems.push({date:dateVal,desc,amount,type,category:autoCategory(desc,type)});}
     }
-    
-    // Single date pattern
+
     if(bankDetectedItems.length===0){
         const p2=/(\d{2}\.\d{2}\.\d{2,4})\s+(.{3,50}?)\s+([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})(?:\s|$)/g;
         while((m=p2.exec(fullText))!==null){
@@ -579,7 +611,7 @@ function parseDNBRawText(fullText){
             if(!seen.has(key)){seen.add(key);bankDetectedItems.push({date:dateVal,desc,amount,type,category:autoCategory(desc,type)});}
         }
     }
-    
+
     if(bankDetectedItems.length===0){showBankStatus('⚠️ Transactions lama helin. Fadlan isku day CSV format-ka.');return;}
     showBankStatus('✅ '+bankDetectedItems.length+' transactions la helay! (fallback)');
     renderBankItems();
@@ -651,60 +683,46 @@ function parseDNBDate(raw){
 function parseNorwegianNumber(raw){
     if(!raw||raw.trim()===''||raw.trim()==='-')return 0;
     let s=raw.trim().replace(/\s/g,'');
-    // Norwegian: 1.234.567,89 → 1234567.89
     if(s.includes(',')&&s.includes('.')){
-        // Check if comma is decimal separator (comes after dot)
         const lastDot=s.lastIndexOf('.');
         const lastComma=s.lastIndexOf(',');
-        if(lastComma>lastDot){
-            // Comma is decimal: 1.234,56 → 1234.56
-            s=s.replace(/\./g,'').replace(',','.');
-        }else{
-            // Dot is decimal: 1,234.56 → 1234.56 (US format)
-            s=s.replace(/,/g,'');
-        }
+        if(lastComma>lastDot){s=s.replace(/\./g,'').replace(',','.');}
+        else{s=s.replace(/,/g,'');}
     }else if(s.includes(',')){
-        // Only comma: 1234,56 → 1234.56
         s=s.replace(',','.');
     }else if(s.includes('.')){
-        // Only dots: could be 1.234 (thousand sep) or 1.234.56 (malformed)
         const parts=s.split('.');
-        if(parts[parts.length-1].length===2){
-            // Last part has 2 digits = decimal
-            s=parts.slice(0,-1).join('')+'.'+parts[parts.length-1];
-        }else{
-            // All dots are thousand separators
-            s=s.replace(/\./g,'');
-        }
+        if(parts[parts.length-1].length===2){s=parts.slice(0,-1).join('')+'.'+parts[parts.length-1];}
+        else{s=s.replace(/\./g,'');}
     }
     return parseFloat(s)||0;
 }
 
 function autoCategory(desc,type){
     const d=(desc||'').toLowerCase();
-    // INCOME categories
     if(type==='income'){
         if(d.includes('agder')||d.includes('taxi'))return'7796';
         if(d.includes('overføring')||d.includes('giro')||d.includes('innbetaling'))return'3030';
         if(d.includes('vipps'))return'3031';
         return'3030';
     }
-    // EXPENSE categories
     if(d.includes('drivstoff')||d.includes('shell')||d.includes('circle k')||d.includes('uno-x')||d.includes('esso')||d.includes('best')||d.includes('uno x'))return'7000';
-    if(d.includes('forsikring')||d.includes('if ')||d.includes('gjensidige')||d.includes('tryg'))return'7040';
-    if(d.includes('vedlikehold')||d.includes('service')||d.includes('dekk')||d.includes('autosync')||d.includes('msg cleaning'))return'7020';
+    if(d.includes('forsikring')||d.includes('if ')||d.includes('gjensidige')||d.includes('tryg')||d.includes('ra forsikring'))return'7040';
+    if(d.includes('vedlikehold')||d.includes('service')||d.includes('dekk')||d.includes('autosync')||d.includes('msg cleaning')||d.includes('wash world'))return'7020';
     if(d.includes('telefon')||d.includes('telenor')||d.includes('telia')||d.includes('ice')||d.includes('lyse tele'))return'6900';
-    if(d.includes('gebyr')||d.includes('kortgebyr'))return'7770';
+    if(d.includes('gebyr')||d.includes('kortgebyr')||d.includes('omkostninger'))return'7770';
     if(d.includes('vipps'))return'7770';
     if(d.includes('regnskap')||d.includes('revisjon')||d.includes('fortum')||d.includes('regnskaps'))return'6705';
     if(d.includes('agder taxi')||d.includes('agder  taxi'))return'7796';
-    if(d.includes('lønn'))return'5000';
+    if(d.includes('lønn')||d.includes('salad ahmed'))return'5000';
     if(d.includes('skatt')||d.includes('skatteinnkrevin')||d.includes('arbeidsgiver'))return'5400';
     if(d.includes('strøm')||d.includes('elektri')||d.includes('eviny'))return'7000';
     if(d.includes('lær')||d.includes('kurs')||d.includes('tyholmen'))return'7140';
     if(d.includes('wash')||d.includes('vask'))return'7020';
     if(d.includes('arendal kommune')||d.includes('kommune'))return'7400';
     if(d.includes('vibb')||d.includes('nextgentel')||d.includes('data'))return'6907';
+    if(d.includes('santander')||d.includes('livsforsikring')||d.includes('dnb liv'))return'7040';
+    if(d.includes('kontoregulering')||d.includes('til 1520'))return'7797';
     if(d.includes('overføring')||d.includes('til '))return'7790';
     return'7790';
 }
@@ -862,7 +880,6 @@ async function startScanner(){try{stream=await navigator.mediaDevices.getUserMed
 function capturePhoto(){const video=document.getElementById('scanner-video');const canvas=document.getElementById('scanner-canvas');canvas.width=video.videoWidth;canvas.height=video.videoHeight;canvas.getContext('2d').drawImage(video,0,0);const imgSrc=canvas.toDataURL('image/jpeg');document.getElementById('scanned-img').src=imgSrc;document.getElementById('scanned-img').style.display='block';video.style.display='none';document.getElementById('capture-btn').style.display='none';document.getElementById('scan-btn').style.display='block';if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}runOCR(imgSrc);}
 function handleFileUpload(input){
     const file=input.files[0];if(!file)return;
-    // PDF faylka? Hubi in Agder Taxi yahay
     if(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf')){
         updateStatus('📄 PDF faktura aqrinaya...');
         parseAgderTaxiPDF(file);
@@ -878,7 +895,6 @@ async function parseAgderTaxiPDF(file){
     try{
         const arrayBuffer=await file.arrayBuffer();
         const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
-        // Aqri items-ka oo leh coordinates (x,y) si loo kala sooco safaf
         let allItems=[];
         for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
             const page=await pdf.getPage(pageNum);
@@ -900,11 +916,7 @@ async function parseAgderTaxiPDF(file){
 
 function parseAgderTaxiItems(items){
     ocrDetectedItems=[];
-
-    // Sort by page, then y, then x
     items.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
-
-    // Group into lines (within 6px y = same line)
     const lines=[];
     let curLine=[],lastY=-999,lastPage=-1;
     for(const it of items){
@@ -915,21 +927,13 @@ function parseAgderTaxiItems(items){
         lastY=it.y;lastPage=it.page;
     }
     if(curLine.length)lines.push(curLine);
-
-    // Get full text for header parsing
     const fullText=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
-
-    // --- TAARIIKHDA ---
     let dateVal='';
     const dateM=fullText.match(/Fakturadato[:\s]+(\d{2})\.(\d{2})\.(\d{4})/i)||fullText.match(/(\d{2})\.(\d{2})\.(\d{4})/);
     if(dateM&&dateM[3])dateVal=dateM[3]+'-'+dateM[2]+'-'+dateM[1];
     if(dateVal){document.getElementById('ocr-date-display').textContent=dateVal;document.getElementById('entry-date').value=dateVal;}
-
-    // --- FAKTURA NR ---
     const invM=fullText.match(/(?:Faktura|bilag)[\/\s]+(\d+)/i);
     if(invM)document.getElementById('ocr-invoice-display').textContent=invM[1];
-
-    // --- TOTAL / MVA ---
     const totalM=fullText.match(/[Bb]el[øo]p\s+inkl[.\s]+mva[.:\s]+([-]?\d[\d\s.,]+)/i);
     let totalAmt=0,totalIsIncome=false;
     if(totalM){const raw=totalM[1].trim();totalIsIncome=raw.startsWith('-');totalAmt=parseNorwegianNumber(raw.replace('-',''));document.getElementById('ocr-total-display').textContent=(totalIsIncome?'+':'-')+totalAmt.toLocaleString('nb-NO')+' kr';}
@@ -937,8 +941,6 @@ function parseAgderTaxiItems(items){
     const mva25M=fullText.match(/[Mm]va\s+25\s*%[:\s]+([-]?\d[\d\s.,]+)/i);
     if(mva12M){document.getElementById('ocr-mva12-display').textContent=parseNorwegianNumber(mva12M[1].replace('-','')).toLocaleString('nb-NO')+' kr';}
     if(mva25M){document.getElementById('ocr-mva25-display').textContent=parseNorwegianNumber(mva25M[1].replace('-','')).toLocaleString('nb-NO')+' kr';}
-
-    // --- CATEGORY MAP ---
     const agderMap=[
         {pattern:/EMV\s*N/i,             cat:'3030', label:'EMV N'},
         {pattern:/TT\s*Rogaland/i,        cat:'3030', label:'TT Rogaland'},
@@ -954,48 +956,26 @@ function parseAgderTaxiItems(items){
         {pattern:/El\s*bil\s*lad/i,      cat:'7000', label:'El bil lading'},
         {pattern:/Avgiftsfritt/i,         cat:'3039', label:'Avgiftsfritt'},
     ];
-
-    // --- PARSE EACH LINE: find AG-XXX lines ---
-    // Each line has: Description | AG-XXX | [Ant] | [Pris] | Beløp | [MVA%]
-    // Negative beløp = income (taxi pays you), Positive = expense (you pay)
     const seen=new Set();
-
     for(const lineItems of lines){
         const lineText=lineItems.map(i=>i.text).join(' ').trim();
         if(lineText.length<5)continue;
-
-        // Must have AG- pattern
         const carMatch=lineText.match(/\b(AG-\d{3,4})\b/i);
         if(!carMatch)continue;
-        const carPlate=carMatch[1].toUpperCase(); // e.g. "AG-270" or "AG-368"
-
-        // Skip Sum lines
         if(/^Sum\b/i.test(lineText))continue;
-
-        // Find all Norwegian amounts in line
         const amtMatches=[...lineText.matchAll(/([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];
         if(!amtMatches.length)continue;
-
-        // Last amount = beløp (the one we want)
         const lastRaw=amtMatches[amtMatches.length-1][1];
         const isNeg=lastRaw.startsWith('-');
         const amount=parseNorwegianNumber(lastRaw.replace('-',''));
         if(amount<1)continue;
-
-        // Determine category & label from description
         let cat='7796',label='Agder Taxi';
         for(const map of agderMap){
             if(map.pattern.test(lineText)){cat=map.cat;label=map.label;break;}
         }
-
-        // Sign logic:
-        // Negative in faktura = taxi paying us = INCOME
-        // Positive in faktura = we pay taxi = EXPENSE
         const type=isNeg?'income':'expense';
         if(type==='income'&&parseInt(cat)>=6000)cat='3030';
         if(type==='expense'&&parseInt(cat)<4000)cat='7796';
-
-        // Description includes car plate
         const desc=label;
         const key=cat+'|'+amount+'|'+desc;
         if(!seen.has(key)){
@@ -1003,22 +983,15 @@ function parseAgderTaxiItems(items){
             ocrDetectedItems.push({desc,amount,type,date:dateVal,category:cat});
         }
     }
-
-    // Fallback if nothing parsed
     if(ocrDetectedItems.length===0&&totalAmt>0){
         ocrDetectedItems.push({desc:'Agder Taxi Faktura',amount:totalAmt,type:totalIsIncome?'income':'expense',date:dateVal,category:'7796'});
     }
-
     document.getElementById('ocr-results').style.display='block';
     updateStatus('✅ '+ocrDetectedItems.length+' entries la helay — dhammaan waa xushmeysan yihiin!');
-
-    // Sort: by car plate, then income first
     ocrDetectedItems.sort((a,b)=>{
         if(a.type!==b.type)return a.type==='income'?-1:1;
         return b.amount-a.amount;
     });
-
-
     renderOCRItems();
 }
 
