@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport PRO - DNB Fix</title>
+<title>Transport PRO - Final Fix</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -98,7 +98,7 @@ auth.onAuthStateChanged(u => {
 
 function doLogin() {
     auth.signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value)
-    .catch(e => alert("Noget gikk galt: " + e.message));
+    .catch(e => alert("Login failed: " + e.message));
 }
 
 function doLogout() { if(confirm("Ma hubtaa?")) auth.signOut(); }
@@ -116,41 +116,47 @@ async function handlePDF(inp) {
     const reader = new FileReader();
     reader.onload = async function() {
         const pdf = await pdfjsLib.getDocument({data: new Uint8Array(this.result)}).promise;
-        let text = "";
+        let fullText = "";
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            text += content.items.map(s => s.str).join(" ") + "\n";
+            // Isticmaal newline si loo kala saaro safafada
+            fullText += content.items.map(s => s.str).join(" ") + "\n";
         }
-        processDNB(text);
+        processDNB(fullText);
     };
     reader.readAsArrayBuffer(file);
 }
 
 function processDNB(t) {
     bItems = [];
-    // Habka cusub wuxuu raadinayaa: Date + Text + Ut_Amount + [Inn_Amount]
+    // Nidaamka wuxuu raadinayaa taariikhda, kadib qoraalka, kadibna lacagta (isagoo iska indhatiraya nambarada tixraaca)
     const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/æøåÆØÅ]+?)\s+([\d\.\,]+)(?:\s+([\d\.\,]+))?/g;
     let m;
     while ((m = regex.exec(t)) !== null) {
         const date = m[1];
         const desc = m[2].trim();
-        const firstVal = m[3].replace(/\./g, '').replace(',', '.');
-        const secondVal = m[4] ? m[4].replace(/\./g, '').replace(',', '.') : null;
+        let val1 = m[3].replace(/\./g, '').replace(',', '.');
+        let val2 = m[4] ? m[4].replace(/\./g, '').replace(',', '.') : null;
 
         let type = "expense";
-        let amount = parseFloat(firstVal);
+        let amount = parseFloat(val1);
 
-        // Haddii uu jiro qiimo labaad, ka hore waa Utgifter, ka dambe waa Inn-konto (Income)
-        if (secondVal) {
+        // HADDII desc uu ka kooban yahay Agder Taxi, mar walba waa INCOME
+        if (desc.toLowerCase().includes("agder taxi")) {
             type = "income";
-            amount = parseFloat(secondVal);
-        } else if (desc.toLowerCase().includes("agder taxi")) {
-            // Mararka qaarkood Agder Taxi wuxuu ku jiraa hal tiir laakiin waa dakhli
-            type = "income";
+            // Haddii uu jiro val2, isticmaal kan dambe (waa tiirka Inn på konto)
+            if (val2) amount = parseFloat(val2);
+        } else if (val2) {
+            // Haddii nambar labaad jiro laakiin uusan ahayn tixraac (arkivref had iyo jeer waa 9-digit)
+            if (val2.length < 9) {
+                type = "income";
+                amount = parseFloat(val2);
+            }
         }
 
-        if (!isNaN(amount) && amount > 0) {
+        // Iska ilaali nambarada tixraaca (arkivref) ee had iyo jeer aad u waaweyn
+        if (!isNaN(amount) && amount < 1000000 && amount > 0) {
             bItems.push({ date, description: desc, amount, type });
         }
     }
@@ -159,7 +165,7 @@ function processDNB(t) {
 
 function renderPreview() {
     const container = document.getElementById('bprev');
-    container.innerHTML = `<h4 style="color:var(--y)">Hordhac: ${bItems.length} meelood</h4>`;
+    container.innerHTML = `<h4 style="color:var(--y)">La helay ${bItems.length} meelood</h4>`;
     bItems.forEach(item => {
         const color = item.type === 'income' ? 'var(--g)' : 'var(--r)';
         container.innerHTML += `<div class="pitem" style="border-left: 5px solid ${color}">
@@ -171,12 +177,11 @@ function renderPreview() {
 }
 
 async function importBank() {
-    const u = auth.currentUser;
-    const ref = db.ref('entries/' + u.uid);
+    const ref = db.ref('entries/' + auth.currentUser.uid);
     for (let item of bItems) {
         await ref.push(item);
     }
-    alert("Xogtii waa la keydiyay!");
+    alert("Waa lagu guuleystay!");
     bItems = [];
     document.getElementById('bprev').innerHTML = "";
     document.getElementById('btn-bi').style.display = 'none';
@@ -212,7 +217,7 @@ function renderDash(list) {
 }
 
 function delAll() {
-    if (confirm("Ma hubtaa inaad tirtirto DHAMMAAN xogta?")) {
+    if (confirm("Ma hubtaa?")) {
         db.ref('entries/' + auth.currentUser.uid).remove();
     }
 }
