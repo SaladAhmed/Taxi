@@ -1,8 +1,8 @@
 // ============================================================
 // TRANSPORT PRO - app.js - BUUXA / COMPLETE
-// Mohamed Salad Transport - Firebase Connected
 // ============================================================
 
+// ⚠️ Xogtaada Firebase ee saxda ah waa tan:
 const firebaseConfig = {
   apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
   authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -14,6 +14,7 @@ const firebaseConfig = {
   measurementId: "G-VJTX0THFK5"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
@@ -35,7 +36,7 @@ let currentStream = null;
 const INCOME_CATS = ['3030','3031','3032','3033','3039','3110'];
 
 // ============================================================
-// AUTH STATE LISTENER
+// AUTH STATE
 // ============================================================
 auth.onAuthStateChanged(user => {
   if (user) {
@@ -43,18 +44,22 @@ auth.onAuthStateChanged(user => {
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('setup-page').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
-    document.getElementById('user-display-name').textContent = user.displayName || user.email;
-    document.getElementById('prof-name').textContent = user.displayName || 'Isticmaale';
-    document.getElementById('prof-email').textContent = user.email;
+    
+    const displayEmail = user.email;
+    const displayName = user.displayName || user.email;
+    
+    if(document.getElementById('user-display-name')) document.getElementById('user-display-name').textContent = displayName;
+    if(document.getElementById('prof-name')) document.getElementById('prof-name').textContent = displayName;
+    if(document.getElementById('prof-email')) document.getElementById('prof-email').textContent = displayEmail;
 
     db.ref('users/' + user.uid + '/profile').once('value').then(snap => {
       const data = snap.val();
-      if (data && data.photoURL) {
-        document.getElementById('profile-img').src = data.photoURL;
-      }
-      if (data && data.displayName) {
-        document.getElementById('prof-name').textContent = data.displayName;
-        document.getElementById('user-display-name').textContent = data.displayName;
+      if (data) {
+        if (data.photoURL && document.getElementById('profile-img')) document.getElementById('profile-img').src = data.photoURL;
+        if (data.displayName) {
+          if(document.getElementById('prof-name')) document.getElementById('prof-name').textContent = data.displayName;
+          if(document.getElementById('user-display-name')) document.getElementById('user-display-name').textContent = data.displayName;
+        }
       }
     });
 
@@ -119,162 +124,19 @@ function logout() {
   if (confirm('Ma hubtaa inaad ka baxeyso?')) auth.signOut();
 }
 
-function forgotPassword() {
-  const email = document.getElementById('email').value.trim();
-  if (!email) return alert('Geli email-kaaga horta!');
-  auth.sendPasswordResetEmail(email)
-    .then(() => alert('Email dib-u-habeynta waa la diray!'))
-    .catch(err => alert('Khalad: ' + translateError(err.code)));
-}
-
-function changePass() {
-  const newPass = prompt('Geli passwordka cusub (ugu yaraan 6 xaraf):');
-  if (!newPass || newPass.length < 6) return alert('Password aad u gaaban!');
-  currentUser.updatePassword(newPass)
-    .then(() => alert('Password waa la bedelay!'))
-    .catch(err => alert('Khalad: ' + translateError(err.code)));
-}
-
 function translateError(code) {
   const map = {
-    'auth/wrong-password': 'Password-ka waa khalad',
+    'auth/wrong-password': 'Password-ka waa khaldan yahay',
     'auth/user-not-found': 'Email-kan lama helin',
-    'auth/email-already-in-use': 'Email-kani horey ayuu u joogay',
-    'auth/weak-password': 'Password aad u daciif ah',
-    'auth/invalid-email': 'Email-ku ma sax',
-    'auth/invalid-credential': 'Email ama password waa khalad',
-    'auth/too-many-requests': 'Isku day badan — dib u sug daqiiqad'
+    'auth/email-already-in-use': 'Email-kan mar hore ayaa la isticmaalay',
+    'auth/weak-password': 'Password-ku waa inuu ka badnaadaa 6 xaraf',
+    'auth/invalid-email': 'Email-ku ma saxna'
   };
   return map[code] || code;
 }
 
 // ============================================================
-// PROFILE
-// ============================================================
-function toggleProfileEdit(show) {
-  document.getElementById('profile-view').style.display = show ? 'none' : 'block';
-  document.getElementById('profile-edit-form').style.display = show ? 'block' : 'none';
-  if (show) {
-    document.getElementById('edit-display-name').value = currentUser.displayName || '';
-  }
-}
-
-function updateProfileInfo() {
-  const name = document.getElementById('edit-display-name').value.trim();
-  if (!name) return alert('Geli magacaaga!');
-  currentUser.updateProfile({ displayName: name }).then(() => {
-    db.ref('users/' + currentUser.uid + '/profile').update({ displayName: name });
-    document.getElementById('prof-name').textContent = name;
-    document.getElementById('user-display-name').textContent = name;
-    toggleProfileEdit(false);
-    alert('Profile waa la cusboonaysiiyay!');
-  });
-}
-
-function uploadPhoto(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const ref = storage.ref('profiles/' + currentUser.uid + '/photo.jpg');
-  ref.put(file).then(() => ref.getDownloadURL()).then(url => {
-    document.getElementById('profile-img').src = url;
-    db.ref('users/' + currentUser.uid + '/profile').update({ photoURL: url });
-    currentUser.updateProfile({ photoURL: url });
-  });
-}
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-function showTab(tab) {
-  ['dash','add','reports','profile'].forEach(t => {
-    document.getElementById('page-' + t).style.display = t === tab ? 'block' : 'none';
-    const nav = document.getElementById('nav-' + t);
-    if (nav) nav.classList.toggle('active', t === tab);
-  });
-  if (tab === 'reports') renderReports();
-}
-
-// ============================================================
-// THEME & LANG
-// ============================================================
-function toggleTheme() {
-  document.body.classList.toggle('light-theme');
-}
-
-function updateLang(lang) {
-  currentLang = lang;
-}
-
-// ============================================================
-// MODUS & PERIOD
-// ============================================================
-function setModus(modus) {
-  currentModus = modus;
-  document.getElementById('btn-modus-individuell').classList.toggle('active', modus === 'individuell');
-  document.getElementById('btn-modus-total').classList.toggle('active', modus === 'total');
-  document.getElementById('modus-label-text').textContent = modus.toUpperCase();
-
-  const pf = document.getElementById('period-filter');
-  if (modus === 'individuell') {
-    pf.classList.add('visible');
-    setPeriod(currentPeriod, document.querySelector('.period-btn.active'));
-  } else {
-    pf.classList.remove('visible');
-    document.getElementById('custom-date-row').classList.remove('visible');
-    renderDashboard(allEntries);
-  }
-}
-
-function setPeriod(period, btn) {
-  currentPeriod = period;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-
-  const cdr = document.getElementById('custom-date-row');
-  if (period === 'custom') {
-    cdr.classList.add('visible');
-    applyCustomFilter();
-    return;
-  } else {
-    cdr.classList.remove('visible');
-  }
-
-  const now = new Date();
-  let from, to;
-  if (period === 'today') {
-    from = to = now.toISOString().split('T')[0];
-  } else if (period === 'week') {
-    const d = new Date(now);
-    d.setDate(d.getDate() - d.getDay() + 1);
-    from = d.toISOString().split('T')[0];
-    to = now.toISOString().split('T')[0];
-  } else if (period === 'month') {
-    from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    to = now.toISOString().split('T')[0];
-  } else if (period === 'year') {
-    from = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
-    to = now.toISOString().split('T')[0];
-  }
-
-  const filtered = currentModus === 'individuell'
-    ? allEntries.filter(e => e.uid === currentUser.uid && e.date >= from && e.date <= to)
-    : allEntries.filter(e => e.date >= from && e.date <= to);
-
-  renderDashboard(filtered);
-}
-
-function applyCustomFilter() {
-  const from = document.getElementById('filter-from').value;
-  const to = document.getElementById('filter-to').value;
-  if (!from || !to) return;
-  const filtered = currentModus === 'individuell'
-    ? allEntries.filter(e => e.uid === currentUser.uid && e.date >= from && e.date <= to)
-    : allEntries.filter(e => e.date >= from && e.date <= to);
-  renderDashboard(filtered);
-}
-
-// ============================================================
-// LOAD & SAVE ENTRIES
+// DATA LOAD & SAVE
 // ============================================================
 function loadEntries() {
   if (!currentUser) return;
@@ -283,27 +145,23 @@ function loadEntries() {
     snap.forEach(child => {
       allEntries.push({ id: child.key, ...child.val() });
     });
-    allEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    if (currentModus === 'individuell') {
-      setPeriod(currentPeriod, document.querySelector('.period-btn.active'));
-    } else {
-      renderDashboard(allEntries);
-    }
+    allEntries.sort((a, b) => b.date.localeCompare(a.date));
+    renderDashboard(allEntries);
   });
 }
 
-function saveData(type) {
+function saveData() {
   const date = document.getElementById('entry-date').value;
   const cat = document.getElementById('entry-category').value;
   const desc = document.getElementById('entry-desc').value.trim();
   const amt = parseFloat(document.getElementById('entry-amt').value);
 
-  if (!date || !cat || isNaN(amt) || amt <= 0) return alert('Buuxi dhammaan meelaha lagama maarmaanka ah!');
+  if (!date || !cat || isNaN(amt)) return alert('Buuxi meelaha loo baahan yahay!');
 
-  const isIncome = type === 'income';
+  const isIncome = INCOME_CATS.includes(cat);
   const entry = {
-    date,
-    category: cat,
+    date, 
+    category: cat, 
     desc: desc || cat,
     amount: isIncome ? Math.abs(amt) : -Math.abs(amt),
     type: isIncome ? 'income' : 'expense',
@@ -312,594 +170,83 @@ function saveData(type) {
     createdAt: Date.now()
   };
 
-  const editId = document.getElementById('edit-id').value;
-  const ref = editId ? db.ref('entries/' + editId) : db.ref('entries').push();
-
-  (editId ? ref.update(entry) : ref.set(entry)).then(() => {
-    alert(editId ? '✅ Waa la cusboonaysiiyay!' : '✅ Waa la keydiiyay!');
-    clearForm();
+  db.ref('entries').push(entry).then(() => {
+    alert('Waa la keydiyay!');
+    document.getElementById('entry-amt').value = '';
+    document.getElementById('entry-desc').value = '';
     showTab('dash');
-  }).catch(err => alert('Khalad: ' + err.message));
-}
-
-function clearForm() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('entry-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('entry-category').value = '3030';
-  document.getElementById('entry-desc').value = '';
-  document.getElementById('entry-amt').value = '';
-}
-
-function deleteEntry(id) {
-  if (!confirm('Ma hubtaa inaad tirtireyso?')) return;
-  db.ref('entries/' + id).remove();
-}
-
-function editEntry(id) {
-  const entry = allEntries.find(e => e.id === id);
-  if (!entry) return;
-  document.getElementById('edit-id').value = id;
-  document.getElementById('entry-date').value = entry.date;
-  document.getElementById('entry-category').value = entry.category;
-  document.getElementById('entry-desc').value = entry.desc || '';
-  document.getElementById('entry-amt').value = Math.abs(entry.amount);
-  showTab('add');
-  window.scrollTo(0, 0);
+  }).catch(err => alert("Khalad Database: " + err.message));
 }
 
 // ============================================================
-// DASHBOARD RENDER
+// DASHBOARD & UI
 // ============================================================
 function renderDashboard(entries) {
-  let income = 0, expense = 0, avsk = 0;
-
+  let income = 0, expense = 0;
   entries.forEach(e => {
     if (e.amount > 0) income += e.amount;
     else expense += Math.abs(e.amount);
-    if (e.category === '6010') avsk += Math.abs(e.amount);
   });
 
-  const mva = income * 0.12;
   const netto = income - expense;
-  const result = netto - mva;
+  const mva = income * 0.12;
+  const totalRes = netto - mva;
 
-  setText('total-income', fmt(income));
-  setText('total-expense', fmt(expense));
-  setText('total-netto', fmt(netto));
-  setText('res-mva', fmt(mva));
-  setText('res-avsk', fmt(avsk));
-
+  if(document.getElementById('total-income')) document.getElementById('total-income').textContent = fmt(income);
+  if(document.getElementById('total-expense')) document.getElementById('total-expense').textContent = fmt(expense);
+  if(document.getElementById('total-netto')) document.getElementById('total-netto').textContent = fmt(netto);
+  if(document.getElementById('res-mva')) document.getElementById('res-mva').textContent = fmt(mva);
+  
   const resEl = document.getElementById('res-total');
   if (resEl) {
-    resEl.textContent = fmt(result);
-    resEl.style.color = result >= 0 ? 'var(--green)' : 'var(--red)';
+    resEl.textContent = fmt(totalRes);
+    resEl.style.color = totalRes >= 0 ? '#2ecc71' : '#ff4757';
   }
 
-  renderEntries(entries);
-  if (!amountsVisible) applyBlur();
+  renderEntriesList(entries);
 }
 
-function renderEntries(entries) {
+function renderEntriesList(entries) {
   const container = document.getElementById('entries-list');
   if (!container) return;
   container.innerHTML = '';
 
-  if (entries.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:#64748b;padding:30px;font-size:14px;">📭 Wax gelinta ma jiraan</p>';
-    return;
-  }
-
   entries.forEach(e => {
     const isIncome = e.amount > 0;
-    const color = isIncome ? 'var(--green)' : 'var(--red)';
     const div = document.createElement('div');
     div.className = 'entry-card';
-    div.style.borderColor = color;
     div.innerHTML = `
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:bold;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.desc || e.category}</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${e.date} · ${e.category}</div>
-        ${e.userName ? `<div style="font-size:10px;color:#64748b;margin-top:1px;">👤 ${e.userName}</div>` : ''}
+      <div style="flex:1">
+        <div style="font-weight:bold">${e.desc}</div>
+        <div style="font-size:12px;color:gray">${e.date} | ${e.category}</div>
       </div>
-      <div class="entry-actions">
-        <span class="amount-field" style="color:${color};font-weight:bold;font-size:14px;white-space:nowrap;">${isIncome ? '+' : '-'}${fmt(Math.abs(e.amount))}</span>
-        <i class="fas fa-edit" onclick="editEntry('${e.id}')" style="color:#64748b;font-size:16px;"></i>
-        <i class="fas fa-trash" onclick="deleteEntry('${e.id}')" style="color:#64748b;font-size:16px;"></i>
-      </div>`;
+      <div style="color:${isIncome ? '#2ecc71' : '#ff4757'}; font-weight:bold">
+        ${isIncome ? '+' : ''}${fmt(e.amount)}
+      </div>
+    `;
     container.appendChild(div);
   });
-}
-
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
 }
 
 function fmt(n) {
-  return Number(n).toLocaleString('nb-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
+  return Number(n).toLocaleString('nb-NO') + ' kr';
 }
 
-// ============================================================
-// TOGGLE AMOUNTS VISIBILITY
-// ============================================================
-function toggleAmounts() {
-  amountsVisible = !amountsVisible;
-  document.getElementById('eye-icon').className = amountsVisible ? 'fas fa-eye' : 'fas fa-eye-slash';
-  document.getElementById('eye-label').textContent = amountsVisible ? 'Qari Lacagaha' : 'Muuji Lacagaha';
-  if (amountsVisible) {
-    document.querySelectorAll('.amount-field').forEach(el => el.classList.remove('hidden-amount'));
-  } else {
-    applyBlur();
-  }
-}
-
-function applyBlur() {
-  document.querySelectorAll('.amount-field').forEach(el => el.classList.add('hidden-amount'));
-}
-
-// ============================================================
-// REPORTS
-// ============================================================
-function renderReports() {
-  const tbody = document.getElementById('report-body');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  if (allEntries.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#64748b;padding:20px;">Wax gelinta ma jiraan</td></tr>';
-    return;
-  }
-  allEntries.forEach(e => {
-    const tr = document.createElement('tr');
-    const color = e.amount > 0 ? '#2ecc71' : '#ff4757';
-    tr.innerHTML = `
-      <td>${e.date}</td>
-      <td>${e.category}</td>
-      <td>${e.desc || '—'}</td>
-      <td style="color:${color};font-weight:bold;">${e.amount > 0 ? '+' : ''}${fmt(e.amount)}</td>`;
-    tbody.appendChild(tr);
+function showTab(tab) {
+  const tabs = ['dash','add','reports','profile'];
+  tabs.forEach(t => {
+    const el = document.getElementById('page-' + t);
+    if(el) el.style.display = t === tab ? 'block' : 'none';
   });
 }
 
-function downloadCSV() {
-  let csv = 'Dato,Konto,Beskrivelse,Belop\n';
-  allEntries.forEach(e => {
-    csv += `${e.date},${e.category},"${(e.desc || '').replace(/"/g, '""')}",${e.amount}\n`;
-  });
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'TransportPRO_' + new Date().toISOString().split('T')[0] + '.csv';
-  a.click();
-}
-
-function downloadPDF() {
-  let income = 0, expense = 0;
-  allEntries.forEach(e => {
-    if (e.amount > 0) income += e.amount;
-    else expense += Math.abs(e.amount);
-  });
-  const mva = income * 0.12;
-  const netto = income - expense - mva;
-
-  let html = `<html><head><meta charset="UTF-8"><style>
-    body{font-family:Arial,sans-serif;font-size:12px;margin:20px;color:#1e293b;}
-    h2{color:#b8860b;margin-bottom:5px;}
-    .summary{display:flex;gap:20px;margin:15px 0;flex-wrap:wrap;}
-    .sbox{background:#f1f5f9;border-radius:8px;padding:10px 16px;min-width:120px;}
-    .sbox small{display:block;font-size:10px;color:#64748b;text-transform:uppercase;}
-    .sbox b{font-size:16px;}
-    table{width:100%;border-collapse:collapse;margin-top:15px;}
-    th{background:#334155;color:#f1c40f;padding:8px;text-align:left;}
-    td{padding:7px;border-bottom:1px solid #e2e8f0;}
-    .pos{color:green;font-weight:bold;}.neg{color:red;font-weight:bold;}
-    tr:nth-child(even){background:#f8fafc;}
-  </style></head><body>
-  <h2>🚖 TRANSPORT PRO - Regnskap</h2>
-  <p style="color:#64748b;">Utskriftsdato: ${new Date().toLocaleDateString('nb-NO')} · Mohamed Salad Transport</p>
-  <div class="summary">
-    <div class="sbox"><small>Inntekt</small><b style="color:green;">${fmt(income)}</b></div>
-    <div class="sbox"><small>Utgifter</small><b style="color:red;">${fmt(expense)}</b></div>
-    <div class="sbox"><small>MVA 12%</small><b style="color:#3b82f6;">${fmt(mva)}</b></div>
-    <div class="sbox"><small>Netto resultat</small><b style="color:${netto >= 0 ? 'green' : 'red'}">${fmt(netto)}</b></div>
-  </div>
-  <table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr></thead><tbody>`;
-
-  allEntries.forEach(e => {
-    const cls = e.amount > 0 ? 'pos' : 'neg';
-    html += `<tr><td>${e.date}</td><td>${e.category}</td><td>${e.desc || '—'}</td>
-      <td class="${cls}">${e.amount > 0 ? '+' : ''}${fmt(e.amount)}</td></tr>`;
-  });
-
-  html += '</tbody></table></body></html>';
-  const win = window.open('', '_blank');
-  win.document.write(html);
-  win.document.close();
-  setTimeout(() => win.print(), 500);
+function setModus(modus) {
+  currentModus = modus;
+  loadEntries();
 }
 
 // ============================================================
-// BANK IMPORT - TAB SWITCH
-// ============================================================
-function switchBankTab(tab) {
-  document.getElementById('tab-pdf').classList.toggle('active', tab === 'pdf');
-  document.getElementById('tab-csv').classList.toggle('active', tab === 'csv');
-  document.getElementById('bank-pdf-area').style.display = tab === 'pdf' ? 'block' : 'none';
-  document.getElementById('bank-csv-area').style.display = tab === 'csv' ? 'block' : 'none';
-  document.getElementById('bank-preview-container').style.display = 'none';
-  bankEntries = [];
-}
-
-function showBankStatus(msg, show) {
-  const el = document.getElementById('bank-status');
-  el.textContent = msg;
-  el.style.display = (show === false) ? 'none' : 'block';
-}
-
-// ============================================================
-// CSV IMPORT (DNB)
-// ============================================================
-function handleCSVUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  showBankStatus('CSV waa la aqrinayaa...');
-  const reader = new FileReader();
-  reader.onload = e => parseDNBCSV(e.target.result);
-  reader.readAsText(file, 'UTF-8');
-}
-
-function parseDNBCSV(text) {
-  const lines = text.split('\n').filter(l => l.trim());
-  bankEntries = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(';');
-    if (cols.length < 5) continue;
-    const rawDate = cols[0].trim().replace(/"/g, '');
-    const desc = (cols[1] || '').trim().replace(/"/g, '');
-    const out = parseNOK(cols[3]);
-    const inn = parseNOK(cols[4]);
-    const amount = inn !== 0 ? inn : (out !== 0 ? -out : 0);
-    if (amount === 0) continue;
-    bankEntries.push({ date: convertDate(rawDate), desc: desc || 'DNB transaksjon', amount, selected: true });
-  }
-
-  renderBankPreview();
-  showBankStatus(bankEntries.length + ' transaksjoner funnet', bankEntries.length > 0);
-}
-
-function parseNOK(str) {
-  if (!str || str.trim() === '') return 0;
-  return parseFloat(str.replace(/"/g, '').replace(/\s/g, '').replace(',', '.')) || 0;
-}
-
-function convertDate(raw) {
-  const parts = raw.split('.');
-  if (parts.length === 3) {
-    return `${parts[2].trim()}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-  }
-  return raw;
-}
-
-// ============================================================
-// PDF IMPORT (DNB)
-// ============================================================
-function handlePDFUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  showBankStatus('PDF waa la aqrinayaa...');
-
-  const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      const typedarray = new Uint8Array(e.target.result);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const pdf = await pdfjsLib.getDocument(typedarray).promise;
-      let fullText = '';
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const page = await pdf.getPage(p);
-        const content = await page.getTextContent();
-        fullText += content.items.map(i => i.str).join(' ') + '\n';
-      }
-      parsePDFText(fullText);
-    } catch (err) {
-      showBankStatus('PDF aqrinta waxay ku guuldareysatay: ' + err.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function parsePDFText(text) {
-  bankEntries = [];
-  const lines = text.split('\n');
-
-  lines.forEach(line => {
-    const dateMatch = line.match(/(\d{2}\.\d{2}\.\d{4})/);
-    const amtMatch = line.match(/([-+]?\d[\d\s]*,\d{2})/);
-    if (dateMatch && amtMatch) {
-      const date = convertDate(dateMatch[1]);
-      const amount = parseNOK(amtMatch[1]);
-      const desc = line.replace(dateMatch[0], '').replace(amtMatch[0], '').trim().substring(0, 60) || 'DNB transaksjon';
-      if (amount !== 0) {
-        bankEntries.push({ date, desc, amount, selected: true });
-      }
-    }
-  });
-
-  renderBankPreview();
-  showBankStatus(bankEntries.length + ' transaksjoner funnet fra PDF', bankEntries.length > 0);
-}
-
-function renderBankPreview() {
-  const container = document.getElementById('bank-items-container');
-  const wrapper = document.getElementById('bank-preview-container');
-  container.innerHTML = '';
-
-  if (bankEntries.length === 0) {
-    wrapper.style.display = 'none';
-    return;
-  }
-
-  wrapper.style.display = 'block';
-  document.getElementById('bank-count-label').textContent = bankEntries.length + ' transaksjoner';
-
-  bankEntries.forEach((e, i) => {
-    const div = document.createElement('div');
-    div.className = 'csv-preview-item' + (e.selected ? ' selected' : '');
-    div.id = 'bank-item-' + i;
-    const color = e.amount >= 0 ? '#2ecc71' : '#ff4757';
-    div.innerHTML = `
-      <div>
-        <div style="font-weight:bold;font-size:13px;">${e.desc}</div>
-        <div style="font-size:11px;color:#94a3b8;">${e.date}</div>
-      </div>
-      <span style="color:${color};font-weight:bold;white-space:nowrap;">${e.amount >= 0 ? '+' : ''}${fmt(e.amount)}</span>`;
-    div.onclick = () => {
-      e.selected = !e.selected;
-      div.classList.toggle('selected', e.selected);
-      updateBankImportBtn();
-    };
-    container.appendChild(div);
-  });
-
-  updateBankImportBtn();
-}
-
-function bankSelectAll() {
-  bankEntries.forEach((e, i) => {
-    e.selected = true;
-    const el = document.getElementById('bank-item-' + i);
-    if (el) el.classList.add('selected');
-  });
-  updateBankImportBtn();
-}
-
-function bankSelectNone() {
-  bankEntries.forEach((e, i) => {
-    e.selected = false;
-    const el = document.getElementById('bank-item-' + i);
-    if (el) el.classList.remove('selected');
-  });
-  updateBankImportBtn();
-}
-
-function updateBankImportBtn() {
-  const count = bankEntries.filter(e => e.selected).length;
-  const btn = document.getElementById('btn-import-bank');
-  btn.style.display = count > 0 ? 'block' : 'none';
-  btn.innerHTML = `<i class="fas fa-file-import"></i> KEYDI ${count} TRANSACTION`;
-}
-
-function importBankSelected() {
-  const selected = bankEntries.filter(e => e.selected);
-  if (selected.length === 0) return;
-
-  let count = 0;
-  selected.forEach(e => {
-    const isIncome = e.amount > 0;
-    const entry = {
-      date: e.date,
-      category: isIncome ? '3030' : '7797',
-      desc: e.desc,
-      amount: e.amount,
-      type: isIncome ? 'income' : 'expense',
-      uid: currentUser.uid,
-      userName: currentUser.displayName || currentUser.email,
-      createdAt: Date.now()
-    };
-    db.ref('entries').push(entry).then(() => {
-      count++;
-      if (count === selected.length) {
-        alert('✅ ' + count + ' transaksjoner waa la keydiiyay!');
-        document.getElementById('bank-preview-container').style.display = 'none';
-        bankEntries = [];
-        showBankStatus('', false);
-      }
-    });
-  });
-}
-
-// ============================================================
-// OCR / SCANNER
-// ============================================================
-function startScanner() {
-  const video = document.getElementById('scanner-video');
-  const captureBtn = document.getElementById('capture-btn');
-  video.style.display = 'block';
-  captureBtn.style.display = 'block';
-
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-    .then(stream => {
-      currentStream = stream;
-      video.srcObject = stream;
-    })
-    .catch(() => alert('Kamera ma furan karo. Isticmaal upload beddelka.'));
-}
-
-function capturePhoto() {
-  const video = document.getElementById('scanner-video');
-  const canvas = document.getElementById('scanner-canvas');
-  const img = document.getElementById('scanned-img');
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-
-  if (currentStream) {
-    currentStream.getTracks().forEach(t => t.stop());
-    currentStream = null;
-  }
-
-  video.style.display = 'none';
-  document.getElementById('capture-btn').style.display = 'none';
-  img.src = canvas.toDataURL('image/jpeg');
-  img.style.display = 'block';
-
-  runOCR(canvas.toDataURL('image/jpeg'));
-}
-
-function handleFileUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById('scanned-img');
-    img.src = e.target.result;
-    img.style.display = 'block';
-    runOCR(e.target.result);
-  };
-  reader.readAsDataURL(file);
-}
-
-function runOCR(imgData) {
-  const statusEl = document.getElementById('ocr-status');
-  statusEl.style.display = 'block';
-  statusEl.textContent = '🔍 OCR waa la socodsiinaayaa...';
-
-  Tesseract.recognize(imgData, 'nor+eng', {
-    logger: m => {
-      if (m.status === 'recognizing text') {
-        statusEl.textContent = '📄 Aqrinaya: ' + Math.round(m.progress * 100) + '%';
-      }
-    }
-  }).then(({ data: { text } }) => {
-    statusEl.textContent = '✅ OCR Dhammaatay!';
-    parseOCRText(text);
-  }).catch(err => {
-    statusEl.textContent = '❌ OCR waxay ku guuldareysatay';
-    console.error(err);
-  });
-}
-
-function parseOCRText(text) {
-  const dateMatch = text.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/);
-  let date = new Date().toISOString().split('T')[0];
-  if (dateMatch) {
-    date = `${dateMatch[3]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[1].padStart(2,'0')}`;
-  }
-
-  const invMatch = text.match(/(?:faktura|invoice|nr|ref)[:\s#]*(\d{4,})/i);
-  const invoiceNr = invMatch ? invMatch[1] : '—';
-
-  const totalMatch = text.match(/(?:total|sum|bel.p|.\ betale|totalt)[:\s]*(\d+[,\.]\d{2})/i);
-  const total = totalMatch ? parseNOK(totalMatch[1]) : null;
-
-  const mva12Match = text.match(/(?:mva|moms)\s*12[%\s]*[:\s]*(\d+[,\.]\d{2})/i);
-  const mva25Match = text.match(/(?:mva|moms)\s*25[%\s]*[:\s]*(\d+[,\.]\d{2})/i);
-  const mva12 = mva12Match ? parseNOK(mva12Match[1]) : null;
-  const mva25 = mva25Match ? parseNOK(mva25Match[1]) : null;
-
-  document.getElementById('ocr-results').style.display = 'block';
-  document.getElementById('ocr-date-display').textContent = date;
-  document.getElementById('ocr-invoice-display').textContent = invoiceNr;
-  document.getElementById('ocr-total-display').textContent = total ? fmt(total) : '—';
-  document.getElementById('ocr-mva12-display').textContent = mva12 ? fmt(mva12) : '—';
-  document.getElementById('ocr-mva25-display').textContent = mva25 ? fmt(mva25) : '—';
-
-  document.getElementById('entry-date').value = date;
-  if (total) document.getElementById('entry-amt').value = total;
-
-  ocrEntries = [];
-  if (total) {
-    ocrEntries.push({
-      date, amount: total,
-      desc: 'OCR: ' + (invoiceNr !== '—' ? 'Faktura #' + invoiceNr : 'Faktura'),
-      selected: true
-    });
-  }
-  if (mva12) ocrEntries.push({ date, desc: 'MVA 12%', amount: -mva12, selected: false });
-  if (mva25) ocrEntries.push({ date, desc: 'MVA 25%', amount: -mva25, selected: false });
-
-  renderOCREntries();
-}
-
-function renderOCREntries() {
-  const listEl = document.getElementById('ocr-entry-list');
-  const container = document.getElementById('ocr-items-container');
-  const btn = document.getElementById('btn-import-selected');
-
-  if (ocrEntries.length === 0) {
-    listEl.style.display = 'none';
-    return;
-  }
-
-  listEl.style.display = 'block';
-  container.innerHTML = '';
-
-  ocrEntries.forEach((e) => {
-    const div = document.createElement('div');
-    div.className = 'ocr-entry-item' + (e.selected ? ' selected' : '');
-    div.innerHTML = `
-      <div>
-        <div style="font-weight:bold">${e.desc}</div>
-        <div style="font-size:11px;color:#94a3b8;">${e.date}</div>
-      </div>
-      <span class="${e.amount >= 0 ? 'amt-positive' : 'amt-negative'}">${e.amount >= 0 ? '+' : ''}${fmt(Math.abs(e.amount))}</span>`;
-    div.onclick = () => {
-      e.selected = !e.selected;
-      div.classList.toggle('selected', e.selected);
-      btn.style.display = ocrEntries.some(x => x.selected) ? 'block' : 'none';
-    };
-    container.appendChild(div);
-  });
-
-  btn.style.display = ocrEntries.some(e => e.selected) ? 'block' : 'none';
-}
-
-function importSelected() {
-  const selected = ocrEntries.filter(e => e.selected);
-  if (selected.length === 0) return;
-
-  const cat = document.getElementById('entry-category').value;
-  let count = 0;
-
-  selected.forEach(e => {
-    const isIncome = e.amount > 0;
-    const entry = {
-      date: e.date,
-      category: isIncome ? '3030' : cat,
-      desc: e.desc,
-      amount: e.amount,
-      type: isIncome ? 'income' : 'expense',
-      uid: currentUser.uid,
-      userName: currentUser.displayName || currentUser.email,
-      createdAt: Date.now()
-    };
-    db.ref('entries').push(entry).then(() => {
-      count++;
-      if (count === selected.length) {
-        alert('✅ ' + count + ' entries waa la keydiiyay!');
-        document.getElementById('ocr-entry-list').style.display = 'none';
-        document.getElementById('ocr-results').style.display = 'none';
-        document.getElementById('ocr-status').style.display = 'none';
-        ocrEntries = [];
-      }
-    });
-  });
-}
-
-// ============================================================
-// INIT
+// INITIALIZE
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   setToday();
