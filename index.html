@@ -70,7 +70,7 @@ input,select{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px s
     <div class="navbar">
         <div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-bar"></i><br>Dash</div>
         <div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus-circle"></i><br>Add</div>
-        <div class="ni" onclick="delAll()"><i class="fas fa-trash"></i><br>Clear</div>
+        <div class="ni" onclick="delAll()" style="color:var(--r)"><i class="fas fa-trash"></i><br>TIRTIR</div>
     </div>
 </div>
 
@@ -101,7 +101,9 @@ function doLogin() {
     auth.signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
 }
 
-function doLogout() { auth.signOut(); }
+function doLogout() { 
+    if(confirm("Ma hubtaa inaad ka baxayso?")) auth.signOut(); 
+}
 
 function showPg(pg) {
     document.querySelectorAll('.pg').forEach(p => p.style.display = 'none');
@@ -129,7 +131,6 @@ async function handlePDF(inp) {
 
 function processText(t) {
     bItems = [];
-    // Regex to capture Date, Description, and Amounts (DNB format) [cite: 20, 33]
     const lines = t.split('\n');
     const regex = /(\d{2}\.\d{2}\.\d{2})\s+([\w\s\.\-\/]+)\s+([\d\.\,]+)\s+([\d\.\,]+)?/;
 
@@ -138,16 +139,15 @@ function processText(t) {
         if (m) {
             const date = m[1];
             const desc = m[2].trim();
-            const outAmt = m[3]; // Ut av konto [cite: 20, 33]
-            const inAmt = m[4];  // Inn på konto [cite: 20, 33]
+            const outAmt = m[3];
+            const inAmt = m[4];
 
             let type = "expense";
-            let amount = parseFloat(outAmt.replace('.', '').replace(',', '.'));
+            let amount = parseFloat(outAmt.replace(/\./g, '').replace(',', '.'));
 
-            // If there's an "Inn på konto" or description is Agder Taxi, it's Income 
             if (inAmt || desc.toLowerCase().includes("agder taxi")) {
                 type = "income";
-                amount = parseFloat((inAmt || outAmt).replace('.', '').replace(',', '.'));
+                amount = parseFloat((inAmt || outAmt).replace(/\./g, '').replace(',', '.'));
             }
 
             if (!isNaN(amount)) {
@@ -160,12 +160,12 @@ function processText(t) {
 
 function renderPreview() {
     const container = document.getElementById('bprev');
-    container.innerHTML = '<h3>Liiska hordhaca ah:</h3>';
+    container.innerHTML = '<h3>Dhaqdhaqaaqyada PDF-ka:</h3>';
     bItems.forEach(item => {
         const color = item.type === 'income' ? 'var(--g)' : 'var(--r)';
         container.innerHTML += `<div class="pitem" style="border-left: 4px solid ${color}">
             <span>${item.date} - ${item.description}</span>
-            <b style="color:${color}">${item.amount.toLocaleString()} kr</b>
+            <b style="color:${color}">${item.amount.toLocaleString('nb-NO')} kr</b>
         </div>`;
     });
     document.getElementById('btn-bi').style.display = bItems.length ? 'block' : 'none';
@@ -176,7 +176,7 @@ async function importBank() {
     for (let item of bItems) {
         await db.ref('entries/' + u.uid).push(item);
     }
-    alert("Dhammaan xogtii waa la keydiyay!");
+    alert("Waa la keydiyay!");
     bItems = [];
     document.getElementById('bprev').innerHTML = "";
     document.getElementById('btn-bi').style.display = 'none';
@@ -186,7 +186,7 @@ async function importBank() {
 function loadData() {
     db.ref('entries/' + auth.currentUser.uid).on('value', snap => {
         const list = [];
-        snap.forEach(child => { list.push(child.val()); });
+        snap.forEach(child => { list.push({id: child.key, ...child.val()}); });
         renderDash(list);
     });
 }
@@ -200,17 +200,20 @@ function renderDash(list) {
         if (e.type === 'income') inc += e.amount; else exp += e.amount;
         container.innerHTML += `<div class="ecard" style="border-color:${color}">
             <div><b>${e.description}</b><br><small>${e.date}</small></div>
-            <b style="color:${color}">${e.amount.toLocaleString()} kr</b>
+            <b style="color:${color}">${e.amount.toLocaleString('nb-NO')} kr</b>
         </div>`;
     });
-    document.getElementById('s-inc').textContent = inc.toLocaleString() + " kr";
-    document.getElementById('s-exp').textContent = exp.toLocaleString() + " kr";
-    document.getElementById('s-net').textContent = (inc - exp).toLocaleString() + " kr";
+    document.getElementById('s-inc').textContent = inc.toLocaleString('nb-NO') + " kr";
+    document.getElementById('s-exp').textContent = exp.toLocaleString('nb-NO') + " kr";
+    document.getElementById('s-net').textContent = (inc - exp).toLocaleString('nb-NO') + " kr";
 }
 
+// FUNCTION-KA TIRTIRISTA DHAMMAAN
 function delAll() {
-    if (confirm("Ma hubtaa inaad tirtirto dhammaan xogta?")) {
-        db.ref('entries/' + auth.currentUser.uid).remove();
+    if (confirm("DIGNIIN: Ma hubtaa inaad rabto inaad tirtirto DHAMMAAN xogta kaydsan? Tani lagama noqon karo.")) {
+        db.ref('entries/' + auth.currentUser.uid).remove().then(() => {
+            alert("Xogtii waa la wada tirtiray.");
+        });
     }
 }
 </script>
