@@ -10,7 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
@@ -21,495 +20,245 @@ body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margi
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:var(--card);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100}
 .awrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
 .abox{background:var(--card);border-radius:16px;padding:28px;width:100%;max-width:360px;text-align:center}
-.sbox{background:var(--card);border:2px solid var(--y);border-radius:16px;padding:24px;width:100%;max-width:380px}
-input,select{width:100%;padding:13px;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--t);margin-bottom:11px;font-size:14px;font-family:inherit}
+input,select{width:100%;padding:13px;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--t);margin-bottom:11px;font-size:14px}
 .btn{width:100%;padding:15px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;color:#fff;font-size:14px}
-.btn2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:7px}
-.htitle{text-align:center;color:var(--y);font-weight:bold;padding:13px 0 8px;font-size:16px;text-transform:uppercase;letter-spacing:1px}
-.mbar{display:flex;margin:9px auto 3px;max-width:280px;background:var(--card);border:1.5px solid var(--br);border-radius:30px;overflow:hidden;padding:3px}
-.mbtn{flex:1;padding:8px 0;border:none;background:transparent;color:#64748b;font-weight:bold;font-size:11px;cursor:pointer;border-radius:25px;transition:.2s;text-transform:uppercase}
+.htitle{text-align:center;color:var(--y);font-weight:bold;padding:13px 0 8px;font-size:16px;text-transform:uppercase}
+.mbar{display:flex;margin:9px auto;max-width:280px;background:var(--card);border:1.5px solid var(--br);border-radius:30px;padding:3px}
+.mbtn{flex:1;padding:8px;border:none;background:transparent;color:#64748b;font-weight:bold;cursor:pointer;border-radius:25px}
 .mbtn.on{background:var(--y);color:#0f172a}
-.pfil{display:none;justify-content:center;gap:6px;margin:5px 9px 0;flex-wrap:wrap}
-.pfil.vis{display:flex}
-.pbtn{padding:5px 11px;border-radius:20px;border:1.5px solid var(--br);background:transparent;color:var(--t);font-size:11px;font-weight:bold;cursor:pointer}
-.pbtn.on{border-color:var(--y);color:var(--y)}
-.drow{display:none;gap:7px;margin:5px 13px 0}
-.drow.vis{display:flex}
-.drow input{flex:1;padding:7px;font-size:12px;margin:0}
-.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:9px;max-width:780px;margin:auto}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:9px}
 .sb{background:var(--card);border:1.5px solid;border-radius:11px;padding:10px;text-align:center}
-.sb small{font-size:9px;display:block;margin-bottom:3px;font-weight:bold;letter-spacing:.5px}
-.sb span{font-size:14px;font-weight:bold}
-.mvacard{background:var(--card);border:2px solid var(--br);border-radius:13px;margin:7px 9px;padding:12px;display:grid;grid-template-columns:1fr 1fr}
-.mvai{text-align:center}
-.mvai small{font-size:10px;color:#94a3b8;display:block}
+.sb small{font-size:9px;display:block}
 .sumcard{background:var(--card);border:2px solid var(--y);border-radius:17px;margin:7px 9px;padding:15px;text-align:center}
-.sumcard small{font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase}
-.sumcard h1{margin:7px 0 0;font-size:27px}
-.ecard{background:var(--card);border-radius:11px;padding:12px 13px;margin:0 9px 9px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.einfo{flex:1;min-width:0}
-.einfo .et{font-weight:bold;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.einfo .ed{font-size:11px;color:#94a3b8;margin-top:2px}
-.eact{display:flex;gap:10px;align-items:center;flex-shrink:0}
-.eamt{font-weight:bold;font-size:13px;white-space:nowrap}
-.eact i{cursor:pointer;color:#64748b;font-size:13px}
-.eact i:hover{color:var(--y)}
-.navbar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:9px 0 12px;border-top:1px solid var(--br);z-index:200}
-.ni{text-align:center;color:#64748b;font-size:10px;cursor:pointer;flex:1}
+.ecard{background:var(--card);border-radius:11px;padding:12px;margin:0 9px 9px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center}
+.navbar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:9px 0;border-top:1px solid var(--br)}
+.ni{text-align:center;color:#64748b;font-size:10px;cursor:pointer}
 .ni.on{color:var(--y)}
-.ni i{display:block;font-size:18px;margin-bottom:2px}
-.eyerow{display:flex;justify-content:flex-end;padding:4px 11px 0}
-.eyebtn{background:none;border:1.5px solid var(--br);border-radius:20px;color:var(--t);padding:5px 11px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:5px}
-.eyebtn:hover{border-color:var(--y);color:var(--y)}
-.ha{filter:blur(6px);user-select:none}
-.bbox{background:var(--card);border:2px solid var(--b);border-radius:13px;padding:13px;margin-bottom:12px}
-.bbox h4{color:var(--b);margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px}
-.btabs{display:flex;gap:5px;margin-bottom:8px}
-.btab{flex:1;padding:7px;border:1.5px solid var(--br);border-radius:8px;background:transparent;color:#64748b;font-size:12px;font-weight:bold;cursor:pointer;text-align:center}
-.btab.on{border-color:var(--b);color:var(--b);background:rgba(59,130,246,.08)}
-.bstat{display:none;background:#111827;border:2px solid var(--b);padding:9px;border-radius:9px;margin-bottom:8px;color:var(--b);font-weight:bold;text-align:center;font-size:12px}
-.uarea{border:2px dashed var(--br);border-radius:10px;padding:16px;text-align:center;margin-bottom:11px;cursor:pointer}
-.uarea:hover{border-color:var(--y)}
-.uarea i{font-size:24px;color:#64748b;display:block;margin-bottom:5px}
-.uarea p{margin:3px 0;font-size:12px;color:#64748b}
-.pitem{background:var(--bg);border:1px solid var(--br);border-radius:9px;padding:9px 11px;margin-bottom:6px;cursor:pointer}
-.pitem.sel{border-color:var(--g);background:rgba(46,204,113,.06)}
-.ptop{display:flex;justify-content:space-between;align-items:center}
-.ptop .pd{font-weight:bold;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.ptop .pa{font-weight:bold;font-size:12px;white-space:nowrap;margin-left:7px}
-.pdt{font-size:11px;color:#94a3b8;margin-top:2px}
-.sarow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:#94a3b8}
-.sarow button{background:none;border:1px solid var(--br);border-radius:7px;color:var(--t);padding:3px 9px;font-size:11px;cursor:pointer}
-.ostat{display:none;background:#111827;border:2px solid var(--y);padding:10px;border-radius:10px;margin-bottom:10px;color:var(--y);font-weight:bold;text-align:center;font-size:13px}
-.ores{display:none;background:var(--card);border:2px solid var(--g);border-radius:12px;padding:13px;margin-bottom:10px}
-.ores h4{color:var(--g);margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px}
-.of{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--br);font-size:13px}
-.of:last-child{border-bottom:none}
-.of label{color:#94a3b8;font-size:11px}
-.of span{font-weight:bold;color:var(--y)}
-.ocrlist{display:none;margin-bottom:10px}
-.oi{background:var(--card);border:1px solid var(--br);border-radius:9px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.oi.sel{border-color:var(--g);background:rgba(46,204,113,.08)}
-.oi:hover{border-color:var(--y)}
-.oii{flex:1;min-width:0}
-.oii .nm{font-weight:bold;font-size:12px}
-.oii .ct{font-size:10px;color:#64748b;margin-top:2px}
-.oiamt{font-weight:bold;font-size:13px;white-space:nowrap;margin-left:7px}
-.grand{background:var(--card);border:2px solid var(--y);border-radius:11px;padding:10px 12px;margin-top:9px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;text-align:center}
-.gc small{display:block;font-size:9px;color:#94a3b8;margin-bottom:2px;text-transform:uppercase}
-.gc b{font-size:14px}
-.pimgw{width:85px;height:85px;margin:0 auto 11px;border:3px solid var(--y);border-radius:50%;overflow:hidden;background:#334155;cursor:pointer}
-.pimgw img{width:100%;height:100%;object-fit:cover}
-.rtbl{width:100%;border-collapse:collapse;font-size:12px}
-.rtbl th{background:var(--br);color:var(--y);padding:9px 8px;text-align:left}
-.rtbl td{padding:8px;border-bottom:1px solid var(--br)}
-.dlrow{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
-.dlrow .btn{width:auto;padding:9px 16px;font-size:12px}
-.sprev{width:100%;height:190px;background:#000;border-radius:10px;margin-bottom:10px;display:none;object-fit:cover;border:2px solid var(--y)}
-.slbl{font-size:11px;color:#94a3b8;text-transform:uppercase;margin-bottom:8px;margin-top:3px;letter-spacing:.5px}
-#fui,#csvi,#pdfi,#pup{display:none}
+.ni i{display:block;font-size:18px}
+.uarea{border:2px dashed var(--br);border-radius:10px;padding:20px;text-align:center;margin-bottom:11px;cursor:pointer}
+.pitem{background:var(--bg);border:1px solid var(--br);border-radius:9px;padding:10px;margin-bottom:6px}
+#pdfi, #fui { display: none; }
 </style>
 </head>
 <body>
-<div id="pg-auth" style="display:none"><div class="awrap"><div class="abox">
-<h2 style="color:var(--y);margin-bottom:18px">&#128662; TRANSPORT PRO</h2>
-<input type="email" id="em" placeholder="E-post">
-<input type="password" id="pw" placeholder="Passord">
-<button class="btn" style="background:var(--b);margin-bottom:9px" onclick="doLogin()">LOGG INN</button>
-<p style="color:var(--y);cursor:pointer;font-size:12px;margin:4px 0" onclick="forgotPw()">Glemt passord?</p>
-<p style="font-size:12px;color:#94a3b8;margin:7px 0">Cusub? <span style="color:var(--y);cursor:pointer;font-weight:bold" onclick="goSetup()">DIIWAANGELI</span></p>
-</div></div></div>
-<div id="pg-setup" style="display:none"><div class="awrap"><div class="sbox">
-<h2 style="color:var(--y);text-align:center;margin-bottom:3px">&#128662; TRANSPORT PRO</h2>
-<p style="color:#94a3b8;text-align:center;font-size:13px;margin-bottom:15px">Samee akoon cusub</p>
-<div class="slbl">Magaca Hore</div><input type="text" id="sf" placeholder="First name">
-<div class="slbl">Magaca Aabaha</div><input type="text" id="sl" placeholder="Last name">
-<div class="slbl">E-mail</div><input type="email" id="se" placeholder="email@example.com">
-<div class="slbl">Password</div><input type="password" id="sp" placeholder="Ugu yaraan 6 xaraf">
-<div class="slbl">Xaqiiji Password</div><input type="password" id="sp2" placeholder="Dib u geli">
-<button class="btn" style="background:var(--g);margin-top:3px" onclick="doSetup()">SAMEE AKOON</button>
-<p style="text-align:center;font-size:12px;color:#94a3b8;margin-top:10px">Akoon horey? <span style="color:var(--y);cursor:pointer;font-weight:bold" onclick="goAuth()">SOOG GAL</span></p>
-</div></div></div>
+
+<div id="pg-auth" style="display:none">
+    <div class="awrap">
+        <div class="abox">
+            <h2 style="color:var(--y)">&#128662; LOGG INN</h2>
+            <input type="email" id="em" placeholder="E-post">
+            <input type="password" id="pw" placeholder="Passord">
+            <button class="btn" style="background:var(--b)" onclick="doLogin()">SOO GAL</button>
+        </div>
+    </div>
+</div>
+
 <div id="app" style="display:none">
-<div class="topbar">
-<i class="fas fa-moon" style="cursor:pointer;font-size:16px" onclick="toggleTheme()"></i>
-<span id="uname" style="font-weight:bold;font-size:14px">...</span>
-<div><span style="cursor:pointer">&#127475;&#127476;</span></div>
+    <div class="topbar">
+        <i class="fas fa-bars"></i>
+        <span id="uname">...</span>
+        <span>&#127475;&#127476;</span>
+    </div>
+
+    <div id="pg-dash" class="pg">
+        <div class="mbar">
+            <button class="mbtn" onclick="setModus('i')">Individuell</button>
+            <button class="mbtn on" onclick="setModus('t')">Total</button>
+        </div>
+        <div class="sgrid">
+            <div class="sb" style="border-color:var(--g);color:var(--g)"><small>INNTEKT</small><span id="s-inc">0 kr</span></div>
+            <div class="sb" style="border-color:var(--r);color:var(--r)"><small>UTGIFTER</small><span id="s-exp">0 kr</span></div>
+            <div class="sb" style="border-color:var(--b);color:var(--b)"><small>NETTO</small><span id="s-net">0 kr</span></div>
+        </div>
+        <div class="sumcard">
+            <small>RESULTAT FOR SKATT</small>
+            <h1 id="s-tot">0 kr</h1>
+        </div>
+        <div id="elist"></div>
+    </div>
+
+    <div id="pg-add" class="pg" style="display:none;padding:15px">
+        <div class="htitle">IMPORT DNB PDF</div>
+        <div class="uarea" onclick="document.getElementById('pdfi').click()">
+            <i class="fas fa-file-pdf" style="font-size:30px;color:var(--r)"></i>
+            <p>Riix halkan si aad u soo geliso Kontoutskrift</p>
+        </div>
+        <input type="file" id="pdfi" accept=".pdf" onchange="handlePDF(this)">
+        <div id="bprev"></div>
+        <button id="btn-bi" class="btn" style="background:var(--g);display:none" onclick="importBank()">KEYDI XOGTA PDF-KA</button>
+        <hr>
+        <div class="htitle">GELI GACANTA</div>
+        <input type="date" id="edate">
+        <input type="text" id="edesc" placeholder="Beskrivelse">
+        <input type="number" id="eamt" placeholder="Belop">
+        <button class="btn" style="background:var(--b)" onclick="saveManual()">LAGRE</button>
+    </div>
+
+    <div id="pg-profile" class="pg" style="display:none;padding:20px;text-align:center">
+        <div class="htitle">MY PROFILE</div>
+        <p id="pemail">...</p>
+        <button class="btn" style="background:var(--r);margin-bottom:15px" onclick="delAllEntries()">
+            <i class="fas fa-trash"></i> TIRTIR DHAMMAAN XOGTA
+        </button>
+        <button class="btn" style="background:var(--br)" onclick="doLogout()">
+            <i class="fas fa-sign-out-alt"></i> LOGG UT (KA BAX)
+        </button>
+    </div>
+
+    <div class="navbar">
+        <div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-home"></i>Dash</div>
+        <div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus"></i>Add</div>
+        <div class="ni" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user"></i>Profil</div>
+    </div>
 </div>
-<div id="pg-dash" class="pg">
-<div style="padding:9px 13px 0;text-align:center">
-<div style="font-size:10px;color:#64748b;margin-bottom:3px">MODUS: <span id="mlbl" style="color:var(--y);font-weight:bold">TOTAL</span></div>
-<div class="mbar">
-<button class="mbtn" id="mb-i" onclick="setModus('i')"><i class="fas fa-user"></i> Individuell</button>
-<button class="mbtn on" id="mb-t" onclick="setModus('t')"><i class="fas fa-globe"></i> Total</button>
-</div></div>
-<div class="eyerow"><button class="eyebtn" onclick="toggleAmt()"><i class="fas fa-eye" id="ei"></i><span id="el">Qari</span></button></div>
-<div class="pfil" id="pfil">
-<button class="pbtn on" onclick="setPer('today',this)">I dag</button>
-<button class="pbtn" onclick="setPer('week',this)">Uke</button>
-<button class="pbtn" onclick="setPer('month',this)">Maaned</button>
-<button class="pbtn" onclick="setPer('year',this)">Ar</button>
-<button class="pbtn" onclick="setPer('custom',this)">Egendefinert</button>
-</div>
-<div class="drow" id="drow">
-<input type="date" id="dfrom" onchange="applyCustom()">
-<input type="date" id="dto" onchange="applyCustom()">
-</div>
-<div class="sgrid">
-<div class="sb" style="border-color:var(--g);color:var(--g)"><small>INNTEKT</small><span id="s-inc" class="af">0 kr</span></div>
-<div class="sb" style="border-color:var(--r);color:var(--r)"><small>UTGIFTER</small><span id="s-exp" class="af">0 kr</span></div>
-<div class="sb" style="border-color:var(--b);color:var(--b)"><small>NETTO</small><span id="s-net" class="af">0 kr</span></div>
-</div>
-<div class="mvacard">
-<div class="mvai"><small>Skyldig MVA (12%)</small><b id="s-mva" class="af">0 kr</b></div>
-<div class="mvai"><small>Avskrivning</small><b id="s-avsk" class="af">0 kr</b></div>
-</div>
-<div class="sumcard"><small>RESULTAT FOR SKATT (NETTO)</small><h1 id="s-tot" class="af" style="color:var(--g)">0 kr</h1></div>
-<div id="elist"></div>
-</div>
-<div id="pg-reports" class="pg" style="display:none;padding:14px">
-<div class="htitle">REGNSKAP REPORTS</div>
-<div class="dlrow">
-<button class="btn" style="background:var(--g)" onclick="dlCSV()"><i class="fas fa-file-csv"></i> CSV</button>
-<button class="btn" style="background:var(--b)" onclick="dlPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-<button class="btn" style="background:var(--r)" onclick="delAllEntries()"><i class="fas fa-trash-alt"></i> TIRTIR DHAMMAAN</button>
-</div>
-<table class="rtbl"><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Belop</th></tr></thead><tbody id="rtbody"></tbody></table>
-</div>
-<div id="pg-add" class="pg" style="display:none;padding:14px">
-<div class="htitle">REGISTRER DATA</div>
-<div class="bbox">
-<h4><i class="fas fa-university"></i> DNB Bank Import</h4>
-<div class="btabs">
-<button class="btab on" id="bt-pdf" onclick="switchTab('pdf')">&#128196; PDF</button>
-<button class="btab" id="bt-csv" onclick="switchTab('csv')">&#128202; CSV</button>
-</div>
-<div id="bstat" class="bstat"></div>
-<div id="bpdf">
-<div class="uarea" onclick="document.getElementById('pdfi').click()" style="border-color:var(--b)">
-<i class="fas fa-file-pdf" style="color:var(--r)"></i>
-<p style="color:var(--b);font-weight:bold">DNB PDF Kontoutskrift</p><p>Riix halkan</p>
-</div>
-<input type="file" id="pdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)">
-</div>
-<div id="bcsv" style="display:none">
-<div class="uarea" onclick="document.getElementById('csvi').click()" style="border-color:var(--b)">
-<i class="fas fa-file-csv" style="color:var(--b)"></i>
-<p style="color:var(--b);font-weight:bold">DNB CSV</p><p>Transaksjoner - Last ned CSV</p>
-</div>
-<input type="file" id="csvi" accept=".csv,text/csv" onchange="handleCSV(this)">
-</div>
-<div id="bprev" style="display:none">
-<div class="sarow"><span id="bcount">0</span>
-<div style="display:flex;gap:5px"><button onclick="bAll()">Dhammaan</button><button onclick="bClearList()" style="color:var(--r)">Tirtir Liiska</button></div>
-</div>
-<div id="bitems"></div>
-<button class="btn" id="btn-bi" style="background:var(--b);display:none;margin-top:7px" onclick="importBank()">KEYDI LA XUSHAY</button>
-</div></div>
-<div class="slbl">FAKTURA / RECEIPT</div>
-<div id="ostat" class="ostat"></div>
-<button class="btn" style="background:var(--b);margin-bottom:9px" id="scanbtn" onclick="startScan()"><i class="fas fa-camera"></i> SCAN KAMERA</button>
-<div class="uarea" onclick="document.getElementById('fui').click()">
-<i class="fas fa-file-image"></i>
-<p>Fakturada soo geli - JPG/PNG/PDF</p>
-<p style="color:var(--y);font-weight:bold">Agder Taxi PDF automatic!</p>
-</div>
-<input type="file" id="fui" accept="image/*,.pdf,application/pdf" onchange="handleFile(this)">
-<video id="svid" class="sprev" autoplay playsinline></video>
-<canvas id="scv" style="display:none"></canvas>
-<img id="simg" class="sprev">
-<button id="capbtn" class="btn" style="display:none;background:var(--g);margin-bottom:10px" onclick="capture()">TA SAWIRKA</button>
-<div id="ores" class="ores">
-<h4>Faktura La Aqriyay</h4>
-<div class="of"><label>TAARIIKHDA</label><span id="od">-</span></div>
-<div class="of"><label>FAKTURA NR</label><span id="oinv">-</span></div>
-<div class="of"><label>BELOP INKL MVA</label><span id="otot">-</span></div>
-<div class="of"><label>MVA 12%</label><span id="om12">-</span></div>
-<div class="of"><label>MVA 25%</label><span id="om25">-</span></div>
-</div>
-<div id="ocrlist" class="ocrlist">
-<div style="color:var(--y);font-weight:bold;font-size:12px;margin-bottom:7px;text-transform:uppercase">Dooro entries:</div>
-<div id="oitems"></div>
-<button class="btn" id="btn-oi" style="background:var(--g);display:none;margin-top:5px" onclick="importOCR()">KEYDI LA XUSHAY</button>
-</div>
-<div style="border-top:1px solid var(--br);margin-top:12px;padding-top:12px">
-<div class="slbl">GELI GACANTA</div>
-</div>
-<input type="hidden" id="eid">
-<input type="date" id="edate">
-<select id="ecat">
-<optgroup label="INNTEKT">
-<option value="3030">3030 - Kjoreinntekter, lav sats</option>
-<option value="3031">3031 - Kjoreinntekter kontant</option>
-<option value="3032">3032 - Kjoreinntekter NAV</option>
-<option value="3033">3033 - Kjoreinntekter skole</option>
-<option value="3039">3039 - Bomtur</option>
-<option value="3110">3110 - Tips</option>
-</optgroup>
-<optgroup label="UTGIFTER">
-<option value="5000">5000 - Lonn til ansatte</option>
-<option value="5400">5400 - Arbeidsgiveravgift</option>
-<option value="5920">5920 - Yrkesskadeforsiking</option>
-<option value="6010">6010 - Avskrivning transportmidler</option>
-<option value="6705">6705 - Regnskapshonorar</option>
-<option value="6755">6755 - Sentralavgift</option>
-<option value="6800">6800 - Kontorrekvisita</option>
-<option value="6900">6900 - Telefon</option>
-<option value="6907">6907 - Datakommunikasjon</option>
-<option value="7000">7000 - Drivstoff</option>
-<option value="7020">7020 - Vedlikehold transportmiddel</option>
-<option value="7040">7040 - Forsikring transportmiddel</option>
-<option value="7140">7140 - Reisekostnad</option>
-<option value="7400">7400 - Kontingent</option>
-<option value="7770">7770 - Bank og kortgebyr</option>
-<option value="7790">7790 - Annen kostnad</option>
-<option value="7791">7791 - Spesialtur</option>
-<option value="7792">7792 - General kreditt</option>
-<option value="7793">7793 - Pasienttransport</option>
-<option value="7794">7794 - Ikke motte</option>
-<option value="7795">7795 - Adm gebyr trukket</option>
-<option value="7796">7796 - Faktura Agder Taxi</option>
-<option value="7797">7797 - Kontoutskrift</option>
-<option value="7798">7798 - Annen fradragsberettiget</option>
-</optgroup>
-</select>
-<input type="text" id="edesc" placeholder="Beskrivelse">
-<input type="number" id="eamt" placeholder="Belop (kr)" step="0.01">
-<div class="btn2">
-<button class="btn" style="background:var(--g)" onclick="saveE('income')">LAGRE INNTEKT</button>
-<button class="btn" style="background:var(--r)" onclick="saveE('expense')">LAGRE UTGIFT</button>
-</div>
-</div>
-<div id="pg-profile" class="pg" style="display:none;padding:14px;text-align:center">
-<div class="htitle">MY PROFILE</div>
-<div class="pimgw" onclick="document.getElementById('pup').click()">
-<img id="pimg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-<input type="file" id="pup" onchange="uploadPic(this)">
-</div>
-<div id="pview">
-<h3 id="pname" style="margin-bottom:3px">User Name</h3>
-<p id="pemail" style="color:#94a3b8;font-size:13px;margin-bottom:15px">email</p>
-<button class="btn" style="background:var(--y);color:#0f172a;margin-bottom:9px" onclick="togglePE(true)">Wax ka badal</button>
-</div>
-<div id="pedit" style="display:none;background:var(--card);padding:13px;border-radius:11px;border:1px solid var(--br);text-align:left">
-<input type="text" id="pename" placeholder="Magacaaga">
-<button class="btn" style="background:var(--g);margin-bottom:7px" onclick="savePName()">KEYDI</button>
-<button class="btn" style="background:var(--br)" onclick="togglePE(false)">KA NOQO</button>
-</div>
-<hr style="border:0;border-top:1px solid var(--br);margin:15px 0">
-<button class="btn" style="background:var(--b);margin-bottom:9px" onclick="chPass()">Change Password</button>
-<button class="btn" style="background:var(--r)" onclick="doLogout()">LOGG UT</button>
-</div>
-<div class="navbar">
-<div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i>Dash</div>
-<div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus"></i>Add</div>
-<div class="ni" id="ni-reports" onclick="showPg('reports')"><i class="fas fa-file-invoice"></i>Reports</div>
-<div class="ni" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user"></i>Profil</div>
-</div>
-</div>
+
 <script>
 // CONFIG
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-firebase.initializeApp({apiKey:"AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",authDomain:"mohamed-salad-transport.firebaseapp.com",databaseURL:"https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",projectId:"mohamed-salad-transport",storageBucket:"mohamed-salad-transport.firebasestorage.app",appId:"1:608716442795:web:34cafc1a23316664717bee"});
-const db=firebase.database(),auth=firebase.auth(),stor=firebase.storage();
-let entries=[],bItems=[],amtHid=false,modus='t',period='today',cf=null,ct=null;
+firebase.initializeApp({
+    apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
+    authDomain: "mohamed-salad-transport.firebaseapp.com",
+    databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mohamed-salad-transport",
+    storageBucket: "mohamed-salad-transport.firebasestorage.app"
+});
+const db = firebase.database(), auth = firebase.auth();
+let bItems = [];
 
-function E(id){return document.getElementById(id);}
-function V(id){return E(id).value;}
-function T(id,v){E(id).textContent=v;}
-function show(id){E(id).style.display='block';}
-function hide(id){E(id).style.display='none';}
-
-// BANK LOGIC
-function dnbType(desc, outAmt, inAmt) {
-    const d = (desc || '').toLowerCase();
-    if (inAmt > 0 || d.includes('agder taxi')) return 'income';
-    return 'expense';
-}
-
-function norNum(r) {
-    if (!r || r.trim() === '' || r.trim() === '-') return 0;
-    let s = r.trim().replace(/\s/g, '');
-    s = s.replace(/\./g, '').replace(',', '.');
-    return parseFloat(s) || 0;
-}
-
-function getCat(desc) {
-    const d = (desc || '').toLowerCase();
-    if (d.includes('agder taxi')) return '3030';
-    if (d.includes('tesla') || d.includes('uno-x') || d.includes('wash world') || d.includes('eviny')) return '7000';
-    if (d.includes('skatt') || d.includes('arbeidsavgift')) return '5400';
-    if (d.includes('forsikring') || d.includes('gjensidige') || d.includes('tryg')) return '7040';
-    if (d.includes('santander') || d.includes('consumer bank')) return '7020';
-    if (d.includes('kommune')) return '7790';
-    if (d.includes('fortum') || d.includes('vibb') || d.includes('lyse tele') || d.includes('nextgentel')) return '6907';
-    return '7798';
-}
-
-// PDF HANDLING
-async function handlePDF(inp) {
-    const file = inp.files[0]; if (!file) return;
-    T('bstat', 'Aqrinaya bogagga PDF-ka...'); show('bstat');
-    try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let allLines = [];
-        
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            // Extract text items and combine them by proximity
-            const items = content.items.map(item => item.str).join(" ");
-            allLines.push(items);
-        }
-
-        const fullText = allLines.join("\n");
-        bItems = [];
-        
-        // Match dates (DD.MM.YY) followed by text and amounts
-        const pattern = /(\d{2}\.\d{2}\.\d{2})\s+(\d{2}\.\d{2}\.\d{2})?\s*([A-Za-zÆØÅæøå0-9\-\.\,\/\s]+?)\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)/g;
-        let match;
-        
-        while ((match = pattern.exec(fullText)) !== null) {
-            const dateStr = match[1];
-            const desc = match[3].trim();
-            const amountStr = match[4];
-            
-            // Skip headers or irrelevant text
-            if (desc.toLowerCase().includes('saldo') || desc.length < 3) continue;
-
-            const val = norNum(amountStr);
-            const type = dnbType(desc, 0, 0); // Type detection logic
-            
-            bItems.push({
-                date: '20' + dateStr.split('.').reverse().join('-'),
-                description: desc.replace(/\n/g, ' '),
-                amount: val,
-                type: type,
-                category: getCat(desc),
-                sel: true
-            });
-        }
-
-        if (bItems.length > 0) {
-            renderBItems();
-            hide('bpdf'); hide('bcsv'); show('bprev'); show('btn-bi');
-            T('bstat', bItems.length + ' dhaqdhaqaaq ayaa la helay bogagga oo dhan');
-        } else {
-            T('bstat', 'Ma jiro wax dhaqdhaqaaq ah oo la helay. Hubi inuu yahay DNB kontoutskrift.');
-        }
-    } catch (e) {
-        T('bstat', 'Khalad: ' + e.message);
+// AUTH TRACKING
+auth.onAuthStateChanged(u => {
+    if (u) {
+        document.getElementById('pg-auth').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('pemail').textContent = u.email;
+        loadData();
+    } else {
+        document.getElementById('pg-auth').style.display = 'block';
+        document.getElementById('app').style.display = 'none';
     }
-}
-
-function renderBItems() {
-    const container = E('bitems'); container.innerHTML = '';
-    bItems.forEach((item, idx) => {
-        const div = document.createElement('div');
-        div.className = 'pitem' + (item.sel ? ' sel' : '');
-        div.onclick = () => { item.sel = !item.sel; renderBItems(); };
-        const col = item.type === 'income' ? 'var(--g)' : 'var(--r)';
-        div.innerHTML = `<div class="ptop"><span class="pd">${item.description}</span><span class="pa" style="color:${col}">${item.amount.toLocaleString('nb-NO')} kr</span></div>
-                         <div class="pdt">${item.date} | Kat: ${item.category}</div>`;
-        container.appendChild(div);
-    });
-    T('bcount', bItems.filter(x => x.sel).length + ' la xushay');
-}
-
-function bClearList() {
-    if(confirm('Ma tirtirtaa liiskan hordhaca ah?')) {
-        bItems = [];
-        hide('bprev'); show('bpdf'); show('bcsv'); hide('bstat');
-    }
-}
-
-function bAll() { bItems.forEach(i => i.sel = true); renderBItems(); }
-
-async function importBank() {
-    const toSave = bItems.filter(x => x.sel);
-    if (toSave.length === 0) return;
-    T('bstat', 'Kaydinaya...');
-    const u = auth.currentUser;
-    for (const item of toSave) {
-        await db.ref('entries/' + u.uid).push({
-            date: item.date, description: item.description, amount: item.amount, type: item.type, category: item.category
-        });
-    }
-    alert('Dhammaan waa la keydiyay!');
-    location.reload();
-}
-
-function delAllEntries() {
-    if (confirm('DIGNIIN: Ma hubtaa inaad rabto inaad tirtirto DHAMMAAN xogta kaydsan? Tani lagama noqon karo.')) {
-        db.ref('entries/' + auth.currentUser.uid).remove().then(() => {
-            alert('Dhammaan xogtii waa la tirtiray.');
-            loadData();
-        });
-    }
-}
-
-// CORE AUTH & DASH
-auth.onAuthStateChanged(u=>{
-  if(u){
-    hide('pg-auth'); hide('pg-setup'); show('app');
-    T('uname', u.displayName||u.email); loadData();
-  } else { show('pg-auth'); hide('app'); }
 });
 
-function loadData(){
-  const u=auth.currentUser; if(!u)return;
-  db.ref('entries/'+u.uid).on('value',snap=>{
-    entries=[]; snap.forEach(c=>entries.push({id:c.key,...c.val()}));
-    entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    renderDash(entries); renderRep(entries);
-  });
+function doLogin() {
+    const e = document.getElementById('em').value, p = document.getElementById('pw').value;
+    auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
 }
 
-function renderDash(list){
-  let inc=0, exp=0; const el=E('elist'); el.innerHTML='';
-  list.forEach(e=>{
-    const a=parseFloat(e.amount)||0;
-    if(e.type==='income') inc+=a; else exp+=a;
-    const col=e.type==='income'?'var(--g)':'var(--r)';
-    const c=document.createElement('div'); c.className='ecard'; c.style.borderColor=col;
-    c.innerHTML=`<div class="einfo"><div class="et">${e.category} - ${e.description}</div><div class="ed">${e.date}</div></div>
-                 <div class="eact"><span class="ea" style="color:${col}">${a.toLocaleString('nb-NO')} kr</span>
-                 <i class="fas fa-trash" onclick="delE('${e.id}')"></i></div>`;
-    el.appendChild(c);
-  });
-  T('s-inc', inc.toLocaleString('nb-NO')+' kr');
-  T('s-exp', exp.toLocaleString('nb-NO')+' kr');
-  T('s-tot', (inc-exp).toLocaleString('nb-NO')+' kr');
-  E('s-tot').style.color=(inc-exp)>=0?'var(--g)':'var(--r)';
+// LOGOUT FUNCTION (HALKAN AYAA MUHIIM AH)
+function doLogout() {
+    if (confirm("Ma hubtaa inaad rabto inaad ka baxdo (Logout)?")) {
+        auth.signOut().then(() => {
+            console.log("User signed out.");
+        }).catch(err => alert("Khalad ayaa dhacay: " + err.message));
+    }
 }
 
-function renderRep(list){
-    const tb=E('rtbody'); tb.innerHTML='';
-    list.forEach(e=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${e.date}</td><td>${e.category}</td><td>${e.description}</td>
-                      <td style="color:${e.type==='income'?'var(--g)':'var(--r)'}">${e.amount.toLocaleString('nb-NO')} kr</td>`;
-        tb.appendChild(tr);
+// DELETE ALL DATA
+function delAllEntries() {
+    if (confirm("DIGNIIN: Ma hubtaa inaad tirtirto DHAMMAAN xogta? Ma heli kartid mar kale.")) {
+        db.ref('entries/' + auth.currentUser.uid).remove().then(() => {
+            alert("Dhammaan xogtii waa la tirtiray.");
+        });
+    }
+}
+
+// NAVIGATION
+function showPg(pg) {
+    document.querySelectorAll('.pg').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+    document.getElementById('pg-' + pg).style.display = 'block';
+    document.getElementById('ni-' + pg).classList.add('on');
+}
+
+// LOAD & RENDER
+function loadData() {
+    db.ref('entries/' + auth.currentUser.uid).on('value', snap => {
+        const list = [];
+        snap.forEach(c => { list.push({id: c.key, ...c.val()}); });
+        renderDash(list);
     });
 }
 
-function delE(id){ if(confirm('Tirtir?')) db.ref('entries/'+auth.currentUser.uid+'/'+id).remove(); }
-function showPg(pg){
-  document.querySelectorAll('.pg').forEach(p=>p.style.display='none');
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
-  E('pg-'+pg).style.display='block'; E('ni-'+pg).classList.add('on');
+function renderDash(list) {
+    const container = document.getElementById('elist');
+    container.innerHTML = '';
+    let inc = 0, exp = 0;
+    list.forEach(e => {
+        const amt = parseFloat(e.amount);
+        if (e.type === 'income') inc += amt; else exp += amt;
+        const div = document.createElement('div');
+        div.className = 'ecard';
+        div.style.borderColor = e.type === 'income' ? 'var(--g)' : 'var(--r)';
+        div.innerHTML = `<div><b>${e.description}</b><br><small>${e.date}</small></div>
+                         <b style="color:${e.type === 'income' ? 'var(--g)' : 'var(--r)'}">${amt.toLocaleString()} kr</b>`;
+        container.appendChild(div);
+    });
+    document.getElementById('s-inc').textContent = inc.toLocaleString() + " kr";
+    document.getElementById('s-exp').textContent = exp.toLocaleString() + " kr";
+    document.getElementById('s-tot').textContent = (inc - exp).toLocaleString() + " kr";
 }
-function doLogin(){
-  const e=V('em').trim(), p=V('pw');
-  if(e&&p) auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message));
+
+// PDF IMPORT
+async function handlePDF(inp) {
+    const file = inp.files[0];
+    if (!file) return;
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    let fullText = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        fullText += content.items.map(item => item.str).join(" ") + "\n";
+    }
+    
+    // Simple regex for DNB PDF lines (Date Description Amount)
+    const pattern = /(\d{2}\.\d{2}\.\d{2})\s+([A-Za-zÆØÅæøå\s\-]+)\s+([\d\.\,]+)/g;
+    let match;
+    bItems = [];
+    while ((match = pattern.exec(fullText)) !== null) {
+        const amt = parseFloat(match[3].replace('.', '').replace(',', '.'));
+        if (isNaN(amt)) continue;
+        bItems.push({
+            date: "20" + match[1].split('.').reverse().join('-'),
+            description: match[2].trim(),
+            amount: amt,
+            type: match[2].toLowerCase().includes('taxi') ? 'income' : 'expense'
+        });
+    }
+    renderBPreview();
 }
-function toggleTheme(){document.body.classList.toggle('lt');}
-function switchTab(t){
-  E('bpdf').style.display=t==='pdf'?'block':'none';
-  E('bcsv').style.display=t==='csv'?'block':'none';
-  E('bt-pdf').className='btab'+(t==='pdf'?' on':'');
-  E('bt-csv').className='btab'+(t==='csv'?' on':'');
+
+function renderBPreview() {
+    const container = document.getElementById('bprev');
+    container.innerHTML = '<h4>Dhaqdhaqaaqyada la helay:</h4>';
+    bItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'pitem';
+        div.innerHTML = `<span>${item.date} - ${item.description}</span> <b>${item.amount} kr</b>`;
+        container.appendChild(div);
+    });
+    document.getElementById('btn-bi').style.display = bItems.length ? 'block' : 'none';
+}
+
+async function importBank() {
+    const u = auth.currentUser;
+    for (let item of bItems) {
+        await db.ref('entries/' + u.uid).push(item);
+    }
+    alert("Waa la soo kiciyay xogtii!");
+    bItems = [];
+    renderBPreview();
+    showPg('dash');
+}
+
+function saveManual() {
+    const u = auth.currentUser;
+    db.ref('entries/' + u.uid).push({
+        date: document.getElementById('edate').value,
+        description: document.getElementById('edesc').value,
+        amount: document.getElementById('eamt').value,
+        type: 'expense'
+    });
+    alert("Waa la keydiyay");
 }
 </script>
 </body>
