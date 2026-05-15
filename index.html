@@ -1,1026 +1,915 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport PRO - Regnskap Edition</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="TransportPRO">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root{--bg:#0f172a;--card:#1e293b;--yellow:#f1c40f;--green:#2ecc71;--red:#ff4757;--blue:#3b82f6;--text:#f8fafc;--border:#334155}
-        .light-theme{--bg:#f1f5f9;--card:#ffffff;--text:#1e293b;--border:#cbd5e1}
-        body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:100px;transition:0.3s;overflow-x:hidden}
-        .top-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:var(--card);border-bottom:1px solid var(--border)}
-        .auth-container{padding:30px;text-align:center;max-width:400px;margin:40px auto;background:var(--card);border-radius:15px}
-        .header-title{text-align:center;color:var(--yellow);font-weight:bold;padding:20px 0;font-size:18px;text-transform:uppercase;letter-spacing:1px}
-        .modus-bar{display:flex;align-items:center;justify-content:center;gap:0;margin:12px auto 4px;max-width:320px;background:var(--card);border:1.5px solid var(--border);border-radius:30px;overflow:hidden;padding:3px}
-        .modus-btn{flex:1;padding:9px 0;border:none;background:transparent;color:#64748b;font-weight:bold;font-size:12px;letter-spacing:0.5px;cursor:pointer;border-radius:25px;transition:all 0.25s ease;text-transform:uppercase}
-        .modus-btn.active{background:var(--yellow);color:#0f172a}
-        .period-filter{display:none;justify-content:center;gap:8px;margin:6px 10px 0;flex-wrap:wrap}
-        .period-filter.visible{display:flex}
-        .period-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:11px;font-weight:bold;cursor:pointer;transition:0.2s}
-        .period-btn.active{border-color:var(--yellow);color:var(--yellow)}
-        .custom-date-row{display:none;gap:8px;margin:6px 15px 0}
-        .custom-date-row.visible{display:flex}
-        .custom-date-row input{flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;margin-bottom:0}
-        .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px;max-width:800px;margin:auto}
-        .stat-box{background:var(--card);border:1.5px solid;border-radius:12px;padding:12px;text-align:center}
-        .stat-box small{font-size:9px;display:block;margin-bottom:5px;font-weight:bold}
-        .mva-card{background:var(--card);border:2px solid var(--border);border-radius:15px;margin:10px auto;padding:15px;display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:780px}
-        .mva-item{text-align:center;border-right:1px solid var(--border)}
-        .mva-item:last-child{border-right:none}
-        .summary-card{background:var(--card);border:2px solid var(--yellow);border-radius:20px;margin:10px auto;padding:20px;text-align:center;max-width:770px}
-        .entry-card{background:var(--card);border-radius:15px;padding:15px;margin:0 15px 12px 15px;border-left:6px solid;display:flex;justify-content:space-between;align-items:center;gap:10px}
-        .nav-bar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid var(--border);z-index:1000}
-        .nav-item{text-align:center;color:#64748b;font-size:10px;cursor:pointer;flex:1}
-        .nav-item.active{color:var(--yellow)}
-        input,select{width:100%;padding:15px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-bottom:15px;box-sizing:border-box;font-size:14px}
-        .btn-save{width:100%;padding:18px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;color:white;font-size:14px}
-        .btn-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-        .profile-img-wrap{width:100px;height:100px;margin:0 auto 15px;border:3px solid var(--yellow);border-radius:50%;overflow:hidden;background:#334155;position:relative}
-        .profile-img-wrap img{width:100%;height:100%;object-fit:cover}
-        .entry-actions{display:flex;gap:15px;align-items:center;flex-shrink:0}
-        .entry-actions i{cursor:pointer;transition:0.2s;font-size:16px}
-        .fa-trash:hover{color:var(--red)}
-        .fa-edit:hover{color:var(--yellow)}
-        .scanner-preview{width:100%;height:220px;background:#000;border-radius:10px;margin-bottom:15px;display:none;object-fit:cover;border:2px solid var(--yellow)}
-        .btn-scan{background:var(--blue);margin-bottom:15px}
-        .report-table{width:100%;border-collapse:collapse;margin-top:20px;background:var(--card);border-radius:10px;overflow:hidden}
-        .report-table th,.report-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
-        .report-table th{background:var(--border);color:var(--yellow)}
-        .status-box{display:none;background:#111827;border:2px solid var(--yellow);padding:12px;border-radius:12px;margin-bottom:15px;color:var(--yellow);font-weight:bold;text-align:center;font-size:13px}
-        .ocr-results{display:none;background:var(--card);border:2px solid var(--green);border-radius:15px;padding:15px;margin-bottom:15px}
-        .ocr-results h4{color:var(--green);margin:0 0 12px 0;font-size:13px;text-transform:uppercase;letter-spacing:1px}
-        .ocr-field{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
-        .ocr-field:last-child{border-bottom:none}
-        .ocr-field label{color:#94a3b8;font-size:11px}
-        .ocr-field span{font-weight:bold;color:var(--yellow)}
-        .ocr-entry-list{display:none;margin-bottom:15px}
-        .ocr-entry-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:13px;cursor:pointer;transition:0.2s}
-        .ocr-entry-item:hover{border-color:var(--yellow)}
-        .ocr-entry-item.selected{border-color:var(--green);background:rgba(46,204,113,0.1)}
-        .amt-positive{color:var(--green);font-weight:bold}
-        .amt-negative{color:var(--red);font-weight:bold}
-        .btn-import-selected{background:var(--green);margin-bottom:15px;display:none}
-        .upload-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;margin-bottom:15px;cursor:pointer;transition:0.2s}
-        .upload-area:hover{border-color:var(--yellow)}
-        .upload-area i{font-size:30px;color:#64748b;display:block;margin-bottom:8px}
-        .upload-area p{margin:0;font-size:12px;color:#64748b}
-        #file-upload-input,#csv-upload-input,#pdf-upload-input{display:none}
-        .modus-label{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#64748b;margin-bottom:2px}
-        .modus-label span{color:var(--yellow);font-weight:bold}
-        .download-btns{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;padding:0 5px}
-        .download-btns .btn-save{width:auto;padding:12px 22px;font-size:13px}
-        .hidden-amount{filter:blur(6px);user-select:none;transition:filter 0.3s}
-        .eye-toggle{background:none;border:1.5px solid var(--border);border-radius:20px;color:var(--text);padding:5px 14px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s}
-        .eye-toggle:hover{border-color:var(--yellow);color:var(--yellow)}
-        .eye-toggle-row{display:flex;justify-content:flex-end;padding:6px 12px 0}
-        .bank-import-box{background:var(--card);border:2px solid var(--blue);border-radius:15px;padding:15px;margin-bottom:15px}
-        .bank-import-box h4{color:var(--blue);margin:0 0 10px 0;font-size:13px;text-transform:uppercase;letter-spacing:1px}
-        .bank-upload-tabs{display:flex;gap:8px;margin-bottom:12px}
-        .bank-tab{flex:1;padding:8px;border:1.5px solid var(--border);border-radius:10px;background:transparent;color:#64748b;font-size:12px;font-weight:bold;cursor:pointer;text-align:center;transition:0.2s}
-        .bank-tab.active{border-color:var(--blue);color:var(--blue);background:rgba(59,130,246,0.08)}
-        .csv-preview-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;font-size:13px;cursor:pointer;transition:0.2s}
-        .csv-preview-item:hover{border-color:var(--yellow)}
-        .csv-preview-item.selected{border-color:var(--green);background:rgba(46,204,113,0.08)}
-        .csv-select-all-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;color:#94a3b8}
-        .csv-select-all-row button{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:4px 10px;font-size:11px;cursor:pointer}
-        .csv-select-all-row button:hover{border-color:var(--yellow);color:var(--yellow)}
-        .bank-status{display:none;background:#111827;border:2px solid var(--blue);padding:10px;border-radius:10px;margin-bottom:12px;color:var(--blue);font-weight:bold;text-align:center;font-size:12px}
-        .setup-container{padding:30px;max-width:420px;margin:30px auto;background:var(--card);border-radius:20px;border:2px solid var(--yellow)}
-        .setup-container h2{color:var(--yellow);text-align:center;margin-bottom:5px;font-size:22px}
-        .setup-container p{color:#94a3b8;text-align:center;font-size:13px;margin-bottom:25px}
-        .setup-step{font-size:11px;color:var(--yellow);font-weight:bold;text-transform:uppercase;margin-bottom:5px;letter-spacing:1px}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transport PRO</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TransportPRO">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--y:#f1c40f;--g:#2ecc71;--r:#ff4757;--b:#3b82f6;--t:#f8fafc;--br:#334155}
+.lt{--bg:#f1f5f9;--card:#fff;--t:#1e293b;--br:#cbd5e1}
+*{box-sizing:border-box}
+body{font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--t);margin:0;padding-bottom:90px;overflow-x:hidden}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:var(--card);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100}
+.awrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.abox{background:var(--card);border-radius:16px;padding:28px;width:100%;max-width:360px;text-align:center}
+.sbox{background:var(--card);border:2px solid var(--y);border-radius:16px;padding:24px;width:100%;max-width:380px}
+input,select{width:100%;padding:13px;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--t);margin-bottom:11px;font-size:14px;font-family:inherit}
+.btn{width:100%;padding:15px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;color:#fff;font-size:14px}
+.btn2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:7px}
+.htitle{text-align:center;color:var(--y);font-weight:bold;padding:13px 0 8px;font-size:16px;text-transform:uppercase;letter-spacing:1px}
+.mbar{display:flex;margin:9px auto 3px;max-width:280px;background:var(--card);border:1.5px solid var(--br);border-radius:30px;overflow:hidden;padding:3px}
+.mbtn{flex:1;padding:8px 0;border:none;background:transparent;color:#64748b;font-weight:bold;font-size:11px;cursor:pointer;border-radius:25px;transition:.2s;text-transform:uppercase}
+.mbtn.on{background:var(--y);color:#0f172a}
+.pfil{display:none;justify-content:center;gap:6px;margin:5px 9px 0;flex-wrap:wrap}
+.pfil.vis{display:flex}
+.pbtn{padding:5px 11px;border-radius:20px;border:1.5px solid var(--br);background:transparent;color:var(--t);font-size:11px;font-weight:bold;cursor:pointer}
+.pbtn.on{border-color:var(--y);color:var(--y)}
+.drow{display:none;gap:7px;margin:5px 13px 0}
+.drow.vis{display:flex}
+.drow input{flex:1;padding:7px;font-size:12px;margin:0}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:9px;max-width:780px;margin:auto}
+.sb{background:var(--card);border:1.5px solid;border-radius:11px;padding:10px;text-align:center}
+.sb small{font-size:9px;display:block;margin-bottom:3px;font-weight:bold;letter-spacing:.5px}
+.sb span{font-size:14px;font-weight:bold}
+.mvacard{background:var(--card);border:2px solid var(--br);border-radius:13px;margin:7px 9px;padding:12px;display:grid;grid-template-columns:1fr 1fr}
+.mvai{text-align:center}
+.mvai small{font-size:10px;color:#94a3b8;display:block}
+.sumcard{background:var(--card);border:2px solid var(--y);border-radius:17px;margin:7px 9px;padding:15px;text-align:center}
+.sumcard small{font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase}
+.sumcard h1{margin:7px 0 0;font-size:27px}
+.ecard{background:var(--card);border-radius:11px;padding:12px 13px;margin:0 9px 9px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.einfo{flex:1;min-width:0}
+.einfo .et{font-weight:bold;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.einfo .ed{font-size:11px;color:#94a3b8;margin-top:2px}
+.eact{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.eamt{font-weight:bold;font-size:13px;white-space:nowrap}
+.eact i{cursor:pointer;color:#64748b;font-size:13px}
+.eact i:hover{color:var(--y)}
+.navbar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:9px 0 12px;border-top:1px solid var(--br);z-index:200}
+.ni{text-align:center;color:#64748b;font-size:10px;cursor:pointer;flex:1}
+.ni.on{color:var(--y)}
+.ni i{display:block;font-size:18px;margin-bottom:2px}
+.eyerow{display:flex;justify-content:flex-end;padding:4px 11px 0}
+.eyebtn{background:none;border:1.5px solid var(--br);border-radius:20px;color:var(--t);padding:5px 11px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:5px}
+.eyebtn:hover{border-color:var(--y);color:var(--y)}
+.ha{filter:blur(6px);user-select:none}
+.bbox{background:var(--card);border:2px solid var(--b);border-radius:13px;padding:13px;margin-bottom:12px}
+.bbox h4{color:var(--b);margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.btabs{display:flex;gap:5px;margin-bottom:8px}
+.btab{flex:1;padding:7px;border:1.5px solid var(--br);border-radius:8px;background:transparent;color:#64748b;font-size:12px;font-weight:bold;cursor:pointer;text-align:center}
+.btab.on{border-color:var(--b);color:var(--b);background:rgba(59,130,246,.08)}
+.bstat{display:none;background:#111827;border:2px solid var(--b);padding:9px;border-radius:9px;margin-bottom:8px;color:var(--b);font-weight:bold;text-align:center;font-size:12px}
+.uarea{border:2px dashed var(--br);border-radius:10px;padding:16px;text-align:center;margin-bottom:11px;cursor:pointer}
+.uarea:hover{border-color:var(--y)}
+.uarea i{font-size:24px;color:#64748b;display:block;margin-bottom:5px}
+.uarea p{margin:3px 0;font-size:12px;color:#64748b}
+.pitem{background:var(--bg);border:1px solid var(--br);border-radius:9px;padding:9px 11px;margin-bottom:6px;cursor:pointer}
+.pitem.sel{border-color:var(--g);background:rgba(46,204,113,.06)}
+.ptop{display:flex;justify-content:space-between;align-items:center}
+.ptop .pd{font-weight:bold;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ptop .pa{font-weight:bold;font-size:12px;white-space:nowrap;margin-left:7px}
+.pdt{font-size:11px;color:#94a3b8;margin-top:2px}
+.sarow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:#94a3b8}
+.sarow button{background:none;border:1px solid var(--br);border-radius:7px;color:var(--t);padding:3px 9px;font-size:11px;cursor:pointer}
+.ostat{display:none;background:#111827;border:2px solid var(--y);padding:10px;border-radius:10px;margin-bottom:10px;color:var(--y);font-weight:bold;text-align:center;font-size:13px}
+.ores{display:none;background:var(--card);border:2px solid var(--g);border-radius:12px;padding:13px;margin-bottom:10px}
+.ores h4{color:var(--g);margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.of{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--br);font-size:13px}
+.of:last-child{border-bottom:none}
+.of label{color:#94a3b8;font-size:11px}
+.of span{font-weight:bold;color:var(--y)}
+.ocrlist{display:none;margin-bottom:10px}
+.oi{background:var(--card);border:1px solid var(--br);border-radius:9px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.oi.sel{border-color:var(--g);background:rgba(46,204,113,.08)}
+.oi:hover{border-color:var(--y)}
+.oii{flex:1;min-width:0}
+.oii .nm{font-weight:bold;font-size:12px}
+.oii .ct{font-size:10px;color:#64748b;margin-top:2px}
+.oiamt{font-weight:bold;font-size:13px;white-space:nowrap;margin-left:7px}
+.grand{background:var(--card);border:2px solid var(--y);border-radius:11px;padding:10px 12px;margin-top:9px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;text-align:center}
+.gc small{display:block;font-size:9px;color:#94a3b8;margin-bottom:2px;text-transform:uppercase}
+.gc b{font-size:14px}
+.pimgw{width:85px;height:85px;margin:0 auto 11px;border:3px solid var(--y);border-radius:50%;overflow:hidden;background:#334155;cursor:pointer}
+.pimgw img{width:100%;height:100%;object-fit:cover}
+.rtbl{width:100%;border-collapse:collapse;font-size:12px}
+.rtbl th{background:var(--br);color:var(--y);padding:9px 8px;text-align:left}
+.rtbl td{padding:8px;border-bottom:1px solid var(--br)}
+.dlrow{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+.dlrow .btn{width:auto;padding:9px 16px;font-size:12px}
+.sprev{width:100%;height:190px;background:#000;border-radius:10px;margin-bottom:10px;display:none;object-fit:cover;border:2px solid var(--y)}
+.slbl{font-size:11px;color:#94a3b8;text-transform:uppercase;margin-bottom:8px;margin-top:3px;letter-spacing:.5px}
+#fui,#csvi,#pdfi,#pup{display:none}
+</style>
 </head>
 <body>
-
-<!-- SETUP PAGE -->
-<div id="setup-page" style="display:none;padding:20px;">
-    <div class="setup-container">
-        <h2>🚖 TRANSPORT PRO</h2>
-        <p>Samee akoonkaaga cusub</p>
-        <div class="setup-step">Magacaaga Hore</div>
-        <input type="text" id="setup-firstname" placeholder="Magaca hore (First name)">
-        <div class="setup-step">Magaca Aabaha</div>
-        <input type="text" id="setup-lastname" placeholder="Magaca aabaha (Last name)">
-        <div class="setup-step">E-mail</div>
-        <input type="email" id="setup-email" placeholder="Email-kaaga">
-        <div class="setup-step">Passwordka</div>
-        <input type="password" id="setup-pass" placeholder="Password (ugu yaraan 6 xaraf)">
-        <div class="setup-step">Xaqiiji Passwordka</div>
-        <input type="password" id="setup-pass2" placeholder="Dib u geli password-ka">
-        <button class="btn-save" style="background:var(--green);margin-top:5px;" onclick="handleSetup()">
-            <i class="fas fa-user-plus"></i> SAMEE AKOON
-        </button>
-        <p style="text-align:center;margin-top:15px;font-size:12px;color:#94a3b8;">
-            Akoon horey u leedahay?
-            <span style="color:var(--yellow);cursor:pointer;font-weight:bold;" onclick="showLogin()">SOOG GAL</span>
-        </p>
-    </div>
+<div id="pg-auth" style="display:none"><div class="awrap"><div class="abox">
+<h2 style="color:var(--y);margin-bottom:18px">&#128662; TRANSPORT PRO</h2>
+<input type="email" id="em" placeholder="E-post">
+<input type="password" id="pw" placeholder="Passord">
+<button class="btn" style="background:var(--b);margin-bottom:9px" onclick="doLogin()">LOGG INN</button>
+<p style="color:var(--y);cursor:pointer;font-size:12px;margin:4px 0" onclick="forgotPw()">Glemt passord?</p>
+<p style="font-size:12px;color:#94a3b8;margin:7px 0">Cusub? <span style="color:var(--y);cursor:pointer;font-weight:bold" onclick="goSetup()">DIIWAANGELI</span></p>
+</div></div></div>
+<div id="pg-setup" style="display:none"><div class="awrap"><div class="sbox">
+<h2 style="color:var(--y);text-align:center;margin-bottom:3px">&#128662; TRANSPORT PRO</h2>
+<p style="color:#94a3b8;text-align:center;font-size:13px;margin-bottom:15px">Samee akoon cusub</p>
+<div class="slbl">Magaca Hore</div><input type="text" id="sf" placeholder="First name">
+<div class="slbl">Magaca Aabaha</div><input type="text" id="sl" placeholder="Last name">
+<div class="slbl">E-mail</div><input type="email" id="se" placeholder="email@example.com">
+<div class="slbl">Password</div><input type="password" id="sp" placeholder="Ugu yaraan 6 xaraf">
+<div class="slbl">Xaqiiji Password</div><input type="password" id="sp2" placeholder="Dib u geli">
+<button class="btn" style="background:var(--g);margin-top:3px" onclick="doSetup()">SAMEE AKOON</button>
+<p style="text-align:center;font-size:12px;color:#94a3b8;margin-top:10px">Akoon horey? <span style="color:var(--y);cursor:pointer;font-weight:bold" onclick="goAuth()">SOOG GAL</span></p>
+</div></div></div>
+<div id="app" style="display:none">
+<div class="topbar">
+<i class="fas fa-moon" style="cursor:pointer;font-size:16px" onclick="toggleTheme()"></i>
+<span id="uname" style="font-weight:bold;font-size:14px">...</span>
+<div><span style="cursor:pointer">&#127475;&#127476;</span></div>
 </div>
-
-<!-- LOGIN PAGE -->
-<div id="auth-page" class="auth-container">
-    <h2 style="color:var(--yellow)">🚖 TRANSPORT PRO</h2><br>
-    <input type="email" id="email" placeholder="E-post">
-    <input type="password" id="pass" placeholder="Passord">
-    <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
-    <p style="color:var(--yellow);cursor:pointer;font-size:12px;margin-top:10px;" onclick="forgotPassword()">Glemt passord?</p>
-    <p style="text-align:center;font-size:12px;color:#94a3b8;margin-top:5px;">
-        Account cusub?
-        <span style="color:var(--yellow);cursor:pointer;font-weight:bold;" onclick="showSetup()">DIIWAANGELI</span>
-    </p>
+<div id="pg-dash" class="pg">
+<div style="padding:9px 13px 0;text-align:center">
+<div style="font-size:10px;color:#64748b;margin-bottom:3px">MODUS: <span id="mlbl" style="color:var(--y);font-weight:bold">TOTAL</span></div>
+<div class="mbar">
+<button class="mbtn" id="mb-i" onclick="setModus('i')"><i class="fas fa-user"></i> Individuell</button>
+<button class="mbtn on" id="mb-t" onclick="setModus('t')"><i class="fas fa-globe"></i> Total</button>
+</div></div>
+<div class="eyerow"><button class="eyebtn" onclick="toggleAmt()"><i class="fas fa-eye" id="ei"></i><span id="el">Qari</span></button></div>
+<div class="pfil" id="pfil">
+<button class="pbtn on" onclick="setPer('today',this)">I dag</button>
+<button class="pbtn" onclick="setPer('week',this)">Uke</button>
+<button class="pbtn" onclick="setPer('month',this)">Maaned</button>
+<button class="pbtn" onclick="setPer('year',this)">Ar</button>
+<button class="pbtn" onclick="setPer('custom',this)">Egendefinert</button>
 </div>
-
-<!-- MAIN APP -->
-<div id="main-app" style="display:none">
-    <div class="top-bar">
-        <i class="fas fa-moon" style="cursor:pointer" onclick="toggleTheme()"></i>
-        <div id="user-display-name" style="font-weight:bold">Laster...</div>
-        <div>
-            <span style="cursor:pointer" onclick="updateLang('no')">🇳🇴</span>
-            <span style="cursor:pointer" onclick="updateLang('so')">🇸🇴</span>
-        </div>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div id="page-dash" class="page">
-        <div style="padding:10px 15px 0;">
-            <div class="modus-label">MODUS: <span id="modus-label-text">TOTAL</span></div>
-            <div class="modus-bar">
-                <button class="modus-btn" id="btn-modus-individuell" onclick="setModus('individuell')"><i class="fas fa-user"></i> Individuell</button>
-                <button class="modus-btn active" id="btn-modus-total" onclick="setModus('total')"><i class="fas fa-globe"></i> Total</button>
-            </div>
-        </div>
-        <div class="eye-toggle-row">
-            <button class="eye-toggle" onclick="toggleAmounts()">
-                <i class="fas fa-eye" id="eye-icon"></i>
-                <span id="eye-label">Qari Lacagaha</span>
-            </button>
-        </div>
-        <div class="period-filter" id="period-filter">
-            <button class="period-btn active" onclick="setPeriod('today',this)">I dag</button>
-            <button class="period-btn" onclick="setPeriod('week',this)">Uke</button>
-            <button class="period-btn" onclick="setPeriod('month',this)">Måned</button>
-            <button class="period-btn" onclick="setPeriod('year',this)">År</button>
-            <button class="period-btn" onclick="setPeriod('custom',this)">Egendefinert</button>
-        </div>
-        <div class="custom-date-row" id="custom-date-row">
-            <input type="date" id="filter-from" onchange="applyCustomFilter()">
-            <input type="date" id="filter-to" onchange="applyCustomFilter()">
-        </div>
-        <div class="stats-grid">
-            <div class="stat-box" style="border-color:var(--green);color:var(--green)"><small>INNTEKT</small><span id="total-income" class="amount-field">0 kr</span></div>
-            <div class="stat-box" style="border-color:var(--red);color:var(--red)"><small>UTGIFTER</small><span id="total-expense" class="amount-field">0 kr</span></div>
-            <div class="stat-box" style="border-color:var(--blue);color:var(--blue)"><small>NETTO</small><span id="total-netto" class="amount-field">0 kr</span></div>
-        </div>
-        <div class="mva-card">
-            <div class="mva-item"><small>Skyldig MVA</small><br><b id="res-mva" class="amount-field">0 kr</b></div>
-            <div class="mva-item"><small>Avskrivning</small><br><b id="res-avsk" class="amount-field">0 kr</b></div>
-        </div>
-        <div class="summary-card">
-            <small>RESULTAT FØR SKATT (NETTO)</small>
-            <h1 id="res-total" class="amount-field" style="color:var(--green)">0 kr</h1>
-        </div>
-        <div id="entries-list"></div>
-    </div>
-
-    <!-- REPORTS -->
-    <div id="page-reports" class="page" style="display:none;padding:20px;">
-        <div class="header-title">REGNSKAP REPORTS</div>
-        <div class="download-btns">
-            <button class="btn-save" style="background:var(--green)" onclick="downloadCSV()"><i class="fas fa-file-csv"></i> Last ned CSV</button>
-            <button class="btn-save" style="background:var(--blue)" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Last ned PDF</button>
-        </div>
-        <table class="report-table">
-            <thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr></thead>
-            <tbody id="report-body"></tbody>
-        </table>
-    </div>
-
-    <!-- ADD PAGE -->
-    <div id="page-add" class="page" style="display:none;padding:20px;">
-        <div class="header-title">REGISTRER DATA</div>
-        <div class="bank-import-box">
-            <h4><i class="fas fa-university"></i> DNB Bank Import</h4>
-            <div class="bank-upload-tabs">
-                <button class="bank-tab active" id="tab-pdf" onclick="switchBankTab('pdf')">📄 PDF</button>
-                <button class="bank-tab" id="tab-csv" onclick="switchBankTab('csv')">📊 CSV</button>
-            </div>
-            <div id="bank-status" class="bank-status"></div>
-            <div id="bank-pdf-area">
-                <div class="upload-area" onclick="document.getElementById('pdf-upload-input').click()" style="border-color:var(--blue);margin-bottom:10px;">
-                    <i class="fas fa-file-pdf" style="color:var(--red)"></i>
-                    <p style="color:var(--blue);font-weight:bold;">DNB PDF Kontoutskrift ku soo geli</p>
-                    <p>arkiv_dokument_DNB.pdf</p>
-                </div>
-                <input type="file" id="pdf-upload-input" accept=".pdf,application/pdf" onchange="handlePDFUpload(this)">
-            </div>
-            <div id="bank-csv-area" style="display:none;">
-                <div class="upload-area" onclick="document.getElementById('csv-upload-input').click()" style="border-color:var(--blue);margin-bottom:10px;">
-                    <i class="fas fa-file-csv" style="color:var(--blue)"></i>
-                    <p style="color:var(--blue);font-weight:bold;">DNB CSV File ku soo geli</p>
-                    <p>Transaksjoner → Last ned CSV</p>
-                </div>
-                <input type="file" id="csv-upload-input" accept=".csv,text/csv" onchange="handleCSVUpload(this)">
-            </div>
-            <div id="bank-preview-container" style="display:none;">
-                <div class="csv-select-all-row">
-                    <span id="bank-count-label">0 transactions</span>
-                    <div style="display:flex;gap:6px;">
-                        <button onclick="bankSelectAll()">Dooro Dhammaan</button>
-                        <button onclick="bankSelectNone()">Tirtir Xushka</button>
-                    </div>
-                </div>
-                <div id="bank-items-container"></div>
-                <button class="btn-save" id="btn-import-bank" style="background:var(--blue);display:none;margin-top:8px;" onclick="importBankSelected()">
-                    <i class="fas fa-file-import"></i> KEYDI TRANSACTIONS LA XUSHAY
-                </button>
-            </div>
-        </div>
-
-        <div id="ocr-status" class="status-box"></div>
-        <button class="btn-save btn-scan" onclick="startScanner()"><i class="fas fa-camera"></i> SCAN RECEIPT (KAMERA)</button>
-        <div class="upload-area" onclick="document.getElementById('file-upload-input').click()">
-            <i class="fas fa-file-image"></i>
-            <p>Riix halkan si aad sawir u soo geliso fakturada</p>
-            <p style="color:var(--yellow);margin-top:5px;font-weight:bold">JPG / PNG</p>
-        </div>
-        <input type="file" id="file-upload-input" accept="image/*" onchange="handleFileUpload(this)">
-        <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
-        <canvas id="scanner-canvas" style="display:none;"></canvas>
-        <img id="scanned-img" class="scanner-preview"/>
-        <button id="capture-btn" class="btn-save" style="display:none;background:var(--green);margin-bottom:15px;" onclick="capturePhoto()">📸 TA SAWIRKA</button>
-
-        <div id="ocr-results" class="ocr-results">
-            <h4>✅ Faktura La Aqriyay</h4>
-            <div class="ocr-field"><label>TAARIIKHDA</label><span id="ocr-date-display">—</span></div>
-            <div class="ocr-field"><label>FAKTURA NR</label><span id="ocr-invoice-display">—</span></div>
-            <div class="ocr-field"><label>BELØP INKL. MVA</label><span id="ocr-total-display">—</span></div>
-            <div class="ocr-field"><label>MVA 12%</label><span id="ocr-mva12-display">—</span></div>
-            <div class="ocr-field"><label>MVA 25%</label><span id="ocr-mva25-display">—</span></div>
-        </div>
-        <div id="ocr-entry-list" class="ocr-entry-list">
-            <div style="color:var(--yellow);font-weight:bold;font-size:13px;margin-bottom:8px;text-transform:uppercase">📋 Dooro entries aad rabto in la keydiyo:</div>
-            <div id="ocr-items-container"></div>
-            <button class="btn-save btn-import-selected" id="btn-import-selected" onclick="importSelected()"><i class="fas fa-file-import"></i> KEYDI ENTRIES LA XUSHAY</button>
-        </div>
-
-        <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border)">
-            <div style="color:#94a3b8;font-size:12px;margin-bottom:12px;text-transform:uppercase">✏️ Geli Gacanta ama Saxar OCR:</div>
-        </div>
-        <input type="hidden" id="edit-id">
-        <input type="date" id="entry-date">
-        <select id="entry-category">
-            <optgroup label="INNTEKT (DRIFTSINNTEKTER)">
-                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
-                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
-                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
-                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
-                <option value="3039">3039 - Bomtur, lav sats</option>
-                <option value="3110">3110 - Tips</option>
-            </optgroup>
-            <optgroup label="UTGIFTER (DRIFTSKOSTNADER)">
-                <option value="5000">5000 - Lønn til ansatte</option>
-                <option value="5400">5400 - Arbeidsgiveravgift</option>
-                <option value="5920">5920 - Yrkesskadeforsiking</option>
-                <option value="6010">6010 - Avskrivning på transportmidler</option>
-                <option value="6705">6705 - Regnskapshonorar</option>
-                <option value="6755">6755 - Sentralavgift</option>
-                <option value="6800">6800 - Kontorrekvisita</option>
-                <option value="6900">6900 - Telefon</option>
-                <option value="6907">6907 - Datakommunikasjon</option>
-                <option value="7000">7000 - Drivstoff</option>
-                <option value="7020">7020 - Vedlikehold transportmiddel</option>
-                <option value="7040">7040 - Forsikring transportmiddel</option>
-                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
-                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
-                <option value="7770">7770 - Bank- og kortgebyr</option>
-                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
-                <option value="7790">7790 - Annen kostnad</option>
-                <option value="7791">7791 - Spesialtur</option>
-                <option value="7792">7792 - General kreditt</option>
-                <option value="7793">7793 - Pasienttransport</option>
-                <option value="7794">7794 - Ikke møtte</option>
-                <option value="7795">7795 - Adm: gebyr trukket</option>
-                <option value="7796">7796 - Faktura fra Agder Taxi uten MVA og moms, feriepenger</option>
-                <option value="7797">7797 - Kontoutskrift</option>
-            </optgroup>
-        </select>
-        <input type="text" id="entry-desc" placeholder="Beskrivelse">
-        <input type="number" id="entry-amt" placeholder="Beløp (kr)" step="0.01">
-        <div class="btn-group">
-            <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">LAGRE INNTEKT</button>
-            <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">LAGRE UTGIFT</button>
-        </div>
-    </div>
-
-    <!-- PROFILE -->
-    <div id="page-profile" class="page" style="display:none;padding:20px;text-align:center;">
-        <div class="header-title">MY PROFILE</div>
-        <div class="profile-img-wrap" onclick="document.getElementById('profile-upload').click()">
-            <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-            <input type="file" id="profile-upload" style="display:none" onchange="uploadPhoto(this)">
-        </div>
-        <div id="profile-view">
-            <h3 id="prof-name" style="margin-bottom:5px;">User Name</h3>
-            <p id="prof-email" style="color:#94a3b8;font-size:14px;margin-bottom:20px;">email@example.com</p>
-            <button class="btn-save" style="background:var(--yellow);color:black;margin-bottom:10px" onclick="toggleProfileEdit(true)"><i class="fas fa-edit"></i> Wax ka badal Profile-ka</button>
-        </div>
-        <div id="profile-edit-form" style="display:none;background:var(--card);padding:15px;border-radius:12px;border:1px solid var(--border);">
-            <input type="text" id="edit-display-name" placeholder="Magacaaga">
-            <button class="btn-save" style="background:var(--green);margin-bottom:10px;" onclick="updateProfileInfo()">KEYDI ISBEDELKA</button>
-            <button class="btn-save" style="background:var(--border);color:white;" onclick="toggleProfileEdit(false)">KA NOQO</button>
-        </div>
-        <hr style="border:0;border-top:1px solid var(--border);margin:20px 0;">
-        <button class="btn-save" style="background:var(--blue);margin-bottom:10px" onclick="changePass()">Change Password</button>
-        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT (EXIT)</button>
-    </div>
-
-    <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br><span>Dash</span></div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br><span>Add</span></div>
-        <div class="nav-item" id="nav-reports" onclick="showTab('reports')"><i class="fas fa-file-invoice"></i><br><span>Reports</span></div>
-        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br><span>Profil</span></div>
-    </div>
+<div class="drow" id="drow">
+<input type="date" id="dfrom" onchange="applyCustom()">
+<input type="date" id="dto" onchange="applyCustom()">
 </div>
-
+<div class="sgrid">
+<div class="sb" style="border-color:var(--g);color:var(--g)"><small>INNTEKT</small><span id="s-inc" class="af">0 kr</span></div>
+<div class="sb" style="border-color:var(--r);color:var(--r)"><small>UTGIFTER</small><span id="s-exp" class="af">0 kr</span></div>
+<div class="sb" style="border-color:var(--b);color:var(--b)"><small>NETTO</small><span id="s-net" class="af">0 kr</span></div>
+</div>
+<div class="mvacard">
+<div class="mvai"><small>Skyldig MVA (12%)</small><b id="s-mva" class="af">0 kr</b></div>
+<div class="mvai"><small>Avskrivning</small><b id="s-avsk" class="af">0 kr</b></div>
+</div>
+<div class="sumcard"><small>RESULTAT FOR SKATT (NETTO)</small><h1 id="s-tot" class="af" style="color:var(--g)">0 kr</h1></div>
+<div id="elist"></div>
+</div>
+<div id="pg-reports" class="pg" style="display:none;padding:14px">
+<div class="htitle">REGNSKAP REPORTS</div>
+<div class="dlrow">
+<button class="btn" style="background:var(--g)" onclick="dlCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+<button class="btn" style="background:var(--b)" onclick="dlPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+</div>
+<table class="rtbl"><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Belop</th></tr></thead><tbody id="rtbody"></tbody></table>
+</div>
+<div id="pg-add" class="pg" style="display:none;padding:14px">
+<div class="htitle">REGISTRER DATA</div>
+<div class="bbox">
+<h4><i class="fas fa-university"></i> DNB Bank Import</h4>
+<div class="btabs">
+<button class="btab on" id="bt-pdf" onclick="switchTab('pdf')">&#128196; PDF</button>
+<button class="btab" id="bt-csv" onclick="switchTab('csv')">&#128202; CSV</button>
+</div>
+<div id="bstat" class="bstat"></div>
+<div id="bpdf">
+<div class="uarea" onclick="document.getElementById('pdfi').click()" style="border-color:var(--b)">
+<i class="fas fa-file-pdf" style="color:var(--r)"></i>
+<p style="color:var(--b);font-weight:bold">DNB PDF Kontoutskrift</p><p>Riix halkan</p>
+</div>
+<input type="file" id="pdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)">
+</div>
+<div id="bcsv" style="display:none">
+<div class="uarea" onclick="document.getElementById('csvi').click()" style="border-color:var(--b)">
+<i class="fas fa-file-csv" style="color:var(--b)"></i>
+<p style="color:var(--b);font-weight:bold">DNB CSV</p><p>Transaksjoner - Last ned CSV</p>
+</div>
+<input type="file" id="csvi" accept=".csv,text/csv" onchange="handleCSV(this)">
+</div>
+<div id="bprev" style="display:none">
+<div class="sarow"><span id="bcount">0</span>
+<div style="display:flex;gap:5px"><button onclick="bAll()">Dhammaan</button><button onclick="bNone()">Tirtir</button></div>
+</div>
+<div id="bitems"></div>
+<button class="btn" id="btn-bi" style="background:var(--b);display:none;margin-top:7px" onclick="importBank()">KEYDI LA XUSHAY</button>
+</div></div>
+<div class="slbl">FAKTURA / RECEIPT</div>
+<div id="ostat" class="ostat"></div>
+<button class="btn" style="background:var(--b);margin-bottom:9px" id="scanbtn" onclick="startScan()"><i class="fas fa-camera"></i> SCAN KAMERA</button>
+<div class="uarea" onclick="document.getElementById('fui').click()">
+<i class="fas fa-file-image"></i>
+<p>Fakturada soo geli - JPG/PNG/PDF</p>
+<p style="color:var(--y);font-weight:bold">Agder Taxi PDF automatic!</p>
+</div>
+<input type="file" id="fui" accept="image/*,.pdf,application/pdf" onchange="handleFile(this)">
+<video id="svid" class="sprev" autoplay playsinline></video>
+<canvas id="scv" style="display:none"></canvas>
+<img id="simg" class="sprev">
+<button id="capbtn" class="btn" style="display:none;background:var(--g);margin-bottom:10px" onclick="capture()">TA SAWIRKA</button>
+<div id="ores" class="ores">
+<h4>Faktura La Aqriyay</h4>
+<div class="of"><label>TAARIIKHDA</label><span id="od">-</span></div>
+<div class="of"><label>FAKTURA NR</label><span id="oinv">-</span></div>
+<div class="of"><label>BELOP INKL MVA</label><span id="otot">-</span></div>
+<div class="of"><label>MVA 12%</label><span id="om12">-</span></div>
+<div class="of"><label>MVA 25%</label><span id="om25">-</span></div>
+</div>
+<div id="ocrlist" class="ocrlist">
+<div style="color:var(--y);font-weight:bold;font-size:12px;margin-bottom:7px;text-transform:uppercase">Dooro entries:</div>
+<div id="oitems"></div>
+<button class="btn" id="btn-oi" style="background:var(--g);display:none;margin-top:5px" onclick="importOCR()">KEYDI LA XUSHAY</button>
+</div>
+<div style="border-top:1px solid var(--br);margin-top:12px;padding-top:12px">
+<div class="slbl">GELI GACANTA</div>
+</div>
+<input type="hidden" id="eid">
+<input type="date" id="edate">
+<select id="ecat">
+<optgroup label="INNTEKT">
+<option value="3030">3030 - Kjoreinntekter, lav sats</option>
+<option value="3031">3031 - Kjoreinntekter kontant</option>
+<option value="3032">3032 - Kjoreinntekter NAV</option>
+<option value="3033">3033 - Kjoreinntekter skole</option>
+<option value="3039">3039 - Bomtur</option>
+<option value="3110">3110 - Tips</option>
+</optgroup>
+<optgroup label="UTGIFTER">
+<option value="5000">5000 - Lonn til ansatte</option>
+<option value="5400">5400 - Arbeidsgiveravgift</option>
+<option value="5920">5920 - Yrkesskadeforsiking</option>
+<option value="6010">6010 - Avskrivning transportmidler</option>
+<option value="6705">6705 - Regnskapshonorar</option>
+<option value="6755">6755 - Sentralavgift</option>
+<option value="6800">6800 - Kontorrekvisita</option>
+<option value="6900">6900 - Telefon</option>
+<option value="6907">6907 - Datakommunikasjon</option>
+<option value="7000">7000 - Drivstoff</option>
+<option value="7020">7020 - Vedlikehold transportmiddel</option>
+<option value="7040">7040 - Forsikring transportmiddel</option>
+<option value="7140">7140 - Reisekostnad</option>
+<option value="7400">7400 - Kontingent</option>
+<option value="7770">7770 - Bank og kortgebyr</option>
+<option value="7790">7790 - Annen kostnad</option>
+<option value="7791">7791 - Spesialtur</option>
+<option value="7792">7792 - General kreditt</option>
+<option value="7793">7793 - Pasienttransport</option>
+<option value="7794">7794 - Ikke motte</option>
+<option value="7795">7795 - Adm gebyr trukket</option>
+<option value="7796">7796 - Faktura Agder Taxi</option>
+<option value="7797">7797 - Kontoutskrift</option>
+<option value="7798">7798 - Annen fradragsberettiget</option>
+</optgroup>
+</select>
+<input type="text" id="edesc" placeholder="Beskrivelse">
+<input type="number" id="eamt" placeholder="Belop (kr)" step="0.01">
+<div class="btn2">
+<button class="btn" style="background:var(--g)" onclick="saveE('income')">LAGRE INNTEKT</button>
+<button class="btn" style="background:var(--r)" onclick="saveE('expense')">LAGRE UTGIFT</button>
+</div>
+</div>
+<div id="pg-profile" class="pg" style="display:none;padding:14px;text-align:center">
+<div class="htitle">MY PROFILE</div>
+<div class="pimgw" onclick="document.getElementById('pup').click()">
+<img id="pimg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+<input type="file" id="pup" onchange="uploadPic(this)">
+</div>
+<div id="pview">
+<h3 id="pname" style="margin-bottom:3px">User Name</h3>
+<p id="pemail" style="color:#94a3b8;font-size:13px;margin-bottom:15px">email</p>
+<button class="btn" style="background:var(--y);color:#0f172a;margin-bottom:9px" onclick="togglePE(true)">Wax ka badal</button>
+</div>
+<div id="pedit" style="display:none;background:var(--card);padding:13px;border-radius:11px;border:1px solid var(--br);text-align:left">
+<input type="text" id="pename" placeholder="Magacaaga">
+<button class="btn" style="background:var(--g);margin-bottom:7px" onclick="savePName()">KEYDI</button>
+<button class="btn" style="background:var(--br)" onclick="togglePE(false)">KA NOQO</button>
+</div>
+<hr style="border:0;border-top:1px solid var(--br);margin:15px 0">
+<button class="btn" style="background:var(--b);margin-bottom:9px" onclick="chPass()">Change Password</button>
+<button class="btn" style="background:var(--r)" onclick="doLogout()">LOGG UT</button>
+</div>
+<div class="navbar">
+<div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i>Dash</div>
+<div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus"></i>Add</div>
+<div class="ni" id="ni-reports" onclick="showPg('reports')"><i class="fas fa-file-invoice"></i>Reports</div>
+<div class="ni" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user"></i>Profil</div>
+</div>
+</div>
 <script>
-// ============================================================
-// FIREBASE CONFIG - Mohamed Salad Transport
-// ============================================================
-const firebaseConfig = {
-  apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-  authDomain: "mohamed-salad-transport.firebaseapp.com",
-  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mohamed-salad-transport",
-  storageBucket: "mohamed-salad-transport.firebasestorage.app",
-  messagingSenderId: "608716442795",
-  appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
-  measurementId: "G-VJTX0THFK5"
-};
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-const storage = firebase.storage();
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+firebase.initializeApp({apiKey:"AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",authDomain:"mohamed-salad-transport.firebaseapp.com",databaseURL:"https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",projectId:"mohamed-salad-transport",storageBucket:"mohamed-salad-transport.firebasestorage.app",appId:"1:608716442795:web:34cafc1a23316664717bee"});
+const db=firebase.database(),auth=firebase.auth(),stor=firebase.storage();
+let stream=null,entries=[],bItems=[],oItems=[],amtHid=false,modus='t',period='today',cf=null,ct=null;
 
-// ============================================================
-// GLOBAL STATE
-// ============================================================
-let currentUser = null;
-let allEntries = [];
-let currentModus = 'total';
-let currentPeriod = 'today';
-let amountsVisible = true;
-let currentLang = 'no';
-let ocrEntries = [];
-let bankEntries = [];
-let currentStream = null;
-const INCOME_CATS = ['3030','3031','3032','3033','3039','3110'];
+function E(id){return document.getElementById(id);}
+function V(id){return E(id).value;}
+function T(id,v){E(id).textContent=v;}
+function show(id){E(id).style.display='block';}
+function hide(id){E(id).style.display='none';}
 
-// ============================================================
-// AUTH STATE
-// ============================================================
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    document.getElementById('auth-page').style.display = 'none';
-    document.getElementById('setup-page').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
-    document.getElementById('user-display-name').textContent = user.displayName || user.email;
-    document.getElementById('prof-name').textContent = user.displayName || 'Isticmaale';
-    document.getElementById('prof-email').textContent = user.email;
-    db.ref('users/' + user.uid + '/profile').once('value').then(snap => {
-      const d = snap.val();
-      if (d && d.photoURL) document.getElementById('profile-img').src = d.photoURL;
-      if (d && d.displayName) {
-        document.getElementById('prof-name').textContent = d.displayName;
-        document.getElementById('user-display-name').textContent = d.displayName;
-      }
-    });
-    setModus('total');
-    loadEntries();
-    setToday();
-  } else {
-    currentUser = null;
-    document.getElementById('auth-page').style.display = 'block';
-    document.getElementById('setup-page').style.display = 'none';
-    document.getElementById('main-app').style.display = 'none';
-  }
+// AUTH
+auth.onAuthStateChanged(u=>{
+  if(u){
+    hide('pg-auth');hide('pg-setup');show('app');
+    T('uname',u.displayName||u.email);T('pname',u.displayName||'User');T('pemail',u.email);
+    if(u.photoURL)E('pimg').src=u.photoURL;
+    loadData();
+  }else{show('pg-auth');hide('pg-setup');hide('app');}
 });
+function goSetup(){hide('pg-auth');show('pg-setup');}
+function goAuth(){hide('pg-setup');show('pg-auth');}
+function doLogin(){
+  const e=V('em').trim().toLowerCase(),p=V('pw');
+  if(!e||!p)return alert('Email iyo password geli!');
+  auth.signInWithEmailAndPassword(e,p).catch(err=>alert('Khalad: '+err.message));
+}
+async function doSetup(){
+  const f=V('sf').trim(),l=V('sl').trim(),e=V('se').trim().toLowerCase(),p=V('sp'),p2=V('sp2');
+  if(!f||!l)return alert('Magac geli!');
+  if(!e)return alert('Email geli!');
+  if(p.length<6)return alert('Password ugu yaraan 6 xaraf!');
+  if(p!==p2)return alert('Password-yada ma isku mid!');
+  try{
+    const c=await auth.createUserWithEmailAndPassword(e,p);
+    await c.user.updateProfile({displayName:f+' '+l});
+    alert('Akoon la sameeyay! Ku soo dhawoow '+f);
+  }catch(err){alert('Khalad: '+err.message);}
+}
+function forgotPw(){
+  const e=V('em').trim().toLowerCase();
+  if(!e)return alert('Email geli!');
+  auth.sendPasswordResetEmail(e).then(()=>alert('Reset link la diray: '+e)).catch(err=>alert(err.message));
+}
+function doLogout(){auth.signOut();}
+function chPass(){auth.sendPasswordResetEmail(auth.currentUser.email).then(()=>alert('Link la diray!')).catch(err=>alert(err.message));}
+function toggleTheme(){document.body.classList.toggle('lt');}
 
-function setToday() {
-  const el = document.getElementById('entry-date');
-  if (el) el.value = new Date().toISOString().split('T')[0];
-}
-
-// ============================================================
-// AUTH FUNCTIONS
-// ============================================================
-function handleAuth() {
-  const email = document.getElementById('email').value.trim();
-  const pass = document.getElementById('pass').value;
-  if (!email || !pass) return alert('Geli email iyo password!');
-  auth.signInWithEmailAndPassword(email, pass)
-    .catch(err => alert('Khalad: ' + translateError(err.code)));
-}
-
-function handleSetup() {
-  const first = document.getElementById('setup-firstname').value.trim();
-  const last = document.getElementById('setup-lastname').value.trim();
-  const email = document.getElementById('setup-email').value.trim();
-  const pass = document.getElementById('setup-pass').value;
-  const pass2 = document.getElementById('setup-pass2').value;
-  if (!first || !last || !email || !pass) return alert('Buuxi dhammaan meelaha!');
-  if (pass !== pass2) return alert('Passwordyada iskuma mid aha!');
-  if (pass.length < 6) return alert('Password-ku waa inuu ahaado ugu yaraan 6 xaraf!');
-  auth.createUserWithEmailAndPassword(email, pass).then(cred => {
-    const displayName = first + ' ' + last;
-    return cred.user.updateProfile({ displayName }).then(() => {
-      db.ref('users/' + cred.user.uid + '/profile').set({ displayName, email });
-    });
-  }).catch(err => alert('Khalad: ' + translateError(err.code)));
-}
-
-function showSetup() {
-  document.getElementById('auth-page').style.display = 'none';
-  document.getElementById('setup-page').style.display = 'block';
-}
-function showLogin() {
-  document.getElementById('setup-page').style.display = 'none';
-  document.getElementById('auth-page').style.display = 'block';
-}
-function logout() {
-  if (confirm('Ma hubtaa inaad ka baxeyso?')) auth.signOut();
-}
-function forgotPassword() {
-  const email = document.getElementById('email').value.trim();
-  if (!email) return alert('Geli email-kaaga horta!');
-  auth.sendPasswordResetEmail(email)
-    .then(() => alert('Email dib-u-habeynta waa la diray!'))
-    .catch(err => alert('Khalad: ' + translateError(err.code)));
-}
-function changePass() {
-  const p = prompt('Geli passwordka cusub (ugu yaraan 6 xaraf):');
-  if (!p || p.length < 6) return alert('Password aad u gaaban!');
-  currentUser.updatePassword(p)
-    .then(() => alert('Password waa la bedelay!'))
-    .catch(err => alert('Khalad: ' + translateError(err.code)));
-}
-function translateError(code) {
-  const m = {
-    'auth/wrong-password':'Password-ka waa khalad',
-    'auth/user-not-found':'Email-kan lama helin',
-    'auth/email-already-in-use':'Email-kani horey ayuu u joogay',
-    'auth/weak-password':'Password aad u daciif ah',
-    'auth/invalid-email':'Email-ku ma sax',
-    'auth/invalid-credential':'Email ama password waa khalad',
-    'auth/too-many-requests':'Isku day badan — dib u sug daqiiqad'
-  };
-  return m[code] || code;
-}
-
-// ============================================================
 // PROFILE
-// ============================================================
-function toggleProfileEdit(show) {
-  document.getElementById('profile-view').style.display = show ? 'none' : 'block';
-  document.getElementById('profile-edit-form').style.display = show ? 'block' : 'none';
-  if (show) document.getElementById('edit-display-name').value = currentUser.displayName || '';
+function togglePE(s){
+  E('pview').style.display=s?'none':'block';
+  E('pedit').style.display=s?'block':'none';
+  if(s)E('pename').value=auth.currentUser.displayName||'';
 }
-function updateProfileInfo() {
-  const name = document.getElementById('edit-display-name').value.trim();
-  if (!name) return alert('Geli magacaaga!');
-  currentUser.updateProfile({ displayName: name }).then(() => {
-    db.ref('users/' + currentUser.uid + '/profile').update({ displayName: name });
-    document.getElementById('prof-name').textContent = name;
-    document.getElementById('user-display-name').textContent = name;
-    toggleProfileEdit(false);
-    alert('Profile waa la cusboonaysiiyay!');
-  });
+async function savePName(){
+  const n=V('pename');if(!n)return alert('Magac qor!');
+  await auth.currentUser.updateProfile({displayName:n});
+  T('pname',n);T('uname',n);togglePE(false);
 }
-function uploadPhoto(input) {
-  const file = input.files[0];
-  if (!file) return;
-  storage.ref('profiles/' + currentUser.uid + '/photo.jpg').put(file)
-    .then(s => s.ref.getDownloadURL())
-    .then(url => {
-      document.getElementById('profile-img').src = url;
-      db.ref('users/' + currentUser.uid + '/profile').update({ photoURL: url });
-      currentUser.updateProfile({ photoURL: url });
-    });
+async function uploadPic(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=stor.ref('profiles/'+auth.currentUser.uid);
+  await r.put(f);const u=await r.getDownloadURL();
+  await auth.currentUser.updateProfile({photoURL:u});
+  E('pimg').src=u;
 }
 
-// ============================================================
 // NAVIGATION
-// ============================================================
-function showTab(tab) {
-  ['dash','add','reports','profile'].forEach(t => {
-    document.getElementById('page-' + t).style.display = t === tab ? 'block' : 'none';
-    const n = document.getElementById('nav-' + t);
-    if (n) n.classList.toggle('active', t === tab);
-  });
-  if (tab === 'reports') renderReports();
+function showPg(pg){
+  document.querySelectorAll('.pg').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  E('pg-'+pg).style.display='block';E('ni-'+pg).classList.add('on');
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
 }
-function toggleTheme() { document.body.classList.toggle('light-theme'); }
-function updateLang(lang) { currentLang = lang; }
 
-// ============================================================
-// MODUS & PERIOD
-// ============================================================
-function setModus(modus) {
-  currentModus = modus;
-  document.getElementById('btn-modus-individuell').classList.toggle('active', modus === 'individuell');
-  document.getElementById('btn-modus-total').classList.toggle('active', modus === 'total');
-  document.getElementById('modus-label-text').textContent = modus.toUpperCase();
-  const pf = document.getElementById('period-filter');
-  if (modus === 'individuell') {
-    pf.classList.add('visible');
-    setPeriod(currentPeriod, document.querySelector('.period-btn.active'));
-  } else {
-    pf.classList.remove('visible');
-    document.getElementById('custom-date-row').classList.remove('visible');
-    renderDashboard(allEntries);
+// MODUS
+function setModus(m){
+  modus=m;
+  E('mb-i').classList.toggle('on',m==='i');
+  E('mb-t').classList.toggle('on',m==='t');
+  T('mlbl',m==='t'?'TOTAL':'INDIVIDUELL');
+  if(m==='i'){E('pfil').classList.add('vis');setPer(period);}
+  else{E('pfil').classList.remove('vis');E('drow').classList.remove('vis');renderDash(entries);}
+}
+function setPer(p,btn){
+  period=p;
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  else document.querySelectorAll('.pbtn').forEach(b=>{if((b.getAttribute('onclick')||'').includes("'"+p+"'"))b.classList.add('on');});
+  if(p==='custom')E('drow').classList.add('vis');
+  else{E('drow').classList.remove('vis');applyPer();}
+}
+function applyCustom(){cf=V('dfrom');ct=V('dto');if(cf&&ct)applyPer();}
+function getRange(){
+  const now=new Date(),pad=n=>String(n).padStart(2,'0'),fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  if(period==='today'){const t=fmt(now);return{f:t,t:t};}
+  if(period==='week'){const day=now.getDay()||7;const m=new Date(now);m.setDate(now.getDate()-day+1);return{f:fmt(m),t:fmt(now)};}
+  if(period==='month')return{f:now.getFullYear()+'-'+pad(now.getMonth()+1)+'-01',t:fmt(now)};
+  if(period==='year')return{f:now.getFullYear()+'-01-01',t:fmt(now)};
+  if(period==='custom')return{f:cf,t:ct};
+  return null;
+}
+function applyPer(){if(modus!=='i')return;const r=getRange();if(!r||!r.f||!r.t)return;renderDash(entries.filter(e=>e.date>=r.f&&e.date<=r.t));}
+
+// EYE TOGGLE
+function toggleAmt(){
+  amtHid=!amtHid;
+  E('ei').className='fas fa-eye'+(amtHid?'-slash':'');
+  T('el',amtHid?'Tus':'Qari');
+  document.querySelectorAll('.af,.ea').forEach(el=>el.classList.toggle('ha',amtHid));
+}
+
+// DATA
+function loadData(){
+  const u=auth.currentUser;if(!u)return;
+  db.ref('entries/'+u.uid).on('value',snap=>{
+    entries=[];
+    snap.forEach(c=>entries.push({id:c.key,...c.val()}));
+    entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    if(modus==='i')applyPer();else renderDash(entries);
+    renderRep(entries);
+  });
+}
+
+function renderDash(list){
+  let inc=0,exp=0,mva=0,avsk=0;
+  const el=E('elist');el.innerHTML='';
+  list.forEach(e=>{
+    const a=parseFloat(e.amount)||0;
+    if(e.type==='income')inc+=a;else exp+=a;
+    if(e.category==='6010')avsk+=a;
+    const cat=parseInt(e.category||'0');if(e.type==='income'&&cat>=3030&&cat<=3110)mva+=a*0.12;
+    const isI=e.type==='income',col=isI?'var(--g)':'var(--r)';
+    const c=document.createElement('div');c.className='ecard';c.style.borderColor=col;
+    const shortDesc=(e.description||'').length>45?(e.description||'').substring(0,45)+'...':e.description||'';c.innerHTML='<div class="einfo"><div class="et">'+e.category+' - '+shortDesc+'</div><div class="ed">'+e.date+'</div></div>'
+      +'<div class="eact"><span class="ea'+(amtHid?' ha':'')+'" style="color:'+col+'">'+(isI?'+':'-')+a.toLocaleString('nb-NO')+' kr</span>'
+      +'<i class="fas fa-edit" onclick="editE(\''+e.id+'\')"></i>'
+      +'<i class="fas fa-trash" onclick="delE(\''+e.id+'\')" style="color:#64748b"></i></div>';
+    el.appendChild(c);
+  });
+  const net=inc-exp;
+  T('s-inc',inc.toLocaleString('nb-NO')+' kr');
+  T('s-exp',exp.toLocaleString('nb-NO')+' kr');
+  T('s-net',net.toLocaleString('nb-NO')+' kr');
+  T('s-mva',Math.round(mva).toLocaleString('nb-NO')+' kr');
+  T('s-avsk',avsk.toLocaleString('nb-NO')+' kr');
+  T('s-tot',net.toLocaleString('nb-NO')+' kr');
+  E('s-tot').style.color=net>=0?'var(--g)':'var(--r)';
+  if(amtHid)document.querySelectorAll('.af,.ea').forEach(el=>el.classList.add('ha'));
+}
+
+function renderRep(list){
+  const tb=E('rtbody');tb.innerHTML='';
+  list.forEach(e=>{
+    const isI=e.type==='income';
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+e.date+'</td><td>'+e.category+'</td><td>'+(e.description||'')+'</td>'
+      +'<td style="color:'+(isI?'var(--g)':'var(--r)')+';font-weight:bold">'+(isI?'+':'-')+parseFloat(e.amount||0).toLocaleString('nb-NO')+' kr</td>';
+    tb.appendChild(tr);
+  });
+}
+
+function saveE(type){
+  const u=auth.currentUser;if(!u)return;
+  const eid=V('eid');
+  const entry={date:V('edate'),category:V('ecat'),description:V('edesc'),amount:parseFloat(V('eamt'))||0,type};
+  if(!entry.date||!entry.amount)return alert('Fadlan buuxi bannaanaha!');
+  const ref=eid?db.ref('entries/'+u.uid+'/'+eid):db.ref('entries/'+u.uid).push();
+  ref.set(entry).then(()=>{
+    E('eid').value='';E('edate').value='';E('edesc').value='';E('eamt').value='';
+    showPg('dash');
+  }).catch(err=>alert(err.message));
+}
+function delE(id){if(!confirm('Tirtir?'))return;db.ref('entries/'+auth.currentUser.uid+'/'+id).remove();}
+function editE(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  E('eid').value=id;E('edate').value=e.date;E('ecat').value=e.category;E('edesc').value=e.description;E('eamt').value=e.amount;
+  showPg('add');
+}
+
+// HELPERS
+function norNum(r){
+  if(!r||r.trim()===''||r.trim()==='-')return 0;
+  let s=r.trim().replace(/\s/g,'');
+  if(s.includes(',')&&s.includes('.')){
+    if(s.lastIndexOf(',')>s.lastIndexOf('.'))s=s.replace(/\./g,'').replace(',','.');
+    else s=s.replace(/,/g,'');
+  }else if(s.includes(','))s=s.replace(',','.');
+  else if(s.includes('.')){
+    const p=s.split('.');
+    if(p[p.length-1].length===2)s=p.slice(0,-1).join('')+'.'+p[p.length-1];
+    else s=s.replace(/\./g,'');
   }
+  return parseFloat(s)||0;
 }
-
-function setPeriod(period, btn) {
-  currentPeriod = period;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const cdr = document.getElementById('custom-date-row');
-  if (period === 'custom') { cdr.classList.add('visible'); applyCustomFilter(); return; }
-  cdr.classList.remove('visible');
-  const now = new Date();
-  let from, to = now.toISOString().split('T')[0];
-  if (period === 'today') { from = to; }
-  else if (period === 'week') { const d = new Date(now); d.setDate(d.getDate() - d.getDay() + 1); from = d.toISOString().split('T')[0]; }
-  else if (period === 'month') { from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]; }
-  else if (period === 'year') { from = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]; }
-  const filtered = currentModus === 'individuell'
-    ? allEntries.filter(e => e.uid === currentUser.uid && e.date >= from && e.date <= to)
-    : allEntries.filter(e => e.date >= from && e.date <= to);
-  renderDashboard(filtered);
+function parseD(r){
+  if(!r)return null;r=r.trim();
+  let m=r.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];
+  m=r.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);if(m)return'20'+m[3]+'-'+m[2]+'-'+m[1];
+  m=r.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return r;
+  m=r.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];
+  return null;
 }
-
-function applyCustomFilter() {
-  const from = document.getElementById('filter-from').value;
-  const to = document.getElementById('filter-to').value;
-  if (!from || !to) return;
-  const filtered = currentModus === 'individuell'
-    ? allEntries.filter(e => e.uid === currentUser.uid && e.date >= from && e.date <= to)
-    : allEntries.filter(e => e.date >= from && e.date <= to);
-  renderDashboard(filtered);
+function dnbType(desc){
+  const d=(desc||'').toLowerCase();
+  // --- EXPENSE: lacag baxday ---
+  if(/^visa\b/i.test(desc))return'expense';
+  if(d.includes('mastercard')||d.includes('mc '))return'expense';
+  if(d.includes('shell')||d.includes('circle k')||d.includes('uno-x')||d.includes('esso')||d.includes('best '))return'expense';
+  if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('if '))return'expense';
+  if(d.includes('skatt')||d.includes('skatteinnkrevin'))return'expense';
+  if(d.includes('arbeidsgiver'))return'expense';
+  if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele')||d.includes('ice.net'))return'expense';
+  if(d.includes('autosync')||d.includes('msg cleaning')||d.includes('tyholmen'))return'expense';
+  if(d.includes('eviny')||d.includes('fortum')||d.includes('strom')||d.includes('strem'))return'expense';
+  if(d.includes('arendal kommune')||d.includes('kristiansand kommune'))return'expense';
+  if(d.includes('vibb')||d.includes('nextgentel'))return'expense';
+  if(d.includes('wash')||d.includes('vask')||d.includes('carwash'))return'expense';
+  if(d.includes('haytham')||d.includes('kamal')||d.includes('altaieb'))return'expense';
+  if(d.includes('til ')&&d.includes('overf'))return'expense';
+  if(d.includes('kontoregulering til'))return'expense';
+  if(d.includes('nettbank')||d.includes('mobilepay'))return'expense';
+  if(d.includes('ra forsikring')||d.includes('tryg forsikring'))return'expense';
+  if(d.includes('tesla')&&/^visa/i.test(desc))return'expense';
+  // --- INCOME: lacag timid ---
+  if(d.includes('agder taxi'))return'income';
+  if(/giro\s*nr/i.test(desc))return'income';
+  if(d.includes('overf')&&d.includes('innland')&&!d.includes('til '))return'income';
+  if(d.includes('kontoregulering')&&!d.includes('til '))return'income';
+  if(d.includes('innskudd'))return'income';
+  if(d.includes('overf')&&!d.includes('til '))return'income';
+  // Default: unknown = expense (safer)
+  return'expense';
 }
-
-// ============================================================
-// LOAD & SAVE
-// ============================================================
-function loadEntries() {
-  if (!currentUser) return;
-  db.ref('entries').on('value', snap => {
-    allEntries = [];
-    snap.forEach(child => allEntries.push({ id: child.key, ...child.val() }));
-    allEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    if (currentModus === 'individuell') setPeriod(currentPeriod, document.querySelector('.period-btn.active'));
-    else renderDashboard(allEntries);
-  });
-}
-
-function saveData(type) {
-  const date = document.getElementById('entry-date').value;
-  const cat = document.getElementById('entry-category').value;
-  const desc = document.getElementById('entry-desc').value.trim();
-  const amt = parseFloat(document.getElementById('entry-amt').value);
-  if (!date || !cat || isNaN(amt) || amt <= 0) return alert('Buuxi dhammaan meelaha lagama maarmaanka ah!');
-  const isIncome = type === 'income';
-  const entry = {
-    date, category: cat, desc: desc || cat,
-    amount: isIncome ? Math.abs(amt) : -Math.abs(amt),
-    type: isIncome ? 'income' : 'expense',
-    uid: currentUser.uid,
-    userName: currentUser.displayName || currentUser.email,
-    createdAt: Date.now()
-  };
-  const editId = document.getElementById('edit-id').value;
-  const ref = editId ? db.ref('entries/' + editId) : db.ref('entries').push();
-  (editId ? ref.update(entry) : ref.set(entry)).then(() => {
-    alert(editId ? '✅ Waa la cusboonaysiiyay!' : '✅ Waa la keydiiyay!');
-    clearForm(); showTab('dash');
-  }).catch(err => alert('Khalad: ' + err.message));
-}
-
-function clearForm() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('entry-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('entry-category').value = '3030';
-  document.getElementById('entry-desc').value = '';
-  document.getElementById('entry-amt').value = '';
-}
-
-function deleteEntry(id) {
-  if (!confirm('Ma hubtaa inaad tirtireyso?')) return;
-  db.ref('entries/' + id).remove();
-}
-
-function editEntry(id) {
-  const e = allEntries.find(x => x.id === id);
-  if (!e) return;
-  document.getElementById('edit-id').value = id;
-  document.getElementById('entry-date').value = e.date;
-  document.getElementById('entry-category').value = e.category;
-  document.getElementById('entry-desc').value = e.desc || '';
-  document.getElementById('entry-amt').value = Math.abs(e.amount);
-  showTab('add'); window.scrollTo(0, 0);
-}
-
-// ============================================================
-// DASHBOARD
-// ============================================================
-function renderDashboard(entries) {
-  let income = 0, expense = 0, avsk = 0;
-  entries.forEach(e => {
-    if (e.amount > 0) income += e.amount;
-    else expense += Math.abs(e.amount);
-    if (e.category === '6010') avsk += Math.abs(e.amount);
-  });
-  const mva = income * 0.12;
-  const netto = income - expense;
-  const result = netto - mva;
-  setText('total-income', fmt(income));
-  setText('total-expense', fmt(expense));
-  setText('total-netto', fmt(netto));
-  setText('res-mva', fmt(mva));
-  setText('res-avsk', fmt(avsk));
-  const resEl = document.getElementById('res-total');
-  if (resEl) { resEl.textContent = fmt(result); resEl.style.color = result >= 0 ? 'var(--green)' : 'var(--red)'; }
-  renderEntries(entries);
-  if (!amountsVisible) applyBlur();
-}
-
-function renderEntries(entries) {
-  const container = document.getElementById('entries-list');
-  if (!container) return;
-  container.innerHTML = '';
-  if (entries.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:#64748b;padding:30px;font-size:14px;">📭 Wax gelinta ma jiraan</p>';
-    return;
+function autocat(desc,type){
+  const d=(desc||'').toLowerCase();
+  if(type==='income'){
+    if(d.includes('agder')||d.includes('taxi'))return'7796';
+    if(d.includes('giro')||d.includes('overf')||d.includes('innland'))return'3030';
+    return'3030';
   }
-  entries.forEach(e => {
-    const isIncome = e.amount > 0;
-    const color = isIncome ? 'var(--green)' : 'var(--red)';
-    const div = document.createElement('div');
-    div.className = 'entry-card';
-    div.style.borderColor = color;
-    div.innerHTML = `
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:bold;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.desc || e.category}</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${e.date} · ${e.category}</div>
-        ${e.userName ? `<div style="font-size:10px;color:#64748b;">👤 ${e.userName}</div>` : ''}
-      </div>
-      <div class="entry-actions">
-        <span class="amount-field" style="color:${color};font-weight:bold;font-size:14px;white-space:nowrap;">${isIncome?'+':'-'}${fmt(Math.abs(e.amount))}</span>
-        <i class="fas fa-edit" onclick="editEntry('${e.id}')" style="color:#64748b"></i>
-        <i class="fas fa-trash" onclick="deleteEntry('${e.id}')" style="color:#64748b"></i>
-      </div>`;
-    container.appendChild(div);
-  });
+  // EXPENSES - uten MVA (bank transactions)
+  if(d.includes('shell')||d.includes('circle k')||d.includes('uno-x')||d.includes('drivstoff')||d.includes('esso'))return'7000';
+  if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('ra forsikring'))return'7040';
+  if(d.includes('vedlikehold')||d.includes('service')||d.includes('dekk')||d.includes('autosync')||d.includes('wash'))return'7020';
+  if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele')||d.includes('ice.net'))return'6900';
+  if(d.includes('gebyr')||d.includes('kortgebyr'))return'7770';
+  if(d.includes('vipps'))return'7770';
+  if(d.includes('regnskap')||d.includes('revisjon'))return'6705';
+  if(d.includes('lonn')||d.includes('lonnskjoring'))return'5000';
+  if(d.includes('skatt')||d.includes('arbeidsgiver')||d.includes('skatteinnkrevin'))return'5400';
+  if(d.includes('eviny')||d.includes('fortum')||d.includes('strom'))return'7000';
+  if(d.includes('arendal kommune')||d.includes('kommune'))return'7400';
+  if(d.includes('vibb')||d.includes('nextgentel')||d.includes('data'))return'6907';
+  if(d.includes('overf')||d.includes('kontoregulering'))return'7797';
+  return'7790';
+}
+function catOpts(){
+  return'<optgroup label="INNTEKT"><option value="3030">3030 - Kjoreinntekter</option><option value="3031">3031 - Kontant</option><option value="3032">3032 - NAV</option><option value="3033">3033 - Skole</option><option value="3039">3039 - Bomtur</option><option value="3110">3110 - Tips</option></optgroup>'
+  +'<optgroup label="UTGIFTER"><option value="5000">5000 - Lonn</option><option value="5400">5400 - Arbeidsgiveravgift</option><option value="5920">5920 - Yrkesskadeforsiking</option><option value="6010">6010 - Avskrivning</option><option value="6705">6705 - Regnskapshonorar</option><option value="6755">6755 - Sentralavgift</option><option value="6800">6800 - Kontorrekvisita</option><option value="6900">6900 - Telefon</option><option value="6907">6907 - Datakommunikasjon</option><option value="7000">7000 - Drivstoff</option><option value="7020">7020 - Vedlikehold</option><option value="7040">7040 - Forsikring</option><option value="7140">7140 - Reisekostnad</option><option value="7400">7400 - Kontingent</option><option value="7770">7770 - Bank/kortgebyr</option><option value="7790">7790 - Annen kostnad</option><option value="7791">7791 - Spesialtur</option><option value="7792">7792 - General kreditt</option><option value="7793">7793 - Pasienttransport</option><option value="7794">7794 - Ikke motte</option><option value="7795">7795 - Adm gebyr</option><option value="7796">7796 - Faktura Agder Taxi</option><option value="7797">7797 - Kontoutskrift</option><option value="7798">7798 - Annen fradragsberettiget</option></optgroup>';
 }
 
-function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
-function fmt(n) { return Number(n).toLocaleString('nb-NO',{minimumFractionDigits:2,maximumFractionDigits:2})+' kr'; }
-
-function toggleAmounts() {
-  amountsVisible = !amountsVisible;
-  document.getElementById('eye-icon').className = amountsVisible ? 'fas fa-eye' : 'fas fa-eye-slash';
-  document.getElementById('eye-label').textContent = amountsVisible ? 'Qari Lacagaha' : 'Muuji Lacagaha';
-  document.querySelectorAll('.amount-field').forEach(el => el.classList.toggle('hidden-amount', !amountsVisible));
+// DNB BANK IMPORT
+function switchTab(t){
+  E('bt-pdf').classList.toggle('on',t==='pdf');E('bt-csv').classList.toggle('on',t==='csv');
+  E('bpdf').style.display=t==='pdf'?'block':'none';E('bcsv').style.display=t==='csv'?'block':'none';
+  E('bprev').style.display='none';E('bstat').style.display='none';bItems=[];
 }
-function applyBlur() { document.querySelectorAll('.amount-field').forEach(el => el.classList.add('hidden-amount')); }
+function showBS(m){const s=E('bstat');s.style.display='block';s.textContent=m;}
 
-// ============================================================
-// REPORTS
-// ============================================================
-function renderReports() {
-  const tbody = document.getElementById('report-body');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  if (allEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#64748b;padding:20px;">Wax gelinta ma jiraan</td></tr>'; return; }
-  allEntries.forEach(e => {
-    const tr = document.createElement('tr');
-    const c = e.amount > 0 ? '#2ecc71' : '#ff4757';
-    tr.innerHTML = `<td>${e.date}</td><td>${e.category}</td><td>${e.desc||'—'}</td><td style="color:${c};font-weight:bold;">${e.amount>0?'+':''}${fmt(e.amount)}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-function downloadCSV() {
-  let csv = 'Dato,Konto,Beskrivelse,Belop\n';
-  allEntries.forEach(e => { csv += `${e.date},${e.category},"${(e.desc||'').replace(/"/g,'""')}",${e.amount}\n`; });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'}));
-  a.download = 'TransportPRO_' + new Date().toISOString().split('T')[0] + '.csv';
-  a.click();
-}
-
-function downloadPDF() {
-  let income = 0, expense = 0;
-  allEntries.forEach(e => { if (e.amount > 0) income += e.amount; else expense += Math.abs(e.amount); });
-  const mva = income * 0.12;
-  const netto = income - expense - mva;
-  let html = `<html><head><meta charset="UTF-8"><style>
-    body{font-family:Arial,sans-serif;font-size:12px;margin:20px;}
-    h2{color:#b8860b;} .sum{display:flex;gap:15px;flex-wrap:wrap;margin:10px 0;}
-    .sb{background:#f1f5f9;padding:10px 15px;border-radius:8px;}
-    .sb small{display:block;font-size:10px;color:#64748b;text-transform:uppercase;}
-    table{width:100%;border-collapse:collapse;margin-top:15px;}
-    th{background:#334155;color:#f1c40f;padding:8px;text-align:left;}
-    td{padding:7px;border-bottom:1px solid #e2e8f0;}
-    .p{color:green;font-weight:bold;} .n{color:red;font-weight:bold;}
-    tr:nth-child(even){background:#f8fafc;}
-  </style></head><body>
-  <h2>🚖 TRANSPORT PRO - Regnskap</h2>
-  <p style="color:#64748b;">Utskriftsdato: ${new Date().toLocaleDateString('nb-NO')} · Mohamed Salad Transport</p>
-  <div class="sum">
-    <div class="sb"><small>Inntekt</small><b style="color:green;">${fmt(income)}</b></div>
-    <div class="sb"><small>Utgifter</small><b style="color:red;">${fmt(expense)}</b></div>
-    <div class="sb"><small>MVA 12%</small><b style="color:#3b82f6;">${fmt(mva)}</b></div>
-    <div class="sb"><small>Netto resultat</small><b style="color:${netto>=0?'green':'red'}">${fmt(netto)}</b></div>
-  </div>
-  <table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr></thead><tbody>`;
-  allEntries.forEach(e => {
-    html += `<tr><td>${e.date}</td><td>${e.category}</td><td>${e.desc||'—'}</td><td class="${e.amount>0?'p':'n'}">${e.amount>0?'+':''}${fmt(e.amount)}</td></tr>`;
-  });
-  html += '</tbody></table></body></html>';
-  const win = window.open('','_blank');
-  win.document.write(html); win.document.close();
-  setTimeout(() => win.print(), 500);
-}
-
-// ============================================================
-// BANK IMPORT
-// ============================================================
-function switchBankTab(tab) {
-  document.getElementById('tab-pdf').classList.toggle('active', tab==='pdf');
-  document.getElementById('tab-csv').classList.toggle('active', tab==='csv');
-  document.getElementById('bank-pdf-area').style.display = tab==='pdf'?'block':'none';
-  document.getElementById('bank-csv-area').style.display = tab==='csv'?'block':'none';
-  document.getElementById('bank-preview-container').style.display = 'none';
-  bankEntries = [];
-}
-
-function showBankStatus(msg, show) {
-  const el = document.getElementById('bank-status');
-  el.textContent = msg;
-  el.style.display = show===false ? 'none' : 'block';
-}
-
-function handleCSVUpload(input) {
-  const file = input.files[0]; if (!file) return;
-  showBankStatus('CSV waa la aqrinayaa...');
-  const r = new FileReader();
-  r.onload = e => parseDNBCSV(e.target.result);
-  r.readAsText(file, 'UTF-8');
-}
-
-function parseDNBCSV(text) {
-  bankEntries = [];
-  const lines = text.split('\n').filter(l => l.trim());
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(';');
-    if (cols.length < 5) continue;
-    const rawDate = cols[0].trim().replace(/"/g,'');
-    const desc = (cols[1]||'').trim().replace(/"/g,'');
-    const out = parseNOK(cols[3]), inn = parseNOK(cols[4]);
-    const amount = inn!==0 ? inn : (out!==0 ? -out : 0);
-    if (amount===0) continue;
-    bankEntries.push({ date: convertDate(rawDate), desc: desc||'DNB transaksjon', amount, selected: true });
-  }
-  renderBankPreview();
-  showBankStatus(bankEntries.length + ' transaksjoner funnet', bankEntries.length > 0);
-}
-
-function parseNOK(str) {
-  if (!str||str.trim()==='') return 0;
-  return parseFloat(str.replace(/"/g,'').replace(/\s/g,'').replace(',','.')) || 0;
-}
-function convertDate(raw) {
-  const p = raw.split('.');
-  if (p.length===3) return `${p[2].trim()}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-  return raw;
-}
-
-function handlePDFUpload(input) {
-  const file = input.files[0]; if (!file) return;
-  showBankStatus('PDF waa la aqrinayaa...');
-  const r = new FileReader();
-  r.onload = async e => {
-    try {
-      const arr = new Uint8Array(e.target.result);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const pdf = await pdfjsLib.getDocument(arr).promise;
-      let txt = '';
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const page = await pdf.getPage(p);
-        const content = await page.getTextContent();
-        txt += content.items.map(i => i.str).join(' ') + '\n';
-      }
-      parsePDFText(txt);
-    } catch(err) { showBankStatus('PDF aqrinta waxay ku guuldareysatay: ' + err.message); }
-  };
-  r.readAsArrayBuffer(file);
-}
-
-function parsePDFText(text) {
-  bankEntries = [];
-  text.split('\n').forEach(line => {
-    const dm = line.match(/(\d{2}\.\d{2}\.\d{4})/);
-    const am = line.match(/([-+]?\d[\d\s]*,\d{2})/);
-    if (dm && am) {
-      const date = convertDate(dm[1]);
-      const amount = parseNOK(am[1]);
-      const desc = line.replace(dm[0],'').replace(am[0],'').trim().substring(0,60)||'DNB transaksjon';
-      if (amount!==0) bankEntries.push({ date, desc, amount, selected: true });
+async function handlePDF(inp){
+  const f=inp.files[0];if(!f)return;showBS('PDF aqrinaya...');
+  try{
+    const buf=await f.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let all=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const pg=await pdf.getPage(p);
+      const con=await pg.getTextContent();
+      const vp=pg.getViewport({scale:1});
+      con.items.forEach(it=>{if(it.str.trim())all.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p});});
     }
+    parseDNBItems(all);
+  }catch(err){showBS('Khalad: '+err.message);}
+  inp.value='';
+}
+function parseDNBItems(all){
+  bItems=[];
+  all.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+  const lines=[];let cur=[],ly=-999,lp=-1;
+  for(const it of all){if(it.page!==lp||Math.abs(it.y-ly)>8){if(cur.length)lines.push(cur);cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}
+  if(cur.length)lines.push(cur);
+  const seen=new Set();
+  const dRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
+  const nRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+  for(const line of lines){
+    const f=line[0];if(!f||!dRe.test(f.text))continue;
+    const dv=parseD(f.text);if(!dv)continue;
+    const nums=[],txts=[];
+    for(const it of line){
+      if(dRe.test(it.text))continue;
+      if(nRe.test(it.text.trim()))nums.push(norNum(it.text));
+      else if(it.text.trim())txts.push(it.text.trim());
+    }
+    const desc=txts.join(' ').replace(/\s+/g,' ').trim();
+    if(desc.length<2||!nums.length)continue;
+    let amt=nums.length===1?nums[0]:Math.min(nums[0],nums[1]);
+    if(amt<0.01||amt>9999999)continue;
+    const type=dnbType(desc);
+    const key=dv+'|'+amt+'|'+desc.substring(0,18);
+    if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
+  }
+  if(!bItems.length){
+    const ft=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
+    parseDNBRaw(ft);return;
+  }
+  showBS(bItems.length+' transactions la helay!');renderBItems();
+}
+function parseDNBRaw(text){
+  bItems=[];const seen=new Set();
+  const re=/(\d{2}\.\d{2}\.\d{2,4})\s+\d{2}\.\d{2}\.\d{2,4}\s+(.+?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})\s+\d{1,3}(?:[.\s]\d{3})*,\d{2}/g;
+  let m;
+  while((m=re.exec(text))!==null){
+    const dv=parseD(m[1]);if(!dv)continue;
+    const desc=m[2].trim().replace(/\s+/g,' ');
+    const amt=norNum(m[3]);
+    if(amt<0.01||amt>9999999||desc.length<2)continue;
+    const type=dnbType(desc);
+    const key=dv+'|'+amt+'|'+desc.substring(0,15);
+    if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
+  }
+  if(!bItems.length){showBS('Transactions lama helin. Isku day CSV.');return;}
+  showBS(bItems.length+' transactions!');renderBItems();
+}
+function handleCSV(inp){
+  const f=inp.files[0];if(!f)return;showBS('CSV aqrinaya...');
+  const r=new FileReader();
+  r.onload=e=>{try{parseCSV(e.target.result);}catch(err){showBS('Khalad: '+err.message);}};
+  r.readAsText(f,'UTF-8');inp.value='';
+}
+function parseCSV(text){
+  bItems=[];
+  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  let hi=-1,sep=';';
+  for(let i=0;i<Math.min(10,lines.length);i++){
+    const l=lines[i].toLowerCase();
+    if(l.includes('dato')||l.includes('forklaringstekst')){hi=i;sep=l.includes(';')?';':',';break;}
+  }
+  if(hi===-1){showBS('CSV format lama garanayn.');return;}
+  const hdrs=splitC(lines[hi],sep).map(h=>h.replace(/['"]/g,'').trim().toLowerCase());
+  let dc=-1,tc=-1,ic=-1,uc=-1,ac=-1;
+  hdrs.forEach((h,i)=>{
+    if(h.includes('dato'))dc=i;
+    if(h.includes('tekst')||h.includes('forklaringstekst'))tc=i;
+    if(h.includes('inn')||h.includes('credit'))ic=i;
+    if(h.includes('ut fra')||h.includes('uttak')||h.includes('debit'))uc=i;
+    if((h.includes('belop')||h.includes('amount'))&&ic===-1)ac=i;
   });
-  renderBankPreview();
-  showBankStatus(bankEntries.length + ' transaksjoner funnet fra PDF', bankEntries.length > 0);
+  for(let i=hi+1;i<lines.length;i++){
+    const l=lines[i].trim();if(!l)continue;
+    const cols=splitC(l,sep).map(c=>c.replace(/['"]/g,'').trim());
+    if(cols.length<2)continue;
+    const dv=parseD(dc>=0?cols[dc]:cols[0]);if(!dv)continue;
+    const desc=tc>=0?cols[tc]:(cols[1]||'Transaksjon');
+    let amt=0,type='expense';
+    if(ic>=0||uc>=0){
+      const iv=ic>=0?norNum(cols[ic]):0;const uv=uc>=0?norNum(cols[uc]):0;
+      if(iv>0){amt=iv;type='income';}else if(uv>0){amt=uv;type='expense';}
+    }else if(ac>=0){
+      const v=norNum(cols[ac]);
+      if(v>0){amt=v;type='income';}else if(v<0){amt=Math.abs(v);type='expense';}
+    }
+    if(amt<=0)continue;
+    bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});
+  }
+  if(!bItems.length){showBS('Transactions lama helin.');return;}
+  showBS(bItems.length+' transactions!');renderBItems();
+}
+function splitC(line,sep){const r=[];let c='',q=false;for(const ch of line){if(ch==='"')q=!q;else if(ch===sep&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
+function renderBItems(){
+  const con=E('bitems');con.innerHTML='';E('bprev').style.display='block';T('bcount',bItems.length+' transactions');
+  bItems.forEach((item,i)=>{
+    const isI=item.type==='income',col=isI?'var(--g)':'var(--r)',sign=isI?'+':'-';
+    const d=document.createElement('div');d.className='pitem sel';d.id='bi-'+i;
+    d.innerHTML='<div class="ptop" onclick="toggleBI('+i+')" style="cursor:pointer">'
+      +'<span class="pd">'+item.desc+'</span>'
+      +'<span class="pa" style="color:'+col+'">'+sign+item.amount.toLocaleString('nb-NO')+' kr</span></div>'
+      +'<div class="pdt">'+item.date+'</div>'
+      +'<select id="bc-'+i+'" onclick="event.stopPropagation()" onchange="bItems['+i+'].category=this.value;bItems['+i+'].type=parseInt(this.value)<4000?\'income\':\'expense\'" style="margin:4px 0 0;padding:6px 8px;font-size:11px">'
+      +catOpts()+'</select>';
+    con.appendChild(d);
+    setTimeout(()=>{const s=E('bc-'+i);if(s)s.value=item.category;},0);
+  });
+  updateBBtn();
+}
+function toggleBI(i){E('bi-'+i).classList.toggle('sel');updateBBtn();}
+function updateBBtn(){
+  const n=document.querySelectorAll('.pitem.sel').length;
+  E('btn-bi').style.display=n>0?'block':'none';
+  T('bcount',n+' / '+bItems.length+' valgt');
+}
+function bAll(){document.querySelectorAll('.pitem').forEach(el=>el.classList.add('sel'));updateBBtn();}
+function bNone(){document.querySelectorAll('.pitem').forEach(el=>el.classList.remove('sel'));updateBBtn();}
+function importBank(){
+  const u=auth.currentUser;if(!u)return;let n=0;
+  document.querySelectorAll('.pitem.sel').forEach(el=>{
+    const i=parseInt(el.id.replace('bi-',''));const it=bItems[i];
+    const type=parseInt(it.category)<4000?'income':'expense';
+    db.ref('entries/'+u.uid).push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type});
+    n++;
+  });
+  showBS(n+' la keydiay!');E('bprev').style.display='none';bItems=[];
+  setTimeout(()=>showPg('dash'),900);
 }
 
-function renderBankPreview() {
-  const container = document.getElementById('bank-items-container');
-  const wrapper = document.getElementById('bank-preview-container');
-  container.innerHTML = '';
-  if (bankEntries.length===0) { wrapper.style.display='none'; return; }
-  wrapper.style.display = 'block';
-  document.getElementById('bank-count-label').textContent = bankEntries.length + ' transaksjoner';
-  bankEntries.forEach((e, i) => {
-    const div = document.createElement('div');
-    div.className = 'csv-preview-item' + (e.selected?' selected':'');
-    div.id = 'bank-item-' + i;
-    const color = e.amount>=0 ? '#2ecc71' : '#ff4757';
-    div.innerHTML = `<div><div style="font-weight:bold;font-size:13px;">${e.desc}</div><div style="font-size:11px;color:#94a3b8;">${e.date}</div></div>
-      <span style="color:${color};font-weight:bold;white-space:nowrap;">${e.amount>=0?'+':''}${fmt(e.amount)}</span>`;
-    div.onclick = () => { e.selected=!e.selected; div.classList.toggle('selected',e.selected); updateBankImportBtn(); };
-    container.appendChild(div);
+// AGDER TAXI PDF
+async function handleFile(inp){
+  const f=inp.files[0];if(!f)return;
+  if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
+    showOS('Agder Taxi PDF aqrinaya...');parseAgderPDF(f);return;
+  }
+  const r=new FileReader();
+  r.onload=e=>{E('simg').src=e.target.result;E('simg').style.display='block';runOCR(e.target.result);};
+  r.readAsDataURL(f);
+}
+async function parseAgderPDF(f){
+  try{
+    const buf=await f.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;let all=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const pg=await pdf.getPage(p);const con=await pg.getTextContent();const vp=pg.getViewport({scale:1});
+      con.items.forEach(it=>{if(it.str.trim())all.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p});});
+    }
+    parseAgderItems(all);
+  }catch(err){showOS('Khalad: '+err.message);}
+}
+function parseAgderItems(all){
+  oItems=[];
+  all.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+  const lines=[];let cur=[],ly=-999,lp=-1;
+  for(const it of all){if(it.page!==lp||Math.abs(it.y-ly)>7){if(cur.length)lines.push(cur);cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}
+  if(cur.length)lines.push(cur);
+  const ft=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
+  let dv='';
+  const dm=ft.match(/Fakturadato[\s:]+(\d{2})\.(\d{2})\.(\d{4})/i)||ft.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+  if(dm&&dm[3]){dv=dm[3]+'-'+dm[2]+'-'+dm[1];E('od').textContent=dv;E('edate').value=dv;}
+  const im=ft.match(/(?:Faktura|bilag)[\/\s]+(\d+)/i);if(im)E('oinv').textContent=im[1];
+  const tm=ft.match(/[Bb]el[o]p\s+inkl[\s.]+mva[.:\s]+([-]?\d[\d\s.,]+)/i);
+  let tAmt=0,tIsI=false;
+  if(tm){const raw=tm[1].trim();tIsI=raw.startsWith('-');tAmt=norNum(raw.replace('-',''));E('otot').textContent=(tIsI?'+':'-')+tAmt.toLocaleString('nb-NO')+' kr';}
+  const m12=ft.match(/[Mm]va\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const m25=ft.match(/[Mm]va\s+25\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  if(m12)E('om12').textContent=norNum(m12[1].replace('-','')).toLocaleString('nb-NO')+' kr';
+  if(m25)E('om25').textContent=norNum(m25[1].replace('-','')).toLocaleString('nb-NO')+' kr';
+  const amap=[
+    {re:/EMV\s*N/i,cat:'3030',lb:'EMV N'},{re:/TT\s*Rogaland/i,cat:'3030',lb:'TT Rogaland'},
+    {re:/VIPPS/i,cat:'3030',lb:'VIPPS'},{re:/APP.BETALING/i,cat:'3031',lb:'APP-betaling'},
+    {re:/Spesialtur/i,cat:'7791',lb:'Spesialtur'},{re:/Generell\s*kreditt/i,cat:'7792',lb:'Generell kreditt'},
+    {re:/Pasienttransport/i,cat:'7793',lb:'Pasienttransport'},{re:/Ikke\s*m[o\s]tt/i,cat:'7794',lb:'Ikke motte'},
+    {re:/Adm\s*gebyr/i,cat:'7795',lb:'Adm gebyr trukket'},{re:/Sentralavgift/i,cat:'6755',lb:'Sentralavgift'},
+    {re:/Bilforsikring/i,cat:'7040',lb:'Bilforsikring'},{re:/El\s*bil\s*lad/i,cat:'7000',lb:'El bil lading'},
+    {re:/Avgiftsfritt/i,cat:'3039',lb:'Avgiftsfritt'},
+  ];
+  const seen=new Set();
+  for(const line of lines){
+    const txt=line.map(i=>i.text).join(' ').trim();
+    if(!txt||!/AG-\d{3}/i.test(txt)||/^Sum\b/i.test(txt))continue;
+    const amts=[...txt.matchAll(/([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];if(!amts.length)continue;
+    const lr=amts[amts.length-1][1];const isN=lr.startsWith('-');const amt=norNum(lr.replace('-',''));if(amt<1)continue;
+    let cat='7796',lb='Agder Taxi';
+    for(const m of amap){if(m.re.test(txt)){cat=m.cat;lb=m.lb;break;}}
+    const type=isN?'income':'expense';
+    if(type==='income'&&parseInt(cat)>=6000)cat='3030';
+    if(type==='expense'&&parseInt(cat)<4000)cat='7796';
+    const key=cat+'|'+amt+'|'+lb;
+    if(!seen.has(key)){seen.add(key);oItems.push({desc:lb,amount:amt,type,date:dv,category:cat});}
+  }
+  if(!oItems.length&&tAmt>0)oItems.push({desc:'Agder Taxi Faktura',amount:tAmt,type:tIsI?'income':'expense',date:dv,category:'7796'});
+  oItems.sort((a,b)=>{if(a.type!==b.type)return a.type==='income'?-1:1;return b.amount-a.amount;});
+  E('ores').style.display='block';showOS(oItems.length+' entries la helay!');renderOItems();
+}
+function renderOItems(){
+  if(!oItems.length)return;const con=E('oitems');con.innerHTML='';
+  oItems.forEach((it,i)=>{
+    const isI=it.type==='income',col=isI?'var(--g)':'var(--r)',sign=isI?'+':'-';
+    const d=document.createElement('div');d.className='oi sel';d.id='oi-'+i;
+    d.onclick=()=>{d.classList.toggle('sel');updateOBtn();};
+    d.innerHTML='<div class="oii"><div class="nm">'+it.desc+'</div><div class="ct">'+it.category+' - '+(isI?'INNTEKT':'UTGIFT')+'</div></div>'
+      +'<span class="oiamt" style="color:'+col+'">'+sign+it.amount.toLocaleString('nb-NO')+' kr</span>';
+    con.appendChild(d);
   });
-  updateBankImportBtn();
+  const gI=oItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+  const gE=oItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);const gN=gI-gE;
+  const tot=document.createElement('div');tot.className='grand';
+  tot.innerHTML='<div class="gc"><small>INNTEKT</small><b style="color:var(--g)">+'+gI.toLocaleString('nb-NO')+' kr</b></div>'
+    +'<div class="gc"><small>UTGIFT</small><b style="color:var(--r)">-'+gE.toLocaleString('nb-NO')+' kr</b></div>'
+    +'<div class="gc"><small>NETTO</small><b style="color:'+(gN>=0?'var(--g)':'var(--r)')+'">'+(gN>=0?'+':'')+gN.toLocaleString('nb-NO')+' kr</b></div>';
+  con.appendChild(tot);E('ocrlist').style.display='block';updateOBtn();
+}
+function updateOBtn(){const n=document.querySelectorAll('.oi.sel').length;E('btn-oi').style.display=n>0?'block':'none';}
+function importOCR(){
+  const u=auth.currentUser;if(!u)return;let n=0;
+  document.querySelectorAll('.oi.sel').forEach(el=>{
+    const i=parseInt(el.id.replace('oi-',''));const it=oItems[i];
+    db.ref('entries/'+u.uid).push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type});
+    n++;
+  });
+  alert(n+' entries la keydiay!');hide('ocrlist');hide('ores');showPg('dash');
 }
 
-function bankSelectAll() {
-  bankEntries.forEach((e,i) => { e.selected=true; const el=document.getElementById('bank-item-'+i); if(el) el.classList.add('selected'); });
-  updateBankImportBtn();
+// OCR IMAGE
+function showOS(m){const b=E('ostat');b.style.display='block';b.textContent=m;}
+async function startScan(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    E('svid').style.display='block';E('svid').srcObject=stream;
+    E('capbtn').style.display='block';E('scanbtn').style.display='none';
+  }catch(err){alert('Kamera: '+err.message);}
 }
-function bankSelectNone() {
-  bankEntries.forEach((e,i) => { e.selected=false; const el=document.getElementById('bank-item-'+i); if(el) el.classList.remove('selected'); });
-  updateBankImportBtn();
+function capture(){
+  const v=E('svid'),c=E('scv');c.width=v.videoWidth;c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  const src=c.toDataURL('image/jpeg');
+  E('simg').src=src;E('simg').style.display='block';
+  v.style.display='none';E('capbtn').style.display='none';E('scanbtn').style.display='block';
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  runOCR(src);
 }
-function updateBankImportBtn() {
-  const count = bankEntries.filter(e=>e.selected).length;
-  const btn = document.getElementById('btn-import-bank');
-  btn.style.display = count>0?'block':'none';
-  btn.innerHTML = `<i class="fas fa-file-import"></i> KEYDI ${count} TRANSACTION`;
+async function runOCR(src){
+  showOS('OCR socota...');
+  try{
+    const r=await Tesseract.recognize(src,'nor+eng',{logger:m=>{if(m.status==='recognizing text')showOS('OCR: '+Math.round(m.progress*100)+'%');}});
+    parseOCRTxt(r.data.text);
+  }catch(err){showOS('OCR khalad: '+err.message);}
 }
-function importBankSelected() {
-  const selected = bankEntries.filter(e=>e.selected);
-  if (!selected.length) return;
-  let count = 0;
-  selected.forEach(e => {
-    const isIncome = e.amount>0;
-    db.ref('entries').push({
-      date:e.date, category:isIncome?'3030':'7797', desc:e.desc,
-      amount:e.amount, type:isIncome?'income':'expense',
-      uid:currentUser.uid, userName:currentUser.displayName||currentUser.email, createdAt:Date.now()
-    }).then(() => {
-      count++;
-      if (count===selected.length) {
-        alert('✅ '+count+' transaksjoner waa la keydiiyay!');
-        document.getElementById('bank-preview-container').style.display='none';
-        bankEntries=[];
-        showBankStatus('', false);
-      }
-    });
+function parseOCRTxt(text){
+  showOS('OCR dhammaatay');
+  const dm=text.match(/\b(\d{2})[.\-\/](\d{2})[.\-\/](\d{2,4})\b/);let dv='';
+  if(dm){const y=dm[3].length===2?'20'+dm[3]:dm[3];dv=y+'-'+dm[2]+'-'+dm[1];E('od').textContent=dv;E('edate').value=dv;}
+  const tm=text.match(/(?:total|belop|sum)[^\d]*(\d[\d\s,.]+)/i);let tAmt=0;
+  if(tm){tAmt=parseFloat(tm[1].replace(/\s/g,'').replace(',','.'));E('otot').textContent=tAmt.toLocaleString('nb-NO')+' kr';}
+  const m12=text.match(/mva\s*12[^\d]*(\d[\d,.]+)/i),m25=text.match(/mva\s*25[^\d]*(\d[\d,.]+)/i);
+  if(m12)E('om12').textContent=parseFloat(m12[1].replace(',','.'))+' kr';
+  if(m25)E('om25').textContent=parseFloat(m25[1].replace(',','.'))+' kr';
+  E('ores').style.display='block';oItems=[];
+  if(tAmt>0)oItems.push({desc:'Faktura total',amount:tAmt,type:'expense',date:dv,category:'7790'});
+  text.split('\n').forEach(line=>{
+    const m=line.match(/^(.+?)\s+(\d[\d,.]+)\s*kr?\s*$/i);
+    if(m){const a=parseFloat(m[2].replace(',','.'));if(a>0&&a!==tAmt)oItems.push({desc:m[1].trim(),amount:a,type:'expense',date:dv,category:'7790'});}
   });
+  renderOItems();
 }
 
-// ============================================================
-// OCR / SCANNER
-// ============================================================
-function startScanner() {
-  const video = document.getElementById('scanner-video');
-  document.getElementById('capture-btn').style.display = 'block';
-  video.style.display = 'block';
-  navigator.mediaDevices.getUserMedia({ video:{facingMode:'environment'} })
-    .then(stream => { currentStream=stream; video.srcObject=stream; })
-    .catch(() => alert('Kamera ma furan karo. Isticmaal upload beddelka.'));
+// DOWNLOADS
+function dlCSV(){
+  const rows=[['Dato','Konto','Beskrivelse','Type','Belop']];
+  entries.forEach(e=>rows.push([e.date||'',e.category||'',(e.description||'').replace(/,/g,' '),e.type==='income'?'Inntekt':'Utgift',parseFloat(e.amount||0).toFixed(2)]));
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='regnskap-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  URL.revokeObjectURL(url);
 }
-function capturePhoto() {
-  const video = document.getElementById('scanner-video');
-  const canvas = document.getElementById('scanner-canvas');
-  const img = document.getElementById('scanned-img');
-  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-  canvas.getContext('2d').drawImage(video,0,0);
-  if (currentStream) { currentStream.getTracks().forEach(t=>t.stop()); currentStream=null; }
-  video.style.display='none';
-  document.getElementById('capture-btn').style.display='none';
-  img.src=canvas.toDataURL('image/jpeg'); img.style.display='block';
-  runOCR(canvas.toDataURL('image/jpeg'));
-}
-function handleFileUpload(input) {
-  const file = input.files[0]; if (!file) return;
-  const r = new FileReader();
-  r.onload = e => {
-    const img = document.getElementById('scanned-img');
-    img.src=e.target.result; img.style.display='block';
-    runOCR(e.target.result);
-  };
-  r.readAsDataURL(file);
-}
-function runOCR(imgData) {
-  const s = document.getElementById('ocr-status');
-  s.style.display='block'; s.textContent='🔍 OCR waa la socodsiinaayaa...';
-  Tesseract.recognize(imgData,'nor+eng',{
-    logger: m => { if(m.status==='recognizing text') s.textContent='📄 Aqrinaya: '+Math.round(m.progress*100)+'%'; }
-  }).then(({data:{text}}) => { s.textContent='✅ OCR Dhammaatay!'; parseOCRText(text); })
-    .catch(err => { s.textContent='❌ OCR waxay ku guuldareysatay'; console.error(err); });
-}
-function parseOCRText(text) {
-  const dm = text.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/);
-  let date = new Date().toISOString().split('T')[0];
-  if (dm) date = `${dm[3]}-${dm[2].padStart(2,'0')}-${dm[1].padStart(2,'0')}`;
-  const im = text.match(/(?:faktura|invoice|nr|ref)[:\s#]*(\d{4,})/i);
-  const invoiceNr = im ? im[1] : '—';
-  const tm = text.match(/(?:total|sum|bel|betale|totalt)[:\s]*(\d+[,\.]\d{2})/i);
-  const total = tm ? parseNOK(tm[1]) : null;
-  const m12 = text.match(/(?:mva|moms)\s*12[%\s]*[:\s]*(\d+[,\.]\d{2})/i);
-  const m25 = text.match(/(?:mva|moms)\s*25[%\s]*[:\s]*(\d+[,\.]\d{2})/i);
-  const mva12 = m12 ? parseNOK(m12[1]) : null;
-  const mva25 = m25 ? parseNOK(m25[1]) : null;
-  document.getElementById('ocr-results').style.display='block';
-  document.getElementById('ocr-date-display').textContent=date;
-  document.getElementById('ocr-invoice-display').textContent=invoiceNr;
-  document.getElementById('ocr-total-display').textContent=total?fmt(total):'—';
-  document.getElementById('ocr-mva12-display').textContent=mva12?fmt(mva12):'—';
-  document.getElementById('ocr-mva25-display').textContent=mva25?fmt(mva25):'—';
-  document.getElementById('entry-date').value=date;
-  if (total) document.getElementById('entry-amt').value=total;
-  ocrEntries=[];
-  if (total) ocrEntries.push({date,amount:total,desc:'OCR: '+(invoiceNr!=='—'?'Faktura #'+invoiceNr:'Faktura'),selected:true});
-  if (mva12) ocrEntries.push({date,desc:'MVA 12%',amount:-mva12,selected:false});
-  if (mva25) ocrEntries.push({date,desc:'MVA 25%',amount:-mva25,selected:false});
-  renderOCREntries();
-}
-function renderOCREntries() {
-  const listEl=document.getElementById('ocr-entry-list');
-  const container=document.getElementById('ocr-items-container');
-  const btn=document.getElementById('btn-import-selected');
-  if (!ocrEntries.length) { listEl.style.display='none'; return; }
-  listEl.style.display='block'; container.innerHTML='';
-  ocrEntries.forEach(e => {
-    const div=document.createElement('div');
-    div.className='ocr-entry-item'+(e.selected?' selected':'');
-    div.innerHTML=`<div><div style="font-weight:bold">${e.desc}</div><div style="font-size:11px;color:#94a3b8;">${e.date}</div></div>
-      <span class="${e.amount>=0?'amt-positive':'amt-negative'}">${e.amount>=0?'+':''}${fmt(Math.abs(e.amount))}</span>`;
-    div.onclick=()=>{ e.selected=!e.selected; div.classList.toggle('selected',e.selected); btn.style.display=ocrEntries.some(x=>x.selected)?'block':'none'; };
-    container.appendChild(div);
-  });
-  btn.style.display=ocrEntries.some(e=>e.selected)?'block':'none';
-}
-function importSelected() {
-  const selected=ocrEntries.filter(e=>e.selected); if(!selected.length) return;
-  const cat=document.getElementById('entry-category').value;
-  let count=0;
-  selected.forEach(e => {
-    const isIncome=e.amount>0;
-    db.ref('entries').push({
-      date:e.date,category:isIncome?'3030':cat,desc:e.desc,amount:e.amount,
-      type:isIncome?'income':'expense',uid:currentUser.uid,
-      userName:currentUser.displayName||currentUser.email,createdAt:Date.now()
-    }).then(()=>{
-      count++;
-      if(count===selected.length){
-        alert('✅ '+count+' entries waa la keydiiyay!');
-        document.getElementById('ocr-entry-list').style.display='none';
-        document.getElementById('ocr-results').style.display='none';
-        document.getElementById('ocr-status').style.display='none';
-        ocrEntries=[];
-      }
-    });
-  });
+function dlPDF(){
+  const win=window.open('','_blank');
+  const ti=entries.filter(e=>e.type==='income').reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const te=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const net=ti-te;
+  const rows=entries.map(e=>{
+    const isI=e.type==='income';
+    return '<tr><td>'+(e.date||'')+'</td><td>'+(e.category||'')+'</td><td>'+(e.description||'')+'</td>'
+      +'<td style="color:'+(isI?'#2ecc71':'#ff4757')+';font-weight:bold">'+(isI?'+':'-')+parseFloat(e.amount||0).toLocaleString('nb-NO')+' kr</td></tr>';
+  }).join('');
+  const page=[
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Regnskap</title>',
+    '<style>body{font-family:Arial,sans-serif;padding:25px;color:#1e293b}',
+    'h1{border-bottom:3px solid #f1c40f;padding-bottom:8px}',
+    '.sum{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap}',
+    '.box{background:#f1f5f9;border-radius:8px;padding:12px 18px;text-align:center}',
+    '.box small{display:block;font-size:10px;color:#64748b;font-weight:bold;margin-bottom:3px}',
+    '.box b{font-size:15px}',
+    'table{width:100%;border-collapse:collapse}',
+    'th{background:#1e293b;color:#f1c40f;padding:9px 8px;text-align:left;font-size:12px}',
+    'td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:12px}',
+    'tr:nth-child(even){background:#f8fafc}',
+    '.pbtn{background:#1e293b;color:#f1c40f;border:none;padding:10px 22px;border-radius:7px;font-weight:bold;cursor:pointer;margin-top:14px}',
+    '@media print{.pbtn{display:none}}</style></head><body>',
+    '<h1>Transport PRO - Regnskap</h1>',
+    '<p style="color:#64748b;font-size:12px">'+new Date().toLocaleString('nb-NO')+'</p>',
+    '<div class="sum">',
+    '<div class="box"><small>INNTEKT</small><b style="color:#2ecc71">'+ti.toLocaleString('nb-NO')+' kr</b></div>',
+    '<div class="box"><small>UTGIFTER</small><b style="color:#ff4757">'+te.toLocaleString('nb-NO')+' kr</b></div>',
+    '<div class="box"><small>NETTO</small><b style="color:'+(net>=0?'#2ecc71':'#ff4757')+'">'+net.toLocaleString('nb-NO')+' kr</b></div>',
+    '</div>',
+    '<table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Belop</th></tr></thead>',
+    '<tbody>'+rows+'</tbody></table>',
+    '<button class="pbtn" onclick="window.print()">PRINT / LAGRE SOM PDF</button>',
+    '</body></html>'
+  ].join('');
+  win.document.write(page);
+  win.document.close();
 }
 
-// INIT
-document.addEventListener('DOMContentLoaded', setToday);
 </script>
 </body>
 </html>
