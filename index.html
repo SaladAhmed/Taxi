@@ -608,6 +608,15 @@ function renderRep(list){
 }
 
 // ======== BILLS PAGE ========
+function delBill(invNr){
+  if(!confirm('Tirtir Faktura #'+invNr+'?'))return;
+  const u=auth.currentUser;if(!u)return;
+  db.ref('bills/'+u.uid+'/'+invNr).remove().then(()=>{
+    bills=bills.filter(b=>b.invNr!==invNr);
+    renderBills();
+  });
+}
+
 function renderBills(){
   const con=E('billlist');if(!con)return;
   const q=(V('bilsearch')||'').toLowerCase();
@@ -618,15 +627,18 @@ function renderBills(){
     const netto=b.nettoAfterMva||0;
     const isPos=netto>=0;
     const d=document.createElement('div');d.className='bilrow';
-    d.innerHTML='<div class="bt">&#128196; Faktura #'+b.invNr+'<span class="bilbadge" style="background:var(--g)">'+b.date+'</span></div>'
+    d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      +'<div class="bt">&#128196; Faktura #'+b.invNr+'<span class="bilbadge" style="background:var(--g)">'+b.date+'</span></div>'
+      +'<button onclick="delBill(\'' +b.invNr+ '\')" style="background:none;border:1px solid var(--r);border-radius:8px;color:var(--r);padding:4px 10px;font-size:11px;font-weight:bold;cursor:pointer">&#128465; Tirtir</button>'
+      +'</div>'
       +'<div class="bd">Utbetales: '+(b.payDate||'-')+' | Entries: '+(b.entryCount||0)+'</div>'
       +'<div class="bamt">'
-      +'<span style="color:#94a3b8;font-size:11px">Raw belop: <b style="color:var(--t)">'+(b.rawTotal||0).toLocaleString('nb-NO')+' kr</b></span>'
+      +'<span style="color:#94a3b8;font-size:11px">Belop (raw): <b style="color:var(--t)">'+(b.rawTotal||0).toLocaleString('nb-NO')+' kr</b></span>'
       +'<span style="color:#94a3b8;font-size:11px">MVA jaris: <b style="color:var(--r)">-'+(b.totalMva||0).toLocaleString('nb-NO')+' kr</b></span>'
       +'</div>'
       +'<div style="text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--br)">'
       +'<small style="font-size:10px;color:#94a3b8;display:block">NETTO (LACAG KEENTAY)</small>'
-      +'<b style="font-size:20px;color:'+(isPos?'var(--g)':'var(--r)')+';">'+(isPos?'+':'')+netto.toLocaleString('nb-NO')+' kr</b>'
+      +'<b style="font-size:22px;color:'+(isPos?'var(--g)':'var(--r)')+';">'+(isPos?'+':'')+netto.toLocaleString('nb-NO')+' kr</b>'
       +'</div>';
     con.appendChild(d);
   });
