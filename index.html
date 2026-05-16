@@ -208,6 +208,11 @@ input,select,textarea{width:100%;padding:13px;border-radius:10px;border:1px soli
 <b id="s-netmva" class="af" style="color:var(--p)">0 kr</b>
 </div>
 <div class="sumcard"><small>RESULTAT FOR SKATT (NETTO)</small><h1 id="s-tot" class="af" style="color:var(--g)">0 kr</h1></div>
+<div style="padding:0 9px 6px;display:flex;justify-content:flex-end">
+<button onclick="deleteAllEntries()" style="background:none;border:1.5px solid var(--r);border-radius:10px;color:var(--r);padding:7px 16px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:6px">
+<i class="fas fa-trash-alt"></i> DHAMMAAN TIRTIR
+</button>
+</div>
 <div id="elist"></div>
 </div>
 
@@ -651,6 +656,15 @@ function saveE(type){
   }).catch(err=>alert(err.message));
 }
 function delE(id){if(!confirm('Tirtir?'))return;db.ref('entries/'+auth.currentUser.uid+'/'+id).remove();}
+function deleteAllEntries(){
+  const u=auth.currentUser;if(!u)return;
+  const n=entries.length;
+  if(!n)return alert('Wax entry ah ma jiraan!');
+  if(!confirm('⚠️ DIGNIIN!\n\nDhammaan '+n+' entries waa la tirtiri doonaa.\nTani waa permanent — ma soo celin karto!\n\nMa hubtaa?'))return;
+  db.ref('entries/'+u.uid).remove()
+    .then(()=>alert('✅ Dhammaan '+n+' entries la tirtiray!'))
+    .catch(err=>alert('Khalad: '+err.message));
+}
 function editE(id){
   const e=entries.find(x=>x.id===id);if(!e)return;
   E('eid').value=id;E('edate').value=e.date;E('ecat').value=e.category;E('edesc').value=e.description;E('eamt').value=e.amount;
