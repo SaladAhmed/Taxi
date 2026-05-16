@@ -123,7 +123,7 @@ tbody td:last-child{text-align:right}
 .td-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:13px}
 .td-amt.inc{color:var(--green)}
 .td-amt.exp{color:var(--red)}
-.td-desc{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.td-desc{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .td-date{color:var(--text3);font-size:12px;white-space:nowrap}
 
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
@@ -267,10 +267,8 @@ tbody td:last-child{text-align:right}
 </div>
 
 <script>
-// Firebase Config Fallback Simulation
 let localTransactions = [];
 
-// Safely configure Worker for Chrome and Safari
 if (typeof window !== 'undefined' && pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
@@ -303,7 +301,6 @@ function loadMockData() {
   renderTransactions();
 }
 
-// DETAILED DNB PDF PARSER FOR CHROME & SAFARI
 async function handlePDF(input) {
   const file = input.files[0];
   if (!file) return;
@@ -319,102 +316,137 @@ async function handlePDF(input) {
       const typedarray = new Uint8Array(this.result);
       const loadingTask = pdfjsLib.getDocument({ data: typedarray });
       const pdf = await loadingTask.promise;
-      let rawLines = [];
+      let allTextItems = [];
 
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         
-        // Sorting layout to ensure Chrome reads text lines linearly
-        let items = textContent.items;
-        items.sort((a, b) => {
-          if (Math.abs(a.transform[5] - b.transform[5]) < 5) {
-            return a.transform[4] - b.transform[4];
-          }
-          return b.transform[5] - a.transform[5];
+        // Push items along with their page to track layout properly
+        textContent.items.forEach(item => {
+          allTextItems.push({
+            str: item.str,
+            x: item.transform[4],
+            y: item.transform[5],
+            page: i
+          });
         });
-
-        let lastY = -1;
-        let lineText = "";
-        items.forEach(item => {
-          if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-            rawLines.push(lineText);
-            lineText = "";
-          }
-          lineText += " " + item.str;
-          lastY = item.transform[5];
-        });
-        if (lineText) rawLines.push(lineText);
       }
 
       statusTxt.innerText = "Falanqaynta xogta DNB...";
-      processDNBText(rawLines);
+      processStateTokens(allTextItems);
 
     } catch (error) {
-      statusTxt.innerText = "Cillad ayaa ku dhacday akhrinta PDF-ka Chrome/Safari.";
+      statusTxt.innerText = "Cillad ayaa ku dhacday akhrinta PDF-ka.";
       console.error(error);
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-function processDNBText(lines) {
-  let extractedTransactions = [];
+// ADVANCED STATE TOKENIZER FOR DNB MULTI-LINE LAYOUT
+function processStateTokens(items) {
+  // Sort items by Page (ascending), then Y (descending), then X (ascending)
+  items.sort((a, b) => {
+    if (a.page !== b.page) return a.page - b.page;
+    if (Math.abs(a.y - b.y) < 4) return a.x - b.x;
+    return b.y - a.y;
+  });
 
-  // Looping through standard DNB matrix
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i].trim();
+  let parsedTransactions = [];
+  let currentTx = null;
 
-    // Matching dates (e.g., 31.12.25 or 02.01.26 or 30.01.2026)
-    let dateMatch = line.match(/^(\d{2}\.\d{2}\.\d{2,4})/);
+  for (let i = 0; i < items.length; i++) {
+    let text = items[i].str.trim();
+    if (!text) continue;
+
+    // Check if this text token looks like a standard statement date (DD.MM.YY)
+    let dateMatch = text.match(/^(\d{2}\.\d{2}\.\d{2})$/);
     
+    // If we hit a new date, and it matches standard patterns, finalize old one and start a new block
     if (dateMatch) {
-      let dateStr = dateMatch[1];
-      let remainingText = line.replace(dateStr, "").trim();
-      
-      // Look ahead for amounts like 147.888,00 or 28,45 or 1.086,00
-      let moneyMatch = remainingText.match(/(\d[\d\.\s]*,\d{2})/);
-      
+      if (currentTx && currentTx.date && currentTx.rawText.length > 0) {
+        let evaluated = evaluateTxBlock(currentTx);
+        if (evaluated) parsedTransactions.push(evaluated);
+      }
+      currentTx = {
+        date: text,
+        rawText: [],
+        amountsFound: []
+      };
+      continue;
+    }
+
+    if (currentTx) {
+      // Check for amounts inside DNB matrix (Matches shapes like: 28,45 or 147.888,00 or 4.859.20)
+      let moneyMatch = text.match(/^(\d[\d\.\s]*,?\d{2})$/);
       if (moneyMatch) {
-        let amountStr = moneyMatch[1];
-        let description = remainingText.replace(amountStr, "").trim();
-        
-        // Format money to clean Float
-        let cleanAmount = parseFloat(amountStr.replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
-
-        // Determine Category / Type
-        let type = "EXP-FUEL"; // default
-        let lowerDesc = description.toLowerCase();
-        
-        if (lowerDesc.includes("taxi") || lowerDesc.includes("innland nr.")) {
-          type = "INC-MVA";
-        } else if (lowerDesc.includes("skatt")) {
-          type = "Skatt";
-        } else if (lowerDesc.includes("salad") || lowerDesc.includes("kontoregulering")) {
-          type = "EXP-OWN";
-        } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning")) {
-          type = "EXP-WASH";
+        currentTx.amountsFound.push(text);
+      } else {
+        // Collect text description blocks (like Visa, Tesla, Skatteetaten etc.)
+        if (text.length > 2 && !text.includes("Side") && !text.includes("Kontoutskrift")) {
+          currentTx.rawText.push(text);
         }
-
-        extractedTransactions.push({
-          date: dateStr,
-          desc: description.substring(0, 40),
-          amount: cleanAmount,
-          type: type
-        });
       }
     }
   }
 
-  if (extractedTransactions.length > 0) {
-    localTransactions = extractedTransactions;
+  // Handle last block
+  if (currentTx && currentTx.date) {
+    let evaluated = evaluateTxBlock(currentTx);
+    if (evaluated) parsedTransactions.push(evaluated);
+  }
+
+  if (parsedTransactions.length > 0) {
+    localTransactions = parsedTransactions;
     renderTransactions();
     document.getElementById('bstat').style.display = 'none';
-    alert(`Guul! Waxaa la soo saaray ${extractedTransactions.length} transaksiyon oo rasmig ah.`);
+    alert(`Guul! Waxaa si dhab ah loo helay ${parsedTransactions.length} transaksiyon oo rasmig ah!`);
     showPg('dash');
   } else {
-    alert("PDF-ka waa la akhriyey laakiin wax xog transaksiyon ah waa laga waayey. Hubi inuu yahay kontoutskrift sax ah.");
+    alert("Waa la akhriyey laakiin wax xog ah waa la waayey. Hubi inuu yahay kontoutskrift rasmiga ah oo sax ah.");
   }
+}
+
+function evaluateTxBlock(tx) {
+  if (tx.amountsFound.length === 0) return null;
+
+  // Re-compose description string cleanly
+  let description = tx.rawText.join(" ").replace(/\s+/g, " ").trim();
+  if (!description || description.includes("Bokføring") || description.includes("Forklarende")) return null;
+
+  // Clean the main transaction amount
+  let rawAmountStr = tx.amountsFound[0];
+  let cleanAmount = parseFloat(rawAmountStr.replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
+  if (isNaN(cleanAmount)) return null;
+
+  // Smart categorization engine based on your statements
+  let type = "EXP-FUEL"; // Default
+  let lowerDesc = description.toLowerCase();
+
+  if (lowerDesc.includes("taxi") || lowerDesc.includes("agder") || lowerDesc.includes("inn på konto")) {
+    type = "INC-MVA";
+  } else if (lowerDesc.includes("skat") || lowerDesc.includes("arbeidsavgift")) {
+    type = "Skatt";
+  } else if (lowerDesc.includes("salad") || lowerDesc.includes("kontoregulering") || lowerDesc.includes("overføring innland")) {
+    // Check if it's income or expense based on text heuristics
+    if (lowerDesc.includes("altaieb") || lowerDesc.includes("hassan")) {
+       type = "INC-MVA"; // Known transfers in
+    } else {
+       type = "EXP-OWN";
+    }
+  } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning")) {
+    type = "EXP-WASH";
+  } else if (lowerDesc.includes("santander") || lowerDesc.includes("forsikring") || lowerDesc.includes("strøm") || lowerDesc.includes("vibb")) {
+    type = "EXP-OWN";
+  }
+
+  return {
+    date: tx.date,
+    desc: description,
+    amount: cleanAmount,
+    type: type
+  };
 }
 
 function renderTransactions() {
@@ -439,7 +471,7 @@ function renderTransactions() {
     tr.innerHTML = `
       <td class="td-date">${item.date}</td>
       <td><span class="badge ${item.type === 'INC-MVA' ? 'inc' : 'exp'}">${item.type}</span></td>
-      <td class="td-desc">${item.desc}</td>
+      <td class="td-desc" title="${item.desc}">${item.desc}</td>
       <td class="${amtClass}">${prefix} ${displayAmt}</td>
     `;
     tbody.appendChild(tr);
