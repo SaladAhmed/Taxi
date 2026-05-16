@@ -53,8 +53,8 @@ input,select,textarea{width:100%;padding:13px;border-radius:10px;border:1px soli
 .sumcard{background:var(--card);border:2px solid var(--y);border-radius:17px;margin:7px 9px;padding:15px;text-align:center}
 .sumcard small{font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase}
 .sumcard h1{margin:7px 0 0;font-size:27px}
-.ecard{background:var(--card);border-radius:11px;padding:12px 13px;margin:0 9px 9px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.einfo{flex:1;min-width:0}
+.ecard{background:var(--card);border-radius:11px;padding:12px 13px;margin:0 9px 9px;border-left:5px solid;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.einfo{flex:1;min-width:0;overflow:hidden}
 .einfo .et{font-weight:bold;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .einfo .ed{font-size:11px;color:#94a3b8;margin-top:2px}
 .einfo .ebil{font-size:10px;color:var(--p);margin-top:1px;font-weight:bold}
@@ -565,14 +565,22 @@ function renderDash(list){
 
     const isI=e.type==='income',col=isI?'var(--g)':'var(--r)';
     const c=document.createElement('div');c.className='ecard';c.style.borderColor=col;
-    const shortDesc=(e.description||'').length>40?(e.description||'').substring(0,40)+'...':e.description||'';
-    c.innerHTML='<div class="einfo"><div class="et">'+e.category+' - '+shortDesc+'</div>'
-      +'<div class="ed">'+e.date+(e.carId?' | '+e.carId:'')+'</div>'
-      +(e.billNr?'<div class="ebil">&#128196; Faktura #'+e.billNr+'</div>':'')
+    const shortDesc=(e.description||'').length>32?(e.description||'').substring(0,32)+'...':e.description||'—';
+    const typeBadge=isI
+      ?'<span style="font-size:9px;background:rgba(46,204,113,.18);color:var(--g);border-radius:5px;padding:1px 6px;font-weight:bold;letter-spacing:.5px">INNTEKT</span>'
+      :'<span style="font-size:9px;background:rgba(255,71,87,.18);color:var(--r);border-radius:5px;padding:1px 6px;font-weight:bold;letter-spacing:.5px">UTGIFT</span>';
+    const amtDisplay=a>0?(isI?'+':'-')+a.toLocaleString('nb-NO')+' kr':'⚠️ 0 kr';
+    c.innerHTML='<div class="einfo">'
+      +'<div class="et" style="display:flex;align-items:center;gap:5px">'+typeBadge+'<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.category+' · '+shortDesc+'</span></div>'
+      +'<div class="ed">📅 '+e.date+(e.carId?' &nbsp;🚗 '+e.carId:'')+'</div>'
+      +(e.billNr?'<div class="ebil">📄 Faktura #'+e.billNr+'</div>':'')
       +'</div>'
-      +'<div class="eact"><span class="ea'+(amtHid?' ha':'')+'" style="color:'+col+'">'+(isI?'+':'-')+a.toLocaleString('nb-NO')+' kr</span>'
-      +'<i class="fas fa-edit" onclick="editE(\''+e.id+'\')"></i>'
-      +'<i class="fas fa-trash" onclick="delE(\''+e.id+'\')" style="color:#64748b"></i></div>';
+      +'<div class="eact" style="flex-direction:column;align-items:flex-end;gap:4px">'
+      +'<span class="ea'+(amtHid?' ha':'')+'" style="color:'+col+';font-size:15px;font-weight:bold;white-space:nowrap">'+amtDisplay+'</span>'
+      +'<div style="display:flex;gap:10px">'
+      +'<i class="fas fa-edit" onclick="editE(\''+e.id+'\')" style="color:#64748b"></i>'
+      +'<i class="fas fa-trash" onclick="delE(\''+e.id+'\')" style="color:#64748b"></i>'
+      +'</div></div>';
     el.appendChild(c);
   });
 
