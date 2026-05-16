@@ -892,11 +892,31 @@ function saveE(type){
   ref.set(entry).then(()=>{clearForm();showPg('dash');}).catch(err=>alert(err.message));
 }
 function clearForm(){E('eid').value='';E('edate').value='';E('edesc').value='';E('eamt').value='';}
-function delE(id){if(!confirm('Slett transaksjonen?'))return;db.ref('entries/'+auth.currentUser.uid+'/'+id).remove();}
+function delE(id){
+  if(!confirm('Slett denne transaksjonen?'))return;
+  db.ref('entries/'+auth.currentUser.uid+'/'+id).remove();
+}
 function editE(id){
   const e=entries.find(x=>x.id===id);if(!e)return;
-  E('eid').value=id;E('edate').value=e.date;E('ecat').value=e.category;E('edesc').value=e.description||'';E('eamt').value=e.amount;
-  showPg('add');
+  // Populate modal
+  E('m-eid').value=id;
+  E('m-edate').value=e.date||'';
+  E('m-ecat').value=e.category||'3030';
+  E('m-edesc').value=e.description||'';
+  E('m-eamt').value=e.amount||'';
+  E('m-etype').value=e.type||'expense';
+  E('edit-modal').style.display='flex';
+}
+function closeModal(){E('edit-modal').style.display='none';}
+function saveModal(){
+  const u=auth.currentUser;if(!u)return;
+  const id=V('m-eid');if(!id)return;
+  const amt=parseFloat(V('m-eamt'));
+  if(!V('m-edate')||!amt)return alert('Fyll inn dato og beløp!');
+  const type=parseInt(V('m-ecat'))<4000?'income':'expense';
+  db.ref('entries/'+u.uid+'/'+id).set({
+    date:V('m-edate'),category:V('m-ecat'),description:V('m-edesc'),amount:amt,type
+  }).then(()=>closeModal()).catch(err=>alert('Feil: '+err.message));
 }
 function deleteAllEntries(){
   const u=auth.currentUser;if(!u)return;
@@ -1313,6 +1333,88 @@ function dlPDF(){
   const page=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Transport PRO – Regnskap</title><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#f8fafc;color:#0f172a;padding:32px;font-size:13px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #e2e8f0}.logo{font-size:20px;font-weight:700}.sub{color:#94a3b8;font-size:12px;margin-top:2px}.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px}.kpi small{font-size:10px;color:#94a3b8;text-transform:uppercase;font-weight:600;letter-spacing:.5px;display:block;margin-bottom:4px}.kpi b{font-size:18px;font-family:'DM Mono',monospace}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}th{background:#f1f5f9;padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}td{padding:10px 14px;border-top:1px solid #f1f5f9}.print-btn{background:#1a56db;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;margin-top:20px}@media print{.print-btn{display:none}}</style></head><body><div class="header"><div><div class="logo">🚕 Transport PRO</div><div class="sub">Regnskapsrapport · ${new Date().toLocaleDateString('nb-NO')}</div></div><div class="sub">Mohamed Salad Transport</div></div><div class="kpi-row"><div class="kpi"><small>Inntekt</small><b style="color:#059669">+${ti.toLocaleString('nb-NO',{minimumFractionDigits:2})} kr</b></div><div class="kpi"><small>Utgifter</small><b style="color:#dc2626">−${te.toLocaleString('nb-NO',{minimumFractionDigits:2})} kr</b></div><div class="kpi"><small>Netto</small><b style="color:${net>=0?'#059669':'#dc2626'}">${net>=0?'+':'−'}${Math.abs(net).toLocaleString('nb-NO',{minimumFractionDigits:2})} kr</b></div></div><table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Faktura</th><th>Beløp</th></tr></thead><tbody>${rows}</tbody></table><button class="print-btn" onclick="window.print()">🖨️ Skriv ut / Lagre PDF</button></body></html>`;
   win.document.write(page);win.document.close();
 }
+</script>
+
+<!-- ══ EDIT MODAL ══ -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,32,68,.55);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:440px;box-shadow:0 24px 48px rgba(0,0,0,.2);overflow:hidden;animation:modalIn .2s ease">
+    <style>@keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}</style>
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px">
+        <i class="fas fa-edit" style="color:#1a56db"></i> Rediger transaksjon
+      </div>
+      <button onclick="closeModal()" style="background:none;border:1px solid #e2e8f0;border-radius:6px;font-size:16px;color:#64748b;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+    </div>
+    <div style="padding:20px">
+      <input type="hidden" id="m-eid">
+      <input type="hidden" id="m-etype">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:5px">📅 Dato</label>
+          <input type="date" id="m-edate" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;color:#0f172a;transition:.15s" onfocus="this.style.borderColor='#1a56db';this.style.boxShadow='0 0 0 3px rgba(26,86,219,.08)'" onblur="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:5px">💰 Beløp (kr)</label>
+          <input type="number" id="m-eamt" placeholder="0.00" step="0.01" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:'DM Mono',monospace;font-weight:600;outline:none;color:#0f172a;transition:.15s" onfocus="this.style.borderColor='#1a56db';this.style.boxShadow='0 0 0 3px rgba(26,86,219,.08)'" onblur="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:5px">📂 Konto</label>
+        <select id="m-ecat" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;color:#0f172a;background:#fff;transition:.15s" onfocus="this.style.borderColor='#1a56db'" onblur="this.style.borderColor='#e2e8f0'">
+          <optgroup label="── INNTEKT ──">
+            <option value="3030">3030 · Kjøreinntekter, lav sats</option>
+            <option value="3031">3031 · Kjøreinntekter kontant</option>
+            <option value="3032">3032 · Kjøreinntekter NAV</option>
+            <option value="3033">3033 · Kjøreinntekter skole</option>
+            <option value="3039">3039 · Bomtur</option>
+            <option value="3110">3110 · Tips</option>
+          </optgroup>
+          <optgroup label="── UTGIFTER ──">
+            <option value="5000">5000 · Lønn til ansatte</option>
+            <option value="5400">5400 · Arbeidsgiveravgift</option>
+            <option value="5920">5920 · Yrkesskadeforsikring</option>
+            <option value="6010">6010 · Avskrivning transportmidler</option>
+            <option value="6705">6705 · Regnskapshonorar</option>
+            <option value="6755">6755 · Sentralavgift</option>
+            <option value="6800">6800 · Kontorrekvisita</option>
+            <option value="6900">6900 · Telefon</option>
+            <option value="6907">6907 · Datakommunikasjon</option>
+            <option value="7000">7000 · Drivstoff</option>
+            <option value="7020">7020 · Vedlikehold transportmiddel</option>
+            <option value="7040">7040 · Forsikring transportmiddel</option>
+            <option value="7140">7140 · Reisekostnad</option>
+            <option value="7400">7400 · Kontingent</option>
+            <option value="7770">7770 · Bank og kortgebyr</option>
+            <option value="7790">7790 · Annen kostnad</option>
+            <option value="7791">7791 · Spesialtur</option>
+            <option value="7792">7792 · Generell kreditt</option>
+            <option value="7793">7793 · Pasienttransport</option>
+            <option value="7794">7794 · Ikke møtt</option>
+            <option value="7795">7795 · Adm. gebyr trukket</option>
+            <option value="7796">7796 · Faktura Agder Taxi</option>
+            <option value="7797">7797 · Kontoutskrift</option>
+            <option value="7798">7798 · Annen fradragsberettiget</option>
+          </optgroup>
+        </select>
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:5px">📝 Beskrivelse</label>
+        <input type="text" id="m-edesc" placeholder="Beskriv transaksjonen..." style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;color:#0f172a;transition:.15s" onfocus="this.style.borderColor='#1a56db';this.style.boxShadow='0 0 0 3px rgba(26,86,219,.08)'" onblur="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="saveModal()" style="flex:1;padding:11px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s" onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1a56db'">
+          <i class="fas fa-save"></i> Lagre endringer
+        </button>
+        <button onclick="closeModal()" style="padding:11px 18px;background:transparent;color:#475569;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s" onmouseover="this.style.borderColor='#94a3b8'" onmouseout="this.style.borderColor='#e2e8f0'">
+          Avbryt
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('edit-modal').addEventListener('click',function(ev){if(ev.target===this)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 </script>
 </body>
 </html>
