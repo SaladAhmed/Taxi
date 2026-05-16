@@ -276,7 +276,6 @@ function showPg(pgId) {
 function doLogin() {
   document.getElementById('pg-auth').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  // Clear any existing residual items on fresh load
   localTransactions = [];
   renderTransactions();
 }
@@ -312,7 +311,6 @@ async function handlePDF(input) {
         let lastY = -1;
         let lineText = "";
         
-        // Linear sorting for perfect reading sequence across platforms
         let items = textContent.items;
         items.sort((a, b) => {
           if (Math.abs(a.transform[5] - b.transform[5]) < 3) return a.transform[4] - b.transform[4];
@@ -349,7 +347,6 @@ function processDNBStatement(lines) {
     let segments = line.split("||").map(s => s.trim()).filter(s => s.length > 0);
     if (segments.length < 2) continue;
 
-    // Detect row start (DNB uses DD.MM.YY format for row indices)
     let dateMatch = segments[0].match(/^(\d{2}\.\d{2}\.\d{2})$/);
     if (!dateMatch) continue;
 
@@ -358,59 +355,62 @@ function processDNBStatement(lines) {
     let amount = 0;
     let isIncome = false;
 
-    // Filter segments to find description and numerical transaction value
-    let foundAmount = false;
-    let descParts = [];
+    let cleanSegments = [];
+    
+    // Sifee segments-ka si looga saaro nambarada Giro iyo tixraacyada khalkhalka bixinaya
+    for (let s of segments) {
+      let cleanS = s.replace(/\s+/g, "");
+      // Haddii uu yahay nambarka Giro (Giro nr.3737017) ama Arkivref dheer, ha u deyn koodka lacagta
+      if (s.toLowerCase().includes("giro") || cleanS.match(/^\d{7}$/) || cleanS.match(/^\d{9}$/)) {
+        continue;
+      }
+      cleanSegments.push(s);
+    }
 
-    for (let j = 1; j < segments.length; j++) {
-      let segmentText = segments[j];
-
-      // Regex matching strict DNB numerical matrix layout (e.g. 11.000,00 or 28,45 or 35,05)
-      let moneyMatch = segmentText.match(/^([\d\.]*,\d{2})$/);
+    // Raadi lacagta saxda ah ee DNB format (,00)
+    for (let j = 1; j < cleanSegments.length; j++) {
+      let textPart = cleanSegments[j];
+      let moneyMatch = textPart.match(/^([\d[\d\.\s]*,?\d{2})$/);
       
-      if (moneyMatch && !foundAmount) {
-        let numericStr = segmentText.replace(/\./g, "").replace(",", ".");
+      if (moneyMatch && textPart.replace(/\s/g, "").length < 10) { 
+        let numericStr = textPart.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
         let val = parseFloat(numericStr);
         if (!isNaN(val) && val > 0) {
           amount = val;
-          foundAmount = true;
-
-          // Advanced Positioning Rule: 
-          // If the money segment occurs near the end of the line array before rentato/ref indices, 
-          // or contains signature text cues, classify layout orientation.
-          let fullLineStr = line.toLowerCase();
-          let segmentIndex = line.indexOf(segmentText);
-          let totalLength = line.length;
-
-          // Check if it belongs to "Inn på konto" column or is an explicit receipt
-          if (fullLineStr.includes("agder taxi") || fullLineStr.includes("inn på konto") || (segmentIndex / totalLength > 0.65 && !fullLineStr.includes("tesla") && !fullLineStr.includes("santander"))) {
-            isIncome = true;
-          }
-        }
-      } else {
-        // Discard audit tracking indices (Arkivref usually 9 digits starting with 7)
-        if (segmentText.length > 2 && !segmentText.match(/^\d{9}$/) && !segmentText.match(/^\d{2}\.\d{2}\.\d{2}$/) && !segmentText.includes("Bokføring")) {
-          descParts.push(segmentText);
         }
       }
     }
 
+    // Soo saar sharaxaad nadiif ah
+    let descParts = [];
+    for (let j = 1; j < segments.length; j++) {
+      let part = segments[j];
+      if (!part.match(/^([\d[\d\.\s]*,?\d{2})$/) && !part.match(/^\d{9}$/) && !part.match(/^\d{2}\.\d{2}\.\d{2}$/)) {
+        descParts.push(part);
+      }
+    }
     description = descParts.join(" ").replace(/\s+/g, " ").trim();
 
-    if (amount > 0 && description.length > 0 && !description.includes("Saldo") && !description.includes("Utført")) {
-      // Direct explicit categorization overrides
-      let lowerDesc = description.toLowerCase();
-      let type = isIncome ? "INC-MVA" : "EXP-FUEL";
+    // STRICT FILTER: Kaliya Agder Taxi AS ayaa ah Income (Dakhli)
+    let lowerDesc = description.toLowerCase();
+    if (lowerDesc.includes("agder taxi")) {
+      isIncome = true;
+    } else {
+      isIncome = false; // Wixii kale oo dhan waa Utgifter (Kharash)
+    }
 
-      if (lowerDesc.includes("taxi") || lowerDesc.includes("agder")) {
+    if (amount > 0 && description.length > 0 && !description.includes("Saldo") && !description.includes("Utført")) {
+      let type = "EXP-FUEL"; // Default utgift
+
+      if (isIncome) {
         type = "INC-MVA";
       } else if (lowerDesc.includes("skatteetaten") || lowerDesc.includes("skat")) {
         type = "Skatt";
       } else if (lowerDesc.includes("tesla")) {
         type = "EXP-FUEL";
-      } else if (lowerDesc.includes("santander") || lowerDesc.includes("livsforsikring") || lowerDesc.includes("vibb") || lowerDesc.includes("strøm")) {
+      } else if (lowerDesc.includes("santander") || lowerDesc.includes("livsforsikring") || lowerDesc.includes("vibb") || lowerDesc.includes("strøm") || lowerDesc.includes("autosync") || lowerDesc.includes("nextgentel") || lowerDesc.includes("lyse")) {
         type = "EXP-OWN";
-      } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning")) {
+      } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning") || lowerDesc.includes("msg")) {
         type = "EXP-WASH";
       }
 
@@ -427,7 +427,7 @@ function processDNBStatement(lines) {
     localTransactions = matchedTransactions;
     renderTransactions();
     document.getElementById('bstat').style.display = 'none';
-    alert(`Guul! Waxaa si dhab ah loo helay ${matchedTransactions.length} transaksiyon oo rasmig ah!`);
+    alert(`Guul! Waxaa si dhab ah loo helay ${matchedTransactions.length} transaksiyon oo sax ah!`);
     showPg('dash');
   } else {
     alert("Ma aysan suurtogalin in xog laga soo saaro. Hubi inuu yahay kontoutskrift PDF sax ah.");
