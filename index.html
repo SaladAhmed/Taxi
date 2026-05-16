@@ -183,6 +183,7 @@ select.form-control{cursor:pointer}
 .btn-outline{background:transparent;color:var(--text2);border-color:var(--border)}
 .btn-outline:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,86,219,.04)}
 .btn-sm{padding:6px 12px;font-size:12px}
+.btn-sm i{margin-right: 2px;}
 .btn-group{display:flex;gap:8px;flex-wrap:wrap}
 
 /* ── UPLOAD ZONE ── */
@@ -283,15 +284,15 @@ input[type=file]{display:none}
 </head>
 <body>
 
-<div id="pg-auth" class="auth-wrap" style="display:block">
+<div id="pg-auth" class="auth-wrap" style="display:flex">
   <div class="auth-card">
     <div class="auth-logo">
       <div class="auth-logo-icon">🚕</div>
       <div class="auth-title">Transport PRO</div>
       <div class="auth-sub">Mohamed Salad Transport · Logg inn</div>
     </div>
-    <div class="form-group"><label class="form-label">E-post</label><input id="em" type="email" class="form-control" placeholder="din@epost.no"></div>
-    <div class="form-group"><label class="form-label">Passord</label><input id="pw" type="password" class="form-control" placeholder="••••••••"></div>
+    <div class="form-group"><label class="form-label">E-post</label><input id="em" type="email" class="form-control" placeholder="din@epost.no" value="test@transportpro.no"></div>
+    <div class="form-group"><label class="form-label">Passord</label><input id="pw" type="password" class="form-control" placeholder="••••••••" value="123456"></div>
     <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Logg inn</button>
     <div style="display:flex;justify-content:space-between;font-size:12px">
       <span style="color:var(--accent);cursor:pointer" onclick="forgotPw()">Glemt passord?</span>
@@ -452,18 +453,18 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-// Initialize Firebase haddii config la dhigo, haddii kalena u daa qaab maamuus ah
-if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+let isFirebaseReady = false;
+if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
   firebase.initializeApp(firebaseConfig);
+  isFirebaseReady = true;
 }
 
-const auth = firebase.auth ? firebase.auth() : null;
-const db = firebase.database ? firebase.database() : null;
+const auth = isFirebaseReady ? firebase.auth() : null;
+const db = isFirebaseReady ? firebase.database() : null;
 
 let localTransactions = [];
 let hideAmounts = false;
 
-// Habka loo akhriyo PDF-ka mar dambe la soo geliyo
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 function showPg(pgId) {
@@ -475,7 +476,7 @@ function showPg(pgId) {
   if(targetNi) targetNi.classList.add('active');
 }
 
-// LOGIN & LOGOUT LOGIC
+// LOGIN WITH FIX
 function doLogin() {
   const email = document.getElementById('em').value;
   const password = document.getElementById('pw').value;
@@ -494,7 +495,7 @@ function doLogin() {
         alert("Cillad login: " + error.message);
       });
   } else {
-    // Fallback if Firebase isn't configured yet
+    // FIX: Haddii aan Firebase la habayn, si toos ah u fur app-ka oo soo radd xogta tijaabada
     document.getElementById('pg-auth').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     loadMockData();
@@ -565,7 +566,6 @@ function setupApp(user) {
 }
 
 function loadMockData() {
-  // If no database, show defaults so it's not empty
   if(localTransactions.length === 0) {
     localTransactions = [
       { desc: "07000 Agder Taxi", amount: 147888.00, date: "16.05.2026", type: "INC-MVA" },
@@ -649,7 +649,6 @@ function processDNBText(text) {
     );
   }
 
-  // Save parsed items into our application state
   itemsFound.forEach(item => {
     if (auth && auth.currentUser && db) {
       db.ref('transactions/' + auth.currentUser.uid).push(item);
@@ -658,16 +657,12 @@ function processDNBText(text) {
     }
   });
 
-  if(!db) {
-    renderTransactions();
-  }
-  
+  renderTransactions();
   document.getElementById('bstat').style.display = 'none';
   alert("Xogta PDF-ka waa la soo akhriyey waxaana lagu daray Dashboard-ka!");
   showPg('dash');
 }
 
-// DASHBOARD INCOME & UTGIFTER CALCULATIONS
 function renderTransactions() {
   const tbody = document.getElementById('etbody');
   tbody.innerHTML = "";
@@ -676,7 +671,6 @@ function renderTransactions() {
   let totalExpenses = 0;
 
   localTransactions.forEach(item => {
-    // Xisaabi dakhliga iyo kharashka ku salaysan Nooca (Type)
     if (item.type === 'INC-MVA') {
       totalIncome += item.amount;
     } else {
@@ -697,7 +691,6 @@ function renderTransactions() {
     tbody.appendChild(tr);
   });
 
-  // Cusboonaysii Dashboard KPI Cards
   const netto = totalIncome - totalExpenses;
 
   document.getElementById('s-inc').innerText = hideAmounts ? "•••••• kr" : totalIncome.toLocaleString('no-NO', {minimumFractionDigits: 2}) + " kr";
@@ -714,7 +707,6 @@ function renderTransactions() {
   }
 }
 
-// EYE TOGGLE BUTTON
 function toggleAmt() {
   hideAmounts = !hideAmounts;
   document.getElementById('el').innerText = hideAmounts ? "Vis" : "Skjul";
@@ -722,7 +714,6 @@ function toggleAmt() {
   renderTransactions();
 }
 
-// DELETE ALL ENTRIES FUNCTION
 function deleteAllEntries() {
   if (confirm("Ma hubaal miyaa inaad rabto inaad tirtirto dhammaan transaksiyonada shaashadda ku jira?")) {
     if (auth && auth.currentUser && db) {
@@ -746,7 +737,6 @@ function setModus(m) {
   document.getElementById('dash-title').innerText = m==='i' ? "Dashboard · Individuell oversikt" : "Dashboard · Total oversikt";
 }
 
-// Check if user is already logged in on start
 window.onload = function() {
   if(auth) {
     auth.onAuthStateChanged(user => {
@@ -754,7 +744,8 @@ window.onload = function() {
       else { document.getElementById('pg-auth').style.display = 'flex'; }
     });
   } else {
-    loadMockData();
+    // If no Firebase active, just keep login page ready to simulation
+    document.getElementById('pg-auth').style.display = 'flex';
   }
 };
 </script>
