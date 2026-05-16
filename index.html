@@ -104,10 +104,12 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .pg.active{display:block}
 
 /* ── KPI CARDS ── */
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow)}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;box-shadow:var(--shadow)}
 .kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.kpi-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.5px}
+.kpi-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.5px}
 .kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
 .kpi.green .kpi-val{color:var(--green)}
 .kpi.red .kpi-val{color:var(--red)}
@@ -479,20 +481,22 @@ input[type=file]{display:none}
               </div>
               <div id="bstat" class="status-bar info"><i class="fas fa-info-circle"></i><span id="bstat-txt"></span></div>
               <div id="bpdf">
-                <div class="upload-zone" onclick="document.getElementById('pdfi').click()">
-                  <i class="fas fa-file-pdf" style="color:#dc2626"></i>
-                  <div class="uz-title">DNB PDF Kontoutskrift</div>
-                  <p>Klikk for å laste opp PDF</p>
-                </div>
-                <input type="file" id="pdfi" accept=".pdf" onchange="handlePDF(this)">
+                <label for="pdfi" class="upload-zone" style="cursor:pointer;display:block">
+                  <i class="fas fa-file-pdf" style="color:#dc2626;font-size:36px;margin-bottom:10px;display:block"></i>
+                  <div class="uz-title" style="font-size:15px;color:#0f172a;margin-bottom:4px">DNB PDF Kontoutskrift</div>
+                  <p style="color:#64748b">Klikk her for å laste opp PDF-fil</p>
+                  <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg PDF</div>
+                </label>
+                <input type="file" id="pdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)" style="display:none">
               </div>
               <div id="bcsv" class="hidden">
-                <div class="upload-zone" onclick="document.getElementById('csvi').click()">
-                  <i class="fas fa-file-csv" style="color:var(--accent)"></i>
-                  <div class="uz-title">DNB CSV</div>
-                  <p>Last ned CSV fra nettbanken</p>
-                </div>
-                <input type="file" id="csvi" accept=".csv" onchange="handleCSV(this)">
+                <label for="csvi" class="upload-zone" style="cursor:pointer;display:block">
+                  <i class="fas fa-file-csv" style="color:#1a56db;font-size:36px;margin-bottom:10px;display:block"></i>
+                  <div class="uz-title" style="font-size:15px;color:#0f172a;margin-bottom:4px">DNB CSV-fil</div>
+                  <p style="color:#64748b">Last ned CSV fra nettbanken og last opp her</p>
+                  <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg CSV</div>
+                </label>
+                <input type="file" id="csvi" accept=".csv,text/csv" onchange="handleCSV(this)" style="display:none">
               </div>
               <div id="bprev" class="hidden" style="margin-top:12px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -514,12 +518,13 @@ input[type=file]{display:none}
             <div style="padding:16px">
               <div id="ostat" class="status-bar info hidden"><i class="fas fa-spinner fa-spin"></i><span id="ostat-txt"></span></div>
 
-              <div class="upload-zone" onclick="document.getElementById('fui').click()" style="margin-bottom:10px">
-                <i class="fas fa-file-invoice" style="color:var(--amber)"></i>
-                <div class="uz-title">Last opp Agder Taxi PDF</div>
-                <p>Auto-les + MVA-beregning</p>
-              </div>
-              <input type="file" id="fui" accept="image/*,.pdf" onchange="handleFile(this)">
+              <label for="fui" class="upload-zone" style="cursor:pointer;display:block;margin-bottom:10px">
+                <i class="fas fa-file-invoice" style="color:#d97706;font-size:36px;margin-bottom:10px;display:block"></i>
+                <div class="uz-title" style="font-size:15px;color:#0f172a;margin-bottom:4px">Agder Taxi PDF</div>
+                <p style="color:#64748b">Auto-les faktura + MVA-beregning</p>
+                <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#d97706;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg PDF</div>
+              </label>
+              <input type="file" id="fui" accept="image/*,.pdf,application/pdf" onchange="handleFile(this)" style="display:none">
 
               <button class="btn btn-outline" style="width:100%;margin-bottom:10px" id="scanbtn" onclick="startScan()"><i class="fas fa-camera"></i> Skann med kamera</button>
               <video id="svid" style="display:none;width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:8px" autoplay playsinline></video>
