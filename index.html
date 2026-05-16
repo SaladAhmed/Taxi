@@ -104,13 +104,17 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .pg.active{display:block}
 
 /* ── KPI CARDS ── */
-.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
-@media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
 @media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;box-shadow:var(--shadow)}
-.kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.kpi-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.5px}
-.kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;box-shadow:var(--shadow)}
+.kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.kpi-val{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.5px}
+.kpi-sub{font-size:12px;color:var(--text3);margin-top:4px}
+.kpi.green{border-left:4px solid var(--green)}
+.kpi.red{border-left:4px solid var(--red)}
+.kpi.blue{border-left:4px solid var(--accent)}
+.kpi.amber{border-left:4px solid var(--amber)}
+.kpi.purple{border-left:4px solid var(--purple)}
 .kpi.green .kpi-val{color:var(--green)}
 .kpi.red .kpi-val{color:var(--red)}
 .kpi.blue .kpi-val{color:var(--accent)}
@@ -380,36 +384,40 @@ input[type=file]{display:none}
           </div>
         </div>
 
-        <!-- KPI cards -->
+        <!-- KPI row 1 -->
         <div class="kpi-row">
           <div class="kpi green">
-            <div class="kpi-label"><i class="fas fa-arrow-up"></i> Inntekt</div>
-            <div class="kpi-val af" id="s-inc">0 kr</div>
+            <div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Inntekt</div>
+            <div class="kpi-val af" id="s-inc">0,00 kr</div>
             <div class="kpi-sub">Brutto inntekt</div>
           </div>
           <div class="kpi red">
-            <div class="kpi-label"><i class="fas fa-arrow-down"></i> Utgifter</div>
-            <div class="kpi-val af" id="s-exp">0 kr</div>
+            <div class="kpi-label"><i class="fas fa-arrow-trend-down"></i> Utgifter</div>
+            <div class="kpi-val af" id="s-exp">0,00 kr</div>
             <div class="kpi-sub">Totale kostnader</div>
           </div>
           <div class="kpi blue">
-            <div class="kpi-label"><i class="fas fa-balance-scale"></i> Netto</div>
-            <div class="kpi-val af" id="s-net">0 kr</div>
+            <div class="kpi-label"><i class="fas fa-scale-balanced"></i> Netto</div>
+            <div class="kpi-val af" id="s-net">0,00 kr</div>
             <div class="kpi-sub">Før skatt</div>
           </div>
+        </div>
+
+        <!-- KPI row 2 -->
+        <div class="kpi-row">
           <div class="kpi amber">
-            <div class="kpi-label"><i class="fas fa-percentage"></i> MVA 12%</div>
-            <div class="kpi-val af" id="s-mva12">0 kr</div>
-            <div class="kpi-sub">Skyldig MVA</div>
+            <div class="kpi-label"><i class="fas fa-percent"></i> MVA 12%</div>
+            <div class="kpi-val af" id="s-mva12">0,00 kr</div>
+            <div class="kpi-sub">Skyldig MVA lav sats</div>
           </div>
           <div class="kpi amber">
-            <div class="kpi-label"><i class="fas fa-percentage"></i> MVA 25%</div>
-            <div class="kpi-val af" id="s-mva25">0 kr</div>
-            <div class="kpi-sub">Skyldig MVA</div>
+            <div class="kpi-label"><i class="fas fa-percent"></i> MVA 25%</div>
+            <div class="kpi-val af" id="s-mva25">0,00 kr</div>
+            <div class="kpi-sub">Skyldig MVA høy sats</div>
           </div>
           <div class="kpi purple">
-            <div class="kpi-label"><i class="fas fa-hand-holding-usd"></i> Netto etter MVA</div>
-            <div class="kpi-val af" id="s-netmva">0 kr</div>
+            <div class="kpi-label"><i class="fas fa-hand-holding-dollar"></i> Netto etter MVA</div>
+            <div class="kpi-val af" id="s-netmva">0,00 kr</div>
             <div class="kpi-sub">Til deg</div>
           </div>
         </div>
