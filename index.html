@@ -157,10 +157,6 @@ tbody td:last-child{text-align:right}
 .auth-logo-icon{width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px}
 .auth-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
 .auth-sub{font-size:13px;color:var(--text3)}
-
-.modus-toggle{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px;gap:2px}
-.modus-btn{padding:5px 14px;border-radius:16px;border:none;background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
-.modus-btn.active{background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
@@ -280,22 +276,16 @@ function showPg(pgId) {
 function doLogin() {
   document.getElementById('pg-auth').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  loadMockData();
+  // Clear any existing residual items on fresh load
+  localTransactions = [];
+  renderTransactions();
 }
 
 function doLogout() {
+  localTransactions = [];
+  renderTransactions();
   document.getElementById('app').style.display = 'none';
   document.getElementById('pg-auth').style.display = 'flex';
-}
-
-function loadMockData() {
-  localTransactions = [
-    { desc: "07000 Agder Taxi AS", amount: 147888.00, date: "16.05.2026", type: "INC-MVA" },
-    { desc: "Skatteetaten", amount: 34663.00, date: "12.05.2026", type: "Skatt" },
-    { desc: "Tesla Inc.", amount: 235.03, date: "10.05.2026", type: "EXP-FUEL" },
-    { desc: "Mohamed Salad Transport", amount: 150.00, date: "09.05.2026", type: "EXP-OWN" }
-  ];
-  renderTransactions();
 }
 
 async function handlePDF(input) {
@@ -313,30 +303,35 @@ async function handlePDF(input) {
       const typedarray = new Uint8Array(this.result);
       const loadingTask = pdfjsLib.getDocument({ data: typedarray });
       const pdf = await loadingTask.promise;
-      let fullText = "";
+      let rawTextLines = [];
 
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         
         let lastY = -1;
-        let pageText = "";
+        let lineText = "";
         
-        // Accumulate row blocks accurately based on physical Y axes
-        textContent.items.forEach(item => {
-          if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-            pageText += "\n";
-          } else if (lastY !== -1) {
-            pageText += "|||"; // Special delimiter for horizontal column spacing
+        // Linear sorting for perfect reading sequence across platforms
+        let items = textContent.items;
+        items.sort((a, b) => {
+          if (Math.abs(a.transform[5] - b.transform[5]) < 3) return a.transform[4] - b.transform[4];
+          return b.transform[5] - a.transform[5];
+        });
+
+        items.forEach(item => {
+          if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 3) {
+            if (lineText.trim()) rawTextLines.push(lineText);
+            lineText = "";
           }
-          pageText += item.str;
+          lineText += " || " + item.str;
           lastY = item.transform[5];
         });
-        fullText += pageText + "\n";
+        if (lineText.trim()) rawTextLines.push(lineText);
       }
 
       statusTxt.innerText = "Falanqaynta xogta DNB...";
-      parseDNBRows(fullText);
+      processDNBStatement(rawTextLines);
 
     } catch (error) {
       statusTxt.innerText = "Cillad ayaa ku dhacday akhrinta PDF-ka.";
@@ -346,128 +341,96 @@ async function handlePDF(input) {
   reader.readAsArrayBuffer(file);
 }
 
-// PHYSICAL MATRIX ROW PARSER FOR DNB CONTINUOUS STATEMENTS
-function parseDNBRows(text) {
-  const lines = text.split("\n");
-  let parsedTransactions = [];
-  
-  let currentDescLines = [];
-  let currentDate = "";
-  let currentAmount = 0;
-  let currentIsIncome = false;
+function processDNBStatement(lines) {
+  let matchedTransactions = [];
 
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i].trim();
-    if (!line) continue;
+    let line = lines[i];
+    let segments = line.split("||").map(s => s.trim()).filter(s => s.length > 0);
+    if (segments.length < 2) continue;
 
-    // Check if line contains horizontal segments
-    let segments = line.split("|||").map(s => s.trim()).filter(s => s.length > 0);
-    if (segments.length === 0) continue;
+    // Detect row start (DNB uses DD.MM.YY format for row indices)
+    let dateMatch = segments[0].match(/^(\d{2}\.\d{2}\.\d{2})$/);
+    if (!dateMatch) continue;
 
-    // Test if first segment matches standard DNB statement date formats (DD.MM.YY)
-    let datePattern = /^(\d{2}\.\d{2}\.\d{2})$/;
-    let hasDate = datePattern.test(segments[0]);
+    let dateStr = segments[0];
+    let description = "";
+    let amount = 0;
+    let isIncome = false;
 
-    if (hasDate) {
-      // Save prior transaction if complete
-      if (currentDate && currentAmount > 0) {
-        parsedTransactions.push({
-          date: currentDate,
-          desc: currentDescLines.join(" ").replace(/\s+/g, " ").trim(),
-          amount: currentAmount,
-          type: currentIsIncome ? "INC-MVA" : "EXP-FUEL" // Temporary type, finalized below
-        });
-      }
+    // Filter segments to find description and numerical transaction value
+    let foundAmount = false;
+    let descParts = [];
 
-      // Reset for new block
-      currentDate = segments[0];
-      currentDescLines = [];
-      currentAmount = 0;
-      currentIsIncome = false;
+    for (let j = 1; j < segments.length; j++) {
+      let segmentText = segments[j];
 
-      // Extract details from current row columns
-      // Find actual financial amounts by avoiding multi-digit reference codes
-      for (let j = 1; j < segments.length; j++) {
-        let textPart = segments[j];
-        
-        // Match money strings (e.g. 147.888,00 or 28,45 or 4.859.20)
-        let moneyMatch = textPart.match(/^([\d[\d\.\s]*,?\d{2})$/);
-        if (moneyMatch && !textPart.includes(".") && textPart.length < 12) {
-          let cleanVal = parseFloat(textPart.replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
-          if (!isNaN(cleanVal) && cleanVal > 0) {
-            currentAmount = cleanVal;
-            // Detect column placement relative to page matrix if visible, or evaluate text strings later
-          }
-        } else if (textPart.length > 2 && !datePattern.test(textPart) && !textPart.includes("Side")) {
-          currentDescLines.push(textPart);
-        }
-      }
-    } else {
-      // Continue accumulating multiline text fields (e.g. description wraps)
-      if (currentDate) {
-        for (let j = 0; j < segments.length; j++) {
-          let textPart = segments[j];
-          let moneyMatch = textPart.match(/^([\d[\d\.\s]*,?\d{2})$/);
-          
-          if (moneyMatch && currentAmount === 0 && textPart.length < 12) {
-            let cleanVal = parseFloat(textPart.replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
-            if (!isNaN(cleanVal)) currentAmount = cleanVal;
-          } else if (textPart.length > 2 && !textPart.includes("Side") && !textPart.includes("Arkivref")) {
-            currentDescLines.push(textPart);
+      // Regex matching strict DNB numerical matrix layout (e.g. 11.000,00 or 28,45 or 35,05)
+      let moneyMatch = segmentText.match(/^([\d\.]*,\d{2})$/);
+      
+      if (moneyMatch && !foundAmount) {
+        let numericStr = segmentText.replace(/\./g, "").replace(",", ".");
+        let val = parseFloat(numericStr);
+        if (!isNaN(val) && val > 0) {
+          amount = val;
+          foundAmount = true;
+
+          // Advanced Positioning Rule: 
+          // If the money segment occurs near the end of the line array before rentato/ref indices, 
+          // or contains signature text cues, classify layout orientation.
+          let fullLineStr = line.toLowerCase();
+          let segmentIndex = line.indexOf(segmentText);
+          let totalLength = line.length;
+
+          // Check if it belongs to "Inn på konto" column or is an explicit receipt
+          if (fullLineStr.includes("agder taxi") || fullLineStr.includes("inn på konto") || (segmentIndex / totalLength > 0.65 && !fullLineStr.includes("tesla") && !fullLineStr.includes("santander"))) {
+            isIncome = true;
           }
         }
-      }
-    }
-  }
-
-  // Push ultimate entry
-  if (currentDate && currentAmount > 0) {
-    parsedTransactions.push({
-      date: currentDate,
-      desc: currentDescLines.join(" ").replace(/\s+/g, " ").trim(),
-      amount: currentAmount,
-      type: currentIsIncome ? "INC-MVA" : "EXP-FUEL"
-    });
-  }
-
-  // POST-PROCESSING CATEGORIZATION AND INFLOW DETECTOR
-  let finalizedTransactions = parsedTransactions.map(tx => {
-    let lowerDesc = tx.desc.toLowerCase();
-    let type = "EXP-FUEL"; // Standard
-
-    // Perfect categorization based on DNB rows
-    if (lowerDesc.includes("agder taxi") || lowerDesc.includes("inn på konto")) {
-      type = "INC-MVA";
-    } else if (lowerDesc.includes("skatteetaten") || lowerDesc.includes("skat")) {
-      type = "Skatt";
-    } else if (lowerDesc.includes("salad") || lowerDesc.includes("overføring") || lowerDesc.includes("kontoregulering")) {
-      if (lowerDesc.includes("altaieb") || lowerDesc.includes("hassan")) {
-        type = "INC-MVA"; // Income wire transfer
       } else {
-        type = "EXP-OWN"; // Owners draw / Outgoing transfer
+        // Discard audit tracking indices (Arkivref usually 9 digits starting with 7)
+        if (segmentText.length > 2 && !segmentText.match(/^\d{9}$/) && !segmentText.match(/^\d{2}\.\d{2}\.\d{2}$/) && !segmentText.includes("Bokføring")) {
+          descParts.push(segmentText);
+        }
       }
-    } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning")) {
-      type = "EXP-WASH";
-    } else if (lowerDesc.includes("santander") || lowerDesc.includes("autosync") || lowerDesc.includes("strøm") || lowerDesc.includes("vibb") || lowerDesc.includes("forsikring")) {
-      type = "EXP-OWN";
     }
 
-    return {
-      date: tx.date,
-      desc: tx.desc,
-      amount: tx.amount,
-      type: type
-    };
-  }).filter(tx => tx.desc.length > 0 && !tx.desc.includes("Bokføring") && !tx.desc.includes("Forklarende"));
+    description = descParts.join(" ").replace(/\s+/g, " ").trim();
 
-  if (finalizedTransactions.length > 0) {
-    localTransactions = finalizedTransactions;
+    if (amount > 0 && description.length > 0 && !description.includes("Saldo") && !description.includes("Utført")) {
+      // Direct explicit categorization overrides
+      let lowerDesc = description.toLowerCase();
+      let type = isIncome ? "INC-MVA" : "EXP-FUEL";
+
+      if (lowerDesc.includes("taxi") || lowerDesc.includes("agder")) {
+        type = "INC-MVA";
+      } else if (lowerDesc.includes("skatteetaten") || lowerDesc.includes("skat")) {
+        type = "Skatt";
+      } else if (lowerDesc.includes("tesla")) {
+        type = "EXP-FUEL";
+      } else if (lowerDesc.includes("santander") || lowerDesc.includes("livsforsikring") || lowerDesc.includes("vibb") || lowerDesc.includes("strøm")) {
+        type = "EXP-OWN";
+      } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning")) {
+        type = "EXP-WASH";
+      }
+
+      matchedTransactions.push({
+        date: dateStr,
+        desc: description,
+        amount: amount,
+        type: type
+      });
+    }
+  }
+
+  if (matchedTransactions.length > 0) {
+    localTransactions = matchedTransactions;
     renderTransactions();
     document.getElementById('bstat').style.display = 'none';
-    alert(`Guul! Waxaa si dhab ah loo helay ${finalizedTransactions.length} transaksiyon oo rasmig ah!`);
+    alert(`Guul! Waxaa si dhab ah loo helay ${matchedTransactions.length} transaksiyon oo rasmig ah!`);
     showPg('dash');
   } else {
-    alert("Ma aysan suurtogalin in si sax ah loo akhriyo. Hubi inuu yahay kontoutskrift-ka rasmiga ah.");
+    alert("Ma aysan suurtogalin in xog laga soo saaro. Hubi inuu yahay kontoutskrift PDF sax ah.");
   }
 }
 
