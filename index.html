@@ -335,6 +335,7 @@ input[type=file]{display:none}
       <div class="nav-item" id="ni-reports" onclick="showPg('reports')"><i class="fas fa-file-alt"></i><span class="nav-label">Rapporter</span></div>
       <div class="nav-section-title">Transaksjoner</div>
       <div class="nav-item" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus-circle"></i><span class="nav-label">Registrer</span></div>
+      <div class="nav-item" id="ni-scan" onclick="showPg('scan')"><i class="fas fa-camera"></i><span class="nav-label">Scan Faktura</span></div>
       <div class="nav-item" id="ni-bills" onclick="showPg('bills')"><i class="fas fa-file-invoice-dollar"></i><span class="nav-label">Fakturaer</span></div>
       <div class="nav-section-title">Konto</div>
       <div class="nav-item" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user-circle"></i><span class="nav-label">Profil</span></div>
@@ -638,6 +639,94 @@ input[type=file]{display:none}
       </div>
     </div>
 
+    <!-- ── SCAN FAKTURA ── -->
+    <div id="pg-scan" class="pg">
+      <div class="topbar">
+        <div class="topbar-title"><i class="fas fa-camera" style="color:var(--accent)"></i> Scan Faktura</div>
+      </div>
+      <div class="page-content">
+        <div style="max-width:520px;margin:0 auto">
+
+          <!-- Agder Taxi PDF upload -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-file-invoice" style="color:var(--amber)"></i> Agder Taxi — Last opp PDF</div>
+            </div>
+            <div style="padding:16px">
+              <div id="scan-ostat" class="status-bar" style="display:none"><i class="fas fa-spinner fa-spin"></i><span id="scan-ostat-txt"></span></div>
+              <label for="scan-fui" style="display:block;border:2px dashed var(--amber);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;background:#fffbeb;transition:.2s;margin-bottom:12px" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'">
+                <i class="fas fa-file-invoice" style="font-size:42px;color:var(--amber);display:block;margin-bottom:12px"></i>
+                <div style="font-size:16px;font-weight:700;color:#92400e;margin-bottom:4px">Trykk her for å laste opp</div>
+                <div style="font-size:13px;color:#b45309;margin-bottom:14px">Agder Taxi PDF faktura</div>
+                <div style="display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700">
+                  <i class="fas fa-upload"></i> Velg PDF-fil
+                </div>
+              </label>
+              <input type="file" id="scan-fui" accept="image/*,.pdf,application/pdf" style="display:none" onchange="handleScanFile(this)">
+            </div>
+          </div>
+
+          <!-- Camera scan -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-camera" style="color:var(--accent)"></i> Skann med kamera</div>
+            </div>
+            <div style="padding:16px">
+              <button id="scan-startbtn" class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;margin-bottom:12px" onclick="startScanPage()">
+                <i class="fas fa-camera"></i> Åpne kamera
+              </button>
+              <video id="scan-vid" style="display:none;width:100%;border-radius:10px;border:2px solid var(--accent);margin-bottom:8px;max-height:320px;object-fit:cover" autoplay playsinline></video>
+              <canvas id="scan-cv" style="display:none"></canvas>
+              <button id="scan-capbtn" class="btn btn-success" style="display:none;width:100%;padding:14px;font-size:15px;margin-bottom:8px" onclick="captureScanPage()">
+                <i class="fas fa-circle" style="color:#fff"></i> Ta bilde nå
+              </button>
+              <button id="scan-stopbtn" class="btn btn-outline" style="display:none;width:100%;margin-bottom:8px" onclick="stopScanPage()">
+                <i class="fas fa-times"></i> Avslutt kamera
+              </button>
+              <img id="scan-img" style="display:none;width:100%;border-radius:10px;border:1px solid var(--border);margin-bottom:8px">
+            </div>
+          </div>
+
+          <!-- OCR/Faktura results (shared with add page) -->
+          <div id="scan-netto" class="netto-highlight hidden" style="margin-bottom:12px">
+            <small>Netto utbetalt (etter MVA)</small>
+            <div class="nh-val" id="scan-netto-big">0 kr</div>
+            <div class="nh-sub" id="scan-netto-sub"></div>
+          </div>
+
+          <div class="ocr-result-card hidden" id="scan-atcard" style="margin-bottom:12px">
+            <div class="ocr-result-head"><i class="fas fa-receipt"></i> Fakturadetaljer</div>
+            <div style="padding:12px 16px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+                <div><span style="color:var(--text3)">Faktura nr:</span> <b id="scan-inv">-</b></div>
+                <div><span style="color:var(--text3)">Dato:</span> <b id="scan-date">-</b></div>
+                <div><span style="color:var(--text3)">Utbetales:</span> <b id="scan-pay">-</b></div>
+                <div><span style="color:var(--text3)">Beløp inkl. MVA:</span> <b id="scan-tot">-</b></div>
+              </div>
+              <div class="mva-row" style="margin-top:10px">
+                <div class="mva-box"><small>Grunnlag 12%</small><b id="scan-g12">-</b></div>
+                <div class="mva-box"><small>MVA 12%</small><b id="scan-m12" style="color:var(--red)">-</b></div>
+                <div class="mva-box"><small>Avgiftsfritt</small><b id="scan-free">-</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="scan-ocrlist" class="hidden">
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fas fa-list-check"></i> Velg poster å lagre</div></div>
+              <div style="padding:12px">
+                <div id="scan-oitems" style="max-height:320px;overflow-y:auto"></div>
+                <button class="btn btn-success" id="scan-btn-oi" style="display:none;width:100%;margin-top:10px" onclick="importScanOCR()">
+                  <i class="fas fa-save"></i> Lagre valgte poster
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- ── PROFIL ── -->
     <div id="pg-profile" class="pg">
       <div class="topbar"><div class="topbar-title">Min profil</div></div>
@@ -740,6 +829,12 @@ function showPg(pg){
   E('pg-'+pg)?.classList.add('active');
   E('ni-'+pg)?.classList.add('active');
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;
+    if(E('scan-vid'))E('scan-vid').style.display='none';
+    if(E('scan-capbtn'))E('scan-capbtn').style.display='none';
+    if(E('scan-stopbtn'))E('scan-stopbtn').style.display='none';
+    if(E('scan-startbtn'))E('scan-startbtn').style.display='flex';
+  }
   if(pg==='bills')renderBills();
 }
 
@@ -1293,6 +1388,190 @@ function importOCR(){
   alert(n+' poster lagret!');CL(E('ocrlist'),'hidden',true);CL(E('atcard'),'hidden',true);CL(E('atnetto'),'hidden',true);hideStat('ostat');showPg('dash');
 }
 function showOS(m,type='info'){const b=E('ostat');if(b){CL(b,'hidden',false);b.style.display='flex';b.className='status-bar '+type;E('ostat-txt').textContent=m;}}
+function showScanStat(m,type='info'){
+  const b=E('scan-ostat');if(!b)return;
+  b.style.display='flex';b.className='status-bar '+type;
+  E('scan-ostat-txt').textContent=m;
+}
+
+// ── SCAN PAGE — dedicated functions ──
+let scanStream=null,scanOItems=[];
+
+async function handleScanFile(inp){
+  const f=inp.files[0];if(!f)return;
+  showScanStat('Leser fil...','info');
+  if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
+    showScanStat('Leser Agder Taxi PDF...','info');
+    parseAgderPDFForScan(f);
+  } else {
+    const r=new FileReader();
+    r.onload=e=>{
+      E('scan-img').src=e.target.result;
+      E('scan-img').style.display='block';
+      runOCRForScan(e.target.result);
+    };
+    r.readAsDataURL(f);
+  }
+  inp.value='';
+}
+
+async function parseAgderPDFForScan(f){
+  try{
+    const buf=await f.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let all=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const pg=await pdf.getPage(p);const con=await pg.getTextContent();const vp=pg.getViewport({scale:1});
+      con.items.forEach(it=>{if(it.str.trim())all.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p});});
+    }
+    parseAgderItemsForScan(all);
+  }catch(err){showScanStat('Feil: '+err.message,'error');}
+}
+
+function parseAgderItemsForScan(all){
+  scanOItems=[];
+  all.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+  const lines=[];let cur=[],ly=-999,lp=-1;
+  for(const it of all){if(it.page!==lp||Math.abs(it.y-ly)>7){if(cur.length)lines.push(cur);cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}
+  if(cur.length)lines.push(cur);
+  const ft=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');
+
+  let dv='',payDate='',invNr='';
+  const dm=ft.match(/Fakturadato[\s:]+(\d{2})\.(\d{2})\.(\d{4})/i)||ft.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+  if(dm&&dm[3]){dv=dm[3]+'-'+dm[2]+'-'+dm[1];T('scan-date',dv);}
+  const pdm=ft.match(/[Uu]tbetales\s+(\d{2})\.(\d{2})\.(\d{2,4})/i);
+  if(pdm){payDate=pdm[3].length===2?'20'+pdm[3]+'-'+pdm[2]+'-'+pdm[1]:pdm[3]+'-'+pdm[2]+'-'+pdm[1];T('scan-pay',payDate);}
+  const im=ft.match(/(?:Faktura|bilag)[\/\s#]+(\d+)/i)||ft.match(/(\d{7})/);
+  if(im){invNr=im[1];T('scan-inv',invNr);}
+
+  let rawTotal=0,rawIsNeg=false,mva12=0,mva25=0,avgiftsfritt=0;
+  const tmAll=[...ft.matchAll(/[Bb]el[o]p\s+inkl[\s.]+mva[.:\s]+([-]?\d[\d\s.,]+)/gi)];
+  if(tmAll.length>0){const raw=tmAll[tmAll.length-1][1].trim();rawIsNeg=raw.startsWith('-');rawTotal=norNum(raw.replace('-',''));T('scan-tot',(rawIsNeg?'+ ':'')+fmt(rawTotal));}
+  const m12m=ft.match(/[Mm]va\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const m25m=ft.match(/[Mm]va\s+25\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const g12m=ft.match(/[Mm]va\s+grunnlag\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const frim=ft.match(/[Aa]vgiftsfritt[\s:]+([-]?\d[\d\s.,]+)/i);
+  if(g12m)T('scan-g12',fmt(norNum(g12m[1].replace('-',''))));
+  if(m12m){mva12=norNum(m12m[1].replace('-',''));T('scan-m12',fmt(mva12));}
+  if(m25m)mva25=norNum(m25m[1].replace('-',''));
+  if(frim){avgiftsfritt=norNum(frim[1].replace('-',''));T('scan-free',fmt(avgiftsfritt));}
+
+  const totalMva=Math.round(mva12+mva25);
+  const nettoAfterMva=Math.round(rawTotal-mva12-mva25);
+  const displayNetto=rawIsNeg?nettoAfterMva:-nettoAfterMva;
+
+  CL(E('scan-netto'),'hidden',false);
+  T('scan-netto-big',(displayNetto>=0?'+':'−')+fmt(Math.abs(displayNetto)));
+  E('scan-netto-big').style.color=displayNetto>=0?'var(--green)':'var(--red)';
+  T('scan-netto-sub','Brutto: '+fmt(rawTotal)+' − MVA 12%: '+fmt(Math.round(mva12))+' − MVA 25%: '+fmt(Math.round(mva25)));
+  CL(E('scan-atcard'),'hidden',false);
+
+  const amap=[
+    {re:/EMV\s*N/i,cat:'3030',lb:'EMV N',mvaP:12},{re:/TT\s*Rogaland/i,cat:'3030',lb:'TT Rogaland',mvaP:12},
+    {re:/VIPPS/i,cat:'3030',lb:'VIPPS',mvaP:12},{re:/APP.BETALING/i,cat:'3031',lb:'APP-betaling',mvaP:12},
+    {re:/Spesialtur/i,cat:'7791',lb:'Spesialtur',mvaP:12},{re:/Generell\s*kreditt/i,cat:'7792',lb:'Generell kreditt',mvaP:12},
+    {re:/Pasienttransport/i,cat:'7793',lb:'Pasienttransport',mvaP:12},{re:/Ikke\s*m[o\s]tt/i,cat:'7794',lb:'Ikke møtt',mvaP:12},
+    {re:/Adm\s*gebyr/i,cat:'7795',lb:'Adm. gebyr trukket',mvaP:25},{re:/Sentralavgift/i,cat:'6755',lb:'Sentralavgift',mvaP:12},
+    {re:/Bilforsikring/i,cat:'7040',lb:'Bilforsikring',mvaP:0},{re:/El\s*bil\s*lad/i,cat:'7000',lb:'El bil lading',mvaP:25},
+    {re:/Avgiftsfritt/i,cat:'3039',lb:'Avgiftsfritt',mvaP:0},
+  ];
+  const seen=new Set();
+  for(const line of lines){
+    const txt=line.map(i=>i.text).join(' ').trim();
+    if(!txt||/^Sum\b/i.test(txt)||!/AG-\d{3}/i.test(txt))continue;
+    const carM=txt.match(/AG-(\d{3})/i);const carId=carM?'AG-'+carM[1]:'';
+    const amts=[...txt.matchAll(/([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];if(!amts.length)continue;
+    const lr=amts[amts.length-1][1];const isN=lr.startsWith('-');const amt=norNum(lr.replace('-',''));
+    if(amt<1)continue;
+    let cat='7796',lb='Agder Taxi',mvaP=12;
+    for(const m of amap){if(m.re.test(txt)){cat=m.cat;lb=m.lb;mvaP=m.mvaP;break;}}
+    const type=isN?'income':'expense';
+    if(type==='income'&&parseInt(cat)>=6000)cat='3030';
+    if(type==='expense'&&parseInt(cat)<4000)cat='7796';
+    const key=cat+'|'+amt+'|'+lb+'|'+carId;
+    if(!seen.has(key)){seen.add(key);scanOItems.push({desc:lb+(carId?' ('+carId+')':''),amount:amt,type,date:dv,category:cat,carId,invNr,mvaP,billNr:invNr});}
+  }
+  if(!scanOItems.length&&rawTotal>0)
+    scanOItems.push({desc:'Agder Taxi Faktura #'+invNr,amount:nettoAfterMva>0?nettoAfterMva:rawTotal,type:rawIsNeg?'income':'expense',date:dv,category:'7796',invNr,billNr:invNr});
+
+  scanOItems.sort((a,b)=>a.type!==b.type?a.type==='income'?-1:1:b.amount-a.amount);
+  showScanStat('✅ '+scanOItems.length+' poster funnet!','success');
+
+  if(auth.currentUser&&invNr){
+    const billData={invNr,date:dv,payDate,rawTotal,totalMva,mva12:Math.round(mva12),mva25:Math.round(mva25),avgiftsfritt,nettoAfterMva:displayNetto,entryCount:scanOItems.length,savedAt:new Date().toISOString()};
+    db.ref('bills/'+auth.currentUser.uid+'/'+invNr).set(billData);
+  }
+  renderScanItems();
+}
+
+function renderScanItems(){
+  if(!scanOItems.length)return;
+  const con=E('scan-oitems');con.innerHTML='';
+  scanOItems.forEach((it,i)=>{
+    const isI=it.type==='income',sign=isI?'+':'−';
+    const d=document.createElement('div');d.className='import-item sel';d.id='soi-'+i;
+    d.onclick=()=>{d.classList.toggle('sel');updateScanBtn();};
+    d.innerHTML=`<div class="import-item-top">
+      <span class="import-item-desc">${it.desc}</span>
+      <span class="import-item-amt" style="color:${isI?'var(--green)':'var(--red)'}">${sign}${fmt(it.amount)}</span>
+    </div>
+    <div class="import-item-meta">${it.category} · <span class="badge ${isI?'inc':'exp'}" style="font-size:10px">${isI?'Inntekt':'Utgift'}</span>${it.mvaP?' · MVA '+it.mvaP+'%':''}</div>`;
+    con.appendChild(d);
+  });
+  CL(E('scan-ocrlist'),'hidden',false);
+  updateScanBtn();
+}
+function updateScanBtn(){
+  const n=document.querySelectorAll('#scan-oitems .import-item.sel').length;
+  E('scan-btn-oi').style.display=n>0?'flex':'none';
+}
+function importScanOCR(){
+  const u=auth.currentUser;if(!u)return;let n=0;
+  document.querySelectorAll('#scan-oitems .import-item.sel').forEach(el=>{
+    const i=parseInt(el.id.replace('soi-',''));const it=scanOItems[i];
+    db.ref('entries/'+u.uid).push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0});n++;
+  });
+  alert(n+' poster lagret!');
+  CL(E('scan-ocrlist'),'hidden',true);CL(E('scan-atcard'),'hidden',true);CL(E('scan-netto'),'hidden',true);
+  E('scan-ostat').style.display='none';E('scan-img').style.display='none';
+  showPg('dash');
+}
+
+async function startScanPage(){
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    E('scan-vid').style.display='block';E('scan-vid').srcObject=scanStream;
+    E('scan-capbtn').style.display='flex';E('scan-stopbtn').style.display='flex';
+    E('scan-startbtn').style.display='none';
+  }catch(err){alert('Kamera ikke tilgjengelig: '+err.message);}
+}
+function stopScanPage(){
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  E('scan-vid').style.display='none';E('scan-capbtn').style.display='none';E('scan-stopbtn').style.display='none';
+  E('scan-startbtn').style.display='flex';
+}
+function captureScanPage(){
+  const v=E('scan-vid'),c=E('scan-cv');
+  c.width=v.videoWidth;c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  const src=c.toDataURL('image/jpeg',0.95);
+  E('scan-img').src=src;E('scan-img').style.display='block';
+  stopScanPage();
+  runOCRForScan(src);
+}
+async function runOCRForScan(src){
+  showScanStat('OCR kjører...','info');
+  try{
+    const r=await Tesseract.recognize(src,'nor+eng',{logger:m=>{if(m.status==='recognizing text')showScanStat('OCR: '+Math.round(m.progress*100)+'%','info');}});
+    showScanStat('OCR ferdig','success');
+    const dm=r.data.text.match(/\b(\d{2})[.\-\/](\d{2})[.\-\/](\d{2,4})\b/);let dv='';
+    if(dm){const y=dm[3].length===2?'20'+dm[3]:dm[3];dv=y+'-'+dm[2]+'-'+dm[1];}
+    const tm=r.data.text.match(/(?:total|belop|sum)[^\d]*(\d[\d\s,.]+)/i);
+    scanOItems=[];
+    if(tm){const a=parseFloat(tm[1].replace(/\s/g,'').replace(',','.'));if(a>0)scanOItems.push({desc:'Faktura total (OCR)',amount:a,type:'expense',date:dv,category:'7790'});}
+    renderScanItems();
+  }catch(err){showScanStat('OCR feil: '+err.message,'error');}
+}
 
 // ── CAMERA ──
 async function startScan(){
