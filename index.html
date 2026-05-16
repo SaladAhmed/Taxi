@@ -1290,27 +1290,38 @@ async function importBank(){
     if(!isNaN(i)&&bItems[i])selected.push(bItems[i]);
   });
   if(!selected.length){showBS('Ingen valgt!','error');return;}
-  showBS('Lagrer '+selected.length+' transaksjoner...','info');
-  try{
-    // Save ALL using Promise.all — no dropping
-    const saves=selected.map(it=>{
+
+  const total=selected.length;
+  showBS('Lagrer 0 / '+total+'...','info');
+  E('btn-bi').disabled=true;
+
+  let saved=0,failed=0;
+  for(const it of selected){
+    try{
       const type=parseInt(it.category)<4000?'income':'expense';
-      return db.ref('entries/'+u.uid).push({
+      await db.ref('entries/'+u.uid).push({
         date:it.date,
         category:it.category,
         description:it.desc,
         amount:it.amount,
         type
       });
-    });
-    await Promise.all(saves);
-    showBS('✅ '+selected.length+' transaksjoner lagret!','success');
-    CL(E('bprev'),'hidden',true);
-    bItems=[];
-    setTimeout(()=>showPg('dash'),1200);
-  }catch(err){
-    showBS('Feil ved lagring: '+err.message,'error');
+      saved++;
+      showBS('Lagrer '+saved+' / '+total+'...','info');
+    }catch(err){
+      failed++;
+    }
   }
+
+  E('btn-bi').disabled=false;
+  if(failed===0){
+    showBS('✅ Alle '+saved+' transaksjoner lagret!','success');
+  }else{
+    showBS('⚠️ '+saved+' lagret, '+failed+' feilet — prøv igjen','error');
+  }
+  CL(E('bprev'),'hidden',true);
+  bItems=[];
+  setTimeout(()=>showPg('dash'),1500);
 }
 
 // ── AGDER TAXI ──
@@ -1417,14 +1428,28 @@ function renderOItems(invNr){
   con.appendChild(tot);
   CL(E('ocrlist'),'hidden',false);updateOBtn();
 }
-function updateOBtn(){const n=document.querySelectorAll('.import-item.sel').length;E('btn-oi').style.display=n>0?'flex':'none';}
-function importOCR(){
-  const u=auth.currentUser;if(!u)return;let n=0;
+function updateOBtn(){const n=document.querySelectorAll('#oitems .import-item.sel').length;E('btn-oi').style.display=n>0?'flex':'none';}
+async function importOCR(){
+  const u=auth.currentUser;if(!u)return;
+  const selected=[];
   document.querySelectorAll('#oitems .import-item.sel').forEach(el=>{
-    const i=parseInt(el.id.replace('oi-',''));const it=oItems[i];
-    db.ref('entries/'+u.uid).push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0});n++;
+    const i=parseInt(el.id.replace('oi-',''));
+    if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);
   });
-  alert(n+' poster lagret!');CL(E('ocrlist'),'hidden',true);CL(E('atcard'),'hidden',true);CL(E('atnetto'),'hidden',true);hideStat('ostat');showPg('dash');
+  if(!selected.length)return;
+  let saved=0;
+  for(const it of selected){
+    await db.ref('entries/'+u.uid).push({
+      date:it.date,category:it.category,description:it.desc,
+      amount:it.amount,type:it.type,carId:it.carId||'',
+      billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0
+    });
+    saved++;
+  }
+  alert('✅ '+saved+' poster lagret!');
+  CL(E('ocrlist'),'hidden',true);CL(E('atcard'),'hidden',true);
+  CL(E('atnetto'),'hidden',true);hideStat('ostat');
+  showPg('dash');
 }
 function showOS(m,type='info'){const b=E('ostat');if(b){CL(b,'hidden',false);b.style.display='flex';b.className='status-bar '+type;E('ostat-txt').textContent=m;}}
 function showScanStat(m,type='info'){
@@ -1564,15 +1589,27 @@ function updateScanBtn(){
   const n=document.querySelectorAll('#scan-oitems .import-item.sel').length;
   E('scan-btn-oi').style.display=n>0?'flex':'none';
 }
-function importScanOCR(){
-  const u=auth.currentUser;if(!u)return;let n=0;
+async function importScanOCR(){
+  const u=auth.currentUser;if(!u)return;
+  const selected=[];
   document.querySelectorAll('#scan-oitems .import-item.sel').forEach(el=>{
-    const i=parseInt(el.id.replace('soi-',''));const it=scanOItems[i];
-    db.ref('entries/'+u.uid).push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0});n++;
+    const i=parseInt(el.id.replace('soi-',''));
+    if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);
   });
-  alert(n+' poster lagret!');
-  CL(E('scan-ocrlist'),'hidden',true);CL(E('scan-atcard'),'hidden',true);CL(E('scan-netto'),'hidden',true);
-  E('scan-ostat').style.display='none';E('scan-img').style.display='none';
+  if(!selected.length)return;
+  let saved=0;
+  for(const it of selected){
+    await db.ref('entries/'+u.uid).push({
+      date:it.date,category:it.category,description:it.desc,
+      amount:it.amount,type:it.type,carId:it.carId||'',
+      billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0
+    });
+    saved++;
+  }
+  alert('✅ '+saved+' poster lagret!');
+  CL(E('scan-ocrlist'),'hidden',true);CL(E('scan-atcard'),'hidden',true);
+  CL(E('scan-netto'),'hidden',true);E('scan-ostat').style.display='none';
+  E('scan-img').style.display='none';
   showPg('dash');
 }
 
