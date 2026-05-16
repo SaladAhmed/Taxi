@@ -1274,18 +1274,43 @@ function renderBItems(){
   updateBBtn();
 }
 function toggleBI(i){E('bi-'+i).classList.toggle('sel');updateBBtn();}
-function updateBBtn(){const n=document.querySelectorAll('.import-item.sel').length;E('btn-bi').style.display=n>0?'flex':'none';T('bcount',n+' / '+bItems.length+' valgt');}
-function bAll(){document.querySelectorAll('.import-item').forEach(el=>el.classList.add('sel'));updateBBtn();}
-function bNone(){document.querySelectorAll('.import-item').forEach(el=>el.classList.remove('sel'));updateBBtn();}
-function importBank(){
-  const u=auth.currentUser;if(!u)return;let n=0;
-  document.querySelectorAll('.import-item.sel').forEach(el=>{
-    const i=parseInt(el.id.replace('bi-',''));const it=bItems[i];
-    const type=parseInt(it.category)<4000?'income':'expense';
-    db.ref('entries/'+u.uid).push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type});n++;
+function updateBBtn(){
+  const n=document.querySelectorAll('#bitems .import-item.sel').length;
+  E('btn-bi').style.display=n>0?'flex':'none';
+  T('bcount',n+' / '+bItems.length+' valgt');
+}
+function bAll(){document.querySelectorAll('#bitems .import-item').forEach(el=>el.classList.add('sel'));updateBBtn();}
+function bNone(){document.querySelectorAll('#bitems .import-item').forEach(el=>el.classList.remove('sel'));updateBBtn();}
+
+async function importBank(){
+  const u=auth.currentUser;if(!u)return;
+  const selected=[];
+  document.querySelectorAll('#bitems .import-item.sel').forEach(el=>{
+    const i=parseInt(el.id.replace('bi-',''));
+    if(!isNaN(i)&&bItems[i])selected.push(bItems[i]);
   });
-  showBS(n+' transaksjoner lagret!','success');CL(E('bprev'),'hidden',true);bItems=[];
-  setTimeout(()=>showPg('dash'),1000);
+  if(!selected.length){showBS('Ingen valgt!','error');return;}
+  showBS('Lagrer '+selected.length+' transaksjoner...','info');
+  try{
+    // Save ALL using Promise.all — no dropping
+    const saves=selected.map(it=>{
+      const type=parseInt(it.category)<4000?'income':'expense';
+      return db.ref('entries/'+u.uid).push({
+        date:it.date,
+        category:it.category,
+        description:it.desc,
+        amount:it.amount,
+        type
+      });
+    });
+    await Promise.all(saves);
+    showBS('✅ '+selected.length+' transaksjoner lagret!','success');
+    CL(E('bprev'),'hidden',true);
+    bItems=[];
+    setTimeout(()=>showPg('dash'),1200);
+  }catch(err){
+    showBS('Feil ved lagring: '+err.message,'error');
+  }
 }
 
 // ── AGDER TAXI ──
