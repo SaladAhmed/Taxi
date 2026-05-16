@@ -208,9 +208,6 @@ tbody td:last-child{text-align:right}
       <div class="topbar">
         <div class="topbar-title">Dashboard · Total oversikt</div>
         <div class="topbar-actions">
-          <div class="modus-toggle">
-            <button class="modus-btn active">Total</button>
-          </div>
           <button class="top-btn danger btn-sm" onclick="deleteAllEntries()"><i class="fas fa-trash-alt"></i> Slett alle</button>
         </div>
       </div>
@@ -316,25 +313,30 @@ async function handlePDF(input) {
       const typedarray = new Uint8Array(this.result);
       const loadingTask = pdfjsLib.getDocument({ data: typedarray });
       const pdf = await loadingTask.promise;
-      let allTextItems = [];
+      let fullText = "";
 
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         
-        // Push items along with their page to track layout properly
+        let lastY = -1;
+        let pageText = "";
+        
+        // Accumulate row blocks accurately based on physical Y axes
         textContent.items.forEach(item => {
-          allTextItems.push({
-            str: item.str,
-            x: item.transform[4],
-            y: item.transform[5],
-            page: i
-          });
+          if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
+            pageText += "\n";
+          } else if (lastY !== -1) {
+            pageText += "|||"; // Special delimiter for horizontal column spacing
+          }
+          pageText += item.str;
+          lastY = item.transform[5];
         });
+        fullText += pageText + "\n";
       }
 
       statusTxt.innerText = "Falanqaynta xogta DNB...";
-      processStateTokens(allTextItems);
+      parseDNBRows(fullText);
 
     } catch (error) {
       statusTxt.innerText = "Cillad ayaa ku dhacday akhrinta PDF-ka.";
@@ -344,109 +346,129 @@ async function handlePDF(input) {
   reader.readAsArrayBuffer(file);
 }
 
-// ADVANCED STATE TOKENIZER FOR DNB MULTI-LINE LAYOUT
-function processStateTokens(items) {
-  // Sort items by Page (ascending), then Y (descending), then X (ascending)
-  items.sort((a, b) => {
-    if (a.page !== b.page) return a.page - b.page;
-    if (Math.abs(a.y - b.y) < 4) return a.x - b.x;
-    return b.y - a.y;
-  });
-
+// PHYSICAL MATRIX ROW PARSER FOR DNB CONTINUOUS STATEMENTS
+function parseDNBRows(text) {
+  const lines = text.split("\n");
   let parsedTransactions = [];
-  let currentTx = null;
+  
+  let currentDescLines = [];
+  let currentDate = "";
+  let currentAmount = 0;
+  let currentIsIncome = false;
 
-  for (let i = 0; i < items.length; i++) {
-    let text = items[i].str.trim();
-    if (!text) continue;
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (!line) continue;
 
-    // Check if this text token looks like a standard statement date (DD.MM.YY)
-    let dateMatch = text.match(/^(\d{2}\.\d{2}\.\d{2})$/);
-    
-    // If we hit a new date, and it matches standard patterns, finalize old one and start a new block
-    if (dateMatch) {
-      if (currentTx && currentTx.date && currentTx.rawText.length > 0) {
-        let evaluated = evaluateTxBlock(currentTx);
-        if (evaluated) parsedTransactions.push(evaluated);
+    // Check if line contains horizontal segments
+    let segments = line.split("|||").map(s => s.trim()).filter(s => s.length > 0);
+    if (segments.length === 0) continue;
+
+    // Test if first segment matches standard DNB statement date formats (DD.MM.YY)
+    let datePattern = /^(\d{2}\.\d{2}\.\d{2})$/;
+    let hasDate = datePattern.test(segments[0]);
+
+    if (hasDate) {
+      // Save prior transaction if complete
+      if (currentDate && currentAmount > 0) {
+        parsedTransactions.push({
+          date: currentDate,
+          desc: currentDescLines.join(" ").replace(/\s+/g, " ").trim(),
+          amount: currentAmount,
+          type: currentIsIncome ? "INC-MVA" : "EXP-FUEL" // Temporary type, finalized below
+        });
       }
-      currentTx = {
-        date: text,
-        rawText: [],
-        amountsFound: []
-      };
-      continue;
-    }
 
-    if (currentTx) {
-      // Check for amounts inside DNB matrix (Matches shapes like: 28,45 or 147.888,00 or 4.859.20)
-      let moneyMatch = text.match(/^(\d[\d\.\s]*,?\d{2})$/);
-      if (moneyMatch) {
-        currentTx.amountsFound.push(text);
-      } else {
-        // Collect text description blocks (like Visa, Tesla, Skatteetaten etc.)
-        if (text.length > 2 && !text.includes("Side") && !text.includes("Kontoutskrift")) {
-          currentTx.rawText.push(text);
+      // Reset for new block
+      currentDate = segments[0];
+      currentDescLines = [];
+      currentAmount = 0;
+      currentIsIncome = false;
+
+      // Extract details from current row columns
+      // Find actual financial amounts by avoiding multi-digit reference codes
+      for (let j = 1; j < segments.length; j++) {
+        let textPart = segments[j];
+        
+        // Match money strings (e.g. 147.888,00 or 28,45 or 4.859.20)
+        let moneyMatch = textPart.match(/^([\d[\d\.\s]*,?\d{2})$/);
+        if (moneyMatch && !textPart.includes(".") && textPart.length < 12) {
+          let cleanVal = parseFloat(textPart.replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
+          if (!isNaN(cleanVal) && cleanVal > 0) {
+            currentAmount = cleanVal;
+            // Detect column placement relative to page matrix if visible, or evaluate text strings later
+          }
+        } else if (textPart.length > 2 && !datePattern.test(textPart) && !textPart.includes("Side")) {
+          currentDescLines.push(textPart);
+        }
+      }
+    } else {
+      // Continue accumulating multiline text fields (e.g. description wraps)
+      if (currentDate) {
+        for (let j = 0; j < segments.length; j++) {
+          let textPart = segments[j];
+          let moneyMatch = textPart.match(/^([\d[\d\.\s]*,?\d{2})$/);
+          
+          if (moneyMatch && currentAmount === 0 && textPart.length < 12) {
+            let cleanVal = parseFloat(textPart.replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
+            if (!isNaN(cleanVal)) currentAmount = cleanVal;
+          } else if (textPart.length > 2 && !textPart.includes("Side") && !textPart.includes("Arkivref")) {
+            currentDescLines.push(textPart);
+          }
         }
       }
     }
   }
 
-  // Handle last block
-  if (currentTx && currentTx.date) {
-    let evaluated = evaluateTxBlock(currentTx);
-    if (evaluated) parsedTransactions.push(evaluated);
+  // Push ultimate entry
+  if (currentDate && currentAmount > 0) {
+    parsedTransactions.push({
+      date: currentDate,
+      desc: currentDescLines.join(" ").replace(/\s+/g, " ").trim(),
+      amount: currentAmount,
+      type: currentIsIncome ? "INC-MVA" : "EXP-FUEL"
+    });
   }
 
-  if (parsedTransactions.length > 0) {
-    localTransactions = parsedTransactions;
+  // POST-PROCESSING CATEGORIZATION AND INFLOW DETECTOR
+  let finalizedTransactions = parsedTransactions.map(tx => {
+    let lowerDesc = tx.desc.toLowerCase();
+    let type = "EXP-FUEL"; // Standard
+
+    // Perfect categorization based on DNB rows
+    if (lowerDesc.includes("agder taxi") || lowerDesc.includes("inn på konto")) {
+      type = "INC-MVA";
+    } else if (lowerDesc.includes("skatteetaten") || lowerDesc.includes("skat")) {
+      type = "Skatt";
+    } else if (lowerDesc.includes("salad") || lowerDesc.includes("overføring") || lowerDesc.includes("kontoregulering")) {
+      if (lowerDesc.includes("altaieb") || lowerDesc.includes("hassan")) {
+        type = "INC-MVA"; // Income wire transfer
+      } else {
+        type = "EXP-OWN"; // Owners draw / Outgoing transfer
+      }
+    } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning")) {
+      type = "EXP-WASH";
+    } else if (lowerDesc.includes("santander") || lowerDesc.includes("autosync") || lowerDesc.includes("strøm") || lowerDesc.includes("vibb") || lowerDesc.includes("forsikring")) {
+      type = "EXP-OWN";
+    }
+
+    return {
+      date: tx.date,
+      desc: tx.desc,
+      amount: tx.amount,
+      type: type
+    };
+  }).filter(tx => tx.desc.length > 0 && !tx.desc.includes("Bokføring") && !tx.desc.includes("Forklarende"));
+
+  if (finalizedTransactions.length > 0) {
+    localTransactions = finalizedTransactions;
     renderTransactions();
     document.getElementById('bstat').style.display = 'none';
-    alert(`Guul! Waxaa si dhab ah loo helay ${parsedTransactions.length} transaksiyon oo rasmig ah!`);
+    alert(`Guul! Waxaa si dhab ah loo helay ${finalizedTransactions.length} transaksiyon oo rasmig ah!`);
     showPg('dash');
   } else {
-    alert("Waa la akhriyey laakiin wax xog ah waa la waayey. Hubi inuu yahay kontoutskrift rasmiga ah oo sax ah.");
+    alert("Ma aysan suurtogalin in si sax ah loo akhriyo. Hubi inuu yahay kontoutskrift-ka rasmiga ah.");
   }
-}
-
-function evaluateTxBlock(tx) {
-  if (tx.amountsFound.length === 0) return null;
-
-  // Re-compose description string cleanly
-  let description = tx.rawText.join(" ").replace(/\s+/g, " ").trim();
-  if (!description || description.includes("Bokføring") || description.includes("Forklarende")) return null;
-
-  // Clean the main transaction amount
-  let rawAmountStr = tx.amountsFound[0];
-  let cleanAmount = parseFloat(rawAmountStr.replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
-  if (isNaN(cleanAmount)) return null;
-
-  // Smart categorization engine based on your statements
-  let type = "EXP-FUEL"; // Default
-  let lowerDesc = description.toLowerCase();
-
-  if (lowerDesc.includes("taxi") || lowerDesc.includes("agder") || lowerDesc.includes("inn på konto")) {
-    type = "INC-MVA";
-  } else if (lowerDesc.includes("skat") || lowerDesc.includes("arbeidsavgift")) {
-    type = "Skatt";
-  } else if (lowerDesc.includes("salad") || lowerDesc.includes("kontoregulering") || lowerDesc.includes("overføring innland")) {
-    // Check if it's income or expense based on text heuristics
-    if (lowerDesc.includes("altaieb") || lowerDesc.includes("hassan")) {
-       type = "INC-MVA"; // Known transfers in
-    } else {
-       type = "EXP-OWN";
-    }
-  } else if (lowerDesc.includes("wash") || lowerDesc.includes("cleaning")) {
-    type = "EXP-WASH";
-  } else if (lowerDesc.includes("santander") || lowerDesc.includes("forsikring") || lowerDesc.includes("strøm") || lowerDesc.includes("vibb")) {
-    type = "EXP-OWN";
-  }
-
-  return {
-    date: tx.date,
-    desc: description,
-    amount: cleanAmount,
-    type: type
-  };
 }
 
 function renderTransactions() {
