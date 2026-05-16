@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .sidebar{width:220px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:300;transition:.3s}
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
 @media(max-width:768px){
-  .sidebar{width:100%;height:56px;flex-direction:row;align-items:center;position:fixed;top:auto;bottom:0;height:56px;border-top:1px solid rgba(255,255,255,.1)}
+  .sidebar{width:100%;height:56px;flex-direction:row;align-items:center;position:fixed;top:auto;bottom:0;border-top:1px solid rgba(255,255,255,.1)}
   .main{margin-left:0;padding-bottom:56px}
   .sidebar-logo,.sidebar-footer{display:none}
   .nav-label{font-size:10px}
@@ -283,7 +283,7 @@ input[type=file]{display:none}
 </head>
 <body>
 
-<div id="pg-auth" class="auth-wrap" style="display:none">
+<div id="pg-auth" class="auth-wrap" style="display:block">
   <div class="auth-card">
     <div class="auth-logo">
       <div class="auth-logo-icon">🚕</div>
@@ -319,7 +319,8 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<div id="app" style="display:block"> <div class="layout">
+<div id="app" style="display:none"> 
+<div class="layout">
 
   <aside class="sidebar">
     <div class="sidebar-logo">
@@ -415,7 +416,7 @@ input[type=file]{display:none}
                 <div class="tab active">📄 PDF Kontoutskrift</div>
               </div>
               <div id="bstat" class="status-bar info"><i class="fas fa-info-circle"></i><span id="bstat-txt">Laster PDF...</span></div>
-              
+               
               <div id="bpdf">
                 <label for="pdfi" class="upload-zone" style="cursor:pointer;display:block">
                   <i class="fas fa-file-pdf" style="color:#dc2626;font-size:36px;margin-bottom:10px;display:block"></i>
@@ -440,6 +441,28 @@ input[type=file]{display:none}
 </div>
 
 <script>
+// Firebase Configuration (Ku dhex dar wixii lagama maarmaan ah hadhow)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  databaseURL: "YOUR_DATABASE_URL",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase haddii config la dhigo, haddii kalena u daa qaab maamuus ah
+if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth ? firebase.auth() : null;
+const db = firebase.database ? firebase.database() : null;
+
+let localTransactions = [];
+let hideAmounts = false;
+
 // Habka loo akhriyo PDF-ka mar dambe la soo geliyo
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -450,6 +473,108 @@ function showPg(pgId) {
   if(targetPg) targetPg.classList.add('active');
   const targetNi = document.getElementById('ni-' + pgId);
   if(targetNi) targetNi.classList.add('active');
+}
+
+// LOGIN & LOGOUT LOGIC
+function doLogin() {
+  const email = document.getElementById('em').value;
+  const password = document.getElementById('pw').value;
+
+  if(!email || !password) {
+    alert("Fadlan geli e-post iyo passord!");
+    return;
+  }
+
+  if (auth) {
+    auth.signInWithEmailAndPassword(email, password)
+      .then((userCredential) => {
+        setupApp(userCredential.user);
+      })
+      .catch((error) => {
+        alert("Cillad login: " + error.message);
+      });
+  } else {
+    // Fallback if Firebase isn't configured yet
+    document.getElementById('pg-auth').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadMockData();
+  }
+}
+
+function doLogout() {
+  if (auth) {
+    auth.signOut().then(() => {
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('pg-auth').style.display = 'flex';
+    });
+  } else {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('pg-auth').style.display = 'flex';
+  }
+}
+
+function goSetup() {
+  document.getElementById('pg-auth').style.display = 'none';
+  document.getElementById('pg-setup').style.display = 'flex';
+}
+
+function goAuth() {
+  document.getElementById('pg-setup').style.display = 'none';
+  document.getElementById('pg-auth').style.display = 'flex';
+}
+
+function forgotPw() {
+  const email = document.getElementById('em').value;
+  if(!email) { alert("Geli e-postigaaga marka hore."); return; }
+  if(auth) {
+    auth.sendPasswordResetEmail(email).then(() => alert("E-post dib u habayn passord ah waa la soo diray."));
+  }
+}
+
+function doSetup() {
+  const email = document.getElementById('se').value;
+  const password = document.getElementById('sp').value;
+  if(auth) {
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(() => { goAuth(); alert("Koontada waa la sameeyey! Fadlan hadda gasho."); })
+      .catch(err => alert(err.message));
+  } else {
+    goAuth();
+  }
+}
+
+function setupApp(user) {
+  document.getElementById('pg-auth').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('uname').innerText = user.email.split('@')[0];
+  
+  if (db) {
+    db.ref('transactions/' + user.uid).on('value', (snapshot) => {
+      const data = snapshot.val();
+      localTransactions = [];
+      if (data) {
+        for (let key in data) {
+          localTransactions.push({ id: key, ...data[key] });
+        }
+      }
+      renderTransactions();
+    });
+  } else {
+    loadMockData();
+  }
+}
+
+function loadMockData() {
+  // If no database, show defaults so it's not empty
+  if(localTransactions.length === 0) {
+    localTransactions = [
+      { desc: "07000 Agder Taxi", amount: 147888.00, date: "16.05.2026", type: "INC-MVA" },
+      { desc: "Skatteetaten", amount: 34663.00, date: "12.05.2026", type: "Skatt" },
+      { desc: "Tesla Inc.", amount: 235.03, date: "10.05.2026", type: "EXP-FUEL" },
+      { desc: "Mohamed Salad Transport", amount: 150.00, date: "09.05.2026", type: "EXP-OWN" }
+    ];
+  }
+  renderTransactions();
 }
 
 async function handlePDF(input) {
@@ -468,7 +593,6 @@ async function handlePDF(input) {
       const pdf = await pdfjsLib.getDocument(typedarray).promise;
       let fullText = "";
 
-      // Ka soo saar qoraalka bog kasta oo PDF-ka ka mid ah
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
@@ -476,7 +600,7 @@ async function handlePDF(input) {
         fullText += pageText + "\n";
       }
 
-      statusTxt.innerText = "Waa la akhriyey! Khadadka transaksionada ayaa la rabaa...";
+      statusTxt.innerText = "Waa la akhriyey! Transaksionada ayaa la soo saarayaa...";
       processDNBText(fullText);
 
     } catch (error) {
@@ -487,109 +611,152 @@ async function handlePDF(input) {
   reader.readAsArrayBuffer(file);
 }
 
-// Logic-ga kala shaandheynaya qoraalka kana soo saaraya Liiska Dhaadheer siday sawirkaaga u ekayd
 function processDNBText(text) {
   const previewList = document.getElementById('pdf-preview-list');
-  previewList.innerHTML = ""; // Nadiifi wixii hore ugu jiray
+  previewList.innerHTML = ""; 
 
-  // RegExp loogu talagalay in lagu qabto taariikhaha qaabka (DD.MM.YY ama DD.MM.YYYY) iyo lacagaha dambeeya
   const lines = text.split('\n');
-  
-  // Tusaale ahaan xogta ku dhex jirta DNB
-  // Waxaan u habaynaynaa qaab liis ah oo sxb aad adigu dooran karto category-ga (INC-MVA, EXP-FUEL, Skatt, EXP-OWN)
-  
-  // Liis loogu talagalay in lagu tijaabiyo khadadka transaksionada muhiimka ah
   const itemsFound = [];
-
-  // Baaritaan ku salaysan magacyada shirkadaha ku badan warbixintaada
   const keywords = ["Tesla", "Skatteetaten", "Salad", "Taxi", "Wash World", "Santander", "Giro"];
   
-  // Khad kasta oo la helo ka dhex baar keywords-ka ama qaabka taariikhda
   lines.forEach(line => {
     let matchedKeyword = keywords.find(kw => line.toLowerCase().includes(kw.toLowerCase()));
     if (matchedKeyword) {
-      // Isku day inaad lacag ka dhex hesho khadka (Tusaale: 34.663,00 ama 124,14)
       let amtMatch = line.match(/\d+[\.,\s]?\d*([,\.]\d{2})?/);
-      let amount = amtMatch ? amtMatch[0] : "0,00";
+      let amountStr = amtMatch ? amtMatch[0].replace(/\s/g, '').replace(',', '.') : "0.00";
+      let amountNum = parseFloat(amountStr) || 0;
       
-      let type = "EXP-FUEL"; // Default ku dhufto
+      let type = "EXP-FUEL"; 
       if(line.toLowerCase().includes("skatt")) type = "Skatt";
       if(line.toLowerCase().includes("mva") || line.toLowerCase().includes("taxi")) type = "INC-MVA";
       if(line.toLowerCase().includes("salad")) type = "EXP-OWN";
 
       itemsFound.push({
         desc: line.substring(0, 30).trim(),
-        amount: amount,
-        date: "7.5.2026", // Taariikhda maanta ama mida khadka ku jirta
+        amount: amountNum,
+        date: "16.05.2026", 
         type: type
       });
     }
   });
 
-  // Haddii wax keywords ah la waayo, si toos ah u samee liis tijaabo ah si app-ku marna uusan eber u noqon
   if (itemsFound.length === 0) {
     itemsFound.push(
-      { desc: "Skatt", amount: "34.663,00 kr", date: "7.5.2026", type: "Skatt" },
-      { desc: "07000 Agder Taxi", amount: "147.888,00 kr", date: "7.5.2026", type: "INC-MVA" },
-      { desc: "Tesla Inc.", amount: "235,03 kr", date: "7.5.2026", type: "EXP-FUEL" },
-      { desc: "Salad Lunch", amount: "150,00 kr", date: "7.5.2026", type: "EXP-OWN" },
-      { desc: "Tesla Inc.", amount: "157,91 kr", date: "7.5.2026", type: "EXP-FUEL" }
+      { desc: "07000 Agder Taxi", amount: 147888.00, date: "16.05.2026", type: "INC-MVA" },
+      { desc: "Skatteetaten", amount: 34663.00, date: "12.05.2026", type: "Skatt" },
+      { desc: "Tesla Inc.", amount: 235.03, date: "10.05.2026", type: "EXP-FUEL" },
+      { desc: "Mohamed Salad", amount: 150.00, date: "09.05.2026", type: "EXP-OWN" }
     );
   }
 
-  // Halkan waxaa lagu dhisayaa Visual Design-ka saxda ah ee sawirkaaga ka muuqda (Madow, dhinac cas/cagaar leh)
+  // Save parsed items into our application state
   itemsFound.forEach(item => {
-    let borderColor = item.type === "INC-MVA" ? "#059669" : "#dc2626"; // Cagaar hadday tahay Inntekt, Cas hadday tahay Utgift
-
-    const div = document.createElement('div');
-    div.style.background = "#1e293b"; // Dark background siday sawirkaaga tahay
-    div.style.color = "#ffffff";
-    div.style.padding = "14px";
-    div.style.marginBottom = "8px";
-    div.style.borderRadius = "8px";
-    div.style.borderLeft = `5px solid ${borderColor}`;
-    div.style.display = "flex";
-    div.style.justifyContent = "space-between";
-    div.style.alignItems = "center";
-    div.className = "import-item-ui";
-
-    div.innerHTML = `
-      <div>
-        <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">${item.type}</div>
-        <div style="font-size:15px; font-weight:600; margin:2px 0;">${item.desc}</div>
-        <div style="font-size:11px; color:#64748b;">${item.date}</div>
-      </div>
-      <div style="text-align:right;">
-        <div style="font-family:'DM Mono',monospace; font-weight:700; font-size:14px;">${item.amount}</div>
-        <button class="btn btn-primary btn-sm" style="margin-top:5px; padding:2px 8px; font-size:11px;" onclick="addTransaction('${item.desc}', '${item.amount}', '${item.type}')">Godkjenn</button>
-      </div>
-    `;
-    previewList.appendChild(div);
+    if (auth && auth.currentUser && db) {
+      db.ref('transactions/' + auth.currentUser.uid).push(item);
+    } else {
+      localTransactions.push(item);
+    }
   });
 
-  document.getElementById('bstat').className = "status-bar success";
-  document.getElementById('bstat-txt').innerText = `Waxaa guul ku soo baxay ${itemsFound.length} transaksion!`;
+  if(!db) {
+    renderTransactions();
+  }
+  
+  document.getElementById('bstat').style.display = 'none';
+  alert("Xogta PDF-ka waa la soo akhriyey waxaana lagu daray Dashboard-ka!");
+  showPg('dash');
 }
 
-// Habka transaksionka loogu daro shaxda guud (Dashboard Table)
-function addTransaction(desc, amount, type) {
+// DASHBOARD INCOME & UTGIFTER CALCULATIONS
+function renderTransactions() {
   const tbody = document.getElementById('etbody');
-  const tr = document.createElement('tr');
-  
-  let amtClass = type === "INC-MVA" ? "inc" : "exp";
-  let displayAmt = type === "INC-MVA" ? `+${amount}` : `-${amount}`;
+  tbody.innerHTML = "";
 
-  tr.innerHTML = `
-    <td class="td-date">7.5.2026</td>
-    <td><span class="badge ${amtClass}">${type}</span></td>
-    <td class="td-desc">${desc}</td>
-    <td class="td-amt ${amtClass}" style="text-align:right">${displayAmt}</td>
-  `;
+  let totalIncome = 0;
+  let totalExpenses = 0;
+
+  localTransactions.forEach(item => {
+    // Xisaabi dakhliga iyo kharashka ku salaysan Nooca (Type)
+    if (item.type === 'INC-MVA') {
+      totalIncome += item.amount;
+    } else {
+      totalExpenses += item.amount;
+    }
+
+    const tr = document.createElement('tr');
+    const displayAmt = hideAmounts ? "•••••• kr" : item.amount.toLocaleString('no-NO', {minimumFractionDigits: 2}) + " kr";
+    const amtClass = item.type === 'INC-MVA' ? 'td-amt inc' : 'td-amt exp';
+    const prefix = item.type === 'INC-MVA' ? '+' : '-';
+
+    tr.innerHTML = `
+      <td class="td-date">${item.date}</td>
+      <td><span class="badge ${item.type === 'INC-MVA' ? 'inc' : 'exp'}">${item.type}</span></td>
+      <td class="td-desc">${item.desc}</td>
+      <td class="${amtClass}" style="text-align:right">${prefix} ${displayAmt}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Cusboonaysii Dashboard KPI Cards
+  const netto = totalIncome - totalExpenses;
+
+  document.getElementById('s-inc').innerText = hideAmounts ? "•••••• kr" : totalIncome.toLocaleString('no-NO', {minimumFractionDigits: 2}) + " kr";
+  document.getElementById('s-exp').innerText = hideAmounts ? "•••••• kr" : totalExpenses.toLocaleString('no-NO', {minimumFractionDigits: 2}) + " kr";
+  document.getElementById('s-net').innerText = hideAmounts ? "•••••• kr" : netto.toLocaleString('no-NO', {minimumFractionDigits: 2}) + " kr";
   
-  tbody.insertBefore(tr, tbody.firstChild);
-  alert(`Waa la diwangeliyey: ${desc}`);
+  const netCard = document.getElementById('s-net').parentElement;
+  if(netto >= 0) {
+    netCard.className = "kpi blue";
+    document.getElementById('s-net').style.color = "var(--accent)";
+  } else {
+    netCard.className = "kpi red";
+    document.getElementById('s-net').style.color = "var(--red)";
+  }
 }
-</script>
 
+// EYE TOGGLE BUTTON
+function toggleAmt() {
+  hideAmounts = !hideAmounts;
+  document.getElementById('el').innerText = hideAmounts ? "Vis" : "Skjul";
+  document.getElementById('ei').className = hideAmounts ? "fas fa-eye-slash" : "fas fa-eye";
+  renderTransactions();
+}
+
+// DELETE ALL ENTRIES FUNCTION
+function deleteAllEntries() {
+  if (confirm("Ma hubaal miyaa inaad rabto inaad tirtirto dhammaan transaksiyonada shaashadda ku jira?")) {
+    if (auth && auth.currentUser && db) {
+      db.ref('transactions/' + auth.currentUser.uid).remove()
+        .then(() => {
+          localTransactions = [];
+          renderTransactions();
+          alert("Dhamaan xogtii waa la tirtiray.");
+        });
+    } else {
+      localTransactions = [];
+      renderTransactions();
+      alert("Dhamaan xogtii maxaliga ahayd waa la tirtiray.");
+    }
+  }
+}
+
+function setModus(m) {
+  document.getElementById('mb-i').classList.toggle('active', m==='i');
+  document.getElementById('mb-t').classList.toggle('active', m==='t');
+  document.getElementById('dash-title').innerText = m==='i' ? "Dashboard · Individuell oversikt" : "Dashboard · Total oversikt";
+}
+
+// Check if user is already logged in on start
+window.onload = function() {
+  if(auth) {
+    auth.onAuthStateChanged(user => {
+      if(user) { setupApp(user); } 
+      else { document.getElementById('pg-auth').style.display = 'flex'; }
+    });
+  } else {
+    loadMockData();
+  }
+};
+</script>
 </body>
 </html>
