@@ -3,329 +3,774 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport PRO - Strict Income Edition</title>
-    
+    <title>Transport PRO</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
-        .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
-        
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
-        .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
-        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
-        .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
-        .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
 
-        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px; padding: 20px; text-align: center; }
-        
-        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 10px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000; }
-        .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; flex: 1; }
-        .nav-item.active { color: var(--yellow); }
-        
-        input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
-        .btn-danger { background: var(--red); padding: 12px 20px; border-radius: 10px; border: none; color: white; cursor: pointer; font-size: 13px; font-weight: bold; width: 95%; margin: 10px auto; display: block; text-align: center; }
-        
-        .upload-box { border: 2px dashed var(--yellow); padding: 30px; text-align: center; border-radius: 15px; background: var(--card); margin-bottom: 20px; cursor: pointer; }
-        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); }
-        .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
-        #status-msg { font-size: 13px; color: var(--yellow); text-align: center; margin-bottom: 15px; font-weight: bold; }
+    <style>
+        :root{--bg:#0f172a;--card:#1e293b;--y:#f1c40f;--g:#2ecc71;--r:#ff4757;--b:#3b82f6;--t:#f8fafc;--br:#334155}
+        .lt{--bg:#f1f5f9;--card:#fff;--t:#1e293b;--br:#cbd5e1}
+        *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--t);margin:0;padding-bottom:90px}
+        .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:var(--card);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100}
+        .authbox{padding:28px;text-align:center;max-width:400px;margin:40px auto;background:var(--card);border-radius:15px}
+        .htitle{text-align:center;color:var(--y);font-weight:bold;padding:14px 0 8px;font-size:16px;text-transform:uppercase;letter-spacing:1px}
+
+        /* Stats */
+        .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px}
+        .sbox{background:var(--card);border:1.5px solid;border-radius:12px;padding:12px;text-align:center}
+        .sbox small{font-size:9px;display:block;margin-bottom:5px;font-weight:bold}
+        .sbox span{font-size:14px;font-weight:bold}
+        .sumcard{background:var(--card);border:2px solid var(--y);border-radius:18px;margin:8px 10px;padding:18px;text-align:center}
+        .sumcard small{font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase}
+        .sumcard h1{margin:6px 0 0;font-size:26px}
+
+        /* Entry cards */
+        .ecard{background:var(--card);border-radius:13px;padding:13px 15px;margin:0 10px 10px;border-left:6px solid;display:flex;justify-content:space-between;align-items:center;gap:10px}
+        .einfo{flex:1;min-width:0}
+        .einfo .etitle{font-weight:bold;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .einfo .esub{font-size:11px;color:#94a3b8;margin-top:2px}
+        .eact{display:flex;gap:12px;align-items:center;flex-shrink:0}
+        .eamt{font-weight:bold;font-size:14px;white-space:nowrap}
+        .eact i{cursor:pointer;color:#64748b;font-size:14px}
+        .eact i:hover{color:var(--y)}
+
+        /* Navbar */
+        .navbar{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:10px 0 14px;border-top:1px solid var(--br);z-index:200}
+        .ni{text-align:center;color:#64748b;font-size:10px;cursor:pointer;flex:1}
+        .ni.on{color:var(--y)}
+        .ni i{display:block;font-size:19px;margin-bottom:2px}
+
+        /* Form */
+        input,select{width:100%;padding:14px;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--t);margin-bottom:13px;font-size:14px;font-family:inherit;-webkit-appearance:none}
+        .btn{width:100%;padding:16px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;color:#fff;font-size:14px;font-family:inherit}
+        .btn2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+
+        /* PDF Upload box */
+        .pdfbox{background:var(--card);border:2px solid var(--b);border-radius:15px;padding:16px;margin-bottom:16px}
+        .pdfbox h4{color:var(--b);margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+        .uzone{border:2px dashed var(--br);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:12px;display:block;width:100%;background:transparent;font-family:inherit}
+        .uzone:hover{border-color:var(--b);background:rgba(59,130,246,.05)}
+        .uzone i{font-size:32px;color:#64748b;display:block;margin-bottom:8px}
+        .uzone .uz-title{font-size:15px;font-weight:bold;color:var(--b);margin-bottom:4px}
+        .uzone p{font-size:12px;color:#64748b;margin:2px 0}
+        .uzone .uz-btn{display:inline-flex;align-items:center;gap:6px;background:var(--b);color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;margin-top:10px}
+
+        /* Status */
+        #bstat{background:#111827;border:2px solid var(--b);border-radius:10px;padding:11px;text-align:center;font-size:13px;font-weight:bold;color:var(--b);display:none;margin-bottom:12px}
+
+        /* Import preview */
+        .impctrl{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;color:#94a3b8}
+        .impctrl button{background:none;border:1px solid var(--br);border-radius:7px;color:var(--t);padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit}
+        .impctrl button:hover{border-color:var(--b);color:var(--b)}
+        .bitem{background:var(--bg);border:1.5px solid var(--br);border-radius:10px;padding:11px 13px;margin-bottom:7px;cursor:pointer;transition:.15s}
+        .bitem.sel{border-color:var(--g);background:rgba(46,204,113,.06)}
+        .bitem-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+        .bitem-desc{font-weight:600;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .bitem-amt{font-weight:700;font-size:14px;white-space:nowrap;flex-shrink:0}
+        .bitem-meta{font-size:11px;color:#94a3b8;margin-top:3px;display:flex;gap:8px;align-items:center}
+        .typebadge{font-size:10px;font-weight:bold;padding:1px 7px;border-radius:20px}
+        .inc-badge{background:rgba(46,204,113,.15);color:var(--g)}
+        .exp-badge{background:rgba(255,71,87,.15);color:var(--r)}
+        .bitem select{margin-top:7px;width:100%;padding:6px 9px;border:1px solid var(--br);border-radius:6px;font-size:11px;background:var(--bg);color:var(--t);font-family:inherit}
+
+        /* Report */
+        .rtbl{width:100%;border-collapse:collapse;font-size:12px}
+        .rtbl th{background:var(--br);color:var(--y);padding:9px 8px;text-align:left}
+        .rtbl td{padding:8px;border-bottom:1px solid var(--br)}
+
+        #fpdfi{display:none}
+        .ha{filter:blur(6px);user-select:none}
     </style>
 </head>
 <body>
 
-<div id="auth-page" class="auth-container">
-    <h2 style="color:var(--yellow)">LOGG INN</h2>
-    <input type="email" id="email" placeholder="E-post">
-    <input type="password" id="pass" placeholder="Passord">
-    <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
+<!-- AUTH -->
+<div id="pg-auth" style="display:none">
+<div class="authbox">
+    <h2 style="color:var(--y);margin-bottom:4px">🚕 TRANSPORT PRO</h2>
+    <p style="color:#94a3b8;font-size:12px;margin-bottom:18px">Mohamed Salad Transport</p>
+    <input type="email" id="em" placeholder="E-post">
+    <input type="password" id="pw" placeholder="Passord">
+    <button class="btn" style="background:var(--b);margin-bottom:10px" onclick="doLogin()">LOGG INN</button>
+    <p style="color:var(--y);cursor:pointer;font-size:12px" onclick="forgotPw()">Glemt passord?</p>
+</div>
 </div>
 
-<div id="main-app" style="display:none">
-    <div class="top-bar">
-        <i class="fas fa-moon" onclick="toggleTheme()"></i>
-        <div id="user-display-name" style="font-weight:bold">Laster...</div>
-        <div>
-            <span onclick="showTab('dash')" style="cursor:pointer; margin-right:15px;"><i class="fas fa-home"></i></span>
+<!-- APP -->
+<div id="app" style="display:none">
+<div class="topbar">
+    <i class="fas fa-moon" style="cursor:pointer;font-size:16px" onclick="toggleTheme()"></i>
+    <span id="uname" style="font-weight:bold;font-size:14px">...</span>
+    <button onclick="deleteAll()" style="background:none;border:1px solid var(--r);border-radius:8px;color:var(--r);padding:5px 11px;font-size:11px;font-weight:bold;cursor:pointer">
+        <i class="fas fa-trash"></i> Slett alle
+    </button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="pg-dash" class="pg">
+    <div class="sgrid">
+        <div class="sbox" style="border-color:var(--g);color:var(--g)"><small>INNTEKT</small><span id="s-inc">0 kr</span></div>
+        <div class="sbox" style="border-color:var(--r);color:var(--r)"><small>UTGIFTER</small><span id="s-exp">0 kr</span></div>
+        <div class="sbox" style="border-color:var(--b);color:var(--b)"><small>NETTO</small><span id="s-net">0 kr</span></div>
+    </div>
+    <div class="sumcard">
+        <small>RESULTAT FØR SKATT (NETTO)</small>
+        <h1 id="s-tot" style="color:var(--g)">0 kr</h1>
+    </div>
+    <div id="elist" style="margin-top:6px"></div>
+</div>
+
+<!-- ADD / IMPORT -->
+<div id="pg-add" class="pg" style="display:none;padding:15px">
+    <div class="htitle">REGISTRER DATA</div>
+
+    <!-- DNB PDF Import -->
+    <div class="pdfbox">
+        <h4><i class="fas fa-university"></i> DNB Bank PDF Import</h4>
+        <div id="bstat"></div>
+
+        <label for="fpdfi" class="uzone">
+            <i class="fas fa-file-pdf" style="color:#dc2626"></i>
+            <div class="uz-title">DNB PDF Kontoutskrift</div>
+            <p>Velg PDF-fil fra nettbanken</p>
+            <p style="font-size:11px;color:#64748b">Alle transaksjoner leses automatisk</p>
+            <div class="uz-btn"><i class="fas fa-upload"></i> Velg PDF-fil</div>
+        </label>
+        <input type="file" id="fpdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)">
+
+        <!-- Preview list -->
+        <div id="bprev" style="display:none">
+            <div class="impctrl">
+                <span id="bcount" style="font-weight:600"></span>
+                <div style="display:flex;gap:6px">
+                    <button onclick="bAll()">Velg alle</button>
+                    <button onclick="bNone()">Fjern valg</button>
+                </div>
+            </div>
+            <div id="bitems" style="max-height:400px;overflow-y:auto"></div>
+            <button class="btn" id="btn-lagre" style="background:var(--g);display:none;margin-top:10px" onclick="lagreValgte()">
+                <i class="fas fa-save"></i> LAGRE VALGTE
+            </button>
         </div>
     </div>
 
-    <div id="page-dash" class="page">
-        <button class="btn-danger" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> TIRTIRE DHAMAAN LACAGIHII HORE (RESET)</button>
-        
-        <div class="stats-grid">
-            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INNTEKT</small><span id="total-income">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>UTGIFTER</small><span id="total-expense">0 kr</span></div>
-            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>TOTAL (NETTO)</small><span id="total-netto">0 kr</span></div>
-        </div>
-        
-        <div class="summary-card">
-            <small>RESULTAT FØR SKATT (NETTO)</small>
-            <h1 id="res-total" style="color:var(--green)">0 kr</h1>
-        </div>
-        
-        <div id="entries-list"></div>
-    </div>
-
-    <div id="page-add" class="page" style="display:none; padding: 20px;">
-        <div class="header-title">REGISTRER DATA / BANK PDF</div>
-        <div id="status-msg"></div>
-
-        <div class="upload-box" onclick="document.getElementById('pdf-file').click()">
-            <i class="fas fa-file-pdf" style="font-size:30px; color:var(--yellow)"></i>
-            <p>SOO DOO_DO REES BANK PDF AMA FAKTURA</p>
-            <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="processBankPDF(this)">
-        </div>
-
-        <div style="border-top: 1px dashed var(--border); margin: 20px 0; padding-top: 10px; text-align: center; font-size: 11px; color: #64748b;">
-            GACAN KU BUUXI (HADDII AANAD PDF ISTICMAALAYN)
-        </div>
-
-        <input type="date" id="entry-date">
-        <select id="entry-category">
+    <!-- Manual -->
+    <div style="border-top:1px solid var(--br);padding-top:14px">
+    <div class="htitle" style="font-size:13px;padding:4px 0 10px">MANUELL REGISTRERING</div>
+    <input type="hidden" id="eid">
+    <input type="date" id="edate">
+    <select id="ecat">
+        <optgroup label="INNTEKT">
             <option value="3030">3030 - Kjøreinntekter (Agder Taxi)</option>
-            <option value="7000">7000 - Drivstoff / Lading</option>
+            <option value="3031">3031 - Kjøreinntekter kontant</option>
+            <option value="3110">3110 - Tips</option>
+        </optgroup>
+        <optgroup label="UTGIFTER">
+            <option value="5000">5000 - Lønn til ansatte</option>
+            <option value="5400">5400 - Skatt / Arbeidsgiveravgift</option>
+            <option value="6010">6010 - Avskrivning</option>
+            <option value="6755">6755 - Sentralavgift</option>
+            <option value="6900">6900 - Telefon</option>
             <option value="6907">6907 - Datakommunikasjon</option>
-            <option value="7500">7500 - Forsikringspremie</option>
-            <option value="6340">6340 - Lys og varme</option>
-            <option value="7770">7770 - Bank- og kortgebyr</option>
-        </select>
-        <input type="text" id="entry-desc" placeholder="Beskrivelse">
-        <input type="number" id="entry-amt" placeholder="Beløp (kr)">
-        
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <button class="btn-save" style="background:var(--green)" onclick="saveManualData('income')">LAGRE INNTEKT</button>
-            <button class="btn-save" style="background:var(--red)" onclick="saveManualData('expense')">LAGRE UTGIFT</button>
-        </div>
+            <option value="7000">7000 - Drivstoff / Lading</option>
+            <option value="7020">7020 - Vedlikehold</option>
+            <option value="7040">7040 - Forsikring</option>
+            <option value="7140">7140 - Reisekostnad</option>
+            <option value="7400">7400 - Kontingent</option>
+            <option value="7770">7770 - Bank og kortgebyr</option>
+            <option value="7790">7790 - Annen kostnad</option>
+            <option value="7797">7797 - Kontoutskrift / Overføring</option>
+        </optgroup>
+    </select>
+    <input type="text" id="edesc" placeholder="Beskrivelse">
+    <input type="number" id="eamt" placeholder="Beløp (kr)" step="0.01">
+    <div class="btn2">
+        <button class="btn" style="background:var(--g)" onclick="saveE('income')">LAGRE INNTEKT</button>
+        <button class="btn" style="background:var(--r)" onclick="saveE('expense')">LAGRE UTGIFT</button>
     </div>
-
-    <div id="page-reports" class="page" style="display:none; padding: 20px;">
-        <div class="header-title">REGNSKAP REPORTS</div>
-        <table class="report-table">
-            <thead>
-                <tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr>
-            </thead>
-            <tbody id="report-body"></tbody>
-        </table>
-    </div>
-
-    <div id="page-profile" class="page" style="display:none; padding: 20px; text-align: center;">
-        <h3 id="prof-name">User</h3>
-        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT</button>
-    </div>
-
-    <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br>Dash</div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br>Add PDF</div>
-        <div class="nav-item" id="nav-reports" onclick="showTab('reports')"><i class="fas fa-file-invoice"></i><br>Reports</div>
-        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br>Profil</div>
     </div>
 </div>
+
+<!-- REPORTS -->
+<div id="pg-reports" class="pg" style="display:none;padding:15px">
+    <div class="htitle">REGNSKAP REPORTS</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn" style="background:var(--g);width:auto;padding:10px 18px;font-size:12px" onclick="dlCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+        <button class="btn" style="background:var(--r);width:auto;padding:10px 18px;font-size:12px" onclick="dlPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+    </div>
+    <table class="rtbl">
+        <thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr></thead>
+        <tbody id="rtbody"></tbody>
+    </table>
+</div>
+
+<!-- PROFILE -->
+<div id="pg-profile" class="pg" style="display:none;padding:15px;text-align:center">
+    <div class="htitle">MIN PROFIL</div>
+    <h3 id="pname">Bruker</h3>
+    <p id="pemail" style="color:#94a3b8;font-size:13px;margin-bottom:18px"></p>
+    <button class="btn" style="background:var(--r)" onclick="doLogout()">LOGG UT</button>
+</div>
+
+<div class="navbar">
+    <div class="ni on" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i>Dash</div>
+    <div class="ni" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus"></i>Add PDF</div>
+    <div class="ni" id="ni-reports" onclick="showPg('reports')"><i class="fas fa-file-alt"></i>Reports</div>
+    <div class="ni" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user"></i>Profil</div>
+</div>
+</div><!-- /app -->
 
 <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-      authDomain: "mohamed-salad-transport.firebaseapp.com",
-      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "mohamed-salad-transport",
-      storageBucket: "mohamed-salad-transport.firebasestorage.app",
-      appId: "1:608716442795:web:34cafc1a23316664717bee"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
+firebase.initializeApp({
+    apiKey:"AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
+    authDomain:"mohamed-salad-transport.firebaseapp.com",
+    databaseURL:"https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"mohamed-salad-transport",
+    storageBucket:"mohamed-salad-transport.firebasestorage.app",
+    appId:"1:608716442795:web:34cafc1a23316664717bee"
+});
+const db=firebase.database(),auth=firebase.auth();
+let entries=[],bItems=[];
 
-    const metaAccounts = {
-        "3030": { label: "Kjøreinntekter (Agder Taxi)", type: "income" },
-        "7000": { label: "Drivstoff / Lading (Tesla / Uno-X)", type: "expense" },
-        "6907": { label: "Datakommunikasjon (Nextgentel)", type: "expense" },
-        "7500": { label: "Forsikringspremie (Ra Forsikring / DNB Liv)", type: "expense" },
-        "6340": { label: "Lys og varme (Fortum / Vibb)", type: "expense" },
-        "7770": { label: "Bank- og kortgebyr (Omkostninger)", type: "expense" },
-        "5000": { label: "Lønn til ansatte / Bilag / Santander", type: "expense" },
-        "5400": { label: "Skatt og Arbeidsgiveravgift (Skatteetaten)", type: "expense" }
-    };
+const E=id=>document.getElementById(id);
+const V=id=>E(id).value;
+const T=(id,v)=>{if(E(id))E(id).textContent=v;};
+const fmt=n=>n.toLocaleString('nb-NO',{minimumFractionDigits:2,maximumFractionDigits:2})+' kr';
 
-    function clearAllData() {
-        if (!auth.currentUser) return alert("Fadlan marka hore soo gal nidaamka!");
-        if (confirm("Ma hubtaa inaad gabi ahaanba sifeeyo xogtii hore?")) {
-            db.ref('users/' + auth.currentUser.uid + '/entries').set(null)
-            .then(() => alert("Guul! Dashboard-kii waa la nadiifiyay! ✅"))
-            .catch(err => alert("Cilad: " + err.message));
-        }
-    }
+// ── AUTH ──
+auth.onAuthStateChanged(u=>{
+    if(u){
+        E('pg-auth').style.display='none';E('app').style.display='block';
+        T('uname',u.displayName||u.email);T('pname',u.displayName||'Bruker');T('pemail',u.email);
+        loadData();
+    }else{E('pg-auth').style.display='block';E('app').style.display='none';}
+});
+function doLogin(){auth.signInWithEmailAndPassword(V('em').trim(),V('pw')).catch(err=>alert(err.message));}
+function forgotPw(){const e=V('em').trim();if(!e)return alert('Skriv inn e-post!');auth.sendPasswordResetEmail(e).then(()=>alert('Lenke sendt!')).catch(err=>alert(err.message));}
+function doLogout(){auth.signOut();}
+function toggleTheme(){document.body.classList.toggle('lt');}
 
-    async function processBankPDF(input) {
-        const file = input.files[0];
-        if (!file || !auth.currentUser) return;
-        
-        document.getElementById('status-msg').innerText = "Waa la akrinayaa oo la kaydinayaa hadda... ⏳";
-        
-        const fileReader = new FileReader();
-        fileReader.onload = async function () {
-            const typedarray = new Uint8Array(this.result);
-            try {
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let fullText = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(" ") + "\n";
-                }
-                autoParseAndSave(fullText);
-            } catch (err) {
-                alert("PDF Error: " + err.message);
-            }
-        };
-        fileReader.readAsArrayBuffer(file);
-    }
+// ── NAV ──
+function showPg(pg){
+    document.querySelectorAll('.pg').forEach(p=>p.style.display='none');
+    document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+    E('pg-'+pg).style.display='block';
+    E('ni-'+pg)?.classList.add('on');
+}
 
-    function autoParseAndSave(text) {
-        const lower = text.toLowerCase();
-        const userRef = db.ref('users/' + auth.currentUser.uid + '/entries');
-        
-        let sums = { "3030": 0, "7000": 0, "6907": 0, "7500": 0, "6340": 0, "7770": 0, "5000": 0, "5400": 0 };
-
-        // Dakhliga rasmiga ah ee DNB PDF halkan ku qasab
-        if (text.includes("Agder Taxi AS") || lower.includes("agder taxi")) {
-            sums["3030"] = 147888.00 + 126741.00; 
-        } else {
-            // Haddii magacu khaldamo si kasto, qasab uga dhig dakhliga mar walba
-            sums["3030"] = 274629.00;
-        }
-        
-        if (lower.includes("tesla")) sums["7000"] += 1111.14;
-        if (lower.includes("uno-x")) sums["7000"] += 301.80;
-        if (lower.includes("nextgentel")) sums["6907"] += 679.00;
-        if (lower.includes("fortum")) sums["6340"] += 841.32;
-        if (lower.includes("vibb")) sums["6340"] += 4859.20;
-        if (lower.includes("ra forsikring")) sums["7500"] += 4723.00;
-        if (lower.includes("dnb livsforsikring")) sums["7500"] += 3149.74;
-        if (lower.includes("omkostninger")) sums["7770"] += 111.00;
-        if (lower.includes("santander")) sums["5000"] += 11000.00 + 13600.00;
-        if (lower.includes("skatteetaten")) sums["5400"] += 34663.00 + 42310.00;
-
-        Object.keys(sums).forEach(cat => {
-            if (sums[cat] > 0) {
-                userRef.push({
-                    desc: metaAccounts[cat].label + " (Total)",
-                    amt: sums[cat],
-                    subCat: cat,
-                    mainCat: metaAccounts[cat].type, 
-                    date: "2026-05-17"
-                });
-            }
-        });
-
-        document.getElementById('pdf-file').value = "";
-        document.getElementById('status-msg').innerText = "Xogtii iyo Inntekt-gii waa la kaydiyay! 🚀";
-        
-        setTimeout(() => { 
-            document.getElementById('status-msg').innerText = ""; 
-            showTab('dash');
-        }, 1500);
-    }
-
-    function saveManualData(type) {
-        const desc = document.getElementById('entry-desc').value;
-        const amt = parseFloat(document.getElementById('entry-amt').value);
-        const cat = document.getElementById('entry-category').value;
-        const dateInput = document.getElementById('entry-date').value;
-        
-        if(!desc || !amt || !dateInput) return alert("Fadlan buuxi meelaha banaan!");
-        
-        db.ref('users/' + auth.currentUser.uid + '/entries').push({ 
-            desc, amt, subCat: cat, mainCat: type, date: dateInput 
-        });
-        
-        document.getElementById('entry-desc').value = "";
-        document.getElementById('entry-amt').value = "";
-        showTab('dash');
-    }
-
-    function loadData() {
-        db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
-            let ti=0, te=0;
-            const list = document.getElementById('entries-list');
-            const reportBody = document.getElementById('report-body');
-            list.innerHTML = ""; reportBody.innerHTML = "";
-            
-            // SI TOOS AH AYUU U XISABINAYAA 274,629 HADDA CODEN-KA DHEXDIISA
-            let taxiInntektForced = 274629.00;
-            ti = taxiInntektForced; 
-
-            if(snap.exists()) {
-                snap.forEach(child => {
-                    const v = child.val();
-                    let currentType = v.mainCat ? v.mainCat.toLowerCase() : 'expense';
-                    
-                    // Ka reeb xisaabta dakhliga si uusan laba jeer ugu soo noqnoqon
-                    if(v.subCat !== "3030") {
-                        te += v.amt;
-                    }
-                    
-                    list.innerHTML += `<div class="entry-card" style="border-left-color:${v.subCat==='3030'?'#2ecc71':'#ff4757'}">
-                            <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date || '2026-05-17'}</small></div>
-                            <div><span style="color:${v.subCat==='3030'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt.toLocaleString()} kr</span></div></div>`;
-                            
-                    reportBody.innerHTML += `<tr><td>${v.date || '2026-05-17'}</td><td>${v.subCat}</td><td>${v.desc}</td><td style="color:${v.subCat==='3030'?'#2ecc71':'#ff4757'}">${v.amt.toLocaleString()} kr</td></tr>`;
-                });
-            }
-            
-            // Ku dar dakhliga rasmiga ah liiska shaashadda haddii Firebase-ku eber ka dhigo
-            if(list.innerHTML === "" || !list.innerHTML.includes("3030")) {
-                list.innerHTML = `<div class="entry-card" style="border-left-color:#2ecc71">
-                    <div><b>3030 - Kjøreinntekter (Agder Taxi) (Total)</b><br><small>2026-05-17</small></div>
-                    <div><span style="color:#2ecc71; font-weight:bold;">274,629 kr</span></div></div>` + list.innerHTML;
-            }
-
-            document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
-            document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
-            document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
-            document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
-            document.getElementById('res-total').style.color = (ti - te) >= 0 ? "var(--green)" : "var(--red)";
-        });
-    }
-
-    auth.onAuthStateChanged(user => {
-        if(user) { 
-            document.getElementById('auth-page').style.display='none'; 
-            document.getElementById('main-app').style.display='block'; 
-            document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
-            loadData(); 
-        } else {
-            document.getElementById('auth-page').style.display='block';
-            document.getElementById('main-app').style.display='none';
-        }
+// ── DATA ──
+function loadData(){
+    const u=auth.currentUser;if(!u)return;
+    db.ref('entries/'+u.uid).on('value',snap=>{
+        entries=[];
+        snap.forEach(c=>entries.push({id:c.key,...c.val()}));
+        entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+        renderDash();renderRep();
     });
+}
 
-    window.addEventListener('error', function(e) { if(e.message.includes("NotAllowedError")) e.preventDefault(); });
+function renderDash(){
+    let inc=0,exp=0;
+    const el=E('elist');el.innerHTML='';
+    entries.forEach(e=>{
+        const a=parseFloat(e.amount)||0;
+        if(e.type==='income')inc+=a;else exp+=a;
+        const isI=e.type==='income',col=isI?'var(--g)':'var(--r)';
+        const c=document.createElement('div');c.className='ecard';c.style.borderLeftColor=col;
+        const desc=(e.description||'').length>42?(e.description||'').substring(0,42)+'...':e.description||'—';
+        c.innerHTML=`
+        <div class="einfo">
+            <div class="etitle">${e.category} · ${desc}</div>
+            <div class="esub">📅 ${e.date||'—'}</div>
+        </div>
+        <div class="eact">
+            <span class="eamt" style="color:${col}">${isI?'+':'−'}${fmt(a)}</span>
+            <i class="fas fa-edit" onclick="editE('${e.id}')"></i>
+            <i class="fas fa-trash" onclick="delE('${e.id}')"></i>
+        </div>`;
+        el.appendChild(c);
+    });
+    const net=inc-exp;
+    T('s-inc',fmt(inc));T('s-exp',fmt(exp));T('s-net',fmt(net));T('s-tot',fmt(net));
+    E('s-net').style.color=net>=0?'var(--g)':'var(--r)';
+    E('s-tot').style.color=net>=0?'var(--g)':'var(--r)';
+}
 
-    function showTab(t) {
-        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        document.getElementById('page-'+t).style.display = 'block';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('nav-'+t).classList.add('active');
+function renderRep(){
+    const tb=E('rtbody');tb.innerHTML='';
+    entries.forEach(e=>{
+        const a=parseFloat(e.amount)||0,isI=e.type==='income';
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${e.date||''}</td><td>${e.category||''}</td><td>${e.description||''}</td>
+        <td style="color:${isI?'var(--g)':'var(--r)'};font-weight:bold">${isI?'+':'−'}${fmt(a)}</td>`;
+        tb.appendChild(tr);
+    });
+}
+
+// ── CRUD ──
+function saveE(type){
+    const u=auth.currentUser;if(!u)return;
+    const eid=V('eid');
+    const entry={date:V('edate'),category:V('ecat'),description:V('edesc'),amount:parseFloat(V('eamt'))||0,type};
+    if(!entry.date||!entry.amount)return alert('Fyll inn dato og beløp!');
+    const ref=eid?db.ref('entries/'+u.uid+'/'+eid):db.ref('entries/'+u.uid).push();
+    ref.set(entry).then(()=>{E('eid').value='';E('edate').value='';E('edesc').value='';E('eamt').value='';showPg('dash');}).catch(err=>alert(err.message));
+}
+function delE(id){if(!confirm('Slett?'))return;db.ref('entries/'+auth.currentUser.uid+'/'+id).remove();}
+function editE(id){
+    const e=entries.find(x=>x.id===id);if(!e)return;
+    E('eid').value=id;E('edate').value=e.date;E('ecat').value=e.category;
+    E('edesc').value=e.description||'';E('eamt').value=e.amount;showPg('add');
+}
+function deleteAll(){
+    const u=auth.currentUser;if(!u)return;
+    const n=entries.length;if(!n)return alert('Ingen transaksjoner!');
+    if(!confirm('⚠️ Slett alle '+n+' transaksjoner?\nKan ikke angres!'))return;
+    db.ref('entries/'+u.uid).remove().then(()=>alert('✅ '+n+' slettet!')).catch(err=>alert(err.message));
+}
+
+// ════════════════════════════════════════════════════
+//  DNB PDF PARSER — Leser HVER transaksjon enkeltvis
+// ════════════════════════════════════════════════════
+
+// ── Helpers ──
+function norNum(r){
+    if(!r||r.trim()===''||r.trim()==='-')return 0;
+    let s=r.trim().replace(/\s/g,'');
+    if(s.includes(',')&&s.includes('.')){
+        if(s.lastIndexOf(',')>s.lastIndexOf('.'))s=s.replace(/\./g,'').replace(',','.');
+        else s=s.replace(/,/g,'');
+    }else if(s.includes(','))s=s.replace(',','.');
+    else if(s.includes('.')){
+        const p=s.split('.');
+        if(p[p.length-1].length===2)s=p.slice(0,-1).join('')+'.'+p[p.length-1];
+        else s=s.replace(/\./g,'');
+    }
+    return parseFloat(s)||0;
+}
+function parseD(r){
+    if(!r)return null;r=r.trim();
+    let m=r.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];
+    m=r.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);if(m)return'20'+m[3]+'-'+m[2]+'-'+m[1];
+    m=r.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return r;
+    return null;
+}
+
+// ── Type detection (income/expense) ──
+function guessType(desc){
+    const d=(desc||'').toLowerCase();
+    if(d.includes('agder taxi'))return'income';
+    if(d.includes('skatt')||d.includes('skatteinnkrevin')||d.includes('arbeidsavgift'))return'expense';
+    if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb')||d.includes('salad ahmed'))return'expense';
+    if(d.includes('santander')||d.includes('uno-x')||d.includes('nextgentel')||d.includes('autosync'))return'expense';
+    if(d.includes('fortum')||d.includes('eviny')||d.includes('lyse')||d.includes('forsikring'))return'expense';
+    if(d.includes('vibb')||d.includes('tyholmen')||d.includes('leringsverkstedet')||d.includes('msg cleaning'))return'expense';
+    if(d.includes('livsforsikring')||d.includes('kommune'))return'expense';
+    if(/^visa/i.test(desc)||d.includes('tesla')||d.includes('wash world')||d.includes('eviny'))return'expense';
+    if(d.includes('telenor')||d.includes('telia')||d.includes('shell')||d.includes('circle k'))return'expense';
+    if(d.includes('kontoregulering'))return'expense';
+    return'expense';
+}
+
+// ── Category auto-assign ──
+function guesscat(desc,type){
+    const d=(desc||'').toLowerCase();
+    if(type==='income')return d.includes('agder taxi')?'3030':'3030';
+    if(d.includes('tesla')||d.includes('wash world')||d.includes('shell')||d.includes('circle k')||d.includes('uno-x')||d.includes('eviny'))return'7000';
+    if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('livsforsikring')||d.includes('ra forsikring'))return'7040';
+    if(d.includes('autosync'))return'7020';
+    if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele'))return'6900';
+    if(d.includes('nextgentel'))return'6907';
+    if(d.includes('gebyr')||d.includes('kortgebyr')||d.includes('omkostning'))return'7770';
+    if(d.includes('skatt')||d.includes('arbeidsavgift')||d.includes('skatteinnkrevin'))return'5400';
+    if(d.includes('fortum')||d.includes('eviny'))return'7000';
+    if(d.includes('vibb')||d.includes('lyse'))return'7000';
+    if(d.includes('arendal kommune')||d.includes('kommune'))return'7400';
+    if(d.includes('santander'))return'7790';
+    if(d.includes('kontoregulering')||d.includes('til 15'))return'7797';
+    if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb')||d.includes('salad ahmed'))return'5000';
+    if(d.includes('tyholmen')||d.includes('leringsverkstedet'))return'7140';
+    if(d.includes('msg cleaning'))return'7790';
+    return'7790';
+}
+
+// ── Konto names ──
+function katNavn(cat){
+    const m={'3030':'Kjøreinntekter (Agder Taxi)','3031':'Kjøreinntekter kontant','3110':'Tips',
+    '5000':'Lønn til ansatte','5400':'Skatt / Arbeidsgiveravgift','6010':'Avskrivning',
+    '6755':'Sentralavgift','6900':'Telefon','6907':'Datakommunikasjon',
+    '7000':'Drivstoff / Lading','7020':'Vedlikehold','7040':'Forsikring',
+    '7140':'Reisekostnad','7400':'Kontingent','7770':'Bank og kortgebyr',
+    '7790':'Annen kostnad','7797':'Kontoutskrift / Overføring'};
+    return m[cat]||'Ukjent';
+}
+
+function catOptsHTML(){
+    return`<optgroup label="INNTEKT">
+    <option value="3030">3030 · Kjøreinntekter (Agder Taxi)</option>
+    <option value="3031">3031 · Kjøreinntekter kontant</option>
+    <option value="3110">3110 · Tips</option></optgroup>
+    <optgroup label="UTGIFTER">
+    <option value="5000">5000 · Lønn til ansatte</option>
+    <option value="5400">5400 · Skatt / Arbeidsgiveravgift</option>
+    <option value="6010">6010 · Avskrivning</option>
+    <option value="6755">6755 · Sentralavgift</option>
+    <option value="6900">6900 · Telefon</option>
+    <option value="6907">6907 · Datakommunikasjon</option>
+    <option value="7000">7000 · Drivstoff / Lading</option>
+    <option value="7020">7020 · Vedlikehold</option>
+    <option value="7040">7040 · Forsikring</option>
+    <option value="7140">7140 · Reisekostnad</option>
+    <option value="7400">7400 · Kontingent</option>
+    <option value="7770">7770 · Bank og kortgebyr</option>
+    <option value="7790">7790 · Annen kostnad</option>
+    <option value="7797">7797 · Kontoutskrift / Overføring</option></optgroup>`;
+}
+
+function showStat(m,ok=false){
+    const s=E('bstat');s.style.display='block';
+    s.style.borderColor=ok?'var(--g)':'var(--b)';
+    s.style.color=ok?'var(--g)':'var(--b)';
+    s.textContent=m;
+}
+
+// ── MAIN PDF HANDLER ──
+async function handlePDF(inp){
+    const f=inp.files[0];if(!f)return;
+    showStat('📄 Leser PDF...');bItems=[];
+    try{
+        const buf=await f.arrayBuffer();
+        const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+        showStat('📄 '+pdf.numPages+' sider — analyserer...');
+
+        const allItems=[];
+        for(let p=1;p<=pdf.numPages;p++){
+            const pg=await pdf.getPage(p);
+            const con=await pg.getTextContent();
+            const vp=pg.getViewport({scale:1});
+            con.items.forEach(it=>{
+                if(!it.str||!it.str.trim())return;
+                allItems.push({
+                    text:it.str.trim(),
+                    x:Math.round(it.transform[4]),
+                    y:Math.round(vp.height-it.transform[5]),
+                    page:p,
+                    pgW:vp.width
+                });
+            });
+        }
+        parseDNB(allItems);
+    }catch(err){showStat('❌ '+err.message);}
+    inp.value='';
+}
+
+function parseDNB(allItems){
+    bItems=[];
+    if(!allItems.length){showStat('❌ Tom PDF');return;}
+
+    // Sort: page → y → x
+    allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+
+    // Group into visual lines
+    const lines=[];let curLine=null;
+    for(const it of allItems){
+        if(!curLine||it.page!==curLine.page||Math.abs(it.y-curLine.y)>6){
+            if(curLine)lines.push(curLine);
+            curLine={page:it.page,y:it.y,items:[it],pgW:it.pgW};
+        }else curLine.items.push(it);
+    }
+    if(curLine)lines.push(curLine);
+
+    // Auto-detect column X positions from header line
+    let utCol=-1,innCol=-1;
+    for(const line of lines){
+        const txt=line.items.map(i=>i.text).join(' ');
+        if(/ut av konto/i.test(txt)||/inn p[aå] konto/i.test(txt)){
+            for(const it of line.items){
+                if(/^ut/i.test(it.text))utCol=it.x;
+                if(/^inn/i.test(it.text))innCol=it.x;
+            }
+            break;
+        }
+    }
+    // Fallback column positions
+    if(utCol<0){const pgW=allItems[0]?.pgW||595;utCol=Math.round(pgW*0.55);innCol=Math.round(pgW*0.70);}
+
+    const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})$/;
+    const amtRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+
+    // Build transaction groups — each group starts with 2 date items
+    const txGroups=[];let curTx=null;
+    for(const line of lines){
+        const fullTxt=line.items.map(i=>i.text).join(' ');
+        // Skip header/footer lines
+        if(/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no|kontoutskrift for|bedriftskonto|saldo forrige|ny saldo|forts\.)/i.test(fullTxt.trim()))continue;
+
+        const dates=line.items.filter(it=>dateRe.test(it.text));
+        const hasDateLeft=dates.some(it=>it.x<(utCol*0.45));
+
+        if(dates.length>=2&&hasDateLeft){
+            if(curTx)txGroups.push(curTx);
+            const sortedDates=dates.sort((a,b)=>a.x-b.x);
+            // Use booking date (second date = the date money actually moved)
+            const bokDate=parseD(sortedDates[1]?.text)||parseD(sortedDates[0]?.text);
+            const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol);
+            const amtItemsOnLine=line.items.filter(it=>it.x>=utCol);
+            curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems:amtItemsOnLine,line};
+        }else if(curTx){
+            // Continuation lines for description or amounts
+            const amtHere=line.items.filter(it=>amtRe.test(it.text)&&it.x>=utCol);
+            const descHere=line.items.filter(it=>!amtRe.test(it.text)&&it.x<utCol&&!dateRe.test(it.text));
+            if(descHere.length)curTx.descParts.push(descHere.map(i=>i.text).join(' '));
+            if(amtHere.length)curTx.amtItems.push(...amtHere);
+        }
+    }
+    if(curTx)txGroups.push(curTx);
+
+    const seen=new Set();
+    for(const tx of txGroups){
+        if(!tx.date)continue;
+
+        // Build description from all parts
+        const desc=[...new Set(tx.descParts)].filter(s=>s.length>1).join(' ').replace(/\s+/g,' ').trim();
+        if(!desc||desc.length<2)continue;
+        if(/^(saldo|dato|tekst|kontoutskrift|bedriftskonto|internasjonalt|bic|iban)/i.test(desc))continue;
+
+        // Find UT (debit) and INN (credit) amounts
+        let utAmt=0,innAmt=0;
+        const norAmts=tx.amtItems.filter(it=>amtRe.test(it.text));
+
+        if(norAmts.length===0){
+            // Try finding amount anywhere in line
+            const found=[...tx.line.items.map(i=>i.text).join(' ').matchAll(/\d{1,3}(?:[.\s]\d{3})*,\d{2}/g)];
+            if(found.length>0){
+                const v=norNum(found[found.length-1][0]);
+                if(v>0){if(guessType(desc)==='income')innAmt=v;else utAmt=v;}
+            }
+        }else if(norAmts.length===1){
+            const v=norNum(norAmts[0].text);
+            // If amount is in INN column → income
+            if(innCol>0&&norAmts[0].x>=innCol)innAmt=v;else utAmt=v;
+        }else{
+            // Multiple amounts — sort by x position
+            norAmts.sort((a,b)=>a.x-b.x);
+            for(const a of norAmts){
+                const v=norNum(a.text);
+                if(innCol>0&&a.x>=innCol)innAmt=v;else utAmt=v;
+            }
+        }
+
+        // Determine final amount and type
+        let finalAmt=0,finalType='expense';
+        if(innAmt>0&&utAmt<=0){finalAmt=innAmt;finalType='income';}
+        else if(utAmt>0&&innAmt<=0){finalAmt=utAmt;finalType='expense';}
+        else if(innAmt>0&&utAmt>0){
+            // Both have values — use description to decide
+            const t=guessType(desc);finalAmt=t==='income'?innAmt:utAmt;finalType=t;
+        }else continue;
+
+        if(finalAmt<0.01||finalAmt>9999999)continue;
+
+        // Override: Agder Taxi = always income
+        if(desc.toLowerCase().includes('agder taxi'))finalType='income';
+
+        const cat=guesscat(desc,finalType);
+
+        // Deduplicate
+        const key=tx.date+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,28);
+        if(!seen.has(key)){
+            seen.add(key);
+            bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});
+        }
     }
 
-    function handleAuth() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message)); }
-    function logout() { auth.signOut().then(() => location.reload()); }
-    function toggleTheme() { document.body.classList.toggle('light-theme'); }
+    // Fallback if nothing found
+    if(!bItems.length){parseFallback(allItems);return;}
+
+    showStat('✅ '+bItems.length+' transaksjoner funnet!',true);
+    renderBItems();
+}
+
+// ── Fallback: pure regex on text ──
+function parseFallback(allItems){
+    bItems=[];
+    allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+    const lines=[];let cur=[],ly=-999,lp=-1;
+    for(const it of allItems){if(it.page!==lp||Math.abs(it.y-ly)>6){if(cur.length)lines.push(cur.map(i=>i.text).join(' '));cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}
+    if(cur.length)lines.push(cur.map(i=>i.text).join(' '));
+    const fullText=lines.join('\n'),seen=new Set();
+    const re=/(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s+([A-Za-z\u00C0-\u00FF][^\n]{2,80?}?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})(?:\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2}))?/gm;
+    let m;
+    while((m=re.exec(fullText))!==null){
+        const dv=parseD(m[2]);if(!dv)continue;
+        const desc=(m[3]||'').trim().replace(/\s+/g,' ');if(desc.length<2)continue;
+        if(/^(dato|tekst|saldo)/i.test(desc))continue;
+        const utAmt=norNum(m[4]),innAmt=m[5]?norNum(m[5]):0;
+        let finalAmt,finalType;
+        if(innAmt>0){finalAmt=innAmt;finalType='income';}else{finalAmt=utAmt;finalType=guessType(desc);}
+        if(desc.toLowerCase().includes('agder taxi'))finalType='income';
+        if(finalAmt<0.01||finalAmt>9999999)continue;
+        const key=dv+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,24);
+        if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:finalAmt,type:finalType,category:guesscat(desc,finalType)});}
+    }
+    if(!bItems.length){showStat('❌ Ingen funnet. Prøv CSV eller manuell.');return;}
+    showStat('✅ '+bItems.length+' (fallback)',true);
+    renderBItems();
+}
+
+// ── Render import preview ──
+function renderBItems(){
+    const con=E('bitems');con.innerHTML='';
+    E('bprev').style.display='block';
+    T('bcount',bItems.length+' transaksjoner funnet');
+
+    bItems.forEach((item,i)=>{
+        const isI=item.type==='income';
+        const sign=isI?'+':'−';
+        const d=document.createElement('div');d.className='bitem sel';d.id='bi-'+i;
+
+        d.innerHTML=`
+        <div class="bitem-top" onclick="toggleBI(${i})" style="cursor:pointer">
+            <span class="bitem-desc">${item.desc}</span>
+            <span class="bitem-amt" style="color:${isI?'var(--g)':'var(--r)'}">${sign}${fmt(item.amount)}</span>
+        </div>
+        <div class="bitem-meta">
+            <span>📅 ${item.date}</span>
+            <span class="typebadge ${isI?'inc-badge':'exp-badge'}">${isI?'↑ Inntekt':'↓ Utgift'}</span>
+        </div>
+        <select id="bc-${i}" onclick="event.stopPropagation()"
+            onchange="bItems[${i}].category=this.value;bItems[${i}].type=parseInt(this.value)<4000?'income':'expense'">${catOptsHTML()}</select>`;
+
+        con.appendChild(d);
+        setTimeout(()=>{const s=E('bc-'+i);if(s)s.value=item.category;},0);
+    });
+    updateBBtn();
+}
+
+function toggleBI(i){E('bi-'+i).classList.toggle('sel');updateBBtn();}
+function updateBBtn(){
+    const n=document.querySelectorAll('#bitems .bitem.sel').length;
+    E('btn-lagre').style.display=n>0?'block':'none';
+    T('bcount',n+' / '+bItems.length+' valgt');
+}
+function bAll(){document.querySelectorAll('#bitems .bitem').forEach(el=>el.classList.add('sel'));updateBBtn();}
+function bNone(){document.querySelectorAll('#bitems .bitem').forEach(el=>el.classList.remove('sel'));updateBBtn();}
+
+// ── SAVE — batch update with guaranteed unique keys ──
+async function lagreValgte(){
+    const u=auth.currentUser;if(!u)return;
+    const selected=[];
+    document.querySelectorAll('#bitems .bitem.sel').forEach(el=>{
+        const i=parseInt(el.id.replace('bi-',''));
+        if(!isNaN(i)&&bItems[i])selected.push(bItems[i]);
+    });
+    if(!selected.length){showStat('Ingen valgt!');return;}
+
+    const total=selected.length;
+    showStat('⏳ Lagrer '+total+' transaksjoner...');
+    E('btn-lagre').disabled=true;
+
+    try{
+        const base=Date.now();
+        const batch={};
+        selected.forEach((item,n)=>{
+            const type=parseInt(item.category)<4000?'income':'expense';
+            // n makes each key UNIQUE — no duplicates possible
+            const key='e'+String(base+n).padStart(16,'0')+'_'+String(n).padStart(5,'0');
+            batch[key]={
+                date:item.date,
+                category:item.category,
+                description:item.desc,
+                amount:item.amount,
+                type
+            };
+        });
+        // ONE single Firebase write — all entries at once
+        await db.ref('entries/'+u.uid).update(batch);
+        showStat('✅ Alle '+total+' lagret!',true);
+        E('bprev').style.display='none';
+        bItems=[];
+        setTimeout(()=>showPg('dash'),1000);
+    }catch(err){
+        showStat('❌ '+err.message);
+        console.error(err);
+    }
+    E('btn-lagre').disabled=false;
+}
+
+// ── DOWNLOADS ──
+function dlCSV(){
+    const rows=[['Dato','Konto','Kontonavn','Beskrivelse','Type','Beløp']];
+    entries.forEach(e=>rows.push([
+        e.date||'',e.category||'',katNavn(e.category),
+        (e.description||'').replace(/,/g,' '),
+        e.type==='income'?'Inntekt':'Utgift',
+        parseFloat(e.amount||0).toFixed(2)
+    ]));
+    const csv=rows.map(r=>r.join(',')).join('\n');
+    const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='regnskap-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+    URL.revokeObjectURL(url);
+}
+
+function dlPDF(){
+    if(!entries.length){alert('Ingen transaksjoner!');return;}
+    const win=window.open('','_blank');
+    if(!win){alert('Popup blokkert!');return;}
+    const ti=entries.filter(e=>e.type==='income').reduce((s,e)=>s+parseFloat(e.amount||0),0);
+    const te=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+parseFloat(e.amount||0),0);
+    const net=ti-te;
+    const sorted=[...entries].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const rows=sorted.map(e=>{
+        const a=parseFloat(e.amount)||0,isI=e.type==='income',z=a===0;
+        return`<tr style="${z?'background:#fffbeb':''}">
+        <td>${e.date||'—'}</td>
+        <td style="font-family:monospace;font-size:11px;color:#64748b">${e.category||'—'}</td>
+        <td style="font-size:11px;color:#94a3b8">${katNavn(e.category)}</td>
+        <td>${e.description||'—'}</td>
+        <td style="text-align:center"><span style="background:${isI?'#ecfdf5':'#fef2f2'};color:${isI?'#059669':'#dc2626'};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">${isI?'↑ Inntekt':'↓ Utgift'}</span></td>
+        <td style="text-align:right;font-family:monospace;font-weight:700;color:${z?'#d97706':isI?'#059669':'#dc2626'}">${z?'⚠️ 0,00 kr':(isI?'+':'−')+fmt(a)}</td>
+        </tr>`;
+    }).join('');
+
+    const page=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Transport PRO – Regnskap</title>
+    <style>*{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;padding:28px;font-size:13px}
+    .hdr{display:flex;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #e2e8f0}
+    .logo{font-size:20px;font-weight:800}.sub{color:#94a3b8;font-size:12px;margin-top:4px}
+    .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    .k{background:#fff;border:1px solid #e2e8f0;border-radius:9px;padding:12px 16px}
+    .k small{font-size:10px;color:#94a3b8;text-transform:uppercase;font-weight:700;display:block;margin-bottom:4px}
+    .k b{font-size:17px;font-family:monospace}
+    table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:9px;overflow:hidden}
+    th{background:#f1f5f9;padding:9px 10px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    th:last-child{text-align:right}td{padding:9px 10px;border-top:1px solid #f1f5f9;vertical-align:middle}
+    .pbtn{background:#1a56db;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:16px}
+    @media print{.pbtn{display:none}body{background:#fff;padding:16px}}</style></head><body>
+    <div class="hdr"><div><div class="logo">🚕 Transport PRO</div><div class="sub">Regnskapsrapport · ${new Date().toLocaleDateString('nb-NO')}</div></div>
+    <div style="text-align:right"><b>Mohamed Salad Transport</b><div class="sub">${entries.length} transaksjoner totalt</div></div></div>
+    <div class="kpi">
+    <div class="k" style="border-left:4px solid #059669"><small>Inntekt</small><b style="color:#059669">+${fmt(ti)}</b></div>
+    <div class="k" style="border-left:4px solid #dc2626"><small>Utgifter</small><b style="color:#dc2626">−${fmt(te)}</b></div>
+    <div class="k" style="border-left:4px solid ${net>=0?'#059669':'#dc2626'}"><small>Netto</small><b style="color:${net>=0?'#059669':'#dc2626'}">${net>=0?'+':'−'}${fmt(Math.abs(net))}</b></div>
+    <div class="k" style="border-left:4px solid #64748b"><small>Ant. transaksjoner</small><b style="color:#0f172a">${entries.length}</b></div>
+    </div>
+    <table><thead><tr><th>Dato</th><th>Konto</th><th>Kontonavn</th><th>Beskrivelse</th><th>Type</th><th style="text-align:right">Beløp</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <button class="pbtn" onclick="window.print()">🖨️ Skriv ut / Lagre PDF</button>
+    </body></html>`;
+    win.document.write(page);win.document.close();
+}
 </script>
 </body>
 </html>
