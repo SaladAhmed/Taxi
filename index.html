@@ -3,41 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport PRO - Regnskap Edition</title>
+    <title>Transport PRO - Bank PDF Edition</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="TransportPRO">
-    <link class="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2343/2343894.png">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
         .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
         
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
         .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
-        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; max-width: 800px; margin: auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
         .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
         .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
 
-        .mva-card { background: var(--card); border: 2px solid var(--border); border-radius: 15px; margin: 10px auto; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 780px; }
-        .mva-item { text-align: center; border-right: 1px solid var(--border); }
-        .mva-item:last-child { border-right: none; }
-
-        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px auto; padding: 20px; text-align: center; max-width: 770px; }
+        .mva-card { background: var(--card); border: 2px solid var(--border); border-radius: 15px; margin: 10px; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px; padding: 20px; text-align: center; }
         
-        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 0 15px 12px 15px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; }
+        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 10px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000; }
         .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--yellow); }
@@ -45,37 +40,24 @@
         input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
         
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .profile-img-wrap { width: 80px; height: 80px; margin: 0 auto 10px; border: 2px solid var(--yellow); border-radius: 50%; overflow: hidden; background: #334155; }
-        .profile-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .entry-actions { display: flex; gap: 15px; }
-        .entry-actions i { cursor: pointer; transition: 0.2s; }
-        .fa-trash:hover { color: var(--red); }
-        .fa-edit:hover { color: var(--yellow); }
-
-        .scanner-preview { width: 100%; height: 200px; background: #000; border-radius: 10px; margin-bottom: 15px; display: none; object-fit: cover; border: 2px solid var(--yellow); }
-        .btn-scan { background: var(--blue); margin-bottom: 15px; }
-
-        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); border-radius: 10px; overflow: hidden; }
+        .upload-box { border: 2px dashed var(--yellow); padding: 30px; text-align: center; border-radius: 15px; background: var(--card); margin-bottom: 20px; cursor: pointer; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); }
         .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .report-table th { background: var(--border); color: var(--yellow); }
-        #ocr-status { font-size: 12px; color: var(--yellow); text-align: center; margin-bottom: 10px; display: none; }
+        #status-msg { font-size: 13px; color: var(--yellow); text-align: center; margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="auth-page" class="auth-container">
-    <h2 id="auth-title" style="color:var(--yellow)">LOGG INN</h2>
+    <h2 style="color:var(--yellow)">LOGG INN</h2>
     <input type="email" id="email" placeholder="E-post">
     <input type="password" id="pass" placeholder="Passord">
     <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
-    <p style="color:var(--yellow); cursor:pointer; font-size:12px; margin-top:15px;" onclick="forgotPassword()">Glemt passord?</p>
 </div>
 
 <div id="main-app" style="display:none">
     <div class="top-bar">
-        <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
+        <i class="fas fa-moon" onclick="toggleTheme()"></i>
         <div id="user-display-name" style="font-weight:bold">Laster...</div>
         <div>
             <span onclick="updateLang('no')" style="cursor:pointer">🇳🇴</span>
@@ -90,13 +72,6 @@
             <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small id="l-net">TOTAL (NETTO)</small><span id="total-netto">0 kr</span></div>
         </div>
         
-        <div class="mva-card">
-            <div class="mva-item"><small id="l-mva">Skyldig MVA</small><br><b id="res-mva">0 kr</b></div>
-            <div class="mva-item"><small id="l-aga">AGA (14.1%)</small><br><b id="res-aga">0 kr</b></div>
-            <div class="mva-item"><small id="l-fp">Feriepenger</small><br><b id="res-fp">0 kr</b></div>
-            <div class="mva-item"><small id="l-avsk">Avskrivning</small><br><b id="res-avsk">0 kr</b></div>
-        </div>
-        
         <div class="summary-card">
             <small id="l-res">RESULTAT FØR SKATT (NETTO)</small>
             <h1 id="res-total" style="color:var(--green)">0 kr</h1>
@@ -105,101 +80,62 @@
         <div id="entries-list"></div>
     </div>
 
-    <div id="page-reports" class="page" style="display:none; padding: 20px;">
-        <div class="header-title" id="l-rep-title">REGNSKAP REPORTS</div>
-        <div id="report-content">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th id="th-date">Dato</th>
-                        <th id="th-acc">Konto</th>
-                        <th id="th-desc">Beskrivelse</th>
-                        <th id="th-amt">Beløp</th>
-                    </tr>
-                </thead>
-                <tbody id="report-body"></tbody>
-            </table>
-        </div>
-    </div>
-
     <div id="page-add" class="page" style="display:none; padding: 20px;">
-        <div class="header-title" id="l-add-title">REGISTRER DATA</div>
-        <div id="ocr-status"><i class="fas fa-spinner fa-spin"></i> Hadda waxaa la aqrinayaa sawirka...</div>
+        <div class="header-title" id="l-add-title">REGISTRER DATA / BANK PDF</div>
         
-        <button class="btn-save btn-scan" id="scan-btn" onclick="startScanner()"><i class="fas fa-camera"></i> SCAN RECEIPT</button>
-        <video id="scanner-video" class="scanner-preview" autoplay playsinline></video>
-        <canvas id="scanner-canvas" style="display:none;"></canvas>
-        <img id="scanned-img" class="scanner-preview" />
-        <button id="capture-btn" class="btn-save" style="display:none; background:var(--green); margin-bottom:15px;" onclick="capturePhoto()">TA SAWIRKA</button>
+        <div id="status-msg"></div>
+
+        <div class="upload-box" onclick="document.getElementById('pdf-file').click()">
+            <i class="fas fa-file-pdf style='font-size:30px; color:var(--yellow)'"></i>
+            <p>SOO DOO_DO REES BANK PDF UTKRIFT</p>
+            <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="processBankPDF(this)">
+        </div>
 
         <input type="hidden" id="edit-id">
         <input type="date" id="entry-date">
         <select id="entry-category">
-            <optgroup label="INNTEKT (DRIFTSINNTEKTER)">
-                <option value="3030">3030 - Kjøreinntekter, lav sats</option>
-                <option value="3031">3031 - Kjøreinntekter kontant, lav sats</option>
-                <option value="3032">3032 - Kjøreinntekter NAV, lav sats</option>
-                <option value="3033">3033 - Kjøreinntekter skole, lav sats</option>
-                <option value="3039">3039 - Bomtur, lav sats</option>
-                <option value="3110">3110 - Tips</option>
-            </optgroup>
-            <optgroup label="UTGIFTER (DRIFTSKOSTNADER)">
-                <option value="5000">5000 - Lønn til ansatte</option>
-                <option value="5400">5400 - Arbeidsgiveravgift</option>
-                <option value="5920">5920 - Yrkesskadeforsikring</option>
-                <option value="6010">6010 - Avskrivning på transportmidler</option>
-                <option value="6300">6300 - Leie lokale</option>
-                <option value="6340">6340 - Lys og varme</option>
-                <option value="6360">6360 - Renhold</option>
-                <option value="6540">6540 - Inventar (verktøy o.l)</option>
-                <option value="6705">6705 - Regnskapshonorar</option>
-                <option value="6755">6755 - Sentralavgift</option>
-                <option value="6800">6800 - Kontorrekvisita</option>
-                <option value="6900">6900 - Telefon</option>
-                <option value="6907">6907 - Datakommunikasjon</option>
-                <option value="7000">7000 - Drivstoff</option>
-                <option value="7020">7020 - Vedlikehold transportmiddel</option>
-                <option value="7040">7040 - Forsikring transportmiddel</option>
-                <option value="7140">7140 - Reisekostnad, ikke opplysningspliktig</option>
-                <option value="7320">7320 - Reklamekostnad</option>
-                <option value="7400">7400 - Kontingent, fradragsberettiget</option>
-                <option value="7500">7500 - Forsikringspremie</option>
-                <option value="7770">7770 - Bank- og kortgebyr</option>
-                <option value="7790">7790 - Annen kostnad, fradragsberettiget</option>
-                <option value="7798">7798 - Annen kostnad fradragsberettiget</option>
-                <option value="8060">8060 - Valutagevinst (Agio)</option>
-                <option value="8160">8160 - Valutatap (Disagio)</option>
-            </optgroup>
+            <option value="3030">3030 - Kjøreinntekter (Agder Taxi)</option>
+            <option value="7000">7000 - Drivstoff (Uno-X / Tesla)</option>
+            <option value="6907">6907 - Datakommunikasjon (Nextgentel)</option>
+            <option value="7500">7500 - Forsikringspremie (Ra Forsikring)</option>
+            <option value="6340">6340 - Lys og varme (Fortum / Vibb)</option>
+            <option value="7770">7770 - Bank- og kortgebyr</option>
         </select>
         <input type="text" id="entry-desc" placeholder="Beskrivelse">
         <input type="number" id="entry-amt" placeholder="Beløp (kr)">
         
-        <div class="btn-group">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
             <button class="btn-save" style="background:var(--green)" onclick="saveData('income')">LAGRE INNTEKT</button>
             <button class="btn-save" style="background:var(--red)" onclick="saveData('expense')">LAGRE UTGIFT</button>
         </div>
     </div>
 
+    <div id="page-reports" class="page" style="display:none; padding: 20px;">
+        <div class="header-title">REGNSKAP REPORTS</div>
+        <table class="report-table">
+            <thead>
+                <tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr>
+            </thead>
+            <tbody id="report-body"></tbody>
+        </table>
+    </div>
+
     <div id="page-profile" class="page" style="display:none; padding: 20px; text-align: center;">
-        <div class="header-title" id="l-prof-title">MY PROFILE</div>
-        <div class="profile-img-wrap" onclick="document.getElementById('profile-upload').click()">
-            <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-            <input type="file" id="profile-upload" style="display:none" onchange="uploadPhoto(this)">
-        </div>
-        <h3 id="prof-name">User Name</h3>
-        <button class="btn-save" style="background:var(--blue); margin-bottom:10px" onclick="changePass()">Change Password</button>
-        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT (EXIT)</button>
+        <h3 id="prof-name">User</h3>
+        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT</button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br><span>Dash</span></div>
-        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br><span>Add</span></div>
-        <div class="nav-item" id="nav-reports" onclick="showTab('reports')"><i class="fas fa-file-invoice"></i><br><span>Reports</span></div>
-        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br><span>Profil</span></div>
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br>Dash</div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br>Add PDF/Data</div>
+        <div class="nav-item" id="nav-reports" onclick="showTab('reports')"><i class="fas fa-file-invoice"></i><br>Reports</div>
+        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br>Profil</div>
     </div>
 </div>
 
 <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
     const firebaseConfig = {
       apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
       authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -211,80 +147,89 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-    const storage = firebase.storage();
 
-    let stream = null;
-
-    // Translation Function (SOOMAALI & NORWEGIAN)
-    const langData = {
-        no: { inc: "INNTEKT", exp: "UTGIFTER", net: "TOTAL (NETTO)", mva: "Skyldig MVA", res: "RESULTAT FØR SKATT (NETTO)", add: "REGISTRER DATA" },
-        so: { inc: "DAKHIL", exp: "KHARASH", net: "NETTO (TOTAL)", mva: "CASHUURTA (MVA)", res: "RESULTAT KA HOR CASHUURTA", add: "GALII XOGTA" }
+    // Intelligent Bank Rules to auto-categorize accounts based on PDF texts
+    const accountRules = {
+        "agder taxi": { cat: "3030", type: "income" },
+        "tesla": { cat: "7000", type: "expense" },
+        "uno-x": { cat: "7000", type: "expense" },
+        "nextgentel": { cat: "6907", type: "expense" },
+        "fortum": { cat: "6340", type: "expense" },
+        "vibb": { cat: "6340", type: "expense" },
+        "ra forsikring": { cat: "7500", type: "expense" },
+        "omkostninger": { cat: "7770", type: "expense" }
     };
 
-    function updateLang(l) {
-        const d = langData[l];
-        document.getElementById('l-inc').innerText = d.inc;
-        document.getElementById('l-exp').innerText = d.exp;
-        document.getElementById('l-net').innerText = d.net;
-        document.getElementById('l-mva').innerText = d.mva;
-        document.getElementById('l-res').innerText = d.res;
-        document.getElementById('l-add-title').innerText = d.add;
-    }
-
-    // Tesseract OCR Processing
-    async function performOCR(imageSrc) {
-        const status = document.getElementById('ocr-status');
-        status.style.display = 'block';
-        try {
-            const result = await Tesseract.recognize(imageSrc, 'nor+eng');
-            const text = result.data.text;
-            
-            // Isku day inaad hesho lacagta (Prices)
-            const amounts = text.match(/\d+[\.,]\d{2}/g);
-            if (amounts) {
-                const maxAmt = Math.max(...amounts.map(a => parseFloat(a.replace(',', '.'))));
-                document.getElementById('entry-amt').value = maxAmt;
-            }
-            document.getElementById('entry-desc').value = "Scanned Receipt";
-        } catch (e) {
-            console.error(e);
-        } finally {
-            status.style.display = 'none';
-        }
-    }
-
-    async function startScanner() {
-        const video = document.getElementById('scanner-video');
-        const captureBtn = document.getElementById('capture-btn');
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            video.srcObject = stream;
-            video.style.display = 'block';
-            captureBtn.style.display = 'block';
-            document.getElementById('scanned-img').style.display = 'none';
-        } catch (err) { alert("Ma u ogolaatay camirada? " + err); }
-    }
-
-    function capturePhoto() {
-        const video = document.getElementById('scanner-video');
-        const canvas = document.getElementById('scanner-canvas');
-        const img = document.getElementById('scanned-img');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/png');
-        img.src = dataUrl;
-        img.style.display = 'block';
-        stream.getTracks().forEach(track => track.stop());
-        video.style.display = 'none';
-        document.getElementById('capture-btn').style.display = 'none';
+    async function processBankPDF(input) {
+        const file = input.files[0];
+        if (!file) return;
         
-        performOCR(dataUrl);
+        document.getElementById('status-msg').innerText = "Waa la akrinayaa PDF-ka bangiga... ⏳";
+        
+        const fileReader = new FileReader();
+        fileReader.onload = async function () {
+            const typedarray = new Uint8Array(this.result);
+            try {
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    fullText += pageText + "\n";
+                }
+                
+                parseAndSaveBankTransactions(fullText);
+            } catch (err) {
+                alert("PDF-ka waa la akrin waayay: " + err.message);
+            }
+        };
+        fileReader.readAsArrayBuffer(file);
     }
 
-    // Save Bank/Regnskap Data
+    function parseAndSaveBankTransactions(text) {
+        // Simple regex pattern to capture standard text lines containing amounts
+        const lines = text.split('\n');
+        let matchCount = 0;
+        
+        // Let's create an automated loop over common statement item patterns
+        const regexPattern = /([\d]{2}\.[\d]{2}\.[\d]{2})\s+([A-Za-z0-9æøåÆØÅ\s\.\-\/]+)\s+([\d\.\,]+)/g;
+        let match;
+        
+        // Fallback simple parsing matching our database rules
+        Object.keys(accountRules).forEach(keyword => {
+            const escapedKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const searchRegex = new RegExp(`(\\d{2}\\.\\d{2}\\.\\d{2})?\\s*([^\\d]*${escapedKeyword}[^\\d]*)\\s*([\\d\\.\\s]*,\\d{2}|[\\d\\.\\s]+)`, 'gi');
+            
+            while ((match = searchRegex.exec(text)) !== null) {
+                let date = match[1] || new Date().toISOString().split('T')[0];
+                let desc = match[2].trim().replace(/\s+/g, ' ');
+                let amtStr = match[3].replace(/\s/g, '').replace(',', '.');
+                let amt = parseFloat(amtStr);
+                
+                if (!isNaN(amt) && amt > 0) {
+                    const rule = accountRules[keyword];
+                    
+                    // Direct Save to Firebase under current user session
+                    db.ref('users/' + auth.currentUser.uid + '/entries').push({
+                        desc: desc,
+                        amt: amt,
+                        subCat: rule.cat,
+                        mainCat: rule.type,
+                        date: date,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    matchCount++;
+                }
+            }
+        });
+
+        document.getElementById('status-msg').innerText = `Guul! Waxaan PDF-ka ka helay oo kala saaray ${matchCount} Transaksjoner ah! ✅`;
+        setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 5000);
+    }
+
     function saveData(type) {
-        const editId = document.getElementById('edit-id').value;
         const desc = document.getElementById('entry-desc').value;
         const amt = parseFloat(document.getElementById('entry-amt').value);
         const cat = document.getElementById('entry-category').value;
@@ -292,30 +237,13 @@
         
         if(!desc || !amt || !dateInput) return alert("Fadlan buuxi meelaha banaan!");
         
-        const entryData = { 
-            desc, 
-            amt, 
-            subCat: cat, 
-            mainCat: type, 
-            date: dateInput, // Reverted to raw input style for reliability
-            timestamp: new Date(dateInput).getTime() 
-        };
+        db.ref('users/' + auth.currentUser.uid + '/entries').push({ 
+            desc, amt, subCat: cat, mainCat: type, date: dateInput 
+        });
         
-        if(editId) {
-            db.ref('users/' + auth.currentUser.uid + '/entries/' + editId).update(entryData);
-        } else {
-            db.ref('users/' + auth.currentUser.uid + '/entries').push(entryData);
-        }
-        resetForm(); 
-        showTab('dash');
-    }
-
-    function resetForm() {
-        document.getElementById('entry-desc').value = ""; 
+        document.getElementById('entry-desc').value = "";
         document.getElementById('entry-amt').value = "";
-        document.getElementById('edit-id').value = ""; 
-        document.getElementById('scanned-img').style.display = 'none';
-        document.getElementById('l-add-title').innerText = "REGISTRER DATA";
+        showTab('dash');
     }
 
     function loadData() {
@@ -331,9 +259,7 @@
                 
                 list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">
                         <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date}</small></div>
-                        <div class="entry-actions"><span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt} kr</span>
-                        <i class="fas fa-edit" onclick="editEntry('${key}', '${v.desc}', ${v.amt}, '${v.subCat}')"></i>
-                        <i class="fas fa-trash" onclick="deleteEntry('${key}')"></i></div></div>`;
+                        <div><span style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt} kr</span></div></div>`;
                         
                 reportBody.innerHTML += `<tr><td>${v.date}</td><td>${v.subCat}</td><td>${v.desc}</td><td style="color:${v.mainCat==='income'?'#2ecc71':'#ff4757'}">${v.amt} kr</td></tr>`;
             });
@@ -342,22 +268,7 @@
             document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
             document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
             document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
-            
-            // Simplified Live Calculations
-            document.getElementById('res-mva').innerText = (te * 0.25).toLocaleString() + " kr";
-            document.getElementById('res-aga').innerText = (ti * 0.141).toLocaleString() + " kr";
         });
-    }
-
-    function deleteEntry(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('users/' + auth.currentUser.uid + '/entries/' + id).remove(); }
-    
-    function editEntry(id, desc, amt, cat) {
-        document.getElementById('edit-id').value = id; 
-        document.getElementById('entry-desc').value = desc;
-        document.getElementById('entry-amt').value = amt; 
-        document.getElementById('entry-category').value = cat;
-        showTab('add'); 
-        document.getElementById('l-add-title').innerText = "EDIT ENTRY";
     }
 
     auth.onAuthStateChanged(user => {
@@ -365,11 +276,10 @@
             document.getElementById('auth-page').style.display='none'; 
             document.getElementById('main-app').style.display='block'; 
             document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
-            document.getElementById('prof-name').innerText = user.email;
             loadData(); 
-        } else { 
-            document.getElementById('auth-page').style.display='block'; 
-            document.getElementById('main-app').style.display='none'; 
+        } else {
+            document.getElementById('auth-page').style.display='block';
+            document.getElementById('main-app').style.display='none';
         }
     });
 
@@ -383,11 +293,6 @@
     function handleAuth() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message)); }
     function logout() { auth.signOut().then(() => location.reload()); }
     function toggleTheme() { document.body.classList.toggle('light-theme'); }
-    function forgotPassword() {
-        const email = document.getElementById('email').value;
-        if(!email) return alert("Fadlan qor e-post kowaad!");
-        auth.sendPasswordResetEmail(email).then(() => alert("Koodka dib u dajinta e-postka waa la diray!")).catch(err => alert(err.message));
-    }
 </script>
 </body>
 </html>
