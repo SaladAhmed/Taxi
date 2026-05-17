@@ -339,33 +339,180 @@ function deleteAll(){
 }
 
 // ════════════════════════════════════════════════════
-//  DNB PDF PARSER — Leser HVER transaksjon enkeltvis
+//  DNB PDF PARSER v3 — Column-position based
+//  Reads EVERY transaction individually with correct amounts
 // ════════════════════════════════════════════════════
 
-// ── Helpers ──
-function norNum(r){
-    if(!r||r.trim()===''||r.trim()==='-')return 0;
-    let s=r.trim().replace(/\s/g,'');
-    if(s.includes(',')&&s.includes('.')){
-        if(s.lastIndexOf(',')>s.lastIndexOf('.'))s=s.replace(/\./g,'').replace(',','.');
-        else s=s.replace(/,/g,'');
-    }else if(s.includes(','))s=s.replace(',','.');
-    else if(s.includes('.')){
-        const p=s.split('.');
-        if(p[p.length-1].length===2)s=p.slice(0,-1).join('')+'.'+p[p.length-1];
-        else s=s.replace(/\./g,'');
-    }
-    return parseFloat(s)||0;
-}
-function parseD(r){
-    if(!r)return null;r=r.trim();
-    let m=r.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];
-    m=r.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);if(m)return'20'+m[3]+'-'+m[2]+'-'+m[1];
-    m=r.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return r;
-    return null;
+async function handlePDF(inp){
+    const f=inp.files[0];if(!f)return;
+    showStat('📄 Leser PDF...');bItems=[];
+    try{
+        const buf=await f.arrayBuffer();
+        const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+        showStat('📄 '+pdf.numPages+' sider — analyserer...');
+        // Collect ALL words with exact x,y positions from every page
+        const allWords=[];
+        for(let p=1;p<=pdf.numPages;p++){
+            const pg=await pdf.getPage(p);
+            const con=await pg.getTextContent();
+            const vp=pg.getViewport({scale:1});
+            con.items.forEach(it=>{
+                if(!it.str||!it.str.trim())return;
+                allWords.push({
+                    text:it.str.trim(),
+                    x0:it.transform[4],
+                    x1:it.transform[4]+it.width,
+                    top:vp.height-it.transform[5],
+                    page:p,
+                    pgW:vp.width
+                });
+            });
+        }
+        parseDNBv4(allWords);
+    }catch(err){showStat('❌ '+err.message);console.error(err);}
+    inp.value='';
 }
 
-// ── Type detection (income/expense) ──
+function parseDNBv4(allWords){
+    bItems=[];
+    if(!allWords.length){showStat('❌ Tom PDF');return;}
+
+    // Group words into lines by page+top (bucket every 3pt)
+    const lineMap={};
+    for(const w of allWords){
+        const key=w.page+'_'+Math.round(w.top/3)*3;
+        if(!lineMap[key])lineMap[key]={page:w.page,top:w.top,words:[]};
+        lineMap[key].words.push(w);
+    }
+    const lines=Object.values(lineMap).sort((a,b)=>a.page!==b.page?a.page-b.page:a.top-b.top);
+    for(const ln of lines) ln.words.sort((a,b)=>a.x0-b.x0);
+
+    // Auto-detect "Ut av konto" and "Inn på konto" column x-positions
+    let utX=310, innX=390;  // DNB default
+    for(const ln of lines){
+        const txt=ln.words.map(w=>w.text).join(' ');
+        if(/ut av konto/i.test(txt)){
+            const idx=ln.words.findIndex(w=>/^ut$/i.test(w.text));
+            if(idx>=0) utX=ln.words[idx].x0;
+            const idx2=ln.words.findIndex(w=>/^inn$/i.test(w.text));
+            if(idx2>=0) innX=ln.words[idx2].x0;
+            break;
+        }
+    }
+
+    const dateRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
+    const amtRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+
+    // Skip patterns
+    const SKIP=/^(dato|tekst|saldo|side|rentedato|arkivref|bruk|bokf|dronning|pb\.|oslo|telefon|foretaks|dnb\.no|kontoutskrift|internasjonalt|iban|bic|forts\.|renter|innskudd|kreditt|opptjente|skyldige|provisjon|rapportering|henhold|lovdata|returadresse|utskrifts|mohammed|mohamed|møllebakken|4841|arendal|ny saldo|saldo forrige|bedriftskonto)/i;
+
+    const txGroups=[];let cur=null;
+
+    for(const ln of lines){
+        const lineText=ln.words.map(w=>w.text).join(' ');
+        if(SKIP.test(lineText.trim()))continue;
+
+        // Find date words at left side
+        const leftDates=ln.words.filter(w=>dateRe.test(w.text)&&w.x0<utX*0.45);
+
+        if(leftDates.length>=2){
+            // New transaction starts
+            if(cur)txGroups.push(cur);
+            leftDates.sort((a,b)=>a.x0-b.x0);
+            const bokDate=convertDate(leftDates[1].text)||convertDate(leftDates[0].text);
+
+            // Description words: left of utX, not dates, not arkivref numbers
+            const descW=ln.words.filter(w=>
+                w.x1<utX &&
+                !dateRe.test(w.text) &&
+                !/^\d{6,}$/.test(w.text)
+            );
+            const desc=descW.map(w=>w.text).join(' ').trim();
+
+            // Amount words: between utX and innX (UT column)
+            const utW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
+            // Amount words: right of innX (INN column)
+            const innW=ln.words.filter(w=>w.x0>=innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
+
+            const utAmt=utW.length?norNum(utW.map(w=>w.text).join('')):0;
+            const innAmt=innW.length?norNum(innW.map(w=>w.text).join('')):0;
+
+            cur={date:bokDate,descParts:[desc],utAmt,innAmt};
+
+        }else if(cur){
+            // Continuation line
+            const descW=ln.words.filter(w=>
+                w.x1<utX &&
+                !dateRe.test(w.text) &&
+                !/^\d{6,}$/.test(w.text) &&
+                !/^\d{2}\.\d{2}\.\d{2}/.test(w.text)
+            );
+            if(descW.length){
+                const cont=descW.map(w=>w.text).join(' ').trim();
+                if(cont&&!/^\d+$/.test(cont)) cur.descParts.push(cont);
+            }
+            // Pick up missing amounts from continuation lines
+            if(cur.utAmt===0){
+                const utW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
+                if(utW.length) cur.utAmt=norNum(utW.map(w=>w.text).join(''));
+            }
+            if(cur.innAmt===0){
+                const innW=ln.words.filter(w=>w.x0>=innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
+                if(innW.length) cur.innAmt=norNum(innW.map(w=>w.text).join(''));
+            }
+        }
+    }
+    if(cur)txGroups.push(cur);
+
+    // Build bItems from txGroups
+    const seen=new Set();
+    for(const tx of txGroups){
+        if(!tx.date)continue;
+        const desc=[...new Set(tx.descParts)].filter(s=>s.length>0).join(' ').replace(/\s+/g,' ').trim();
+        if(!desc||desc.length<2)continue;
+        if(/^(saldo|kontoutskrift|bedriftskonto)/i.test(desc))continue;
+
+        let finalAmt=0, finalType='expense';
+        if(tx.innAmt>0&&tx.utAmt<=0){finalAmt=tx.innAmt;finalType='income';}
+        else if(tx.utAmt>0&&tx.innAmt<=0){finalAmt=tx.utAmt;finalType='expense';}
+        else if(tx.innAmt>0&&tx.utAmt>0){
+            // Both — use description to decide
+            finalType=guessType(desc);
+            finalAmt=finalType==='income'?tx.innAmt:tx.utAmt;
+        }else continue;
+
+        if(finalAmt<0.01||finalAmt>9999999)continue;
+
+        // Override: Agder Taxi = always income
+        if(desc.toLowerCase().includes('agder taxi'))finalType='income';
+
+        const cat=guesscat(desc,finalType);
+        const key=tx.date+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,30);
+        if(!seen.has(key)){
+            seen.add(key);
+            bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});
+        }
+    }
+
+    if(!bItems.length){showStat('❌ Ingen transaksjoner funnet');return;}
+    showStat('✅ '+bItems.length+' transaksjoner funnet!',true);
+    renderBItems();
+}
+
+function convertDate(s){
+    if(!s)return null;
+    const m=s.match(/^(\d{2})\.(\d{2})\.(\d{2,4})$/);if(!m)return null;
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return`${y}-${m[2]}-${m[1]}`;
+}
+
+function norNum(r){
+    if(!r)return 0;
+    let s=String(r).trim().replace(/\s/g,'');
+    s=s.replace(/\./g,'').replace(',','.');
+    return parseFloat(s)||0;
+}
+
 function guessType(desc){
     const d=(desc||'').toLowerCase();
     if(d.includes('agder taxi'))return'income';
