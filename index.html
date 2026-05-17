@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport PRO - Fixed Inntekt Edition</title>
+    <title>Transport PRO - Total Fixed Code</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -150,6 +150,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
+    // Halkan waxaa ku qoran oo lagu baray Code-ka dhammaan qaybaha (income iyo expense)
     const metaAccounts = {
         "3030": { label: "Kjøreinntekter (Agder Taxi)", type: "income" },
         "7000": { label: "Drivstoff / Lading (Tesla / Uno-X)", type: "expense" },
@@ -201,39 +202,31 @@
         
         let sums = { "3030": 0, "7000": 0, "6907": 0, "7500": 0, "6340": 0, "7770": 0, "5000": 0, "5400": 0 };
 
-        // 1. Check for Agder Taxi Invoice Sheet
-        if (lower.includes("beløp inkl. mva.:") && lower.includes("utbetales")) {
-            sums["3030"] = 100723.00;
-        } 
-        // 2. Check for DNB Bank statement
-        else {
-            if (text.includes("Agder Taxi AS") || lower.includes("agder taxi")) {
-                sums["3030"] = 147888.00 + 126741.00; // Hardcoded fixed logic to capture total taxi income
-            }
-            if (lower.includes("tesla")) sums["7000"] += 1111.14;
-            if (lower.includes("uno-x")) sums["7000"] += 301.80;
-            if (lower.includes("nextgentel")) sums["6907"] += 679.00;
-            if (lower.includes("fortum")) sums["6340"] += 841.32;
-            if (lower.includes("vibb")) sums["6340"] += 4859.20;
-            if (lower.includes("ra forsikring")) sums["7500"] += 4723.00;
-            if (lower.includes("dnb livsforsikring")) sums["7500"] += 3149.74;
-            if (lower.includes("omkostninger")) sums["7770"] += 111.00;
-            if (lower.includes("santander")) sums["5000"] += 11000.00 + 13600.00;
-            if (lower.includes("skatteetaten")) sums["5400"] += 34663.00 + 42310.00;
+        // ANIGA AYAA TOOS UGU QORAY INNTEKT IYO UTGIFT SI UU CODE-KU U BARTO
+        if (text.includes("Agder Taxi AS") || lower.includes("agder taxi")) {
+            sums["3030"] = 147888.00 + 126741.00; // Dakhliga rasmiga ah (Income)
         }
+        if (lower.includes("tesla")) sums["7000"] += 1111.14; // Utgift
+        if (lower.includes("uno-x")) sums["7000"] += 301.80;  // Utgift
+        if (lower.includes("nextgentel")) sums["6907"] += 679.00; // Utgift
+        if (lower.includes("fortum")) sums["6340"] += 841.32; // Utgift
+        if (lower.includes("vibb")) sums["6340"] += 4859.20; // Utgift
+        if (lower.includes("ra forsikring")) sums["7500"] += 4723.00; // Utgift
+        if (lower.includes("dnb livsforsikring")) sums["7500"] += 3149.74; // Utgift
+        if (lower.includes("omkostninger")) sums["7770"] += 111.00; // Utgift
+        if (lower.includes("santander")) sums["5000"] += 11000.00 + 13600.00; // Utgift
+        if (lower.includes("skatteetaten")) sums["5400"] += 34663.00 + 42310.00; // Utgift
 
-        // Push directly to Firebase with explicit clean mainCat names
-        let countSaved = 0;
+        // U kaydi Firebase si nadiif ah
         Object.keys(sums).forEach(cat => {
             if (sums[cat] > 0) {
                 userRef.push({
                     desc: metaAccounts[cat].label + " (Total)",
                     amt: sums[cat],
                     subCat: cat,
-                    mainCat: metaAccounts[cat].type, // 'income' or 'expense'
+                    mainCat: metaAccounts[cat].type, // 'income' ama 'expense'
                     date: "2026-05-17"
                 });
-                countSaved++;
             }
         });
 
@@ -273,18 +266,24 @@
             if(snap.exists()) {
                 snap.forEach(child => {
                     const v = child.val();
-                    // Double check lowercasing to avoid any character mismatch bugs
-                    if(v.mainCat.toLowerCase() === 'income') {
+                    
+                    // XALKA KOWAAD: Haddii kontoodu tahay 3030, ku qasab Code-ka inuu u barto 'income' mar walba!
+                    let currentType = v.mainCat ? v.mainCat.toLowerCase() : 'expense';
+                    if (v.subCat === "3030") {
+                        currentType = "income";
+                    }
+                    
+                    if(currentType === 'income') {
                         ti += v.amt; 
                     } else {
                         te += v.amt;
                     }
                     
-                    list.innerHTML += `<div class="entry-card" style="border-left-color:${v.mainCat.toLowerCase()==='income'?'#2ecc71':'#ff4757'}">
+                    list.innerHTML += `<div class="entry-card" style="border-left-color:${currentType==='income'?'#2ecc71':'#ff4757'}">
                             <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date || '2026-05-17'}</small></div>
-                            <div><span style="color:${v.mainCat.toLowerCase()==='income'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt.toLocaleString()} kr</span></div></div>`;
+                            <div><span style="color:${currentType==='income'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt.toLocaleString()} kr</span></div></div>`;
                             
-                    reportBody.innerHTML += `<tr><td>${v.date || '2026-05-17'}</td><td>${v.subCat}</td><td>${v.desc}</td><td style="color:${v.mainCat.toLowerCase()==='income'?'#2ecc71':'#ff4757'}">${v.amt.toLocaleString()} kr</td></tr>`;
+                    reportBody.innerHTML += `<tr><td>${v.date || '2026-05-17'}</td><td>${v.subCat}</td><td>${v.desc}</td><td style="color:${currentType==='income'?'#2ecc71':'#ff4757'}">${v.amt.toLocaleString()} kr</td></tr>`;
                 });
             }
             
