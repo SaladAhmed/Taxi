@@ -352,174 +352,185 @@ async function handlePDF(inp){
     try{
         const buf=await f.arrayBuffer();
         const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-        showStat('📄 '+pdf.numPages+' sider — analyserer...');
-        // Collect ALL words with exact x,y positions from every page
-        const allWords=[];
+        showStat('📄 '+pdf.numPages+' sider...');
+
+        // Build full text with layout (spaces preserved for column detection)
+        let fullText='';
         for(let p=1;p<=pdf.numPages;p++){
             const pg=await pdf.getPage(p);
             const con=await pg.getTextContent();
             const vp=pg.getViewport({scale:1});
-            con.items.forEach(it=>{
-                if(!it.str||!it.str.trim())return;
-                allWords.push({
-                    text:it.str.trim(),
-                    x0:it.transform[4],
-                    x1:it.transform[4]+it.width,
-                    top:vp.height-it.transform[5],
-                    page:p,
-                    pgW:vp.width
-                });
-            });
+
+            // Group items by Y-row (bucket 4pt)
+            const rows={};
+            for(const it of con.items){
+                if(!it.str)continue;
+                const y=Math.round((vp.height-it.transform[5])/4)*4;
+                if(!rows[y])rows[y]=[];
+                rows[y].push({x:it.transform[4],text:it.str,w:it.width});
+            }
+
+            // Sort rows by Y, build lines with approximate spacing
+            const sortedY=Object.keys(rows).map(Number).sort((a,b)=>a-b);
+            for(const y of sortedY){
+                const items=rows[y].sort((a,b)=>a.x-b.x);
+                // Build line with spaces proportional to gaps
+                let line='';
+                let prevX=0;
+                for(const it of items){
+                    if(!it.text.trim())continue;
+                    const gap=it.x-prevX;
+                    // Add spaces for gap (1 space per ~6px)
+                    const spaces=line===''?0:Math.max(1,Math.round(gap/6));
+                    line+=' '.repeat(spaces)+it.text;
+                    prevX=it.x+(it.w||it.text.length*6);
+                }
+                if(line.trim()) fullText+=line.trim()+'\n';
+            }
+            fullText+='\f'; // page break
         }
-        parseDNBv4(allWords);
+        parseDNBText(fullText);
     }catch(err){showStat('❌ '+err.message);console.error(err);}
     inp.value='';
 }
 
-function parseDNBv4(allWords){
+function parseDNBText(text){
     bItems=[];
-    if(!allWords.length){showStat('❌ Tom PDF');return;}
+    const seen=new Set();
+    const lines=text.split('\n');
 
-    // Group words into lines by page+top (bucket every 3pt)
-    const lineMap={};
-    for(const w of allWords){
-        const key=w.page+'_'+Math.round(w.top/3)*3;
-        if(!lineMap[key])lineMap[key]={page:w.page,top:w.top,words:[]};
-        lineMap[key].words.push(w);
-    }
-    const lines=Object.values(lineMap).sort((a,b)=>a.page!==b.page?a.page-b.page:a.top-b.top);
-    for(const ln of lines) ln.words.sort((a,b)=>a.x0-b.x0);
-
-    // Auto-detect column X positions from header line
-    let utX=310, innX=390;
-    for(const ln of lines){
-        const txt=ln.words.map(w=>w.text).join(' ');
-        if(/ut av konto/i.test(txt)){
-            const utW=ln.words.find(w=>/^ut$/i.test(w.text));
-            const innW=ln.words.find(w=>/^inn$/i.test(w.text));
-            if(utW) utX=utW.x0;
-            if(innW) innX=innW.x0;
+    // Find INN column position by looking at header
+    // "Ut av konto   Inn på konto" — INN starts at char ~52-60
+    let innCol=52; // default character position
+    for(const line of lines){
+        if(/ut av konto/i.test(line)&&/inn/i.test(line)){
+            const m=line.search(/inn/i);
+            if(m>0) innCol=m;
             break;
         }
     }
 
-    const dateRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
+    const SKIP=/^(dato|tekst|saldo|side|rentedato|arkivref|bruk|bokf|dronning|pb\.|oslo|telefon|foretaks|dnb\.no|kontoutskrift|internasjonalt|iban|bic|forts\.|renter|innskudd|kreditt|opptjente|skyldige|provisjon|rapportering|henhold|lovdata|returadresse|utskriftsnummer|møllebakken|4841|ny saldo|saldo forrige|bedriftskonto)/i;
 
-    // Skip header/footer lines
-    const SKIP=/^(dato\s|tekst|saldo|side\s?\d|rentedato|arkivref|bruk\s|bokf|dronning|pb\.|oslo|telefon|foretaks|dnb\.no|kontoutskrift|internasjonalt|iban|bic|forts\.|renter,|innskudd|kreditt|opptjente|skyldige|provisjon|rapportering|henhold|lovdata|returadresse|utskriftsnummer|mohammed|mohamed|møllebakken|4841|ny saldo|saldo forrige|bedriftskonto|hittil)/i;
+    // Norwegian amount regex: 1.234,56 or 28,45 or 147.888,00
+    const AMT=/\d{1,3}(?:\.\d{3})*,\d{2}/g;
 
-    // Helper: merge numeric tokens into amount
-    // PDF.js splits "10.000,00" into ["10.000", ",00"] or ["10.000,00"]
-    function mergeAmt(words){
-        if(!words.length) return 0;
-        // Concatenate all tokens (they're adjacent)
-        const merged = words.map(w=>w.text).join('');
-        // Remove any trailing date/arkivref patterns
-        const clean = merged.replace(/\d{2}\.\d{2}\.\d{2,4}.*/,'').replace(/\d{6,}.*/,'');
-        // Now parse Norwegian number: dots=thousands, comma=decimal
-        // Pattern: digits with optional dots, then comma+2digits
-        const m = clean.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/);
-        if(m) return norNum(m[1]);
-        // Fallback: just numbers
-        const nums = clean.match(/\d[\d.,]*/g);
-        if(nums) return norNum(nums[0]);
-        return 0;
-    }
+    // Transaction line pattern: DD.MM.YY DD.MM.YY DESCRIPTION ... AMOUNT [AMOUNT] DATE ARKIVREF
+    const TX_RE=/^(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s+(.+?)(?:\s{2,}|\s+(?=\d{1,3}(?:\.\d{3})*,\d{2}))/;
 
-    // Helper: is a word an amount-related token?
-    function isAmtToken(text){
-        // Match: "28,45" or "10.000,00" or ",45" or "147.888" etc.
-        return /^\d{1,3}(?:\.\d{3})*(?:,\d{2})?$/.test(text) ||
-               /^,\d{2}$/.test(text) ||
-               /^\d{1,3}(?:\.\d{3})+$/.test(text);
-    }
+    let curTx=null;
 
-    const txGroups=[];let cur=null;
+    for(let i=0;i<lines.length;i++){
+        const raw=lines[i];
+        const line=raw.trim();
+        if(!line||SKIP.test(line))continue;
 
-    for(const ln of lines){
-        const lineText=ln.words.map(w=>w.text).join(' ');
-        if(SKIP.test(lineText.trim()))continue;
+        // Check if line starts with two dates
+        const dateMatch=line.match(/^(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s+(.*)/);
+        if(dateMatch){
+            if(curTx) buildItem(curTx,seen,innCol);
 
-        // Find date words at left side (x < utX * 0.45)
-        const leftDates=ln.words.filter(w=>dateRe.test(w.text)&&w.x0<utX*0.45);
+            const bokDate=cvtDate(dateMatch[2])||cvtDate(dateMatch[1]);
+            const rest=dateMatch[3];
 
-        if(leftDates.length>=2){
-            if(cur)txGroups.push(cur);
-            leftDates.sort((a,b)=>a.x0-b.x0);
-            const bokDate=convertDate(leftDates[1].text)||convertDate(leftDates[0].text);
+            // Find all amounts in the line
+            const amounts=[...rest.matchAll(AMT)].map(m=>({
+                val:norNum(m[0]),
+                pos:m.index+rest.indexOf(dateMatch[3]<0?'':'')+dateMatch[1].length+dateMatch[2].length+2
+            }));
 
-            // Desc: words left of utX, not dates, not long numbers
-            const descW=ln.words.filter(w=>
-                w.x1<=utX &&
-                !dateRe.test(w.text) &&
-                !/^\d{6,}$/.test(w.text)
-            );
-            const desc=descW.map(w=>w.text).join(' ').trim();
+            // Description = text before first amount
+            const firstAmtIdx=rest.search(AMT);
+            const desc=firstAmtIdx>0?rest.substring(0,firstAmtIdx).trim():rest.replace(AMT,'').trim();
+            // Clean desc: remove trailing arkivref (long numbers) and dates
+            const descClean=desc.replace(/\s+\d{8,}.*$/,'').replace(/\s+\d{2}\.\d{2}\.\d{2,4}.*$/,'').trim();
 
-            // UT column: words between utX and innX
-            const utColW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&isAmtToken(w.text));
-            // INN column: words right of innX
-            const innColW=ln.words.filter(w=>w.x0>=innX-5&&isAmtToken(w.text));
-
-            const utAmt=mergeAmt(utColW);
-            const innAmt=mergeAmt(innColW);
-
-            cur={date:bokDate,descParts:[desc],utAmt,innAmt};
-
-        }else if(cur){
-            // Continuation line
-            const descW=ln.words.filter(w=>
-                w.x1<=utX &&
-                !dateRe.test(w.text) &&
-                !/^\d{6,}$/.test(w.text)
-            );
-            if(descW.length){
-                const cont=descW.map(w=>w.text).join(' ').trim();
-                if(cont&&!/^\d+$/.test(cont)&&cont.length>1) cur.descParts.push(cont);
+            // Determine amounts
+            const allAmts=[...rest.matchAll(AMT)];
+            let utAmt=0,innAmt=0;
+            if(allAmts.length===1){
+                const v=norNum(allAmts[0][0]);
+                // Check position in original raw line for column
+                const posInRaw=raw.indexOf(allAmts[0][0]);
+                // If position >= innCol in original line → INN column
+                if(posInRaw>=innCol+10) innAmt=v; else utAmt=v;
+            }else if(allAmts.length>=2){
+                // First = UT, second = INN (but skip date-like patterns and arkivref)
+                const realAmts=allAmts.filter(m=>!m[0].match(/^\d{2}\.\d{2}$/));
+                if(realAmts.length>=2){
+                    utAmt=norNum(realAmts[0][0]);
+                    innAmt=norNum(realAmts[1][0]);
+                }else if(realAmts.length===1){
+                    const posInRaw=raw.indexOf(realAmts[0][0]);
+                    if(posInRaw>=innCol+10) innAmt=norNum(realAmts[0][0]);
+                    else utAmt=norNum(realAmts[0][0]);
+                }
             }
-            // Pick up amounts missed on first line
-            if(cur.utAmt===0){
-                const utColW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&isAmtToken(w.text));
-                if(utColW.length) cur.utAmt=mergeAmt(utColW);
+
+            curTx={date:bokDate,desc:descClean,utAmt,innAmt,rawLine:raw};
+
+        }else if(curTx&&!line.match(/^\d{2}\.\d{2}\.\d{2,4}/)){
+            // Continuation line — append description if not just numbers/dates
+            if(!/^\d+$/.test(line)&&!/^\d{2}\.\d{2}\.\d{2,4}/.test(line)){
+                const cont=line.replace(/\s+\d{8,}.*$/,'').replace(/\s+\d{2}\.\d{2}\.\d{2,4}.*$/,'').trim();
+                if(cont&&cont.length>1&&!/^\d+$/.test(cont)){
+                    curTx.desc=(curTx.desc+' '+cont).trim();
+                }
             }
-            if(cur.innAmt===0){
-                const innColW=ln.words.filter(w=>w.x0>=innX-5&&isAmtToken(w.text));
-                if(innColW.length) cur.innAmt=mergeAmt(innColW);
-            }
+        }else if(line==='\f'&&curTx){
+            buildItem(curTx,seen,innCol);curTx=null;
         }
     }
-    if(cur)txGroups.push(cur);
-
-    // Build final bItems
-    const seen=new Set();
-    for(const tx of txGroups){
-        if(!tx.date)continue;
-        const desc=[...new Set(tx.descParts)].filter(s=>s.length>0).join(' ').replace(/\s+/g,' ').trim();
-        if(!desc||desc.length<2)continue;
-        if(/^(saldo|kontoutskrift|bedriftskonto|internasjonalt|bic|iban)/i.test(desc))continue;
-
-        let finalAmt=0,finalType='expense';
-        if(tx.innAmt>0&&tx.utAmt<=0){finalAmt=tx.innAmt;finalType='income';}
-        else if(tx.utAmt>0&&tx.innAmt<=0){finalAmt=tx.utAmt;finalType='expense';}
-        else if(tx.innAmt>0&&tx.utAmt>0){
-            finalType=guessType(desc);
-            finalAmt=finalType==='income'?tx.innAmt:tx.utAmt;
-        }else continue;
-
-        if(finalAmt<0.01||finalAmt>9999999)continue;
-        if(desc.toLowerCase().includes('agder taxi'))finalType='income';
-
-        const cat=guesscat(desc,finalType);
-        const key=tx.date+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,30);
-        if(!seen.has(key)){
-            seen.add(key);
-            bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});
-        }
-    }
+    if(curTx) buildItem(curTx,seen,innCol);
 
     if(!bItems.length){showStat('❌ Ingen transaksjoner funnet');return;}
     showStat('✅ '+bItems.length+' transaksjoner funnet!',true);
     renderBItems();
+}
+
+function buildItem(tx,seen,innCol){
+    if(!tx.date||!tx.desc) return;
+
+    let finalAmt=0,finalType='expense';
+    if(tx.innAmt>0&&tx.utAmt<=0){finalAmt=tx.innAmt;finalType='income';}
+    else if(tx.utAmt>0&&tx.innAmt<=0){finalAmt=tx.utAmt;finalType='expense';}
+    else if(tx.innAmt>0&&tx.utAmt>0){
+        // Both present — use description
+        finalType=guessType(tx.desc);
+        finalAmt=finalType==='income'?tx.innAmt:tx.utAmt;
+    }else return;
+
+    if(finalAmt<0.01||finalAmt>9999999) return;
+
+    const d=tx.desc.toLowerCase();
+    if(d.includes('agder taxi')) finalType='income';
+
+    // Clean desc
+    let desc=tx.desc.replace(/\s+\d{8,}.*$/,'').replace(/\s{3,}/g,' ').trim();
+    if(desc.length<2) return;
+    if(/^(saldo|kontoutskrift|bedriftskonto|internasjonalt)/i.test(desc)) return;
+
+    const cat=guesscat(desc,finalType);
+    const key=tx.date+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,30);
+    if(!seen.has(key)){
+        seen.add(key);
+        bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});
+    }
+}
+
+function cvtDate(s){
+    if(!s) return null;
+    const m=s.match(/^(\d{2})\.(\d{2})\.(\d{2,4})$/);
+    if(!m) return null;
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return`${y}-${m[2]}-${m[1]}`;
+}
+
+function norNum(r){
+    if(!r)return 0;
+    let s=String(r).trim().replace(/\s/g,'');
+    s=s.replace(/\./g,'').replace(',','.');
+    return parseFloat(s)||0;
 }
 
 function convertDate(s){
