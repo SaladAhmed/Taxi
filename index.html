@@ -1287,7 +1287,7 @@ async function importBank(){
   const selected=[];
   document.querySelectorAll('#bitems .import-item.sel').forEach(el=>{
     const i=parseInt(el.id.replace('bi-',''));
-    if(!isNaN(i)&&bItems[i])selected.push({idx:i,item:bItems[i]});
+    if(!isNaN(i)&&bItems[i])selected.push(bItems[i]);
   });
   if(!selected.length){showBS('Ingen valgt!','error');return;}
 
@@ -1295,30 +1295,29 @@ async function importBank(){
   showBS('Lagrer '+total+' transaksjoner...','info');
   E('btn-bi').disabled=true;
 
-  // Build one big object and write it in ONE transaction
-  const batch={};
-  selected.forEach(({item},n)=>{
-    const type=parseInt(item.category)<4000?'income':'expense';
-    // Unique key: timestamp + index
-    const key='tx_'+(Date.now()+n)+'_'+Math.random().toString(36).substr(2,6);
-    batch[key]={
-      date:item.date,
-      category:item.category,
-      description:item.desc,
-      amount:item.amount,
-      type
-    };
-  });
-
   try{
+    const base=Date.now();
+    const batch={};
+    selected.forEach((item,n)=>{
+      const type=parseInt(item.category)<4000?'income':'expense';
+      // CRITICAL: each key MUST be unique — use base + n (different number per item)
+      const key='e'+String(base+n).padStart(16,'0')+'_'+String(n).padStart(4,'0');
+      batch[key]={
+        date:item.date||'',
+        category:item.category||'7790',
+        description:item.desc||'',
+        amount:item.amount||0,
+        type
+      };
+    });
+
     await db.ref('entries/'+u.uid).update(batch);
-    showBS('✅ Alle '+total+' transaksjoner lagret!','success');
+    showBS('✅ Alle '+total+' lagret!','success');
     CL(E('bprev'),'hidden',true);
     bItems=[];
     setTimeout(()=>showPg('dash'),1200);
   }catch(err){
     showBS('❌ Feil: '+err.message,'error');
-    console.error(err);
   }
   E('btn-bi').disabled=false;
 }
@@ -1436,9 +1435,10 @@ async function importOCR(){
     if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);
   });
   if(!selected.length)return;
+  const base=Date.now();
   const batch={};
   selected.forEach((it,n)=>{
-    const key='tx_'+(Date.now()+n)+'_'+Math.random().toString(36).substr(2,6);
+    const key='e'+String(base+n).padStart(16,'0')+'_'+String(n).padStart(4,'0');
     batch[key]={date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0};
   });
   await db.ref('entries/'+u.uid).update(batch);
@@ -1593,9 +1593,10 @@ async function importScanOCR(){
     if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);
   });
   if(!selected.length)return;
+  const base=Date.now();
   const batch={};
   selected.forEach((it,n)=>{
-    const key='tx_'+(Date.now()+n)+'_'+Math.random().toString(36).substr(2,6);
+    const key='e'+String(base+n).padStart(16,'0')+'_'+String(n).padStart(4,'0');
     batch[key]={date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0};
   });
   await db.ref('entries/'+u.uid).update(batch);
