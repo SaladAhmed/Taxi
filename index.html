@@ -156,7 +156,7 @@
             </div>
             <div id="bitems" style="max-height:400px;overflow-y:auto"></div>
             <button class="btn" id="btn-lagre" style="background:var(--g);display:none;margin-top:10px" onclick="lagreValgte()">
-                <i class="fas fa-save"></i> LAGRE VALGTE
+                <i class="fas fa-save"></i> LAGRE VALGTE (GRUPPERT PER KONTO)
             </button>
         </div>
     </div>
@@ -671,7 +671,7 @@ function updateBBtn(){
 function bAll(){document.querySelectorAll('#bitems .bitem').forEach(el=>el.classList.add('sel'));updateBBtn();}
 function bNone(){document.querySelectorAll('#bitems .bitem').forEach(el=>el.classList.remove('sel'));updateBBtn();}
 
-// ── SAVE — guaranteed unique keys per entry ──
+// ── SAVE — Group by category and save totals ──
 async function lagreValgte(){
     const u=auth.currentUser;if(!u)return;
     const selected=[];
@@ -681,37 +681,46 @@ async function lagreValgte(){
     });
     if(!selected.length){showStat('Ingen valgt!');return;}
 
-    const total=selected.length;
-    showStat('⏳ Lagrer '+total+' transaksjoner...');
+    showStat('⏳ Grupperer og lagrer...');
     E('btn-lagre').disabled=true;
 
-    // Save one by one using Firebase push() — guaranteed unique keys every time
-    let saved=0;
+    // Group by category → sum amounts
+    const groups={};
+    for(const item of selected){
+        const type=parseInt(item.category)<4000?'income':'expense';
+        const key=item.category+'_'+type;
+        if(!groups[key]){
+            groups[key]={
+                category:item.category,
+                type,
+                amount:0,
+                date:item.date, // use first date
+                description:katNavn(item.category)
+            };
+        }
+        groups[key].amount+=item.amount;
+    }
+
+    const entries=Object.values(groups);
+    
     try{
         const ref=db.ref('entries/'+u.uid);
-        // Split into chunks of 10 to avoid overwhelming Firebase
-        for(let i=0;i<selected.length;i+=10){
-            const chunk=selected.slice(i,i+10);
-            const writes=chunk.map(item=>{
-                const type=parseInt(item.category)<4000?'income':'expense';
-                return ref.push({
-                    date:item.date,
-                    category:item.category,
-                    description:item.desc,
-                    amount:item.amount,
-                    type
-                });
-            });
-            await Promise.all(writes);
-            saved+=chunk.length;
-            showStat('⏳ Lagret '+saved+'/'+total+'...');
-        }
-        showStat('✅ Alle '+total+' transaksjoner lagret!',true);
+        await Promise.all(entries.map(e=>ref.push({
+            date:e.date,
+            category:e.category,
+            description:e.description+' (Total)',
+            amount:Math.round(e.amount*100)/100,
+            type:e.type
+        })));
+        
+        const total=selected.length;
+        const groups_count=entries.length;
+        showStat('✅ '+total+' transaksjoner → '+groups_count+' kontoer lagret!',true);
         E('bprev').style.display='none';
         bItems=[];
         setTimeout(()=>showPg('dash'),1200);
     }catch(err){
-        showStat('❌ Feil: '+err.message+' ('+saved+'/'+total+' lagret)');
+        showStat('❌ Feil: '+err.message);
         console.error(err);
     }
     E('btn-lagre').disabled=false;
