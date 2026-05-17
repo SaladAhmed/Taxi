@@ -390,24 +390,49 @@ function parseDNBv4(allWords){
     const lines=Object.values(lineMap).sort((a,b)=>a.page!==b.page?a.page-b.page:a.top-b.top);
     for(const ln of lines) ln.words.sort((a,b)=>a.x0-b.x0);
 
-    // Auto-detect "Ut av konto" and "Inn på konto" column x-positions
-    let utX=310, innX=390;  // DNB default
+    // Auto-detect column X positions from header line
+    let utX=310, innX=390;
     for(const ln of lines){
         const txt=ln.words.map(w=>w.text).join(' ');
         if(/ut av konto/i.test(txt)){
-            const idx=ln.words.findIndex(w=>/^ut$/i.test(w.text));
-            if(idx>=0) utX=ln.words[idx].x0;
-            const idx2=ln.words.findIndex(w=>/^inn$/i.test(w.text));
-            if(idx2>=0) innX=ln.words[idx2].x0;
+            const utW=ln.words.find(w=>/^ut$/i.test(w.text));
+            const innW=ln.words.find(w=>/^inn$/i.test(w.text));
+            if(utW) utX=utW.x0;
+            if(innW) innX=innW.x0;
             break;
         }
     }
 
     const dateRe=/^\d{2}\.\d{2}\.\d{2,4}$/;
-    const amtRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
 
-    // Skip patterns
-    const SKIP=/^(dato|tekst|saldo|side|rentedato|arkivref|bruk|bokf|dronning|pb\.|oslo|telefon|foretaks|dnb\.no|kontoutskrift|internasjonalt|iban|bic|forts\.|renter|innskudd|kreditt|opptjente|skyldige|provisjon|rapportering|henhold|lovdata|returadresse|utskrifts|mohammed|mohamed|møllebakken|4841|arendal|ny saldo|saldo forrige|bedriftskonto)/i;
+    // Skip header/footer lines
+    const SKIP=/^(dato\s|tekst|saldo|side\s?\d|rentedato|arkivref|bruk\s|bokf|dronning|pb\.|oslo|telefon|foretaks|dnb\.no|kontoutskrift|internasjonalt|iban|bic|forts\.|renter,|innskudd|kreditt|opptjente|skyldige|provisjon|rapportering|henhold|lovdata|returadresse|utskriftsnummer|mohammed|mohamed|møllebakken|4841|ny saldo|saldo forrige|bedriftskonto|hittil)/i;
+
+    // Helper: merge numeric tokens into amount
+    // PDF.js splits "10.000,00" into ["10.000", ",00"] or ["10.000,00"]
+    function mergeAmt(words){
+        if(!words.length) return 0;
+        // Concatenate all tokens (they're adjacent)
+        const merged = words.map(w=>w.text).join('');
+        // Remove any trailing date/arkivref patterns
+        const clean = merged.replace(/\d{2}\.\d{2}\.\d{2,4}.*/,'').replace(/\d{6,}.*/,'');
+        // Now parse Norwegian number: dots=thousands, comma=decimal
+        // Pattern: digits with optional dots, then comma+2digits
+        const m = clean.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/);
+        if(m) return norNum(m[1]);
+        // Fallback: just numbers
+        const nums = clean.match(/\d[\d.,]*/g);
+        if(nums) return norNum(nums[0]);
+        return 0;
+    }
+
+    // Helper: is a word an amount-related token?
+    function isAmtToken(text){
+        // Match: "28,45" or "10.000,00" or ",45" or "147.888" etc.
+        return /^\d{1,3}(?:\.\d{3})*(?:,\d{2})?$/.test(text) ||
+               /^,\d{2}$/.test(text) ||
+               /^\d{1,3}(?:\.\d{3})+$/.test(text);
+    }
 
     const txGroups=[];let cur=null;
 
@@ -415,78 +440,73 @@ function parseDNBv4(allWords){
         const lineText=ln.words.map(w=>w.text).join(' ');
         if(SKIP.test(lineText.trim()))continue;
 
-        // Find date words at left side
+        // Find date words at left side (x < utX * 0.45)
         const leftDates=ln.words.filter(w=>dateRe.test(w.text)&&w.x0<utX*0.45);
 
         if(leftDates.length>=2){
-            // New transaction starts
             if(cur)txGroups.push(cur);
             leftDates.sort((a,b)=>a.x0-b.x0);
             const bokDate=convertDate(leftDates[1].text)||convertDate(leftDates[0].text);
 
-            // Description words: left of utX, not dates, not arkivref numbers
+            // Desc: words left of utX, not dates, not long numbers
             const descW=ln.words.filter(w=>
-                w.x1<utX &&
+                w.x1<=utX &&
                 !dateRe.test(w.text) &&
                 !/^\d{6,}$/.test(w.text)
             );
             const desc=descW.map(w=>w.text).join(' ').trim();
 
-            // Amount words: between utX and innX (UT column)
-            const utW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
-            // Amount words: right of innX (INN column)
-            const innW=ln.words.filter(w=>w.x0>=innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
+            // UT column: words between utX and innX
+            const utColW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&isAmtToken(w.text));
+            // INN column: words right of innX
+            const innColW=ln.words.filter(w=>w.x0>=innX-5&&isAmtToken(w.text));
 
-            const utAmt=utW.length?norNum(utW.map(w=>w.text).join('')):0;
-            const innAmt=innW.length?norNum(innW.map(w=>w.text).join('')):0;
+            const utAmt=mergeAmt(utColW);
+            const innAmt=mergeAmt(innColW);
 
             cur={date:bokDate,descParts:[desc],utAmt,innAmt};
 
         }else if(cur){
             // Continuation line
             const descW=ln.words.filter(w=>
-                w.x1<utX &&
+                w.x1<=utX &&
                 !dateRe.test(w.text) &&
-                !/^\d{6,}$/.test(w.text) &&
-                !/^\d{2}\.\d{2}\.\d{2}/.test(w.text)
+                !/^\d{6,}$/.test(w.text)
             );
             if(descW.length){
                 const cont=descW.map(w=>w.text).join(' ').trim();
-                if(cont&&!/^\d+$/.test(cont)) cur.descParts.push(cont);
+                if(cont&&!/^\d+$/.test(cont)&&cont.length>1) cur.descParts.push(cont);
             }
-            // Pick up missing amounts from continuation lines
+            // Pick up amounts missed on first line
             if(cur.utAmt===0){
-                const utW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
-                if(utW.length) cur.utAmt=norNum(utW.map(w=>w.text).join(''));
+                const utColW=ln.words.filter(w=>w.x0>=utX&&w.x0<innX-5&&isAmtToken(w.text));
+                if(utColW.length) cur.utAmt=mergeAmt(utColW);
             }
             if(cur.innAmt===0){
-                const innW=ln.words.filter(w=>w.x0>=innX-5&&amtRe.test(w.text.replace(/\s/g,'')));
-                if(innW.length) cur.innAmt=norNum(innW.map(w=>w.text).join(''));
+                const innColW=ln.words.filter(w=>w.x0>=innX-5&&isAmtToken(w.text));
+                if(innColW.length) cur.innAmt=mergeAmt(innColW);
             }
         }
     }
     if(cur)txGroups.push(cur);
 
-    // Build bItems from txGroups
+    // Build final bItems
     const seen=new Set();
     for(const tx of txGroups){
         if(!tx.date)continue;
         const desc=[...new Set(tx.descParts)].filter(s=>s.length>0).join(' ').replace(/\s+/g,' ').trim();
         if(!desc||desc.length<2)continue;
-        if(/^(saldo|kontoutskrift|bedriftskonto)/i.test(desc))continue;
+        if(/^(saldo|kontoutskrift|bedriftskonto|internasjonalt|bic|iban)/i.test(desc))continue;
 
-        let finalAmt=0, finalType='expense';
+        let finalAmt=0,finalType='expense';
         if(tx.innAmt>0&&tx.utAmt<=0){finalAmt=tx.innAmt;finalType='income';}
         else if(tx.utAmt>0&&tx.innAmt<=0){finalAmt=tx.utAmt;finalType='expense';}
         else if(tx.innAmt>0&&tx.utAmt>0){
-            // Both — use description to decide
             finalType=guessType(desc);
             finalAmt=finalType==='income'?tx.innAmt:tx.utAmt;
         }else continue;
 
         if(finalAmt<0.01||finalAmt>9999999)continue;
-
-        // Override: Agder Taxi = always income
         if(desc.toLowerCase().includes('agder taxi'))finalType='income';
 
         const cat=guesscat(desc,finalType);
