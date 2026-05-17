@@ -513,6 +513,15 @@ function norNum(r){
     return parseFloat(s)||0;
 }
 
+// parseD = alias for convertDate (backward compatibility)
+function parseD(r){
+    if(!r)return null;r=r.trim();
+    let m=r.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];
+    m=r.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);if(m)return'20'+m[3]+'-'+m[2]+'-'+m[1];
+    m=r.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return r;
+    return null;
+}
+
 function guessType(desc){
     const d=(desc||'').toLowerCase();
     if(d.includes('agder taxi'))return'income';
@@ -588,190 +597,6 @@ function showStat(m,ok=false){
     s.style.borderColor=ok?'var(--g)':'var(--b)';
     s.style.color=ok?'var(--g)':'var(--b)';
     s.textContent=m;
-}
-
-// ── MAIN PDF HANDLER ──
-async function handlePDF(inp){
-    const f=inp.files[0];if(!f)return;
-    showStat('📄 Leser PDF...');bItems=[];
-    try{
-        const buf=await f.arrayBuffer();
-        const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-        showStat('📄 '+pdf.numPages+' sider — analyserer...');
-
-        const allItems=[];
-        for(let p=1;p<=pdf.numPages;p++){
-            const pg=await pdf.getPage(p);
-            const con=await pg.getTextContent();
-            const vp=pg.getViewport({scale:1});
-            con.items.forEach(it=>{
-                if(!it.str||!it.str.trim())return;
-                allItems.push({
-                    text:it.str.trim(),
-                    x:Math.round(it.transform[4]),
-                    y:Math.round(vp.height-it.transform[5]),
-                    page:p,
-                    pgW:vp.width
-                });
-            });
-        }
-        parseDNB(allItems);
-    }catch(err){showStat('❌ '+err.message);}
-    inp.value='';
-}
-
-function parseDNB(allItems){
-    bItems=[];
-    if(!allItems.length){showStat('❌ Tom PDF');return;}
-
-    // Sort: page → y → x
-    allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
-
-    // Group into visual lines
-    const lines=[];let curLine=null;
-    for(const it of allItems){
-        if(!curLine||it.page!==curLine.page||Math.abs(it.y-curLine.y)>6){
-            if(curLine)lines.push(curLine);
-            curLine={page:it.page,y:it.y,items:[it],pgW:it.pgW};
-        }else curLine.items.push(it);
-    }
-    if(curLine)lines.push(curLine);
-
-    // Auto-detect column X positions from header line
-    let utCol=-1,innCol=-1;
-    for(const line of lines){
-        const txt=line.items.map(i=>i.text).join(' ');
-        if(/ut av konto/i.test(txt)||/inn p[aå] konto/i.test(txt)){
-            for(const it of line.items){
-                if(/^ut/i.test(it.text))utCol=it.x;
-                if(/^inn/i.test(it.text))innCol=it.x;
-            }
-            break;
-        }
-    }
-    // Fallback column positions
-    if(utCol<0){const pgW=allItems[0]?.pgW||595;utCol=Math.round(pgW*0.55);innCol=Math.round(pgW*0.70);}
-
-    const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})$/;
-    const amtRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
-
-    // Build transaction groups — each group starts with 2 date items
-    const txGroups=[];let curTx=null;
-    for(const line of lines){
-        const fullTxt=line.items.map(i=>i.text).join(' ');
-        // Skip header/footer lines
-        if(/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no|kontoutskrift for|bedriftskonto|saldo forrige|ny saldo|forts\.)/i.test(fullTxt.trim()))continue;
-
-        const dates=line.items.filter(it=>dateRe.test(it.text));
-        const hasDateLeft=dates.some(it=>it.x<(utCol*0.45));
-
-        if(dates.length>=2&&hasDateLeft){
-            if(curTx)txGroups.push(curTx);
-            const sortedDates=dates.sort((a,b)=>a.x-b.x);
-            // Use booking date (second date = the date money actually moved)
-            const bokDate=parseD(sortedDates[1]?.text)||parseD(sortedDates[0]?.text);
-            const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol);
-            const amtItemsOnLine=line.items.filter(it=>it.x>=utCol);
-            curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems:amtItemsOnLine,line};
-        }else if(curTx){
-            // Continuation lines for description or amounts
-            const amtHere=line.items.filter(it=>amtRe.test(it.text)&&it.x>=utCol);
-            const descHere=line.items.filter(it=>!amtRe.test(it.text)&&it.x<utCol&&!dateRe.test(it.text));
-            if(descHere.length)curTx.descParts.push(descHere.map(i=>i.text).join(' '));
-            if(amtHere.length)curTx.amtItems.push(...amtHere);
-        }
-    }
-    if(curTx)txGroups.push(curTx);
-
-    const seen=new Set();
-    for(const tx of txGroups){
-        if(!tx.date)continue;
-
-        // Build description from all parts
-        const desc=[...new Set(tx.descParts)].filter(s=>s.length>1).join(' ').replace(/\s+/g,' ').trim();
-        if(!desc||desc.length<2)continue;
-        if(/^(saldo|dato|tekst|kontoutskrift|bedriftskonto|internasjonalt|bic|iban)/i.test(desc))continue;
-
-        // Find UT (debit) and INN (credit) amounts
-        let utAmt=0,innAmt=0;
-        const norAmts=tx.amtItems.filter(it=>amtRe.test(it.text));
-
-        if(norAmts.length===0){
-            // Try finding amount anywhere in line
-            const found=[...tx.line.items.map(i=>i.text).join(' ').matchAll(/\d{1,3}(?:[.\s]\d{3})*,\d{2}/g)];
-            if(found.length>0){
-                const v=norNum(found[found.length-1][0]);
-                if(v>0){if(guessType(desc)==='income')innAmt=v;else utAmt=v;}
-            }
-        }else if(norAmts.length===1){
-            const v=norNum(norAmts[0].text);
-            // If amount is in INN column → income
-            if(innCol>0&&norAmts[0].x>=innCol)innAmt=v;else utAmt=v;
-        }else{
-            // Multiple amounts — sort by x position
-            norAmts.sort((a,b)=>a.x-b.x);
-            for(const a of norAmts){
-                const v=norNum(a.text);
-                if(innCol>0&&a.x>=innCol)innAmt=v;else utAmt=v;
-            }
-        }
-
-        // Determine final amount and type
-        let finalAmt=0,finalType='expense';
-        if(innAmt>0&&utAmt<=0){finalAmt=innAmt;finalType='income';}
-        else if(utAmt>0&&innAmt<=0){finalAmt=utAmt;finalType='expense';}
-        else if(innAmt>0&&utAmt>0){
-            // Both have values — use description to decide
-            const t=guessType(desc);finalAmt=t==='income'?innAmt:utAmt;finalType=t;
-        }else continue;
-
-        if(finalAmt<0.01||finalAmt>9999999)continue;
-
-        // Override: Agder Taxi = always income
-        if(desc.toLowerCase().includes('agder taxi'))finalType='income';
-
-        const cat=guesscat(desc,finalType);
-
-        // Deduplicate
-        const key=tx.date+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,28);
-        if(!seen.has(key)){
-            seen.add(key);
-            bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});
-        }
-    }
-
-    // Fallback if nothing found
-    if(!bItems.length){parseFallback(allItems);return;}
-
-    showStat('✅ '+bItems.length+' transaksjoner funnet!',true);
-    renderBItems();
-}
-
-// ── Fallback: pure regex on text ──
-function parseFallback(allItems){
-    bItems=[];
-    allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
-    const lines=[];let cur=[],ly=-999,lp=-1;
-    for(const it of allItems){if(it.page!==lp||Math.abs(it.y-ly)>6){if(cur.length)lines.push(cur.map(i=>i.text).join(' '));cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}
-    if(cur.length)lines.push(cur.map(i=>i.text).join(' '));
-    const fullText=lines.join('\n'),seen=new Set();
-    const re=/(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s+([A-Za-z\u00C0-\u00FF][^\n]{2,80?}?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})(?:\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2}))?/gm;
-    let m;
-    while((m=re.exec(fullText))!==null){
-        const dv=parseD(m[2]);if(!dv)continue;
-        const desc=(m[3]||'').trim().replace(/\s+/g,' ');if(desc.length<2)continue;
-        if(/^(dato|tekst|saldo)/i.test(desc))continue;
-        const utAmt=norNum(m[4]),innAmt=m[5]?norNum(m[5]):0;
-        let finalAmt,finalType;
-        if(innAmt>0){finalAmt=innAmt;finalType='income';}else{finalAmt=utAmt;finalType=guessType(desc);}
-        if(desc.toLowerCase().includes('agder taxi'))finalType='income';
-        if(finalAmt<0.01||finalAmt>9999999)continue;
-        const key=dv+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,24);
-        if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:finalAmt,type:finalType,category:guesscat(desc,finalType)});}
-    }
-    if(!bItems.length){showStat('❌ Ingen funnet. Prøv CSV eller manuell.');return;}
-    showStat('✅ '+bItems.length+' (fallback)',true);
-    renderBItems();
 }
 
 // ── Render import preview ──
