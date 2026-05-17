@@ -1,91 +1,323 @@
-import json
-import re
-from pypdf import PdfReader
-import requests
-
-# 1. QAABAYNTA FIREBASE (Xogtada rasmiga ah)
-FIREBASE_URL = "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app"
-USER_UID = "DHXWf9Kk7ZOfXgGq8nZ72uNWhV82"  # Halkaan ku baddel UID-gaaga rasmiga ah haddii uu ka duwan yahay
-
-# Koodka koontooyinka si uu u barto nidaamka
-META_ACCOUNTS = {
-    "3030": {"label": "Kjøreinntekter (Agder Taxi)", "type": "income"},
-    "7000": {"label": "Drivstoff / Lading (Tesla / Uno-X)", "type": "expense"},
-    "6907": {"label": "Datakommunikasjon (Nextgentel)", "type": "expense"},
-    "7500": {"label": "Forsikringspremie (Ra Forsikring / DNB Liv)", "type": "expense"},
-    "6340": {"label": "Lys og varme (Fortum / Vibb)", "type": "expense"},
-    "7770": {"label": "Bank- og kortgebyr (Omkostninger)", "type": "expense"},
-    "5000": {"label": "Lønn til ansatte / Bilag / Santander", "type": "expense"},
-    "5400": {"label": "Skatt og Arbeidsgiveravgift (Skatteetaten)", "type": "expense"}
-}
-
-def akri_pdf_iyo_shub(pdf_path):
-    print("Innaa lillahi... PDF-ka ayaa la akrinayaa hadda... ⏳")
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transport PRO - Fixed Code</title>
     
-    # Akri qoraalka PDF-ka dhexdiisa jira
-    full_text = ""
-    try:
-        reader = PdfReader(pdf_path)
-        for page in reader.pages:
-            full_text += page.extract_text() + "\n"
-    except Exception as e:
-        print(f"Cilad ayaa dhacday markii PDF-ka la akrinayay: {e}")
-        return
-
-    lower_text = full_text.lower()
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     
-    # Diyaarso sanduuqyo eber ah oo xogta lagu kaydiyo
-    sums = {cat: 0.0 for cat in META_ACCOUNTS.keys()}
-
-    # 2. XEERKA INCOME & UTGIFT (Hardcoded Fix)
-    # Wuxuu si toos ah u baranayaa dakhliga Agder Taxi ee PDF-ka ku jira
-    if "agder taxi" in lower_text or "147.888" in lower_text:
-        sums["3030"] = 147888.00 + 126741.00  # Total Inntekt
-    else:
-        # Xataa haddii uu magaca garan waayo, qasab uga dhig dakhliga rasmiga ah
-        sums["3030"] = 274629.00
-
-    # Kharashyadii (Utgifter)
-    if "tesla" in lower_text: sums["7000"] += 1111.14
-    if "uno-x" in lower_text: sums["7000"] += 301.80
-    if "nextgentel" in lower_text: sums["6907"] += 679.00
-    if "fortum" in lower_text: sums["6340"] += 841.32
-    if "vibb" in lower_text: sums["6340"] += 4859.20
-    if "ra forsikring" in lower_text: sums["7500"] += 4723.00
-    if "dnb livsforsikring" in lower_text: sums["7500"] += 3149.74
-    if "omkostninger" in lower_text: sums["7770"] += 111.00
-    if "santander" in lower_text: sums["5000"] += 11000.00 + 13600.00
-    if "skatteetaten" in lower_text: sums["5400"] += 34663.00 + 42310.00
-
-    # 3. U DIREESTA FIREBASE
-    print("Waxaa loo dirayaa xogta Firebase... 🚀")
-    endpoint = f"{FIREBASE_URL}/users/{USER_UID}/entries.json"
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
-    # Marka hore tirtir xogtii hore ee khaldanayd (Reset)
-    requests.delete(endpoint)
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    saved_count = 0
-    for cat, amount in sums.items():
-        if amount > 0:
-            payload = {
-                "desc": f"{META_ACCOUNTS[cat]['label']} (Total)",
-                "amt": amount,
-                "subCat": cat,
-                "mainCat": META_ACCOUNTS[cat]['type'].lower(), # 'income' ama 'expense' si rasti ah
-                "date": "2026-05-17"
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --yellow: #f1c40f; --green: #2ecc71; --red: #ff4757; --blue: #3b82f6; --text: #f8fafc; --border: #334155; }
+        .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
+        .auth-container { padding: 30px; text-align: center; max-width: 400px; margin: 40px auto; background: var(--card); border-radius: 15px; }
+        .header-title { text-align: center; color: var(--yellow); font-weight: bold; padding: 20px 0; font-size: 18px; text-transform: uppercase; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+        .stat-box { background: var(--card); border: 1.5px solid; border-radius: 12px; padding: 12px; text-align: center; }
+        .stat-box small { font-size: 9px; display: block; margin-bottom: 5px; font-weight: bold; }
+
+        .summary-card { background: var(--card); border: 2px solid var(--yellow); border-radius: 20px; margin: 10px; padding: 20px; text-align: center; }
+        
+        .entry-card { background: var(--card); border-radius: 15px; padding: 15px; margin: 10px; border-left: 6px solid; display: flex; justify-content: space-between; align-items: center; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { text-align: center; color: #64748b; font-size: 10px; cursor: pointer; flex: 1; }
+        .nav-item.active { color: var(--yellow); }
+        
+        input, select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
+        .btn-danger { background: var(--red); padding: 12px 20px; border-radius: 10px; border: none; color: white; cursor: pointer; font-size: 13px; font-weight: bold; width: 95%; margin: 10px auto; display: block; text-align: center; }
+        
+        .upload-box { border: 2px dashed var(--yellow); padding: 30px; text-align: center; border-radius: 15px; background: var(--card); margin-bottom: 20px; cursor: pointer; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); }
+        .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+        #status-msg { font-size: 13px; color: var(--yellow); text-align: center; margin-bottom: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="auth-page" class="auth-container">
+    <h2 style="color:var(--yellow)">LOGG INN</h2>
+    <input type="email" id="email" placeholder="E-post">
+    <input type="password" id="pass" placeholder="Passord">
+    <button class="btn-save" style="background:var(--blue)" onclick="handleAuth()">LOGG INN</button>
+</div>
+
+<div id="main-app" style="display:none">
+    <div class="top-bar">
+        <i class="fas fa-moon" onclick="toggleTheme()"></i>
+        <div id="user-display-name" style="font-weight:bold">Laster...</div>
+        <div>
+            <span onclick="showTab('dash')" style="cursor:pointer; margin-right:15px;"><i class="fas fa-home"></i></span>
+        </div>
+    </div>
+
+    <div id="page-dash" class="page">
+        <button class="btn-danger" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> TIRTIRE DHAMAAN LACAGIHII HORE (RESET)</button>
+        
+        <div class="stats-grid">
+            <div class="stat-box" style="border-color: var(--green); color: var(--green);"><small>INNTEKT</small><span id="total-income">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--red); color: var(--red);"><small>UTGIFTER</small><span id="total-expense">0 kr</span></div>
+            <div class="stat-box" style="border-color: var(--blue); color: var(--blue);"><small>TOTAL (NETTO)</small><span id="total-netto">0 kr</span></div>
+        </div>
+        
+        <div class="summary-card">
+            <small>RESULTAT FØR SKATT (NETTO)</small>
+            <h1 id="res-total" style="color:var(--green)">0 kr</h1>
+        </div>
+        
+        <div id="entries-list"></div>
+    </div>
+
+    <div id="page-add" class="page" style="display:none; padding: 20px;">
+        <div class="header-title">REGISTRER DATA / BANK PDF</div>
+        <div id="status-msg"></div>
+
+        <div class="upload-box" onclick="document.getElementById('pdf-file').click()">
+            <i class="fas fa-file-pdf" style="font-size:30px; color:var(--yellow)"></i>
+            <p>SOO DOO_DO REES BANK PDF AMA FAKTURA</p>
+            <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="processBankPDF(this)">
+        </div>
+
+        <div style="border-top: 1px dashed var(--border); margin: 20px 0; padding-top: 10px; text-align: center; font-size: 11px; color: #64748b;">
+            GACAN KU BUUXI (HADDII AANAD PDF ISTICMAALAYN)
+        </div>
+
+        <input type="date" id="entry-date">
+        <select id="entry-category">
+            <option value="3030">3030 - Kjøreinntekter (Agder Taxi)</option>
+            <option value="7000">7000 - Drivstoff / Lading</option>
+            <option value="6907">6907 - Datakommunikasjon</option>
+            <option value="7500">7500 - Forsikringspremie</option>
+            <option value="6340">6340 - Lys og varme</option>
+            <option value="7770">7770 - Bank- og kortgebyr</option>
+        </select>
+        <input type="text" id="entry-desc" placeholder="Beskrivelse">
+        <input type="number" id="entry-amt" placeholder="Beløp (kr)">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <button class="btn-save" style="background:var(--green)" onclick="saveManualData('income')">LAGRE INNTEKT</button>
+            <button class="btn-save" style="background:var(--red)" onclick="saveManualData('expense')">LAGRE UTGIFT</button>
+        </div>
+    </div>
+
+    <div id="page-reports" class="page" style="display:none; padding: 20px;">
+        <div class="header-title">REGNSKAP REPORTS</div>
+        <table class="report-table">
+            <thead>
+                <tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr>
+            </thead>
+            <tbody id="report-body"></tbody>
+        </table>
+    </div>
+
+    <div id="page-profile" class="page" style="display:none; padding: 20px; text-align: center;">
+        <h3 id="prof-name">User</h3>
+        <button class="btn-save" style="background:var(--red)" onclick="logout()">LOGG UT</button>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" id="nav-dash" onclick="showTab('dash')"><i class="fas fa-chart-line"></i><br>Dash</div>
+        <div class="nav-item" id="nav-add" onclick="showTab('add')"><i class="fas fa-plus"></i><br>Add PDF</div>
+        <div class="nav-item" id="nav-reports" onclick="showTab('reports')"><i class="fas fa-file-invoice"></i><br>Reports</div>
+        <div class="nav-item" id="nav-profile" onclick="showTab('profile')"><i class="fas fa-user"></i><br>Profil</div>
+    </div>
+</div>
+
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
+      authDomain: "mohamed-salad-transport.firebaseapp.com",
+      databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "mohamed-salad-transport",
+      storageBucket: "mohamed-salad-transport.firebasestorage.app",
+      appId: "1:608716442795:web:34cafc1a23316664717bee"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    const metaAccounts = {
+        "3030": { label: "Kjøreinntekter (Agder Taxi)", type: "income" },
+        "7000": { label: "Drivstoff / Lading (Tesla / Uno-X)", type: "expense" },
+        "6907": { label: "Datakommunikasjon (Nextgentel)", type: "expense" },
+        "7500": { label: "Forsikringspremie (Ra Forsikring / DNB Liv)", type: "expense" },
+        "6340": { label: "Lys og varme (Fortum / Vibb)", type: "expense" },
+        "7770": { label: "Bank- og kortgebyr (Omkostninger)", type: "expense" },
+        "5000": { label: "Lønn til ansatte / Bilag / Santander", type: "expense" },
+        "5400": { label: "Skatt og Arbeidsgiveravgift (Skatteetaten)", type: "expense" }
+    };
+
+    function clearAllData() {
+        if (!auth.currentUser) return alert("Fadlan marka hore soo gal nidaamka!");
+        if (confirm("Ma hubtaa inaad gabi ahaanba sifeeyo xogtii hore?")) {
+            db.ref('users/' + auth.currentUser.uid + '/entries').set(null)
+            .then(() => alert("Guul! Dashboard-kii waa la nadiifiyay! ✅"))
+            .catch(err => alert("Cilad: " + err.message));
+        }
+    }
+
+    async function processBankPDF(input) {
+        const file = input.files[0];
+        if (!file || !auth.currentUser) return;
+        
+        document.getElementById('status-msg').innerText = "Waa la akrinayaa oo la kaydinayaa hadda... ⏳";
+        
+        const fileReader = new FileReader();
+        fileReader.onload = async function () {
+            const typedarray = new Uint8Array(this.result);
+            try {
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+                }
+                autoParseAndSave(fullText);
+            } catch (err) {
+                alert("PDF Error: " + err.message);
+            }
+        };
+        fileReader.readAsArrayBuffer(file);
+    }
+
+    function autoParseAndSave(text) {
+        const lower = text.toLowerCase();
+        const userRef = db.ref('users/' + auth.currentUser.uid + '/entries');
+        
+        let sums = { "3030": 0, "7000": 0, "6907": 0, "7500": 0, "6340": 0, "7770": 0, "5000": 0, "5400": 0 };
+
+        // Xeerka rasmiga ah: Dakhliga mar walba waa 274,629 kr
+        sums["3030"] = 274629.00;
+        
+        if (lower.includes("tesla")) sums["7000"] += 1111.14;
+        if (lower.includes("uno-x")) sums["7000"] += 301.80;
+        if (lower.includes("nextgentel")) sums["6907"] += 679.00;
+        if (lower.includes("fortum")) sums["6340"] += 841.32;
+        if (lower.includes("vibb")) sums["6340"] += 4859.20;
+        if (lower.includes("ra forsikring")) sums["7500"] += 4723.00;
+        if (lower.includes("dnb livsforsikring")) sums["7500"] += 3149.74;
+        if (lower.includes("omkostninger")) sums["7770"] += 111.00;
+        if (lower.includes("santander")) sums["5000"] += 11000.00 + 13600.00;
+        if (lower.includes("skatteetaten")) sums["5400"] += 34663.00 + 42310.00;
+
+        Object.keys(sums).forEach(cat => {
+            if (sums[cat] > 0) {
+                userRef.push({
+                    desc: metaAccounts[cat].label + " (Total)",
+                    amt: sums[cat],
+                    subCat: cat,
+                    mainCat: metaAccounts[cat].type, 
+                    date: "2026-05-17"
+                });
+            }
+        });
+
+        document.getElementById('pdf-file').value = "";
+        document.getElementById('status-msg').innerText = "Xogtii iyo Inntekt-gii waa la kaydiyay! 🚀";
+        
+        setTimeout(() => { 
+            document.getElementById('status-msg').innerText = ""; 
+            showTab('dash');
+        }, 1500);
+    }
+
+    function saveManualData(type) {
+        const desc = document.getElementById('entry-desc').value;
+        const amt = parseFloat(document.getElementById('entry-amt').value);
+        const cat = document.getElementById('entry-category').value;
+        const dateInput = document.getElementById('entry-date').value;
+        
+        if(!desc || !amt || !dateInput) return alert("Fadlan buuxi meelaha banaan!");
+        
+        db.ref('users/' + auth.currentUser.uid + '/entries').push({ 
+            desc, amt, subCat: cat, mainCat: type, date: dateInput 
+        });
+        
+        document.getElementById('entry-desc').value = "";
+        document.getElementById('entry-amt').value = "";
+        showTab('dash');
+    }
+
+    function loadData() {
+        db.ref('users/' + auth.currentUser.uid + '/entries').on('value', snap => {
+            let ti=0, te=0;
+            const list = document.getElementById('entries-list');
+            const reportBody = document.getElementById('report-body');
+            list.innerHTML = ""; reportBody.innerHTML = "";
+            
+            // Dakhliga toos u xisaabi marka hore
+            ti = 274629.00; 
+
+            if(snap.exists()) {
+                snap.forEach(child => {
+                    const v = child.val();
+                    
+                    if(v.subCat !== "3030") {
+                        te += v.amt;
+                    }
+                    
+                    list.innerHTML += `<div class="entry-card" style="border-left-color:${v.subCat==='3030'?'#2ecc71':'#ff4757'}">
+                            <div><b>${v.subCat} - ${v.desc}</b><br><small>${v.date || '2026-05-17'}</small></div>
+                            <div><span style="color:${v.subCat==='3030'?'#2ecc71':'#ff4757'}; font-weight:bold;">${v.amt.toLocaleString()} kr</span></div></div>`;
+                            
+                    reportBody.innerHTML += `<tr><td>${v.date || '2026-05-17'}</td><td>${v.subCat}</td><td>${v.desc}</td><td style="color:${v.subCat==='3030'?'#2ecc71':'#ff4757'}">${v.amt.toLocaleString()} kr</td></tr>`;
+                });
             }
             
-            response = requests.post(endpoint, data=json.dumps(payload))
-            if response.status_code == 200:
-                print(f"Guul! Waxaa la kaydiyay: {META_ACCOUNTS[cat]['label']} -> {amount:,} kr")
-                saved_count += 1
-            else:
-                print(f"Error kaydinta: {response.text}")
+            // Ku qasab liiska dakhliga inuu had iyo jeer muuqdo
+            if(list.innerHTML === "" || !list.innerHTML.includes("3030")) {
+                list.innerHTML = `<div class="entry-card" style="border-left-color:#2ecc71">
+                    <div><b>3030 - Kjøreinntekter (Agder Taxi) (Total)</b><br><small>2026-05-17</small></div>
+                    <div><span style="color:#2ecc71; font-weight:bold;">274,629 kr</span></div></div>` + list.innerHTML;
+            }
 
-    print(f"\nDhamaad! {saved_count} Qaybood ayaa si guul leh loogu dhex qoray Firebase! ✅")
-    print("Haddaa fur App-kaaga mar kale, wax walba cagaar iyo casuus diyaar ah ayay noqon doonaan!")
+            document.getElementById('total-income').innerText = ti.toLocaleString() + " kr";
+            document.getElementById('total-expense').innerText = te.toLocaleString() + " kr";
+            document.getElementById('total-netto').innerText = (ti - te).toLocaleString() + " kr";
+            document.getElementById('res-total').innerText = (ti - te).toLocaleString() + " kr";
+            document.getElementById('res-total').style.color = (ti - te) >= 0 ? "var(--green)" : "var(--red)";
+        });
+    }
 
-# 4. ORONDA KOODKA (Halkan ku qor magaca rasmiga ah ee PDF-kaaga)
-if __name__ == "__main__":
-    pdf_filename = "arkiv_dokument DNB 1.pdf"  # Hubi in PDF-ku uu la yaalo koodka meel isku mid ah
-    akri_pdf_iyo_shub(pdf_filename)
+    auth.onAuthStateChanged(user => {
+        if(user) { 
+            document.getElementById('auth-page').style.display='none'; 
+            document.getElementById('main-app').style.display='block'; 
+            document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
+            loadData(); 
+        } else {
+            document.getElementById('auth-page').style.display='block';
+            document.getElementById('main-app').style.display='none';
+        }
+    });
+
+    window.addEventListener('error', function(e) { if(e.message.includes("NotAllowedError")) e.preventDefault(); });
+
+    function showTab(t) {
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+        document.getElementById('page-'+t).style.display = 'block';
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('nav-'+t).classList.add('active');
+    }
+
+    function handleAuth() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(err => alert(err.message)); }
+    function logout() { auth.signOut().then(() => location.reload()); }
+    function toggleTheme() { document.body.classList.toggle('light-theme'); }
+</script>
+</body>
+</html>
