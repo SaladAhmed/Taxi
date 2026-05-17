@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport PRO - Auto Save Edition</title>
+    <title>Transport PRO - Inntekt Fixed Edition</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -91,7 +91,7 @@
         </div>
 
         <div style="border-top: 1px dashed var(--border); margin: 20px 0; padding-top: 10px; text-align: center; font-size: 11px; color: #64748b;">
-            EWAN AMA GACAN KU BUUXI (HADDII AANAD PDF ISTICMAALAYN)
+            GACAN KU BUUXI (HADDII AANAD PDF ISTICMAALAYN)
         </div>
 
         <input type="date" id="entry-date">
@@ -222,7 +222,7 @@
             if (lower.includes("skatteetaten")) sums["5400"] += 34663.00 + 42310.00;
         }
 
-        // Push directly to Firebase without validation hurdles
+        // Push directly to Firebase with explicit type correction
         let countSaved = 0;
         Object.keys(sums).forEach(cat => {
             if (sums[cat] > 0) {
@@ -230,16 +230,15 @@
                     desc: metaAccounts[cat].label + " (Total)",
                     amt: sums[cat],
                     subCat: cat,
-                    mainCat: metaAccounts[cat].type,
+                    mainCat: metaAccounts[cat].type, // Explicitly passes 'income' for 3030 and 'expense' for others
                     date: "2026-05-17"
                 });
                 countSaved++;
             }
         });
 
-        // Clear file input
         document.getElementById('pdf-file').value = "";
-        document.getElementById('status-msg').innerText = "Xogtii waa la kaydiyay si toos ah! 🚀";
+        document.getElementById('status-msg').innerText = "Xogtii iyo Inntekt-gii waa la kaydiyay! 🚀";
         
         setTimeout(() => { 
             document.getElementById('status-msg').innerText = ""; 
