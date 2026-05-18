@@ -1,387 +1,82 @@
-<!DOCTYPE html>
-<html lang="no">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport PRO</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TransportPRO">
-<meta name="theme-color" content="#1a56db">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-:root{
-  --bg:#f0f4f8;
-  --sidebar:#0f2044;
-  --sidebar-hover:#1a3260;
-  --sidebar-active:#1a56db;
-  --card:#ffffff;
-  --card2:#f8fafc;
-  --border:#e2e8f0;
-  --text:#0f172a;
-  --text2:#475569;
-  --text3:#94a3b8;
-  --accent:#1a56db;
-  --accent2:#1e40af;
-  --green:#059669;
-  --green-bg:#ecfdf5;
-  --red:#dc2626;
-  --red-bg:#fef2f2;
-  --amber:#d97706;
-  --amber-bg:#fffbeb;
-  --purple:#7c3aed;
-  --purple-bg:#f5f3ff;
-  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
-  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
-  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
-  --radius:8px;
-  --radius-lg:12px;
-  font-family:'DM Sans',-apple-system,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden}
-
-/* LAYOUT */
-.layout{display:flex;min-height:100vh}
-.sidebar{width:220px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:300;transition:.3s}
-.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
-@media(max-width:768px){
-  .sidebar{width:100%;height:56px;flex-direction:row;align-items:center;position:fixed;top:auto;bottom:0;border-top:1px solid rgba(255,255,255,.1)}
-  .main{margin-left:0;padding-bottom:56px}
-  .sidebar-logo,.sidebar-footer{display:none}
-  .nav-label{font-size:10px}
-  .nav-item{flex:1;flex-direction:column;padding:6px 4px;gap:2px;justify-content:center;align-items:center;border-left:none!important;border-bottom:3px solid transparent}
-  .nav-item.active{border-bottom-color:var(--sidebar-active)!important;background:rgba(26,86,219,.15)}
-  .sidebar-nav{flex-direction:row;padding:0;gap:0;flex:1}
-  .nav-section-title{display:none}
-}
-
-/* SIDEBAR */
-.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
-.logo-mark{display:flex;align-items:center;gap:10px}
-.logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.logo-text{color:#fff;font-weight:700;font-size:15px;letter-spacing:-.3px}
-.logo-sub{color:rgba(255,255,255,.4);font-size:11px;margin-top:1px}
-
-.sidebar-nav{display:flex;flex-direction:column;padding:12px 0;gap:2px}
-.nav-section-title{color:rgba(255,255,255,.3);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:10px 16px 4px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:rgba(255,255,255,.6);cursor:pointer;border-left:3px solid transparent;transition:.15s;font-size:13px;font-weight:500;user-select:none}
-.nav-item:hover{background:var(--sidebar-hover);color:#fff}
-.nav-item.active{background:rgba(26,86,219,.25);color:#fff;border-left-color:var(--sidebar-active)}
-.nav-item i{width:16px;text-align:center;font-size:14px;flex-shrink:0}
-
-.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.08)}
-.user-chip{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;border-radius:8px;transition:.15s}
-.user-chip:hover{background:rgba(255,255,255,.06)}
-.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
-.user-name{color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-role{color:rgba(255,255,255,.4);font-size:11px}
-
-/* TOPBAR */
-.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow)}
-.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
-.topbar-actions{display:flex;align-items:center;gap:8px}
-.top-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
-.top-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,86,219,.04)}
-.top-btn.danger{border-color:var(--red);color:var(--red)}
-.top-btn.danger:hover{background:var(--red-bg)}
-
-/* PAGE CONTENT */
-.page-content{padding:20px 24px;flex:1}
-.pg{display:none}
-.pg.active{display:block}
-
-/* KPI CARDS */
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-@media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;box-shadow:var(--shadow)}
-.kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
-.kpi-val{font-size:24px;font-weight:700;font-family:'DM Mono',monospace}
-.kpi-sub{font-size:12px;color:var(--text3);margin-top:4px}
-.kpi.green{border-left:4px solid var(--green)}
-.kpi.red{border-left:4px solid var(--red)}
-.kpi.blue{border-left:4px solid var(--accent)}
-.kpi.amber{border-left:4px solid var(--amber)}
-.kpi.purple{border-left:4px solid var(--purple)}
-.kpi.green .kpi-val{color:var(--green)}
-.kpi.red .kpi-val{color:var(--red)}
-.kpi.blue .kpi-val{color:var(--accent)}
-.kpi.amber .kpi-val{color:var(--amber)}
-.kpi.purple .kpi-val{color:var(--purple)}
-
-/* TABLES */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
-.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:var(--card2);color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border)}
-tbody tr{border-bottom:1px solid var(--border)}
-tbody td{padding:11px 16px;color:var(--text);vertical-align:middle}
-.td-amt{font-family:'DM Mono',monospace;font-weight:600}
-.td-amt.inc{color:var(--green)}
-.td-amt.exp{color:var(--red)}
-.td-cat{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)}
-.td-date{color:var(--text3);font-size:12px}
-
-/* UPLOAD ZONE */
-.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:35px 20px;text-align:center;cursor:pointer;background:var(--card2);display:block;margin-top:15px}
-.upload-zone:hover{border-color:var(--accent);background:rgba(26,86,219,.03)}
-.upload-zone i{font-size:36px;color:var(--red);margin-bottom:10px;display:block}
-
-/* STATUS BAR */
-.status-bar{padding:10px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;margin-bottom:12px;display:none;align-items:center;gap:8px}
-.status-bar.info{background:rgba(26,86,219,.08);color:var(--accent);border:1px solid rgba(26,86,219,.2)}
-.status-bar.success{background:var(--green-bg);color:var(--green);border:1px solid rgba(5,150,105,.2)}
-.status-bar.error{background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2)}
-
-/* AUTH */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2044 0%,#1a56db 100%);padding:20px}
-.auth-card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.form-group{margin-bottom:14px}
-.form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block}
-.form-control{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none}
-.form-control:focus{border-color:var(--accent)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:none;width:100%}
-.btn-primary{background:var(--accent);color:#fff}
-.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
-.hidden{display:none!important}
-</style>
-</head>
-<body>
-
-<div id="pg-auth" class="auth-wrap">
-  <div class="auth-card">
-    <div style="text-align:center;margin-bottom:24px">
-      <h2>Transport PRO</h2>
-      <p style="color:var(--text3)">Logg inn si aad u bilowdo</p>
-    </div>
-    <div class="form-group"><label class="form-label">E-post</label><input id="em" type="email" class="form-control" placeholder="din@epost.no"></div>
-    <div class="form-group"><label class="form-label">Passord</label><input id="pw" type="password" class="form-control" placeholder="••••••••"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Logg inn</button>
-  </div>
-</div>
-
-<div id="app" style="display:none">
-<div class="layout">
-
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-mark">
-        <div class="logo-icon">🚕</div>
-        <div><div class="logo-text">Transport PRO</div></div>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="nav-item active" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i><span class="nav-label">Dashboard</span></div>
-      <div class="nav-item" id="ni-add" onclick="showPg('add')"><i class="fas fa-file-invoice-dollar"></i><span class="nav-label">Bankimport PDF</span></div>
-      <div class="nav-item" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i><span class="nav-label">Logg ut</span></div>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="user-chip">
-        <div class="user-name" id="uname">Laster...</div>
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-    
-    <div id="pg-dash" class="pg active">
-      <div class="topbar">
-        <div class="topbar-title">Dashboard Oversikt</div>
-        <div class="topbar-actions">
-          <button class="top-btn danger" onclick="deleteAllEntries()"><i class="fas fa-trash-alt"></i> Slett alle xogaha</button>
-        </div>
-      </div>
-
-      <div class="page-content">
-        <div class="kpi-row">
-          <div class="kpi green">
-            <div class="kpi-label">Inntekt (Brutto)</div>
-            <div class="kpi-val" id="s-inc">0,00 kr</div>
-          </div>
-          <div class="kpi red">
-            <div class="kpi-label">Utgifter (Kostnader)</div>
-            <div class="kpi-val" id="s-exp">0,00 kr</div>
-          </div>
-          <div class="kpi blue">
-            <div class="kpi-label">Netto (Resultat)</div>
-            <div class="kpi-val" id="s-net">0,00 kr</div>
-          </div>
-        </div>
-
-        <div class="kpi-row">
-          <div class="kpi amber">
-            <div class="kpi-label">MVA 12% (Inntekt)</div>
-            <div class="kpi-val" id="s-mva12">0,00 kr</div>
-          </div>
-          <div class="kpi amber">
-            <div class="kpi-label">MVA 25% (Fradrag)</div>
-            <div class="kpi-val" id="s-mva25">0,00 kr</div>
-          </div>
-          <div class="kpi purple">
-            <div class="kpi-label">Netto Etter MVA</div>
-            <div class="kpi-val" id="s-netmva">0,00 kr</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">Transaksjoner fra PDF</div></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead>
-                <tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Beløp</th></tr>
-              </thead>
-              <tbody id="etbody"></tbody>
-            </table>
-            <div id="etbl-empty" class="empty-state"><i class="fas fa-inbox"></i><h3>Eber ku jira</h3><p>Soo geli PDF kontoutskrift si aad xogta u aragto</p></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="pg-add" class="pg">
-      <div class="topbar"><div class="topbar-title">DNB Bankimport PDF</div></div>
-      <div class="page-content">
-        <div class="card" style="padding:20px">
-          <div id="bstat" class="status-bar info"><i class="fas fa-info-circle"></i><span id="bstat-txt"></span></div>
-          <label for="pdfi" class="upload-zone">
-            <i class="fas fa-file-pdf"></i>
-            <h3>DNB PDF Kontoutskrift</h3>
-            <p>Riix halkan si aad u soo xulato faylka PDF-ka ah</p>
-          </label>
-          <input type="file" id="pdfi" accept=".pdf" onchange="handlePDF(this)" style="display:none">
-        </div>
-      </div>
-    </div>
-
-  </main>
-</div>
-</div>
-
-<script>
-// ========================================== CONFIG & FIREBASE ==========================================
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-  authDomain: "mohamed-salad-transport.firebaseapp.com",
-  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mohamed-salad-transport",
-  storageBucket: "mohamed-salad-transport.firebasestorage.app",
-  appId: "1:608716442795:web:34cafc1a233166641717bee"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const auth = firebase.auth();
-
-const metaAccounts = {
-    "3030": { label: "Kjøreinntekter (Agder Taxi)", type: "income", mva: 0.12 },
-    "7000": { label: "Drivstoff / Lading (Tesla / Uno-X)", type: "expense", mva: 0.25 },
-    "6907": { label: "Datakommunikasjon (Nextgentel)", type: "expense", mva: 0.00 },
-    "7500": { label: "Forsikringspremie (Ra/DNB Liv)", type: "expense", mva: 0.00 },
-    "6340": { label: "Lys og varme (Fortum / Vibb)", type: "expense", mva: 0.25 },
-    "7770": { label: "Bank- og kortgebyr", type: "expense", mva: 0.00 },
-    "5000": { label: "Santander Consumer Bank", type: "expense", mva: 0.00 },
-    "5400": { label: "Skatteetaten (Skatt)", type: "expense", mva: 0.00 }
-};
-
-function showPg(id) {
-    document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    if(document.getElementById('pg-'+id)) document.getElementById('pg-'+id).classList.add('active');
-    if(document.getElementById('ni-'+id)) document.getElementById('ni-'+id).classList.add('active');
-}
-
-function doLogin() {
-    const em = document.getElementById('em').value;
-    const pw = document.getElementById('pw').value;
-    if(!em || !pw) return alert("Fadlan qor email iyo password!");
-    auth.signInWithEmailAndPassword(em, pw).catch(err => alert(err.message));
-}
-
-function doLogout() { auth.signOut().then(() => location.reload()); }
-
-// ========================================== DYNAMIC PDF PARSER (THE ENGINE) ==========================================
-async function handlePDF(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    showStatus("Akrinaya PDF-ka iyo xogta rasmiga ah... ⏳", "info");
-    
-    const fileReader = new FileReader();
-    fileReader.onload = async function () {
-        const typedarray = new Uint8Array(this.result);
-        try {
-            const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(" ") + "\n";
-            }
-            parseBankPDFText(fullText);
-        } catch (err) {
-            showStatus("PDF-ka waa la akrin waayay: " + err.message, "error");
-        }
-    };
-    fileReader.readAsArrayBuffer(file);
-}
-
 function parseBankPDFText(fullText) {
     const user = auth.currentUser;
-    if(!user) return;
-    
+    if (!user) return;
+
     let lines = fullText.split('\n');
     let finalEntries = [];
-    let currentYear = new Date().getFullYear();
+
+    // RegEx aad u saxan oo u goonni ah qaabka PDF-ka DNB
+    // Wuxuu raadinayaa Taariikh (DD.MM.YY) ku xigto Qoraal, ka dibna Lacag dhibic/kooma leh
+    const dnbRegex = /^"(\d{2}\.\d{2}\.\d{2})"\s*,\s*"(\d{2}\.\d{2}\.\d{2})"\s*,\s*"([^"]+)"\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"/;
+    const dnbRegexPage2 = /^"(\d{2}\.\d{2}\.\d{2})"\s*,\s*"([^"]+)"\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"/;
 
     lines.forEach(line => {
-        let lineLower = line.toLowerCase();
-        let targetCat = null;
+        let cleanLine = line.trim();
+        let date = "", text = "", utAvKonto = "", innPaKonto = "";
 
-        if (lineLower.includes("agder taxi")) targetCat = "3030";
-        else if (lineLower.includes("tesla") || lineLower.includes("uno-x") || lineLower.includes("eviny")) targetCat = "7000";
-        else if (lineLower.includes("nextgentel") || lineLower.includes("lyse tele")) targetCat = "6907";
-        else if (lineLower.includes("fortum") || lineLower.includes("vibb")) targetCat = "6340";
-        else if (lineLower.includes("forsikring") || lineLower.includes("dnb livsforsikring")) targetCat = "7500";
-        else if (lineLower.includes("omkostninger")) targetCat = "7770";
-        else if (lineLower.includes("santander")) targetCat = "5000";
-        else if (lineLower.includes("skatteetaten")) targetCat = "5400";
+        // Isku day qaabka bogga 1-aad (oo leh labo taariikhrood oo isku xiga)
+        let match1 = cleanLine.match(dnbRegex);
+        if (match1) {
+            date = match1[2]; // Isticmaal taariikhda bokføring-ka (DD.MM.YY)
+            text = match1[3].replace(/\s+/g, ' ').trim();
+            utAvKonto = match1[4].trim();
+            innPaKonto = match1[5].trim();
+        } else {
+            // Isku day qaabka bogga 2-aad/3-aad (oo mararka qaar hal taariikh ka muuqato bilowga)
+            let match2 = cleanLine.match(dnbRegexPage2);
+            if (match2) {
+                date = match2[1];
+                text = match2[2].replace(/\s+/g, ' ').trim();
+                utAvKonto = match2[3].trim();
+                innPaKonto = match2[4].trim();
+            }
+        }
 
-        if (targetCat) {
-            let amountMatch = line.match(/(\d[\d\s.]*,\d{2})/);
-            let dateMatch = line.match(/(\d{2})\.(\d{2})\.(\d{2})/);
+        // Haddii aan helay taariikh iyo qoraal sax ah, aynu guda galno sifaynta qaybaha
+        if (date && text) {
+            let lineLower = text.toLowerCase();
+            let targetCat = null;
 
-            if (amountMatch) {
-                let cleanAmt = amountMatch[1].replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-                let parsedAmt = parseFloat(cleanAmt);
-                
-                let formattedDate = `${currentYear}-05-17`; 
-                if (dateMatch) {
-                    formattedDate = `20${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+            // Kala saarista qaybaha (Category Matching)
+            if (lineLower.includes("agder taxi")) targetCat = "3030";
+            else if (lineLower.includes("tesla") || lineLower.includes("uno-x") || lineLower.includes("eviny")) targetCat = "7000";
+            else if (lineLower.includes("nextgentel") || lineLower.includes("lyse tele")) targetCat = "6907";
+            else if (lineLower.includes("fortum") || lineLower.includes("vibb")) targetCat = "6340";
+            else if (lineLower.includes("forsikring") || lineLower.includes("dnb livsforsikring")) targetCat = "7500";
+            else if (lineLower.includes("omkostninger")) targetCat = "7770";
+            else if (lineLower.includes("santander")) targetCat = "5000";
+            else if (lineLower.includes("skatteetaten") || lineLower.includes("skatt/arbeidsavgift")) targetCat = "5400";
+
+            if (targetCat) {
+                // Dooro lacagta saxda ah iyada oo la raacayo nidaamka xisaabaadka (Income vs Expense)
+                let rawAmount = (metaAccounts[targetCat].type === "income") ? innPaKonto : utAvKonto;
+
+                if (rawAmount && rawAmount !== "0,00") {
+                    // Nadiifinta lacagta Noorwiijiga (Tusaale: 34.663,00 -> 34663.00)
+                    let cleanAmt = rawAmount.replace(/\./g, '').replace(',', '.');
+                    let parsedAmt = parseFloat(cleanAmt);
+
+                    if (!isNaN(parsedAmt) && parsedAmt > 0) {
+                        // Habaynta taariikhda saxda ah (DD.MM.YY -> YYYY-MM-DD)
+                        let dateParts = date.split('.');
+                        let formattedDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+                        finalEntries.push({
+                            desc: text,
+                            amt: parsedAmt,
+                            subCat: targetCat,
+                            mainCat: metaAccounts[targetCat].type,
+                            date: formattedDate
+                        });
+                    }
                 }
-
-                finalEntries.push({
-                    desc: metaAccounts[targetCat].label,
-                    amt: parsedAmt,
-                    subCat: targetCat,
-                    mainCat: metaAccounts[targetCat].type,
-                    date: formattedDate
-                });
             }
         }
     });
 
+    // Shubista Firebase (Tirtir xogtii hore ee khaldanayd, kuna beddel tan cusub)
     if (finalEntries.length === 0) {
-        showStatus("Wax xog ah oo la aqoonsaday lagama helin PDF-ka!", "error");
+        showStatus("Wax xog ah oo la aqoonsaday lagama helin PDF-ka rasmiga ah!", "error");
         return;
     }
 
@@ -389,91 +84,10 @@ function parseBankPDFText(fullText) {
     userRef.remove().then(() => {
         let promises = finalEntries.map(e => userRef.push(e));
         Promise.all(promises).then(() => {
-            showStatus(`Guul! ${finalEntries.length} Xogood ayaa lagu daray Firebase! ✅`, "success");
-            alert(`Xogtaadii waa la habeeyay! Waxaa la helay ${finalEntries.length} transaksjoner.`);
+            showStatus(`Guul! ${finalEntries.length} Xogood ayaa si sax ah loo habeeyay! ✅`, "success");
+            alert(`Xogtaadii waa la hagaajiyay! Waxaa la helay ${finalEntries.length} transaksjoner.`);
             showPg('dash');
-            document.getElementById('pdfi').value = "";
+            if (typeof loadData === "function") loadData();
         });
     });
 }
-
-function showStatus(msg, type) {
-    const bar = document.getElementById('bstat');
-    const txt = document.getElementById('bstat-txt');
-    bar.className = `status-bar ${type}`;
-    bar.style.display = 'flex';
-    txt.innerText = msg;
-}
-
-// ========================================== FETCH & LIVE CALCULATION ==========================================
-function loadData() {
-    const user = auth.currentUser;
-    if(!user) return;
-    
-    db.ref('users/' + user.uid + '/entries').on('value', snap => {
-        let inc = 0, exp = 0, mva12 = 0, mva25 = 0;
-        const tbody = document.getElementById('etbody');
-        const empty = document.getElementById('etbl-empty');
-        tbody.innerHTML = "";
-        
-        if(!snap.exists()) {
-            empty.classList.remove('hidden');
-            updateKPI(0,0,0,0,0,0);
-            return;
-        }
-        
-        empty.classList.add('hidden');
-        snap.forEach(child => {
-            const v = child.val();
-            if(v.mainCat === 'income') {
-                inc += v.amt;
-                mva12 += v.amt * 0.12;
-            } else {
-                exp += v.amt;
-                if(metaAccounts[v.subCat]?.mva === 0.25) mva25 += v.amt * 0.25;
-            }
-
-            tbody.innerHTML += `<tr>
-                <td class="td-date">${v.date}</td>
-                <td class="td-cat"><b>${v.subCat}</b></td>
-                <td>${v.desc}</td>
-                <td class="td-amt ${v.mainCat==='income'?'inc':'exp'}">${v.amt.toLocaleString('no-NO')} kr</td>
-            </tr>`;
-        });
-        
-        let net = inc - exp;
-        let netMva = net - (mva12 + mva25);
-        updateKPI(inc, exp, net, mva12, mva25, netMva);
-    });
-}
-
-function updateKPI(inc, exp, net, m12, m25, nMva) {
-    document.getElementById('s-inc').innerText = inc.toLocaleString('no-NO') + " kr";
-    document.getElementById('s-exp').innerText = exp.toLocaleString('no-NO') + " kr";
-    document.getElementById('s-net').innerText = net.toLocaleString('no-NO') + " kr";
-    document.getElementById('s-mva12').innerText = m12.toLocaleString('no-NO') + " kr";
-    document.getElementById('s-mva25').innerText = m25.toLocaleString('no-NO') + " kr";
-    document.getElementById('s-netmva').innerText = nMva.toLocaleString('no-NO') + " kr";
-}
-
-function deleteAllEntries() {
-    if(confirm("Ma hubtaa inaad dhamaan transaksiyonada tirtirto?")) {
-        db.ref('users/' + auth.currentUser.uid + '/entries').set(null);
-    }
-}
-
-// ========================================== AUTH STATE LISTENERS ==========================================
-auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('pg-auth').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('uname').innerText = user.email.split('@')[0].toUpperCase();
-        loadData();
-    } else {
-        document.getElementById('pg-auth').style.display = 'flex';
-        document.getElementById('app').style.display = 'none';
-    }
-});
-</script>
-</body>
-</html>
