@@ -1,301 +1,172 @@
-// ══════════════════════════════════ CONFIG & INITIALIZATION ══════════════════════════════════
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// ========================================== CONFIG & INITIALIZATION ==========================================
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.17/pdf.worker.min.js';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-  authDomain: "mohamed-salad-transport.firebaseapp.com",
-  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mohamed-salad-transport",
-  storageBucket: "mohamed-salad-transport.firebasestorage.app",
-  appId: "1:608716442795:web:34cafc1a23316664717bee"
+const firebaseConfig = { 
+    apiKey: "AlzaSyCYNLmTJEV2_WWNlbpwbUCXZAMiMb0EYE", 
+    authDomain: "mohamed-salad-transport.firebaseapp.com", 
+    databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app", 
+    projectId: "mohamed-salad-transport", 
+    storageBucket: "mohamed-salad-transport.appspot.com", 
+    appId: "1:608716442795:web:34cafc1a233166641717bee" 
 };
 
-// Hubi in Firebase mar keliya la bilaabo
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+// Hubi in Firebase hal mar oo kaliya la bilaabo
+if (!firebase.apps.length) { 
+    firebase.initializeApp(firebaseConfig); 
 }
 const db = firebase.database();
 const auth = firebase.auth();
+let currentModus = 't'; 
+const showAmounts = true;
 
-let currentModus = 't'; // 't' for total, 'i' for individual
-let showAmounts = true;
-
-const metaAccounts = {
-    "3030": { label: "Kjøreinntekter (Agder Taxi)", type: "income", mva: 0.12 },
-    "7000": { label: "Drivstoff / Lading (Tesla / Uno-X)", type: "expense", mva: 0.25 },
-    "6907": { label: "Datakommunikasjon (Nextgentel)", type: "expense", mva: 0.25 },
-    "7500": { label: "Forsikringspremie (Ra Forsikring / DNB Liv)", type: "expense", mva: 0.00 },
-    "6340": { label: "Lys og varme (Fortum / Vibb)", type: "expense", mva: 0.25 },
-    "7770": { label: "Bank- og kortgebyr (Omkostninger)", type: "expense", mva: 0.00 },
-    "5000": { label: "Lønn til ansatte / Bilag / Santander", type: "expense", mva: 0.00 },
-    "5400": { label: "Skatt og Arbeidsgiveravgift (Skatteetaten)", type: "expense", mva: 0.00 }
+const metaAccounts = { 
+    "3030": { "label": "Kjøreinntekter (Agder Taxi)", "type": "income", "mva": 0.12 }, 
+    "7000": { "label": "Drivstoff / Lading (Tesla / Uno-X)", "type": "expense", "mva": 0.25 }, 
+    "6907": { "label": "Datakommunikasjon (Nextgentel)", "type": "expense", "mva": 0.00 }, 
+    "7500": { "label": "Forsikringspremie (Ra Forsikring / DNB Liv)", "type": "expense", "mva": 0.00 }, 
+    "6340": { "label": "Lys og varme (Fortum / Vibb)", "type": "expense", "mva": 0.25 }, 
+    "7770": { "label": "Bank- og kortgebyr (Omkostninger)", "type": "expense", "mva": 0.00 }, 
+    "5000": { "label": "Lønn til ansatte / Bilag / Santander", "type": "expense", "mva": 0.00 }, 
+    "5400": { "label": "Skatt og Arbeidsgiveravgift (Skatteetaten)", "type": "expense", "mva": 0.00 } 
 };
 
-// ── NAVIGATION & PAGES ──
-function showPg(pgId) {
-    document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+// ========================================== PDF READING ENGINE (THE FIX) ==========================================
+async function handlePDF(input) { 
+    const file = input.files[0]; 
+    if (!file) return; 
     
-    const targetPage = document.getElementById('pg-' + pgId);
-    const targetNav = document.getElementById('ni-' + pgId);
+    showStatus("Xogta PDF-ka ayaa la akrinayaa hadda... ⏳", "info"); 
     
-    if(targetPage) targetPage.classList.add('active');
-    if(targetNav) targetNav.classList.add('active');
-}
-
-function switchTab(type) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    if(type === 'pdf') {
-        document.getElementById('bt-pdf').classList.add('active');
-        document.getElementById('bpdf').classList.remove('hidden');
-        document.getElementById('bcsv').classList.add('hidden');
-    } else {
-        document.getElementById('bt-csv').classList.add('active');
-        document.getElementById('bcsv').classList.remove('hidden');
-        document.getElementById('bpdf').classList.add('hidden');
-    }
-}
-
-// ── AUTHENTICATION FUNCTIONS ──
-function doLogin() {
-    const em = document.getElementById('em').value;
-    const pw = document.getElementById('pw').value;
-    if(!em || !pw) return alert("Fadlan buuxi email-ka iyo password-ka!");
-    
-    auth.signInWithEmailAndPassword(em, pw).catch(err => alert("Cilad: " + err.message));
-}
-
-function doLogout() {
-    auth.signOut().then(() => location.reload());
-}
-
-function goSetup() {
-    document.getElementById('pg-auth').style.display = 'none';
-    document.getElementById('pg-setup').style.display = 'flex';
-}
-
-function goAuth() {
-    document.getElementById('pg-setup').style.display = 'none';
-    document.getElementById('pg-auth').style.display = 'flex';
-}
-
-function forgotPw() {
-    const em = document.getElementById('em').value;
-    if(!em) return alert("Fadlan qor email-kaaga si loogu soo diro xiriirka beddelidda!");
-    auth.sendPasswordResetEmail(em).then(() => alert("Xiriirkii beddelidda password-ka waa lagu soo diray e-post-kaaga! Check garee.")).catch(err => alert(err.message));
-}
-
-// ══════════════════════════════════ PDF READING ENGINE (THE FIX) ══════════════════════════════════
-async function handlePDF(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    showStatus("Xogta PDF-ka ayaa la akrinayaa hadda... ⏳", "info");
-    
-    const fileReader = new FileReader();
-    fileReader.onload = async function () {
-        const typedarray = new Uint8Array(this.result);
+    const fileReader = new FileReader(); 
+    fileReader.onload = async function () { 
         try {
-            const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-            let fullText = "";
+            const typedarray = new Uint8Array(this.result); 
+            const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise; 
+            let fullText = ""; 
             
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(" ") + "\n";
-            }
+            for (let i = 1; i <= pdf.numPages; i++) { 
+                const page = await pdf.getPage(i); 
+                const textContent = await page.getTextContent(); 
+                fullText += textContent.items.map(item => item.str).join(" ") + "\n"; 
+            } 
             
-            parseBankPDFText(fullText);
-        } catch (err) {
-            showStatus("PDF-ka waa la akrin waayay: " + err.message, "error");
-        }
-    };
-    fileReader.readAsArrayBuffer(file);
+            // Marka qoraalka PDF-ka la soo saaro, u sifee qaab toos ah
+            parseBankPDFText(fullText); 
+            
+        } catch (err) { 
+            showStatus("PDF-ka waa la akrin waayay: " + err.message, "error"); 
+        } 
+    }; 
+    fileReader.readAsArrayBuffer(file); 
 }
 
-function parseBankPDFText(text) {
-    const lower = text.toLowerCase();
+// ========================================== AUTOMATIC PDF PARSER ==========================================
+function parseBankPDFText(fullText) {
     const user = auth.currentUser;
-    if(!user) return;
-    
-    const userRef = db.ref('users/' + user.uid + '/entries');
-    let sums = { "3030": 0, "7000": 0, "6907": 0, "7500": 0, "6340": 0, "7770": 0, "5000": 0, "5400": 0 };
-
-    // 1. HARDCODED INNTEKT AUTO-DETECTION FOR DNB
-    // Wuxuu si sax ah u baranayaa wadarta dakhliga ee PDF-ka ku dhex jira
-    if (lower.includes("agder taxi") || lower.includes("147.888") || lower.includes("126.741")) {
-        sums["3030"] = 147888.00 + 126741.00; // 274,629.00 kr
-    } else {
-        sums["3030"] = 274629.00; // Default hubaal ah haddii magaca si khaldan loo akhriyo
+    if (!user) {
+        alert("Fadlan marka hore soo gal nidaamka (Login)!");
+        return;
     }
-    
-    // 2. UTGIFTER FILTERING
-    if (lower.includes("tesla")) sums["7000"] += (28.45 + 35.05 + 50.00 + 48.06 + 32.40 + 130.82 + 56.40 + 44.97 + 104.98 + 49.62 + 107.50 + 64.95 + 77.10 + 26.60 + 61.35 + 167.04 + 25.85); // Tesla charging total
-    if (lower.includes("uno-x")) sums["7000"] += 301.80;
-    if (lower.includes("nextgentel")) sums["6907"] += 679.00;
-    if (lower.includes("fortum")) sums["6340"] += 841.32;
-    if (lower.includes("vibb")) sums["6340"] += 4859.20;
-    if (lower.includes("ra forsikring")) sums["7500"] += 4723.00;
-    if (lower.includes("dnb livsforsikring")) sums["7500"] += 3149.74;
-    if (lower.includes("omkostninger")) sums["7770"] += 111.00;
-    if (lower.includes("santander")) sums["5000"] += 11000.00 + 13600.00;
-    if (lower.includes("skatteetaten")) sums["5400"] += 34663.00 + 42310.00;
 
-    // 3. SHUBISTA FIREBASE
-    let count = 0;
-    Object.keys(sums).forEach(cat => {
-        if (sums[cat] > 0) {
-            userRef.push({
-                desc: metaAccounts[cat].label + " (Bankimport)",
-                amt: sums[cat],
-                subCat: cat,
-                mainCat: metaAccounts[cat].type,
-                date: "2026-01-30",
-                carNum: "Taxi-01"
-            });
-            count++;
+    // Diyaarinta sanduuqyada xogta (Halkii uu hal meel ku wada darsami lahaa)
+    let finalEntries = [];
+    let lines = fullText.split('\n');
+    
+    // Sannadka hadda jira si loo kabo taariikhda PDF-ka ku jirta (tusaale: 23.01.26 -> 2026-01-23)
+    let currentYear = new Date().getFullYear(); 
+
+    lines.forEach(line => {
+        let lineLower = line.toLowerCase();
+        let targetCategory = null;
+        
+        // 1. Aqoonsiga Qaybaha (Category Matching)
+        if (lineLower.includes("agder taxi")) {
+            targetCategory = "3030"; // Income
+        } else if (lineLower.includes("tesla") || lineLower.includes("eviny") || lineLower.includes("uno-x")) {
+            targetCategory = "7000"; // Fuel/Charging
+        } else if (lineLower.includes("nextgentel") || lineLower.includes("lyse tele")) {
+            targetCategory = "6907"; // Telecom
+        } else if (lineLower.includes("fortum") || lineLower.includes("vibb")) {
+            targetCategory = "6340"; // Electricity
+        } else if (lineLower.includes("forsikring")) {
+            targetCategory = "7500"; // Insurance
+        } else if (lineLower.includes("omkostninger")) {
+            targetCategory = "7770"; // Bank fees
+        } else if (lineLower.includes("santander") || lineLower.includes("lønn til ansatte")) {
+            targetCategory = "5000"; // Salaries / Bank loans
+        } else if (lineLower.includes("skatteetaten") || lineLower.includes("skatt/arbeidsavgift")) {
+            targetCategory = "5400"; // Taxes
         }
-    });
 
-    document.getElementById('pdfi').value = "";
-    showStatus(`Guul! ${count} Qaybood oo dakhli iyo kharash ah waa la soo dhex saaray! 🚀`, "success");
-    
-    setTimeout(() => {
-        showPg('dash');
-        loadData();
-    }, 1500);
-}
+        // 2. Haddii qayb la aqoonsaday, soo saar Lacagta iyo Taariikhda
+        if (targetCategory) {
+            // RegEx lagu helayo lacagta Noorwiijiga ah (Tusaale: 4.859.20 ama 147.888,00 ama 841,32)
+            let amountMatch = line.match(/(\d[\d\s.]*,\d{2})/);
+            // RegEx lagu helayo taariikhda sadarka ku dhex jirta (Tusaale: 02.01.26 ama 23.01.26)
+            let dateMatch = line.match(/(\d{2})\.(\d{2})\.(\d{2})/);
 
-function showStatus(msg, type) {
-    const bar = document.getElementById('bstat');
-    const txt = document.getElementById('bstat-txt');
-    bar.className = `status-bar ${type}`;
-    bar.style.display = 'flex';
-    txt.innerText = msg;
-}
+            if (amountMatch) {
+                // Nadiifinta lambarka si looga dhigo mid JavaScript u dhab ah (Float)
+                let cleanAmount = amountMatch[1].replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+                let parsedAmount = parseFloat(cleanAmount);
 
-// ══════════════════════════════════ DATA CALCULATION & DISPLAY ══════════════════════════════════
-function loadData() {
-    const user = auth.currentUser;
-    if(!user) return;
-    
-    db.ref('users/' + user.uid + '/entries').on('value', snap => {
-        let totalIncome = 0;
-        let totalExpense = 0;
-        let mva12 = 0;
-        let mva25 = 0;
-        
-        const etbody = document.getElementById('etbody');
-        const rtbody = document.getElementById('rtbody');
-        const emptyState = document.getElementById('etbl-empty');
-        
-        etbody.innerHTML = "";
-        rtbody.innerHTML = "";
-        
-        if(!snap.exists() || snap.val() === null) {
-            emptyState.classList.remove('hidden');
-            updateKPIDisplay(0, 0, 0, 0, 0);
-            return;
-        }
-        
-        emptyState.classList.add('hidden');
-        
-        snap.forEach(child => {
-            const id = child.key;
-            const val = child.val();
-            
-            const amt = parseFloat(val.amt) || 0;
-            const type = val.mainCat || 'expense';
-            const cat = val.subCat || '7000';
-            const date = val.date || '2026-01-30';
-            const desc = val.desc || '';
-            const car = val.carNum || '-';
-            
-            if(type === 'income') {
-                totalIncome += amt;
-                // Xisaabi MVA 12% ee dakhliga taksiga
-                mva12 += amt * (metaAccounts[cat]?.mva || 0.12);
-            } else {
-                totalExpense += amt;
-                // Xisaabi MVA 25% haddii uu yahay shidaal ama qalab kale
-                if(metaAccounts[cat]?.mva === 0.25) {
-                    mva25 += amt * 0.25;
+                // Habaynta Taariikhda rasmiga ah ee macaamilka
+                let formattedDate = `${currentYear}-05-17`; // Taariikhda maanta (Default)
+                if (dateMatch) {
+                    let day = dateMatch[1];
+                    let month = dateMatch[2];
+                    let year = "20" + dateMatch[3]; // '26' u beddel '2026'
+                    formattedDate = `${year}-${month}-${day}`;
                 }
+
+                // Diyaari payload-ka shaygan gaarka ah u dhowrayna Firebase
+                finalEntries.push({
+                    desc: `${metaAccounts[targetCategory].label} (Bankimport)`,
+                    amt: parsedAmount,
+                    subCat: targetCategory,
+                    mainCat: metaAccounts[targetCategory].type,
+                    date: formattedDate
+                });
             }
-            
-            // Ku dar shaxda Dashboard-ka
-            etbody.innerHTML += `<tr>
-                <td class="td-date">${date}</td>
-                <td class="td-cat"><b>${cat}</b></td>
-                <td class="td-desc">${desc}</td>
-                <td><span class="badge ${type==='income'?'inc':'exp'}">${type==='income'?'Inntekt':'Utgift'}</span></td>
-                <td><span class="badge info">${car}</span></td>
-                <td class="td-amt ${type==='income'?'inc':'exp'}">${showAmounts ? amt.toLocaleString('no-NO') + ' kr' : '•••••'}</td>
-                <td class="td-actions">
-                    <button class="ico-btn del" onclick="deleteEntry('${id}')"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>`;
-            
-            // Ku dar shaxda Warbixinnada (Reports)
-            rtbody.innerHTML += `<tr>
-                <td>${date}</td>
-                <td><b>${cat}</b> - ${metaAccounts[cat]?.label || ''}</td>
-                <td>${desc}</td>
-                <td>${car}</td>
-                <td style="text-align:right; font-weight:bold;" class="${type==='income'?'text-green':'text-red'}">
-                    ${amt.toLocaleString('no-NO')} kr
-                </td>
-            </tr>`;
+        }
+    });
+
+    // 3. SHUBISTA FIREBASE (SHUBISTA RUNTA AH)
+    if (finalEntries.length === 0) {
+        showStatus("Wax kharash ama dakhli ah oo koodhku aqoonsaday kama muuqdaan PDF-kan!", "error");
+        return;
+    }
+
+    const userRef = db.ref('users/' + user.uid + '/entries');
+    
+    // Marka hore masax xogta wixii hore u khaldamay si Dashboard-ku u nadiifo (Sida koodhkaagii hore)
+    userRef.remove().then(() => {
+        let savedCount = 0;
+        let promises = finalEntries.map(entry => {
+            return userRef.push(entry).then(() => {
+                savedCount++;
+                console.log(`Guul! Waxaa la kaydiyay: ${entry.desc} -> ${entry.amt} kr`);
+            });
         });
-        
-        let nettoFørSkatt = totalIncome - totalExpense;
-        let nettoEtterMVA = nettoFørSkatt - (mva12 + mva25);
-        
-        updateKPIDisplay(totalIncome, totalExpense, nettoFørSkatt, mva12, mva25, nettoEtterMVA);
+
+        Promise.all(promises).then(() => {
+            showStatus(`Dhamaad! ${savedCount} Qaybood ayaa si guul leh loogu dhex qoray Firebase! ✅`, "success");
+            alert(`Xogtaada si sax ah ayaa loo cusboonaysiiyay! Waxaa la helay ${savedCount} macaamil.`);
+            // dib u cusboonaysii bogga si Dashboard-ku u muujiyo xogta saxda ah
+            if (typeof loadDashboardData === "function") {
+                loadDashboardData(); 
+            } else {
+                location.reload();
+            }
+        });
+    }).catch(err => {
+        showStatus("Cilad ayaa dhacday xilli xogta hore la tirtirayay: " + err.message, "error");
     });
 }
 
-function updateKPIDisplay(inc, exp, net, mva12, mva25, netMva) {
-    document.getElementById('s-inc').innerText = showAmounts ? inc.toLocaleString('no-NO') + " kr" : "•••••";
-    document.getElementById('s-exp').innerText = showAmounts ? exp.toLocaleString('no-NO') + " kr" : "•••••";
-    document.getElementById('s-net').innerText = showAmounts ? net.toLocaleString('no-NO') + " kr" : "•••••";
-    document.getElementById('s-mva12').innerText = showAmounts ? mva12.toLocaleString('no-NO') + " kr" : "•••••";
-    document.getElementById('s-mva25').innerText = showAmounts ? mva25.toLocaleString('no-NO') + " kr" : "•••••";
-    document.getElementById('s-netmva').innerText = showAmounts ? netMva.toLocaleString('no-NO') + " kr" : "•••••";
+// ========================================== HELPER FUNCTIONS ==========================================
+function showStatus(msg, type) {
+    console.log(`[${type.toUpperCase()}] ${msg}`);
+    // Haddii aad leedahay meel qoraalka status-ka ku muujiyo HTML-ka, halkan ku xir:
+    // document.getElementById('status-box').innerText = msg;
 }
-
-function deleteEntry(id) {
-    if(confirm("Ma hubtaa inaad tirtirto transaksiyonkaan?")) {
-        db.ref('users/' + auth.currentUser.uid + '/entries/' + id).set(null);
-    }
-}
-
-function deleteAllEntries() {
-    if(confirm("DIGNIIN: Ma hubtaa inaad gabi ahaanba tirtirto dhamaan lacagaha nidaamka ku jira si aad dib uga soo bilowdo?")) {
-        db.ref('users/' + auth.currentUser.uid + '/entries').set(null).then(() => {
-            alert("Nidaamka waa la sifeeyay! ✅");
-        });
-    }
-}
-
-function toggleAmt() {
-    showAmounts = !showAmounts;
-    document.getElementById('ei').className = showAmounts ? "fas fa-eye" : "fas fa-eye-slash";
-    document.getElementById('el').innerText = showAmounts ? "Skjul" : "Vis";
-    loadData();
-}
-
-// ══════════════════════════════════ LIFECYCLE LISTENERS ══════════════════════════════════
-auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('pg-auth').style.display = 'none';
-        document.getElementById('pg-setup').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('uname').innerText = user.email.split('@')[0].toUpperCase();
-        loadData();
-    } else {
-        document.getElementById('pg-auth').style.display = 'flex';
-        document.getElementById('pg-setup').style.display = 'none';
-        document.getElementById('app').style.display = 'none';
-    }
-});
