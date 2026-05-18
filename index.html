@@ -32,19 +32,16 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding-bottom: 60px; }
 
-/* NAVBAR BOTTOM FOR MOBILE & DESKTOP FLOATING */
 .navbar { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
 .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: 500; gap: 4px; transition: 0.2s; }
 .nav-item.active, .nav-item:hover { color: var(--text); }
 .nav-item i { font-size: 18px; }
 .nav-item.active i { color: var(--yellow); }
 
-/* CONTENT CONTAINER */
 .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 16px; }
 .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 4px 0; }
 .btn-reset { background: #dc2626; color: white; border: none; padding: 12px; border-radius: var(--radius); width: 100%; font-weight: 600; font-size: 13px; cursor: pointer; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2); }
 
-/* KPI CARDS GRID */
 .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
 .kpi-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 12px; text-align: center; }
 .kpi-title { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
@@ -55,13 +52,11 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .kpi-card.utgifter { border-color: rgba(239, 68, 68, 0.3); }
 .kpi-card.netto { border-color: rgba(37, 99, 235, 0.3); }
 
-/* LARGE RESULT CARD */
 .result-card { background: var(--card); border: 2px solid var(--yellow); border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 20px; }
 .result-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
 .result-value { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700; color: var(--green); }
 .result-value.negative { color: var(--red); }
 
-/* LIST ITEMS FOR TRANSACTIONS */
 .tx-list { display: flex; flex-direction: column; gap: 10px; }
 .tx-item { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--red); }
 .tx-item.income { border-left-color: var(--green); }
@@ -71,7 +66,6 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .tx-amount { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; color: var(--red); }
 .tx-item.income .tx-amount { color: var(--green); }
 
-/* UPLOAD & MANUAL STYLING */
 .upload-box { border: 2px dashed var(--card-border); background: var(--card); border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; margin-top: 15px; display: block; }
 .upload-box i { font-size: 40px; color: var(--yellow); margin-bottom: 12px; }
 .status-bar { padding: 12px; border-radius: var(--radius); font-size: 13px; margin-bottom: 15px; display: none; align-items: center; gap: 10px; }
@@ -122,7 +116,6 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 </nav>
 
 <script>
-// ========================================== CONFIGURATION ==========================================
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const firebaseConfig = {
@@ -136,13 +129,13 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const USER_UID = "DHXWf9Kk7ZOfXgGq8nZ72uNWhV82"; // Aqoonsigaaga rasmiga ah ee Firebase
+const USER_UID = "DHXWf9Kk7ZOfXgGq8nZ72uNWhV82";
 
 const accountMeta = {
   "3030": { label: "Kjøreinntekter (Agder Taxi)", type: "income" },
   "7000": { label: "Visa Tesla Inc.", type: "expense" },
   "6907": { label: "Datakommunikasjon (Nextgentel)", type: "expense" },
-  "7500": { label: "Forsikringspremie (DNB Livsforsikring)", type: "expense" },
+  "7500": { label: "Forsikringspremie (DNB Livsforsikring / Ra)", type: "expense" },
   "6340": { label: "Lys og varme (Fortum / Vibb)", type: "expense" },
   "7770": { label: "Bank- og kortgebyr (Omkostninger)", type: "expense" },
   "5000": { label: "Santander Consumer Bank", type: "expense" },
@@ -156,7 +149,6 @@ function switchPage(pageId) {
   document.getElementById('btn-' + pageId).classList.add('active');
 }
 
-// ========================================== DNB PDF ENGINE (LINE-BY-LINE) ==========================================
 async function processPDF(input) {
   const file = input.files[0];
   if (!file) return;
@@ -173,47 +165,53 @@ async function processPDF(input) {
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
+        // Ku dar meel bannaan si qoraaladu u kala jabaan si sax ah
         fullText += textContent.items.map(item => item.str).join(" ") + "\n";
       }
 
       parseAndSaveDNB(fullText);
     } catch (err) {
-      updateStatus("PDF-ka waa la akrin waayay: " + err.message, "error");
+      updateStatus("Cilad baa dhacday: " + err.message, "error");
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function parseAndSaveDNB(text) {
-  let lines = text.split('\n');
+  // Nadaafi qoraalka oo u kala jaf sadar kasta oo DNB ah
+  let textCleaned = text.replace(/\"/g, ''); 
+  let lines = textCleaned.split('\n');
   let extractedEntries = [];
 
   lines.forEach(line => {
     let cleanLine = line.trim();
-    
-    // Raadi taariikhda qaabkeeda rasmiga ah (Tusaale: 02.01.26 ama 31.12.25)
-    let dateMatch = cleanLine.match(/(\d{2})\.(\d{2})\.(\d{2})/);
+    if (!cleanLine) return;
+
+    // Raadi taariikhda bilowga ah ee qaabka (DD.MM.YY) - Tusaale: 23.01.26
+    let dateMatch = cleanLine.match(/^(\d{2})\.(\d{2})\.(\d{2})/);
     if (!dateMatch) return;
 
     let lineLower = cleanLine.toLowerCase();
     let detectedCat = null;
 
-    // Aqoonsiga xisaabaadka iyadoo la raacayo qoraalka DNB rasmiga ah
+    // Aqoonsiga qaybaha ganacsiga iyadoo la raacayo PDF-kaaga
     if (lineLower.includes("agder taxi")) detectedCat = "3030";
-    else if (lineLower.includes("tesla")) detectedCat = "7000";
+    else if (lineLower.includes("tesla") || lineLower.includes("uno-x") || lineLower.includes("eviny")) detectedCat = "7000";
     else if (lineLower.includes("nextgentel") || lineLower.includes("lyse tele")) detectedCat = "6907";
     else if (lineLower.includes("fortum") || lineLower.includes("vibb")) detectedCat = "6340";
-    else if (lineLower.includes("forsikring") || lineLower.includes("dnb livsforsikring")) detectedCat = "7500";
+    else if (lineLower.includes("forsikring") || lineLower.includes("ra forsikring") || lineLower.includes("dnb livsforsikring")) detectedCat = "7500";
     else if (lineLower.includes("omkostninger")) detectedCat = "7770";
     else if (lineLower.includes("santander")) detectedCat = "5000";
     else if (lineLower.includes("skatteetaten") || lineLower.includes("skatt/arbeidsavgift")) detectedCat = "5400";
 
     if (detectedCat) {
-      // RegEx lagu helayo lacagta dhamaadka sadarka (Tusaale: 124,14 ama 4.859.20)
-      let amountMatch = cleanLine.match(/(\d[\d\s.]*,\d{2})/);
-      
-      if (amountMatch) {
-        let cleanAmt = amountMatch[1].replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+      // Soo saar dhamaan lacagaha u qaabaysan lacagta Noorwiijiga (Tusaale: 4.859,20 ama 147.888,00)
+      let amounts = cleanLine.match(/(\d[\d\s.]*,\d{2})/g);
+      if (amounts && amounts.length > 0) {
+        // Qaado lacagta u dambaysa ee sadarka ku xusan (waa lacagta dhabta ah ee transaksiyonka)
+        let targetAmountRaw = amounts[0]; 
+        
+        let cleanAmt = targetAmountRaw.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
         let parsedAmt = parseFloat(cleanAmt);
 
         if (!isNaN(parsedAmt) && parsedAmt > 0) {
@@ -232,16 +230,16 @@ function parseAndSaveDNB(text) {
   });
 
   if (extractedEntries.length === 0) {
-    updateStatus("Wax xog ah oo la aqoonsaday lagama helin PDF-kan!", "error");
+    updateStatus("Waa la ogaaday laakiin wax xog ah oo la aqoonsaday lagama helin PDF-kan!", "error");
     return;
   }
 
-  // Tirtir xogtii hore ee khaldanayd, kuna beddel tan cusub oo rasmiga ah
+  // U soo rido Firebase
   const userRef = db.ref('users/' + USER_UID + '/entries');
   userRef.remove().then(() => {
     let promises = extractedEntries.map(entry => userRef.push(entry));
     Promise.all(promises).then(() => {
-      updateStatus(`Guul! ${extractedEntries.length} Qaybood ayaa la kaydiyay! ✅`, "success");
+      updateStatus(`Guul! ${extractedEntries.length} Xogood ayaa la kaydiyay! ✅`, "success");
       alert(`Xogtaadii waa la hagaajiyay! Waxaa la helay ${extractedEntries.length} transaksjoner.`);
       switchPage('dash');
       document.getElementById('pdf-file').value = "";
@@ -257,7 +255,6 @@ function updateStatus(msg, type) {
   txt.innerText = msg;
 }
 
-// ========================================== DATABASE LISTENER & DISPLAY ==========================================
 function listenToDatabase() {
   db.ref('users/' + USER_UID + '/entries').on('value', snapshot => {
     let totalIn = 0, totalOut = 0;
@@ -314,7 +311,6 @@ function clearDatabase() {
   }
 }
 
-// Start watching data immediately
 listenToDatabase();
 </script>
 </body>
