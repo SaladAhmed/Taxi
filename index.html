@@ -1288,48 +1288,66 @@ function bAll(){document.querySelectorAll('#bitems .import-item').forEach(el=>el
 function bNone(){document.querySelectorAll('#bitems .import-item').forEach(el=>el.classList.remove('sel'));updateBBtn();}
 
 async function importBank(){
-  const u=auth.currentUser;if(!u)return;
+  const u=auth.currentUser;
+  if(!u){alert('Ma gelin nidaamka!');return;}
+  
+  // Debug: check bItems
+  console.log('importBank called, bItems.length:', bItems.length);
+  
   const selected=[];
   document.querySelectorAll('#bitems .import-item.sel').forEach(el=>{
     const i=parseInt(el.id.replace('bi-',''));
     if(!isNaN(i)&&bItems[i])selected.push(bItems[i]);
   });
-  if(!selected.length){showBS('Ingen valgt!','error');return;}
+  
+  console.log('Selected:', selected.length);
+  
+  if(!selected.length){
+    // Try all bItems directly
+    if(bItems.length===0){
+      showBS('bItems waa madhan — PDF dib geli!','error');
+      return;
+    }
+    bItems.forEach(item=>selected.push(item));
+  }
 
   const total=selected.length;
-  showBS('Lagrer 0/'+total+'...','info');
+  showBS('Lagrer '+total+' transaksjoner...','info');
   E('btn-bi').disabled=true;
 
-  // Detach existing listener to avoid partial renders during save
-  const u2=auth.currentUser;
-  db.ref('entries/'+u2.uid).off();
-
-  let saved=0;
   try{
-    const ref=db.ref('entries/'+u2.uid);
+    const ref=db.ref('entries/'+u.uid);
+    // Detach listener
+    ref.off();
+    
+    let saved=0;
     for(const item of selected){
       const type=parseInt(item.category)<4000?'income':'expense';
       await ref.push({
         date:item.date||'',
         category:item.category||'7790',
-        description:item.desc||'',
-        amount:item.amount||0,
+        description:item.desc||item.description||'',
+        amount:parseFloat(item.amount)||0,
         type
       });
       saved++;
       showBS('Lagrer '+saved+'/'+total+'...','info');
     }
+    
     showBS('✅ Alle '+total+' lagret!','success');
     CL(E('bprev'),'hidden',true);
     bItems=[];
-    // Reattach listener — will fetch ALL entries fresh
+    
+    // Reattach and go to dash
     setTimeout(()=>{
       loadData();
       showPg('dash');
-    },500);
+    },800);
+    
   }catch(err){
-    showBS('❌ Feil etter '+saved+'/'+total+': '+err.message,'error');
-    loadData(); // reattach even on error
+    showBS('❌ '+err.message,'error');
+    console.error('importBank error:', err);
+    loadData();
   }
   E('btn-bi').disabled=false;
 }
