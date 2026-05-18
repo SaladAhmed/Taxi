@@ -1295,29 +1295,29 @@ async function importBank(){
   showBS('Lagrer '+total+' transaksjoner...','info');
   E('btn-bi').disabled=true;
 
+  let saved=0;
   try{
-    const base=Date.now();
-    const batch={};
-    selected.forEach((item,n)=>{
+    const ref=db.ref('entries/'+u.uid);
+    for(const item of selected){
       const type=parseInt(item.category)<4000?'income':'expense';
-      // CRITICAL: each key MUST be unique — use base + n (different number per item)
-      const key='e'+String(base+n).padStart(16,'0')+'_'+String(n).padStart(4,'0');
-      batch[key]={
+      await ref.push({
         date:item.date||'',
         category:item.category||'7790',
         description:item.desc||'',
         amount:item.amount||0,
         type
-      };
-    });
-
-    await db.ref('entries/'+u.uid).update(batch);
+      });
+      saved++;
+      if(saved%5===0||saved===total){
+        showBS('Lagrer '+saved+'/'+total+'...','info');
+      }
+    }
     showBS('✅ Alle '+total+' lagret!','success');
     CL(E('bprev'),'hidden',true);
     bItems=[];
     setTimeout(()=>showPg('dash'),1200);
   }catch(err){
-    showBS('❌ Feil: '+err.message,'error');
+    showBS('❌ Feil etter '+saved+' lagret: '+err.message,'error');
   }
   E('btn-bi').disabled=false;
 }
@@ -1435,13 +1435,10 @@ async function importOCR(){
     if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);
   });
   if(!selected.length)return;
-  const base=Date.now();
-  const batch={};
-  selected.forEach((it,n)=>{
-    const key='e'+String(base+n).padStart(16,'0')+'_'+String(n).padStart(4,'0');
-    batch[key]={date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0};
-  });
-  await db.ref('entries/'+u.uid).update(batch);
+  const ref=db.ref('entries/'+u.uid);
+  for(const it of selected){
+    await ref.push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0});
+  }
   alert('✅ '+selected.length+' poster lagret!');
   CL(E('ocrlist'),'hidden',true);CL(E('atcard'),'hidden',true);
   CL(E('atnetto'),'hidden',true);hideStat('ostat');
@@ -1593,13 +1590,10 @@ async function importScanOCR(){
     if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);
   });
   if(!selected.length)return;
-  const base=Date.now();
-  const batch={};
-  selected.forEach((it,n)=>{
-    const key='e'+String(base+n).padStart(16,'0')+'_'+String(n).padStart(4,'0');
-    batch[key]={date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0};
-  });
-  await db.ref('entries/'+u.uid).update(batch);
+  const ref=db.ref('entries/'+u.uid);
+  for(const it of selected){
+    await ref.push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0});
+  }
   alert('✅ '+selected.length+' poster lagret!');
   CL(E('scan-ocrlist'),'hidden',true);CL(E('scan-atcard'),'hidden',true);
   CL(E('scan-netto'),'hidden',true);E('scan-ostat').style.display='none';
