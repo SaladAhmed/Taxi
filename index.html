@@ -1402,14 +1402,16 @@ function parseAgderItems(all){
     T('at-netto-sub',`Brutto: ${fmt(rawTotal)} − MVA 12%: ${fmt(Math.round(mva12))} − MVA 25%: ${fmt(Math.round(mva25))}`);
   }
   CL(E('atcard'),'hidden',false);
-  // Only create ONE entry — the netto amount from the faktura
+  // Netto = Beløp inkl. mva (the total on the faktura)
+  // If negative → income (money paid to us), if positive → expense
+  const nettoAmt=rawTotal; // rawTotal is already the absolute value of "Beløp inkl. mva"
+  const nettoType=rawIsNeg?'income':'expense'; // negative beløp = income for us
   oItems=[];
-  const nettoAmt=Math.abs(displayNetto);
   if(nettoAmt>0){
     oItems.push({
       desc:'Agder Taxi Faktura #'+invNr+' (Netto utbetalt)',
       amount:nettoAmt,
-      type:'income',
+      type:nettoType,
       date:dv,
       category:'3030',
       invNr,
@@ -1540,12 +1542,13 @@ function parseAgderItemsForScan(all){
   CL(E('scan-atcard'),'hidden',false);
 
   scanOItems=[];
-  const nettoAmt2=Math.abs(displayNetto);
+  const nettoAmt2=rawTotal;
+  const nettoType2=rawIsNeg?'income':'expense';
   if(nettoAmt2>0){
     scanOItems.push({
       desc:'Agder Taxi Faktura #'+invNr+' (Netto utbetalt)',
       amount:nettoAmt2,
-      type:'income',
+      type:nettoType2,
       date:dv,
       category:'3030',
       invNr,
