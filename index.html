@@ -3,15 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport PRO - Bank Display</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#111827">
+<title>Transport PRO - Nadiif ah</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
@@ -20,58 +17,56 @@
   --card-border: #1f2937;
   --text: #f3f4f6;
   --text-muted: #9ca3af;
-  --accent: #2563eb;
   --green: #10b981;
   --green-bg: rgba(16, 185, 129, 0.1);
   --red: #ef4444;
   --red-bg: rgba(239, 68, 68, 0.1);
   --yellow: #f59e0b;
-  --yellow-bg: rgba(245, 158, 11, 0.1);
   --radius: 12px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding-bottom: 60px; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding-bottom: 70px; }
+
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; background: #0b0f19; }
+.auth-card { background: #1e293b; border-radius: 16px; padding: 32px; width: 100%; max-width: 360px; text-align: center; border: 1px solid var(--card-border); }
+.form-group { margin-bottom: 16px; text-align: left; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; text-transform: uppercase; }
+.form-control { width: 100%; padding: 12px; background: #0f172a; border: 1.5px solid var(--card-border); color: #fff; border-radius: var(--radius); outline: none; }
 
 .navbar { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-.nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: 500; gap: 4px; transition: 0.2s; }
-.nav-item.active, .nav-item:hover { color: var(--text); }
-.nav-item i { font-size: 18px; }
+.nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: 500; gap: 4px; }
+.nav-item.active { color: var(--text); }
 .nav-item.active i { color: var(--yellow); }
 
 .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 16px; }
-.top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 4px 0; }
-.btn-reset { background: #dc2626; color: white; border: none; padding: 12px; border-radius: var(--radius); width: 100%; font-weight: 600; font-size: 13px; cursor: pointer; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2); }
+.top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; }
+.btn-top { flex: 1; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 12px; cursor: pointer; border: none; color: white; text-transform: uppercase; }
+.btn-reset { background: #dc2626; }
+.btn-logout { background: #4b5563; }
 
 .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
 .kpi-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 12px; text-align: center; }
 .kpi-title { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-.kpi-value { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; }
+.kpi-value { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; }
 .kpi-card.inntekt .kpi-title { color: var(--green); }
-.kpi-card.inntekt { border-color: rgba(16, 185, 129, 0.3); }
 .kpi-card.utgifter .kpi-title { color: var(--red); }
-.kpi-card.utgifter { border-color: rgba(239, 68, 68, 0.3); }
-.kpi-card.netto { border-color: rgba(37, 99, 235, 0.3); }
 
 .result-card { background: var(--card); border: 2px solid var(--yellow); border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 20px; }
-.result-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
-.result-value { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700; color: var(--green); }
+.result-value { font-family: 'DM Mono', monospace; font-size: 26px; font-weight: 700; color: var(--green); }
 .result-value.negative { color: var(--red); }
 
 .tx-list { display: flex; flex-direction: column; gap: 10px; }
 .tx-item { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--red); }
 .tx-item.income { border-left-color: var(--green); }
 .tx-info { display: flex; flex-direction: column; gap: 4px; }
-.tx-desc { font-size: 13px; font-weight: 600; color: var(--text); }
+.tx-desc { font-size: 13px; font-weight: 600; }
 .tx-date { font-size: 11px; color: var(--text-muted); }
 .tx-amount { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; color: var(--red); }
 .tx-item.income .tx-amount { color: var(--green); }
 
-.upload-box { border: 2px dashed var(--card-border); background: var(--card); border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; margin-top: 15px; display: block; }
-.upload-box i { font-size: 40px; color: var(--yellow); margin-bottom: 12px; }
-.status-bar { padding: 12px; border-radius: var(--radius); font-size: 13px; margin-bottom: 15px; display: none; align-items: center; gap: 10px; }
-.status-bar.info { background: rgba(37, 99, 235, 0.1); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.2); }
-.status-bar.success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.2); }
-.status-bar.error { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
+/* NEW SMART PASTE AREA */
+.paste-box { width: 100%; height: 180px; background: #0f172a; border: 2px dashed var(--card-border); border-radius: var(--radius); color: white; padding: 12px; font-family: 'DM Mono', monospace; font-size: 12px; resize: none; outline: none; margin-bottom: 12px; }
+.btn-primary { background: var(--yellow); color: #0b0f19; border: none; padding: 14px; border-radius: var(--radius); width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 13px; }
 
 .pg { display: none; }
 .pg.active { display: block; }
@@ -79,18 +74,32 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 </head>
 <body>
 
+<div id="pg-auth" class="auth-wrap">
+  <div class="auth-card">
+    <h2 style="color:#fff; font-size:20px; margin-bottom:20px;">Transport PRO Login</h2>
+    <div class="form-group"><label class="form-label">E-post</label><input id="em" type="email" class="form-control" placeholder="magacaaga@epost.no"></div>
+    <div class="form-group"><label class="form-label">Passord</label><input id="pw" type="password" class="form-control" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="doLogin()">Logg Inn</button>
+  </div>
+</div>
+
+<div id="app-body" style="display:none">
 <div class="container">
+  
   <div id="pg-dash" class="pg active">
-    <button class="btn-reset" onclick="clearDatabase()"><i class="fas fa-trash-alt"></i> Tirtire Dhamaan Lacagihii Hore (Reset)</button>
+    <div class="top-header">
+      <button class="btn-top btn-reset" onclick="clearDatabase()"><i class="fas fa-trash-alt"></i> Slett xogta</button>
+      <button class="btn-top btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logg Ut</button>
+    </div>
     
     <div class="kpi-grid">
       <div class="kpi-card inntekt"><div class="kpi-title">Inntekt</div><div class="kpi-value" id="kpi-in">0 kr</div></div>
       <div class="kpi-card utgifter"><div class="kpi-title">Utgifter</div><div class="kpi-value" id="kpi-out">0 kr</div></div>
-      <div class="kpi-card netto"><div class="kpi-title">Total (Netto)</div><div class="kpi-value" id="kpi-net">0 kr</div></div>
+      <div class="kpi-card netto"><div class="kpi-title">Netto</div><div class="kpi-value" id="kpi-net">0 kr</div></div>
     </div>
 
     <div class="result-card">
-      <div class="result-title">Resultat før skatt (Netto)</div>
+      <div style="font-size:11px; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px;">Resultat før skatt</div>
       <div class="result-value" id="big-net">0 kr</div>
     </div>
 
@@ -98,26 +107,22 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
   </div>
 
   <div id="pg-upload" class="pg">
-    <div class="top-header"><h2>DNB PDF Import</h2></div>
-    <div id="status-box" class="status-bar info"><i class="fas fa-info-circle"></i><span id="status-text"></span></div>
+    <h2 style="margin-bottom:12px; font-size:18px;">DNB Qoraal Geliye (Paste Text)</h2>
+    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Ku koobiyayso (Copy) dhamaan qoraalka ku jira PDF-kaaga DNB, ka dibna halkan ku dhex shub (Paste):</p>
     
-    <label for="pdf-file" class="upload-box">
-      <i class="fas fa-file-pdf"></i>
-      <h3>SOO DOO_DO REES BANK PDF AMA FAKTURA</h3>
-      <p style="color: var(--text-muted); font-size: 12px; margin-top:5px;">Riix halkan si aad u soo xulato faylka</p>
-    </label>
-    <input type="file" id="pdf-file" accept=".pdf" onchange="processPDF(this)" style="display: none;">
+    <textarea id="raw-paste-data" class="paste-box" placeholder='Ku shub qoraalka halkan... Tusaale: "23.01.26","26.01.26","Visa Tesla Inc.","35,05"'></textarea>
+    <button class="btn-primary" onclick="processPastedText()">Hagaaji & Kaydi Xogta ✅</button>
   </div>
+
 </div>
 
 <nav class="navbar">
   <div class="nav-item active" id="btn-dash" onclick="switchPage('dash')"><i class="fas fa-chart-bar"></i>Dash</div>
-  <div class="nav-item" id="btn-upload" onclick="switchPage('upload')"><i class="fas fa-plus-circle"></i>Add PDF</div>
+  <div class="nav-item" id="btn-upload" onclick="switchPage('upload')"><i class="fas fa-paste"></i>Import Text</div>
 </nav>
+</div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
 const firebaseConfig = {
   apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
   authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -129,13 +134,13 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const USER_UID = "DHXWf9Kk7ZOfXgGq8nZ72uNWhV82";
+const auth = firebase.auth();
 
 const accountMeta = {
   "3030": { label: "Kjøreinntekter (Agder Taxi)", type: "income" },
   "7000": { label: "Visa Tesla Inc.", type: "expense" },
   "6907": { label: "Datakommunikasjon (Nextgentel)", type: "expense" },
-  "7500": { label: "Forsikringspremie (DNB Livsforsikring / Ra)", type: "expense" },
+  "7500": { label: "Forsikringspremie (DNB Livsforsikring)", type: "expense" },
   "6340": { label: "Lys og varme (Fortum / Vibb)", type: "expense" },
   "7770": { label: "Bank- og kortgebyr (Omkostninger)", type: "expense" },
   "5000": { label: "Santander Consumer Bank", type: "expense" },
@@ -149,75 +154,67 @@ function switchPage(pageId) {
   document.getElementById('btn-' + pageId).classList.add('active');
 }
 
-async function processPDF(input) {
-  const file = input.files[0];
-  if (!file) return;
-
-  updateStatus("Xogta PDF-ka ayaa la akrinayaa hadda... ⏳", "info");
-
-  const reader = new FileReader();
-  reader.onload = async function() {
-    try {
-      const typedarray = new Uint8Array(this.result);
-      const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-      let fullText = "";
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        // Ku dar meel bannaan si qoraaladu u kala jabaan si sax ah
-        fullText += textContent.items.map(item => item.str).join(" ") + "\n";
-      }
-
-      parseAndSaveDNB(fullText);
-    } catch (err) {
-      updateStatus("Cilad baa dhacday: " + err.message, "error");
-    }
-  };
-  reader.readAsArrayBuffer(file);
+function doLogin() {
+  const em = document.getElementById('em').value;
+  const pw = document.getElementById('pw').value;
+  auth.signInWithEmailAndPassword(em, pw).catch(err => alert("Cilad: " + err.message));
 }
 
-function parseAndSaveDNB(text) {
-  // Nadaafi qoraalka oo u kala jaf sadar kasta oo DNB ah
-  let textCleaned = text.replace(/\"/g, ''); 
-  let lines = textCleaned.split('\n');
-  let extractedEntries = [];
+function doLogout() {
+  auth.signOut().then(() => { location.reload(); });
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('pg-auth').style.display = 'none';
+    document.getElementById('app-body').style.display = 'block';
+    listenToDatabase(user.uid);
+  } else {
+    document.getElementById('pg-auth').style.display = 'flex';
+    document.getElementById('app-body').style.display = 'none';
+  }
+});
+
+// ==================== COPIED TEXT PARSER (ZERO ERRORS) ====================
+function processPastedText() {
+  const rawText = document.getElementById('raw-paste-data').value;
+  if (!rawText.trim()) return alert("Fadlan marka hore qoraalka ku shub sanduuqa!");
+
+  let cleanText = rawText.replace(/\"/g, '');
+  let lines = cleanText.split('\n');
+  let extracted = [];
 
   lines.forEach(line => {
     let cleanLine = line.trim();
     if (!cleanLine) return;
 
-    // Raadi taariikhda bilowga ah ee qaabka (DD.MM.YY) - Tusaale: 23.01.26
-    let dateMatch = cleanLine.match(/^(\d{2})\.(\d{2})\.(\d{2})/);
+    // Raadi taariikhda bilowga sadarka (DD.MM.YY)
+    let dateMatch = cleanLine.match(/(\d{2})\.(\d{2})\.(\d{2})/);
     if (!dateMatch) return;
 
     let lineLower = cleanLine.toLowerCase();
     let detectedCat = null;
 
-    // Aqoonsiga qaybaha ganacsiga iyadoo la raacayo PDF-kaaga
     if (lineLower.includes("agder taxi")) detectedCat = "3030";
-    else if (lineLower.includes("tesla") || lineLower.includes("uno-x") || lineLower.includes("eviny")) detectedCat = "7000";
-    else if (lineLower.includes("nextgentel") || lineLower.includes("lyse tele")) detectedCat = "6907";
+    else if (lineLower.includes("tesla") || lineLower.includes("uno-x")) detectedCat = "7000";
+    else if (lineLower.includes("nextgentel") || lineLower.includes("lyse")) detectedCat = "6907";
     else if (lineLower.includes("fortum") || lineLower.includes("vibb")) detectedCat = "6340";
-    else if (lineLower.includes("forsikring") || lineLower.includes("ra forsikring") || lineLower.includes("dnb livsforsikring")) detectedCat = "7500";
+    else if (lineLower.includes("forsikring") || lineLower.includes("dnb livsforsikring")) detectedCat = "7500";
     else if (lineLower.includes("omkostninger")) detectedCat = "7770";
     else if (lineLower.includes("santander")) detectedCat = "5000";
-    else if (lineLower.includes("skatteetaten") || lineLower.includes("skatt/arbeidsavgift")) detectedCat = "5400";
+    else if (lineLower.includes("skatteetaten")) detectedCat = "5400";
 
     if (detectedCat) {
-      // Soo saar dhamaan lacagaha u qaabaysan lacagta Noorwiijiga (Tusaale: 4.859,20 ama 147.888,00)
+      // Soo saar dhamaan lacagaha u qaabaysan lacagta Noorwiijiga (,00 ama ,XX)
       let amounts = cleanLine.match(/(\d[\d\s.]*,\d{2})/g);
       if (amounts && amounts.length > 0) {
-        // Qaado lacagta u dambaysa ee sadarka ku xusan (waa lacagta dhabta ah ee transaksiyonka)
-        let targetAmountRaw = amounts[0]; 
-        
-        let cleanAmt = targetAmountRaw.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+        let rawAmt = amounts[0];
+        let cleanAmt = rawAmt.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
         let parsedAmt = parseFloat(cleanAmt);
 
         if (!isNaN(parsedAmt) && parsedAmt > 0) {
           let formattedDate = `20${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
-
-          extractedEntries.push({
+          extracted.push({
             desc: accountMeta[detectedCat].label,
             amt: parsedAmt,
             subCat: detectedCat,
@@ -229,51 +226,39 @@ function parseAndSaveDNB(text) {
     }
   });
 
-  if (extractedEntries.length === 0) {
-    updateStatus("Waa la ogaaday laakiin wax xog ah oo la aqoonsaday lagama helin PDF-kan!", "error");
-    return;
+  if (extracted.length === 0) {
+    return alert("Wax xog xisaabeed ah lagama dhex helin qoraalka aad soo koobiyaysay! Hubi in taariikh iyo magac ganacsi ay ku jiraan.");
   }
 
-  // U soo rido Firebase
-  const userRef = db.ref('users/' + USER_UID + '/entries');
+  const currentUser = auth.currentUser;
+  const userRef = db.ref('users/' + currentUser.uid + '/entries');
+  
   userRef.remove().then(() => {
-    let promises = extractedEntries.map(entry => userRef.push(entry));
+    let promises = extracted.map(entry => userRef.push(entry));
     Promise.all(promises).then(() => {
-      updateStatus(`Guul! ${extractedEntries.length} Xogood ayaa la kaydiyay! ✅`, "success");
-      alert(`Xogtaadii waa la hagaajiyay! Waxaa la helay ${extractedEntries.length} transaksjoner.`);
+      alert(`Guul! ${extracted.length} transaksjoner ayaa si nadiif ah loo galiyay!`);
+      document.getElementById('raw-paste-data').value = "";
       switchPage('dash');
-      document.getElementById('pdf-file').value = "";
     });
   });
 }
 
-function updateStatus(msg, type) {
-  const box = document.getElementById('status-box');
-  const txt = document.getElementById('status-text');
-  box.className = `status-bar ${type}`;
-  box.style.display = 'flex';
-  txt.innerText = msg;
-}
-
-function listenToDatabase() {
-  db.ref('users/' + USER_UID + '/entries').on('value', snapshot => {
+function listenToDatabase(uid) {
+  db.ref('users/' + uid + '/entries').on('value', snapshot => {
     let totalIn = 0, totalOut = 0;
     const container = document.getElementById('transactions-container');
     container.innerHTML = "";
 
     if (!snapshot.exists()) {
-      container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">Eber ayaa ku jira. Fadlan soo geli PDF.</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">Eber baa ku jira. Riix 'Import Text' si aad xog u geliso.</div>`;
       updateUI(0, 0, 0);
       return;
     }
 
     snapshot.forEach(child => {
       const item = child.val();
-      if (item.mainCat === 'income') {
-        totalIn += item.amt;
-      } else {
-        totalOut += item.amt;
-      }
+      if (item.mainCat === 'income') totalIn += item.amt;
+      else totalOut += item.amt;
 
       container.innerHTML += `
         <div class="tx-item ${item.mainCat === 'income' ? 'income' : ''}">
@@ -285,9 +270,7 @@ function listenToDatabase() {
         </div>
       `;
     });
-
-    let totalNet = totalIn - totalOut;
-    updateUI(totalIn, totalOut, totalNet);
+    updateUI(totalIn, totalOut, totalIn - totalOut);
   });
 }
 
@@ -295,23 +278,16 @@ function updateUI(inn, out, net) {
   document.getElementById('kpi-in').innerText = inn.toLocaleString('no-NO') + " kr";
   document.getElementById('kpi-out').innerText = out.toLocaleString('no-NO') + " kr";
   document.getElementById('kpi-net').innerText = net.toLocaleString('no-NO') + " kr";
-  
   const bigNet = document.getElementById('big-net');
   bigNet.innerText = (net >= 0 ? "+" : "") + net.toLocaleString('no-NO', {minimumFractionDigits: 2}) + " kr";
-  if (net < 0) {
-    bigNet.classList.add('negative');
-  } else {
-    bigNet.classList.remove('negative');
-  }
+  if (net < 0) bigNet.classList.add('negative'); else bigNet.classList.remove('negative');
 }
 
 function clearDatabase() {
   if (confirm("Ma hubtaa inaad dhamaan transaksiyonada tirtirto?")) {
-    db.ref('users/' + USER_UID + '/entries').set(null);
+    db.ref('users/' + auth.currentUser.uid + '/entries').set(null);
   }
 }
-
-listenToDatabase();
 </script>
 </body>
 </html>
