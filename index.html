@@ -889,7 +889,13 @@ function filterEntries(q){searchQ=q.toLowerCase();renderTableOnly(entries);}
 function loadData(){
   const u=auth.currentUser;if(!u)return;
   db.ref('entries/'+u.uid).on('value',snap=>{
-    entries=[];snap.forEach(c=>entries.push({id:c.key,...c.val()}));
+    entries=[];
+    snap.forEach(c=>{
+      const v=c.val();
+      if(v&&typeof v==='object'&&v.date){
+        entries.push({id:c.key,...v});
+      }
+    });
     entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     if(modus==='i')applyPer();else renderDash(entries);
     renderRep(entries);
@@ -1287,7 +1293,6 @@ async function importBank(){
   const u=auth.currentUser;
   if(!u){alert('Ma gelin nidaamka!');return;}
   
-  // Debug: check bItems
   console.log('importBank called, bItems.length:', bItems.length);
   
   const selected=[];
@@ -1299,11 +1304,7 @@ async function importBank(){
   console.log('Selected:', selected.length);
   
   if(!selected.length){
-    // Try all bItems directly
-    if(bItems.length===0){
-      showBS('bItems waa madhan — PDF dib geli!','error');
-      return;
-    }
+    if(bItems.length===0){showBS('bItems waa madhan — PDF dib geli!','error');return;}
     bItems.forEach(item=>selected.push(item));
   }
 
@@ -1312,25 +1313,23 @@ async function importBank(){
   E('btn-bi').disabled=true;
 
   try{
-    const ref=db.ref('entries/'+u.uid);
-    
+    // Use a completely fresh database reference
+    const uid=u.uid;
     let saved=0;
+    
     for(const item of selected){
       const type=parseInt(item.category)<4000?'income':'expense';
-      try{
-        await ref.push({
-          date:item.date||'',
-          category:item.category||'7790',
-          description:item.desc||item.description||'',
-          amount:parseFloat(item.amount)||0,
-          type
-        });
-        saved++;
+      const newRef=db.ref('entries/'+uid).push();
+      await newRef.set({
+        date:item.date||'',
+        category:item.category||'7790',
+        description:item.desc||item.description||'',
+        amount:parseFloat(item.amount)||0,
+        type
+      });
+      saved++;
+      if(saved%10===0||saved===total){
         showBS('Lagrer '+saved+'/'+total+'...','info');
-      }catch(pushErr){
-        console.error('Push error at item '+saved+':', pushErr.message, pushErr.code);
-        alert('Firebase feil: '+pushErr.message+'\nKode: '+pushErr.code);
-        break;
       }
     }
     
@@ -1338,16 +1337,13 @@ async function importBank(){
     CL(E('bprev'),'hidden',true);
     bItems=[];
     
-    // Reattach and go to dash
     setTimeout(()=>{
-      loadData();
       showPg('dash');
     },800);
     
   }catch(err){
     showBS('❌ '+err.message,'error');
     console.error('importBank error:', err);
-    loadData();
   }
   E('btn-bi').disabled=false;
 }
