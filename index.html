@@ -1312,31 +1312,65 @@ async function importBank(){
   // ── Group by a short keyword from description ──
   function groupKey(desc){
     const d=(desc||'').toLowerCase();
-    if(d.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030'};
-    if(d.includes('tesla'))return{key:'Visa Tesla Inc.',cat:'7000'};
-    if(d.includes('skatteetaten')||d.includes('skatt/arbeidsavgift'))return{key:'Skatteetaten',cat:'5400'};
-    if(d.includes('santander'))return{key:'Santander Consumer Bank AS',cat:'7790'};
-    if(d.includes('kamal'))return{key:'Overføring Kamal',cat:'7790'};
-    if(d.includes('haytham'))return{key:'Overføring Haytham',cat:'7790'};
-    if(d.includes('salad ahmed')||d.includes('salad'))return{key:'Overføring Salad Ahmed',cat:'7790'};
-    if(d.includes('altaieb'))return{key:'Overføring Altaieb',cat:'7790'};
+    const raw=desc||'';
+
+    // Extract exact name from "Overføring innland nr.XXXXXX NAME"
+    const ovM=raw.match(/[Oo]verf[øo]ring\s+innland\s+nr\.\d+\s+(.+)/i);
+    if(ovM){
+      const name=ovM[1].trim();
+      // Categorize by name
+      const nl=name.toLowerCase();
+      if(nl.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030'};
+      if(nl.includes('kamal'))return{key:'Kamal',cat:'7790'};
+      if(nl.includes('haytham'))return{key:'Haytham',cat:'7790'};
+      if(nl.includes('salad ahmed'))return{key:'Salad Ahmed Mohamed',cat:'7790'};
+      if(nl.includes('altaieb'))return{key:'Altaieb Hassan',cat:'7790'};
+      return{key:name,cat:'7790'};
+    }
+
+    // Giro nr.XXXXXX NAME
+    const giroM=raw.match(/[Gg]iro\s+nr\.\d+\s+(.+)/i);
+    if(giroM){
+      const name=giroM[1].trim();
+      const nl=name.toLowerCase();
+      if(nl.includes('santander'))return{key:'Santander Consumer Bank AS',cat:'7790'};
+      if(nl.includes('skatteetaten')||nl.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400'};
+      if(nl.includes('uno-x'))return{key:'Uno-x Mobility Norge AS',cat:'7000'};
+      if(nl.includes('nextgentel'))return{key:'Nextgentel AS',cat:'6907'};
+      if(nl.includes('autosync'))return{key:'Autosync AS',cat:'7020'};
+      if(nl.includes('fortum'))return{key:'Fortum Strøm AS',cat:'7000'};
+      if(nl.includes('lyse'))return{key:'Lyse Tele AS',cat:'6900'};
+      if(nl.includes('ra forsikring'))return{key:'Ra Forsikring AS',cat:'7040'};
+      if(nl.includes('vibb'))return{key:'Vibb AS',cat:'6907'};
+      if(nl.includes('dnb livsforsikring'))return{key:'DNB Livsforsikring AS',cat:'7040'};
+      if(nl.includes('msg cleaning'))return{key:'Msg Cleaning Systems AS',cat:'7790'};
+      if(nl.includes('læringsverkstedet')||nl.includes('leringsverkstedet'))return{key:'Læringsverkstedet Tyholmen',cat:'7140'};
+      if(nl.includes('arendal kommune')||nl.includes('kommune'))return{key:'Arendal Kommune',cat:'7400'};
+      return{key:name,cat:'7790'};
+    }
+
+    // Visa NAME
+    const visaM=raw.match(/[Vv]isa\s+(.+)/i);
+    if(visaM){
+      const name=visaM[1].trim();
+      return{key:'Visa '+name,cat:'7000'};
+    }
+
+    // Kontoregulering
     if(d.includes('kontoregulering'))return{key:'Kontoregulering',cat:'7797'};
-    if(d.includes('uno-x'))return{key:'Uno-x Mobility',cat:'7000'};
-    if(d.includes('nextgentel'))return{key:'Nextgentel AS',cat:'6907'};
-    if(d.includes('autosync'))return{key:'Autosync AS',cat:'7020'};
-    if(d.includes('fortum'))return{key:'Fortum Strøm AS',cat:'7000'};
-    if(d.includes('lyse'))return{key:'Lyse Tele AS',cat:'6900'};
-    if(d.includes('ra forsikring'))return{key:'Ra Forsikring AS',cat:'7040'};
-    if(d.includes('vibb'))return{key:'Vibb AS',cat:'6907'};
-    if(d.includes('eviny'))return{key:'Eviny Elektrifisering',cat:'7000'};
-    if(d.includes('dnb livsforsikring'))return{key:'DNB Livsforsikring AS',cat:'7040'};
-    if(d.includes('wash world'))return{key:'Wash World',cat:'7000'};
-    if(d.includes('msg cleaning'))return{key:'Msg Cleaning Systems AS',cat:'7790'};
-    if(d.includes('læringsverkstedet')||d.includes('leringsverkstedet'))return{key:'Læringsverkstedet Tyholmen',cat:'7140'};
-    if(d.includes('arendal kommune')||d.includes('kommune'))return{key:'Arendal Kommune',cat:'7400'};
+
+    // Skatt/arbeidsavgift
+    if(d.includes('skatt/arbeidsavgift')||d.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400'};
+
+    // Omkostninger
     if(d.includes('omkostninger'))return{key:'Omkostninger (Bank)',cat:'7770'};
-    // Fallback: first 30 chars of desc
-    return{key:(desc||'Ukjent').substring(0,30),cat:'7790'};
+
+    // Agder Taxi fallback
+    if(d.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030'};
+
+    // Fallback: use full desc cleaned up
+    const clean=raw.replace(/\s+\d{6,}.*$/,'').replace(/\s+/g,' ').trim();
+    return{key:clean.substring(0,40)||'Ukjent',cat:'7790'};
   }
 
   // Group and sum
