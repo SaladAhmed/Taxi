@@ -1088,7 +1088,10 @@ function dnbType(desc){
 }
 function autocat(desc,type){
   const d=(desc||'').toLowerCase();
-  if(type==='income'){if(d.includes('agder taxi'))return'7796';return'3030';}
+  if(type==='income'){
+    if(d.includes('agder taxi'))return'3030';
+    return'3030';
+  }
   if(d.includes('tesla')||d.includes('wash world')||d.includes('shell')||d.includes('circle k')||d.includes('uno-x'))return'7000';
   if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('livsforsikring'))return'7040';
   if(d.includes('autosync')||d.includes('vedlikehold'))return'7020';
@@ -1399,37 +1402,24 @@ function parseAgderItems(all){
     T('at-netto-sub',`Brutto: ${fmt(rawTotal)} − MVA 12%: ${fmt(Math.round(mva12))} − MVA 25%: ${fmt(Math.round(mva25))}`);
   }
   CL(E('atcard'),'hidden',false);
-  const amap=[
-    {re:/EMV\s*N/i,cat:'3030',lb:'EMV N',mvaP:12},{re:/TT\s*Rogaland/i,cat:'3030',lb:'TT Rogaland',mvaP:12},
-    {re:/VIPPS/i,cat:'3030',lb:'VIPPS',mvaP:12},{re:/APP.BETALING/i,cat:'3031',lb:'APP-betaling',mvaP:12},
-    {re:/Spesialtur/i,cat:'7791',lb:'Spesialtur',mvaP:12},{re:/Generell\s*kreditt/i,cat:'7792',lb:'Generell kreditt',mvaP:12},
-    {re:/Pasienttransport/i,cat:'7793',lb:'Pasienttransport',mvaP:12},{re:/Ikke\s*m[o\s]tt/i,cat:'7794',lb:'Ikke møtt',mvaP:12},
-    {re:/Adm\s*gebyr/i,cat:'7795',lb:'Adm. gebyr trukket',mvaP:25},{re:/Sentralavgift/i,cat:'6755',lb:'Sentralavgift',mvaP:12},
-    {re:/Bilforsikring/i,cat:'7040',lb:'Bilforsikring',mvaP:0},{re:/El\s*bil\s*lad/i,cat:'7000',lb:'El bil lading',mvaP:25},
-    {re:/Avgiftsfritt/i,cat:'3039',lb:'Avgiftsfritt',mvaP:0},
-  ];
-  const seen=new Set();
-  for(const line of lines){
-    const txt=line.map(i=>i.text).join(' ').trim();
-    if(!txt||/^Sum\b/i.test(txt))continue;
-    if(!/AG-\d{3}/i.test(txt))continue;
-    const carM=txt.match(/AG-(\d{3})/i);const carId=carM?'AG-'+carM[1]:'';
-    const amts=[...txt.matchAll(/([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];if(!amts.length)continue;
-    const lr=amts[amts.length-1][1];const isN=lr.startsWith('-');const amt=norNum(lr.replace('-',''));
-    if(amt<1)continue;
-    let cat='7796',lb='Agder Taxi',mvaP=12;
-    for(const m of amap){if(m.re.test(txt)){cat=m.cat;lb=m.lb;mvaP=m.mvaP;break;}}
-    const type=isN?'income':'expense';
-    if(type==='income'&&parseInt(cat)>=6000)cat='3030';
-    if(type==='expense'&&parseInt(cat)<4000)cat='7796';
-    const key=cat+'|'+amt+'|'+lb+'|'+carId;
-    if(!seen.has(key)){seen.add(key);oItems.push({desc:lb+(carId?' ('+carId+')':''),amount:amt,type,date:dv,category:cat,carId,invNr,mvaP,billNr:invNr});}
+  // Only create ONE entry — the netto amount from the faktura
+  oItems=[];
+  const nettoAmt=Math.abs(displayNetto);
+  if(nettoAmt>0){
+    oItems.push({
+      desc:'Agder Taxi Faktura #'+invNr+' (Netto utbetalt)',
+      amount:nettoAmt,
+      type:'income',
+      date:dv,
+      category:'3030',
+      invNr,
+      billNr:invNr,
+      mvaP:0
+    });
   }
-  if(!oItems.length&&rawTotal>0)oItems.push({desc:'Agder Taxi Faktura #'+invNr,amount:nettoAfterMva>0?nettoAfterMva:rawTotal,type:rawIsNeg?'income':'expense',date:dv,category:'7796',invNr,billNr:invNr});
-  oItems.sort((a,b)=>{if(a.type!==b.type)return a.type==='income'?-1:1;return b.amount-a.amount;});
-  showOS('✅ '+oItems.length+' poster funnet!','success');
+  showOS('✅ Faktura #'+invNr+' klar — '+fmt(nettoAmt),'success');
   if(auth.currentUser&&invNr){
-    const billData={invNr,date:dv,payDate,rawTotal,totalMva,mva12:Math.round(mva12),mva25:Math.round(mva25),avgiftsfritt,nettoAfterMva:displayNetto,entryCount:oItems.length,savedAt:new Date().toISOString()};
+    const billData={invNr,date:dv,payDate,rawTotal,totalMva,mva12:Math.round(mva12),mva25:Math.round(mva25),avgiftsfritt,nettoAfterMva:displayNetto,entryCount:1,savedAt:new Date().toISOString()};
     db.ref('bills/'+auth.currentUser.uid+'/'+invNr).set(billData);
   }
   renderOItems(invNr);
@@ -1549,36 +1539,21 @@ function parseAgderItemsForScan(all){
   T('scan-netto-sub','Brutto: '+fmt(rawTotal)+' − MVA 12%: '+fmt(Math.round(mva12))+' − MVA 25%: '+fmt(Math.round(mva25)));
   CL(E('scan-atcard'),'hidden',false);
 
-  const amap=[
-    {re:/EMV\s*N/i,cat:'3030',lb:'EMV N',mvaP:12},{re:/TT\s*Rogaland/i,cat:'3030',lb:'TT Rogaland',mvaP:12},
-    {re:/VIPPS/i,cat:'3030',lb:'VIPPS',mvaP:12},{re:/APP.BETALING/i,cat:'3031',lb:'APP-betaling',mvaP:12},
-    {re:/Spesialtur/i,cat:'7791',lb:'Spesialtur',mvaP:12},{re:/Generell\s*kreditt/i,cat:'7792',lb:'Generell kreditt',mvaP:12},
-    {re:/Pasienttransport/i,cat:'7793',lb:'Pasienttransport',mvaP:12},{re:/Ikke\s*m[o\s]tt/i,cat:'7794',lb:'Ikke møtt',mvaP:12},
-    {re:/Adm\s*gebyr/i,cat:'7795',lb:'Adm. gebyr trukket',mvaP:25},{re:/Sentralavgift/i,cat:'6755',lb:'Sentralavgift',mvaP:12},
-    {re:/Bilforsikring/i,cat:'7040',lb:'Bilforsikring',mvaP:0},{re:/El\s*bil\s*lad/i,cat:'7000',lb:'El bil lading',mvaP:25},
-    {re:/Avgiftsfritt/i,cat:'3039',lb:'Avgiftsfritt',mvaP:0},
-  ];
-  const seen=new Set();
-  for(const line of lines){
-    const txt=line.map(i=>i.text).join(' ').trim();
-    if(!txt||/^Sum\b/i.test(txt)||!/AG-\d{3}/i.test(txt))continue;
-    const carM=txt.match(/AG-(\d{3})/i);const carId=carM?'AG-'+carM[1]:'';
-    const amts=[...txt.matchAll(/([-]?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g)];if(!amts.length)continue;
-    const lr=amts[amts.length-1][1];const isN=lr.startsWith('-');const amt=norNum(lr.replace('-',''));
-    if(amt<1)continue;
-    let cat='7796',lb='Agder Taxi',mvaP=12;
-    for(const m of amap){if(m.re.test(txt)){cat=m.cat;lb=m.lb;mvaP=m.mvaP;break;}}
-    const type=isN?'income':'expense';
-    if(type==='income'&&parseInt(cat)>=6000)cat='3030';
-    if(type==='expense'&&parseInt(cat)<4000)cat='7796';
-    const key=cat+'|'+amt+'|'+lb+'|'+carId;
-    if(!seen.has(key)){seen.add(key);scanOItems.push({desc:lb+(carId?' ('+carId+')':''),amount:amt,type,date:dv,category:cat,carId,invNr,mvaP,billNr:invNr});}
+  scanOItems=[];
+  const nettoAmt2=Math.abs(displayNetto);
+  if(nettoAmt2>0){
+    scanOItems.push({
+      desc:'Agder Taxi Faktura #'+invNr+' (Netto utbetalt)',
+      amount:nettoAmt2,
+      type:'income',
+      date:dv,
+      category:'3030',
+      invNr,
+      billNr:invNr,
+      mvaP:0
+    });
   }
-  if(!scanOItems.length&&rawTotal>0)
-    scanOItems.push({desc:'Agder Taxi Faktura #'+invNr,amount:nettoAfterMva>0?nettoAfterMva:rawTotal,type:rawIsNeg?'income':'expense',date:dv,category:'7796',invNr,billNr:invNr});
-
-  scanOItems.sort((a,b)=>a.type!==b.type?a.type==='income'?-1:1:b.amount-a.amount);
-  showScanStat('✅ '+scanOItems.length+' poster funnet!','success');
+  showScanStat('✅ Faktura #'+invNr+' klar — '+fmt(nettoAmt2),'success');
 
   if(auth.currentUser&&invNr){
     const billData={invNr,date:dv,payDate,rawTotal,totalMva,mva12:Math.round(mva12),mva25:Math.round(mva25),avgiftsfritt,nettoAfterMva:displayNetto,entryCount:scanOItems.length,savedAt:new Date().toISOString()};
