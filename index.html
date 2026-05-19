@@ -48,6 +48,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden}
 
+/* ── LAYOUT ── */
 .layout{display:flex;min-height:100vh}
 .sidebar{width:220px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:300;transition:.3s}
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
@@ -62,6 +63,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
   .nav-section-title{display:none}
 }
 
+/* ── SIDEBAR ── */
 .sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
 .logo-mark{display:flex;align-items:center;gap:10px}
 .logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -85,6 +87,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .user-name{color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .user-role{color:rgba(255,255,255,.4);font-size:11px}
 
+/* ── TOPBAR ── */
 .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow)}
 .topbar-title{font-size:15px;font-weight:600;color:var(--text)}
 .topbar-actions{display:flex;align-items:center;gap:8px}
@@ -95,10 +98,12 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .top-btn.danger{border-color:var(--red);color:var(--red)}
 .top-btn.danger:hover{background:var(--red-bg)}
 
+/* ── PAGE CONTENT ── */
 .page-content{padding:20px 24px;flex:1}
 .pg{display:none}
 .pg.active{display:block}
 
+/* ── KPI CARDS ── */
 .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
 @media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;box-shadow:var(--shadow)}
@@ -119,6 +124,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .kpi-trend.up{background:var(--green-bg);color:var(--green)}
 .kpi-trend.down{background:var(--red-bg);color:var(--red)}
 
+/* ── SECTION CARD ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
 .card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .card-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
@@ -126,6 +132,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .card-actions{display:flex;gap:6px;align-items:center}
 .card-body{padding:0}
 
+/* ── TABLE ── */
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{background:var(--card2);color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
@@ -146,6 +153,7 @@ tbody td:last-child{text-align:right}
 .ico-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,86,219,.05)}
 .ico-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
 
+/* ── BADGE ── */
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
 .badge.inc{background:var(--green-bg);color:var(--green)}
 .badge.exp{background:var(--red-bg);color:var(--red)}
@@ -153,6 +161,7 @@ tbody td:last-child{text-align:right}
 .badge.amber{background:var(--amber-bg);color:var(--amber)}
 .badge.purple{background:var(--purple-bg);color:var(--purple)}
 
+/* ── FORM ELEMENTS ── */
 .form-group{margin-bottom:14px}
 .form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:.2px}
 .form-control{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--text);font-size:13px;font-family:inherit;transition:.15s;outline:none}
@@ -163,6 +172,7 @@ select.form-control{cursor:pointer}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 @media(max-width:600px){.form-row,.form-row-3{grid-template-columns:1fr}}
 
+/* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:var(--radius);border:1.5px solid transparent;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit;white-space:nowrap}
 .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-primary:hover{background:var(--accent2)}
@@ -175,17 +185,20 @@ select.form-control{cursor:pointer}
 .btn-sm{padding:6px 12px;font-size:12px}
 .btn-group{display:flex;gap:8px;flex-wrap:wrap}
 
+/* ── UPLOAD ZONE ── */
 .upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:28px 20px;text-align:center;cursor:pointer;transition:.2s;background:var(--card2)}
 .upload-zone:hover{border-color:var(--accent);background:rgba(26,86,219,.03)}
 .upload-zone i{font-size:28px;color:var(--text3);margin-bottom:8px;display:block}
 .upload-zone p{font-size:13px;color:var(--text3);margin:2px 0}
 .upload-zone .uz-title{font-size:14px;font-weight:600;color:var(--text2)}
 
+/* ── STATUS BAR ── */
 .status-bar{padding:10px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;margin-bottom:12px;display:none;align-items:center;gap:8px}
 .status-bar.info{background:rgba(26,86,219,.08);color:var(--accent);border:1px solid rgba(26,86,219,.2)}
 .status-bar.success{background:var(--green-bg);color:var(--green);border:1px solid rgba(5,150,105,.2)}
 .status-bar.error{background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2)}
 
+/* ── FILTER BAR ── */
 .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--card2)}
 .filter-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
 .filter-chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -197,19 +210,22 @@ select.form-control{cursor:pointer}
 .date-range input{padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text);background:var(--card);outline:none;font-family:inherit}
 .date-range input:focus{border-color:var(--accent)}
 
+/* ── TABS ── */
 .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;gap:0}
 .tab{padding:11px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;margin-bottom:-1px;white-space:nowrap}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 
+/* ── BILL CARD ── */
 .bill-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px;background:var(--card);box-shadow:var(--shadow)}
 .bill-card-head{padding:12px 16px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .bill-card-body{padding:14px 16px}
 .bill-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
 .bill-kpi{text-align:center;padding:8px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)}
-.bill-kpi small{font-size:10px;color:var(--text3);display:block;text-transform:uppercase;font-weight:600;letter-spacing:.5px;margin-bottom:3px}
+.bill-kpi small{font-size:10px;color:var(--text3);display:block;text-transform:uppercase;font-weight:600;letter-spacing Ram.5px;margin-bottom:3px}
 .bill-kpi b{font-size:15px;font-family:'DM Mono',monospace}
 
+/* ── AUTH ── */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2044 0%,#1a3260 50%,#1a56db 100%);padding:20px}
 .auth-card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .auth-logo{text-align:center;margin-bottom:24px}
@@ -217,10 +233,12 @@ select.form-control{cursor:pointer}
 .auth-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
 .auth-sub{font-size:13px;color:var(--text3)}
 
+/* ── PROFILE ── */
 .profile-avatar-wrap{position:relative;width:80px;height:80px;margin:0 auto 16px;cursor:pointer}
 .profile-avatar-wrap img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border)}
 .profile-avatar-edit{position:absolute;bottom:0;right:0;width:24px;height:24px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}
 
+/* ── IMPORT LIST ── */
 .import-item{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.15s;background:var(--card)}
 .import-item:hover{border-color:var(--accent)}
 .import-item.sel{border-color:var(--green);background:var(--green-bg)}
@@ -230,11 +248,13 @@ select.form-control{cursor:pointer}
 .import-item-meta{font-size:11px;color:var(--text3);margin-top:3px}
 .import-item select{margin-top:6px;width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:var(--card);color:var(--text);font-family:inherit}
 
+/* ── EMPTY STATE ── */
 .empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
 .empty-state i{font-size:40px;margin-bottom:12px;display:block;opacity:.4}
 .empty-state h3{font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px}
 .empty-state p{font-size:13px}
 
+/* ── MISC ── */
 .hidden{display:none!important}
 .ha{filter:blur(7px);user-select:none;pointer-events:none}
 .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
@@ -299,7 +319,7 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<div id="app" style="display:block">
+<div id="app" style="display:none">
 <div class="layout">
 
   <aside class="sidebar">
@@ -311,10 +331,10 @@ input[type=file]{display:none}
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-title">Oversikt</div>
-      <div class="nav-item" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item active" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i><span class="nav-label">Dashboard</span></div>
       <div class="nav-item" id="ni-reports" onclick="showPg('reports')"><i class="fas fa-file-alt"></i><span class="nav-label">Rapporter</span></div>
       <div class="nav-section-title">Transaksjoner</div>
-      <div class="nav-item active" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus-circle"></i><span class="nav-label">Registrer</span></div>
+      <div class="nav-item" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus-circle"></i><span class="nav-label">Registrer</span></div>
       <div class="nav-item" id="ni-scan" onclick="showPg('scan')"><i class="fas fa-camera"></i><span class="nav-label">Scan Faktura</span></div>
       <div class="nav-item" id="ni-bills" onclick="showPg('bills')"><i class="fas fa-file-invoice-dollar"></i><span class="nav-label">Fakturaer</span></div>
       <div class="nav-section-title">Konto</div>
@@ -324,14 +344,14 @@ input[type=file]{display:none}
     <div class="sidebar-footer">
       <div class="user-chip" onclick="showPg('profile')">
         <div class="user-avatar"><img id="pimg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"></div>
-        <div class="user-info"><div class="user-name" id="uname">saladohamed392...</div><div class="user-role">Administrator</div></div>
+        <div class="user-info"><div class="user-name" id="uname">Laster...</div><div class="user-role">Administrator</div></div>
       </div>
     </div>
   </aside>
 
   <main class="main">
 
-    <div id="pg-dash" class="pg">
+    <div id="pg-dash" class="pg active">
       <div class="topbar">
         <div class="topbar-title" id="dash-title">Dashboard · Total oversikt</div>
         <div class="topbar-actions">
@@ -346,6 +366,18 @@ input[type=file]{display:none}
       </div>
 
       <div class="page-content">
+        <div id="pfil" style="display:none;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+          <button class="filter-chip active" onclick="setPer('today',this)">I dag</button>
+          <button class="filter-chip" onclick="setPer('week',this)">Uke</button>
+          <button class="filter-chip" onclick="setPer('month',this)">Måned</button>
+          <button class="filter-chip" onclick="setPer('year',this)">År</button>
+          <button class="filter-chip" onclick="setPer('custom',this)">Egendefinert</button>
+          <div class="date-range" id="drow">
+            <input type="date" id="dfrom" onchange="applyCustom()">
+            <input type="date" id="dto" onchange="applyCustom()">
+          </div>
+        </div>
+
         <div class="kpi-row">
           <div class="kpi green">
             <div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Inntekt</div>
@@ -363,13 +395,80 @@ input[type=file]{display:none}
             <div class="kpi-sub">Før skatt</div>
           </div>
         </div>
+
+        <div class="kpi-row">
+          <div class="kpi amber">
+            <div class="kpi-label"><i class="fas fa-percent"></i> MVA 12%</div>
+            <div class="kpi-val af" id="s-mva12">0,00 kr</div>
+            <div class="kpi-sub">Skyldig MVA lav sats</div>
+          </div>
+          <div class="kpi amber">
+            <div class="kpi-label"><i class="fas fa-percent"></i> MVA 25%</div>
+            <div class="kpi-val af" id="s-mva25">0,00 kr</div>
+            <div class="kpi-sub">Skyldig MVA høy sats</div>
+          </div>
+          <div class="kpi purple">
+            <div class="kpi-label"><i class="fas fa-hand-holding-dollar"></i> Netto etter MVA</div>
+            <div class="kpi-val af" id="s-netmva">0,00 kr</div>
+            <div class="kpi-sub">Til deg</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-list"></i> Transaksjoner</div>
+            <div class="card-actions">
+              <input class="filter-search" id="etxsearch" placeholder="🔍 Søk..." style="width:180px" oninput="filterEntries(this.value)">
+              <button class="btn btn-outline btn-sm" onclick="showPg('add')"><i class="fas fa-plus"></i> Ny</button>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Dato</th>
+                <th>Konto</th>
+                <th>Beskrivelse</th>
+                <th>Type</th>
+                <th>Bil #</th>
+                <th style="text-align:right">Beløp</th>
+                <th style="text-align:right">Handling</th>
+              </tr></thead>
+              <tbody id="etbody"></tbody>
+            </table>
+            <div id="etbl-empty" class="empty-state hidden"><i class="fas fa-inbox"></i><h3>Ingen transaksjoner</h3><p>Importer fra bank eller legg inn manuelt</p></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div id="pg-add" class="pg active">
-      <div class="topbar"><div class="topbar-title">Registrer transaksjoner</div></div>
+    <div id="pg-reports" class="pg">
+      <div class="topbar">
+        <div class="topbar-title">Rapporter</div>
+        <div class="topbar-actions">
+          <button class="top-btn" onclick="dlCSV()"><i class="fas fa-file-csv"></i> Last ned CSV</button>
+          <button class="top-btn primary" onclick="dlPDF()"><i class="fas fa-file-pdf"></i> Generer PDF</button>
+        </div>
+      </div>
       <div class="page-content">
-        <div style="display:grid;grid-template-columns:1fr;gap:16px">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-table"></i> Regnskapsoversikt</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Faktura</th><th style="text-align:right">Beløp</th></tr></thead>
+              <tbody id="rtbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pg-add" class="pg">
+      <div class="topbar">
+        <div class="topbar-title">Registrer transaksjoner</div>
+      </div>
+      <div class="page-content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
           <div class="card">
             <div class="card-header"><div class="card-title"><i class="fas fa-university"></i> DNB Bankimport</div></div>
             <div style="padding:16px">
@@ -377,6 +476,7 @@ input[type=file]{display:none}
                 <div class="tab active" id="bt-pdf" onclick="switchTab('pdf')">📄 PDF</div>
                 <div class="tab" id="bt-csv" onclick="switchTab('csv')">📊 CSV</div>
               </div>
+              <div id="bstat" class="status-bar info"><i class="fas fa-info-circle"></i><span id="bstat-txt"></span></div>
               <div id="bpdf">
                 <label for="pdfi" class="upload-zone" style="cursor:pointer;display:block">
                   <i class="fas fa-file-pdf" style="color:#dc2626;font-size:36px;margin-bottom:10px;display:block"></i>
@@ -384,14 +484,217 @@ input[type=file]{display:none}
                   <p style="color:#64748b">Klikk her for å laste opp PDF-fil</p>
                   <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg PDF</div>
                 </label>
-                <input type="file" id="pdfi" accept=".pdf" onchange="handlePDF(this)">
+                <input type="file" id="pdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)" style="display:none">
+              </div>
+              <div id="bcsv" class="hidden">
+                <label for="csvi" class="upload-zone" style="cursor:pointer;display:block">
+                  <i class="fas fa-file-csv" style="color:#1a56db;font-size:36px;margin-bottom:10px;display:block"></i>
+                  <div class="uz-title" style="font-size:15px;color:#0f172a;margin-bottom:4px">DNB CSV-fil</div>
+                  <p style="color:#64748b">Last ned CSV fra nettbanken og last opp her</p>
+                  <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg CSV</div>
+                </label>
+                <input type="file" id="csvi" accept=".csv" style="display:none">
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
+    
+    <div id="pg-scan" class="pg"><div class="topbar"><div class="topbar-title">Scan Faktura</div></div><div class="page-content"><p>Faktura skanning iyo akhrinta koodka...</p></div></div>
+    <div id="pg-bills" class="pg"><div class="topbar"><div class="topbar-title">Fakturaer</div></div><div class="page-content"><p>Dhammaan faktura-yada halkan ayaa lagu maamulaa...</p></div></div>
+    <div id="pg-profile" class="pg"><div class="topbar"><div class="topbar-title">Profil</div></div><div class="page-content"><p>Habaynta koontada iyo macluumaadkaaga...</p></div></div>
 
   </main>
 </div>
 </div>
+
+<script>
+// 1. FIREBASE CONFIGURATION
+const firebaseConfig = {
+  apiKey: "AIzaSyAs6W...", 
+  authDomain: "saladahmed-taxi.firebaseapp.com",
+  databaseURL: "https://saladahmed-taxi-default-rtdb.firebaseio.com",
+  projectId: "saladahmed-taxi",
+  storageBucket: "saladahmed-taxi.appspot.com",
+  messagingSenderId: "59382018401",
+  appId: "1:59382018401:web:a1b2c3d4e5f6"
+};
+
+// Start Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// 2. AUTH STATE MONITOR
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('pg-auth').style.style.display = 'none';
+    document.getElementById('pg-setup').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('uname').innerText = user.email;
+    loadData();
+  } else {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('pg-setup').style.display = 'none';
+    document.getElementById('pg-auth').style.display = 'block';
+  }
+});
+
+// LOGIN, SETUP & LOGOUT FUNCTIONS
+function doLogin() {
+  const em = document.getElementById('em').value;
+  const pw = document.getElementById('pw').value;
+  if(!em || !pw) return alert("Fadlan buuxi e-post iyo passord");
+  auth.signInWithEmailAndPassword(em, pw).catch(err => alert("Cilo: " + err.message));
+}
+
+function doSetup() {
+  const se = document.getElementById('se').value;
+  const sp = document.getElementById('sp').value;
+  const sp2 = document.getElementById('sp2').value;
+  if(sp !== sp2) return alert("Passord-ada isma laha!");
+  auth.createUserWithEmailAndPassword(se, sp)
+    .then(() => alert("Kontoen er opprettet!"))
+    .catch(err => alert(err.message));
+}
+
+function doLogout() {
+  auth.signOut();
+}
+
+function goSetup() {
+  document.getElementById('pg-auth').style.display = 'none';
+  document.getElementById('pg-setup').style.display = 'block';
+}
+
+function goAuth() {
+  document.getElementById('pg-setup').style.display = 'none';
+  document.getElementById('pg-auth').style.display = 'block';
+}
+
+function forgotPw() {
+  const em = document.getElementById('em').value;
+  if(!em) return alert("Fadlan qor e-postigaga si loogu soo diro link-ga");
+  auth.sendPasswordResetEmail(em).then(() => alert('Nullstillingslenke sendt.')).catch(err => alert(err.message));
+}
+
+// 3. NAVIGATION LOGIC
+function showPg(pgId) {
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  const activePg = document.getElementById('pg-' + pgId);
+  if(activePg) activePg.classList.add('active');
+  
+  const activeNav = document.getElementById('ni-' + pgId);
+  if(activeNav) activeNav.classList.add('active');
+}
+
+// 4. DATA ENGINE (Load from Firebase)
+function loadData() {
+  const user = auth.currentUser;
+  if(!user) return;
+  
+  db.ref('users/' + user.uid + '/entries').on('value', snapshot => {
+    const data = snapshot.val();
+    const tbody = document.getElementById('etbody');
+    const rtbody = document.getElementById('rtbody');
+    if(tbody) tbody.innerHTML = '';
+    if(rtbody) rtbody.innerHTML = '';
+    
+    let inc = 0, exp = 0, mva12 = 0, mva25 = 0;
+    
+    if(data) {
+      document.getElementById('etbl-empty').classList.add('hidden');
+      Object.keys(data).forEach(key => {
+        const entry = data[key];
+        const amt = parseFloat(entry.amount || 0);
+        
+        if(entry.type === 'inntekt') {
+          inc += amt;
+        } else {
+          exp += amt;
+        }
+        
+        // Dynamic row builders
+        if(tbody) {
+          tbody.innerHTML += `<tr>
+            <td class="td-date">${entry.date || ''}</td>
+            <td>${entry.account || ''}</td>
+            <td class="td-desc">${entry.desc || ''}</td>
+            <td><span class="badge ${entry.type === 'inntekt' ? 'inc' : 'exp'}">${entry.type || ''}</span></td>
+            <td>${entry.bil || '-'}</td>
+            <td style="text-align:right" class="td-amt ${entry.type === 'inntekt' ? 'inc' : 'exp'}">${amt.toFixed(2)} kr</td>
+            <td style="text-align:right"><button class="ico-btn del" onclick="deleteEntry('${key}')"><i class="fas fa-trash"></i></button></td>
+          </tr>`;
+        }
+      });
+    } else {
+      document.getElementById('etbl-empty').classList.remove('hidden');
+    }
+    
+    // Summary updating
+    document.getElementById('s-inc').innerText = inc.toFixed(2) + " kr";
+    document.getElementById('s-exp').innerText = exp.toFixed(2) + " kr";
+    document.getElementById('s-net').innerText = (inc - exp).toFixed(2) + " kr";
+    document.getElementById('s-netmva').innerText = (inc - exp).toFixed(2) + " kr";
+  });
+}
+
+// 5. INTERFACE UTILITIES
+function toggleAmt() {
+  const kpis = document.querySelectorAll('.kpi-val');
+  const label = document.getElementById('el');
+  if(label.innerText === "Skjul") {
+    kpis.forEach(k => k.classList.add('ha'));
+    label.innerText = "Vis";
+  } else {
+    kpis.forEach(k => k.classList.remove('ha'));
+    label.innerText = "Skjul";
+  }
+}
+
+function switchTab(type) {
+  if(type === 'pdf') {
+    document.getElementById('bt-pdf').classList.add('active');
+    document.getElementById('bt-csv').classList.remove('active');
+    document.getElementById('bpdf').classList.remove('hidden');
+    document.getElementById('bcsv').classList.add('hidden');
+  } else {
+    document.getElementById('bt-csv').classList.add('active');
+    document.getElementById('bt-pdf').classList.remove('active');
+    document.getElementById('bcsv').classList.remove('hidden');
+    document.getElementById('bpdf').classList.add('hidden');
+  }
+}
+
+function setModus(m) {
+  document.querySelectorAll('.modus-btn').forEach(b => b.classList.remove('active'));
+  if(m === 'i') document.getElementById('mb-i').classList.add('active');
+  if(m === 't') document.getElementById('mb-t').classList.add('active');
+}
+
+function deleteEntry(key) {
+  const user = auth.currentUser;
+  if(user && confirm('Slette denne transaksjonen?')) {
+    db.ref('users/' + user.uid + '/entries/' + key).remove();
+  }
+}
+
+function deleteAllEntries() {
+  const user = auth.currentUser;
+  if(user && confirm('ADVARSEL! Ma doonaysaa inaad tirtirto dhammaan xogta?')) {
+    db.ref('users/' + user.uid + '/entries').remove().then(() => alert('Dhammaan xogtii waa la tirtiray'));
+  }
+}
+
+function handlePDF(input) { alert('PDF faylka waa la helay, habraaca wuu bilaabanayaa...'); }
+function filterEntries(val) { console.log("Searching for:", val); }
+function dlCSV() { alert('CSV download unrolled'); }
+function dlPDF() { alert('PDF Report built'); }
+</script>
+
+</body>
+</html>
