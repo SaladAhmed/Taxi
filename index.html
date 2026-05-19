@@ -1295,58 +1295,95 @@ function bNone(){document.querySelectorAll('#bitems .import-item').forEach(el=>e
 async function importBank(){
   const u=auth.currentUser;
   if(!u){alert('Ma gelin nidaamka!');return;}
-  
-  console.log('importBank called, bItems.length:', bItems.length);
-  
+
   const selected=[];
   document.querySelectorAll('#bitems .import-item.sel').forEach(el=>{
     const i=parseInt(el.id.replace('bi-',''));
     if(!isNaN(i)&&bItems[i])selected.push(bItems[i]);
   });
-  
-  console.log('Selected:', selected.length);
-  
   if(!selected.length){
-    if(bItems.length===0){showBS('bItems waa madhan — PDF dib geli!','error');return;}
+    if(bItems.length===0){showBS('PDF dib geli!','error');return;}
     bItems.forEach(item=>selected.push(item));
   }
 
-  const total=selected.length;
-  showBS('Lagrer '+total+' transaksjoner...','info');
+  showBS('Grupperer '+selected.length+' transaksjoner...','info');
   E('btn-bi').disabled=true;
 
+  // ── Group by a short keyword from description ──
+  function groupKey(desc){
+    const d=(desc||'').toLowerCase();
+    if(d.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030'};
+    if(d.includes('tesla'))return{key:'Visa Tesla Inc.',cat:'7000'};
+    if(d.includes('skatteetaten')||d.includes('skatt/arbeidsavgift'))return{key:'Skatteetaten',cat:'5400'};
+    if(d.includes('santander'))return{key:'Santander Consumer Bank AS',cat:'7790'};
+    if(d.includes('kamal'))return{key:'Overføring Kamal',cat:'7790'};
+    if(d.includes('haytham'))return{key:'Overføring Haytham',cat:'7790'};
+    if(d.includes('salad ahmed')||d.includes('salad'))return{key:'Overføring Salad Ahmed',cat:'7790'};
+    if(d.includes('altaieb'))return{key:'Overføring Altaieb',cat:'7790'};
+    if(d.includes('kontoregulering'))return{key:'Kontoregulering',cat:'7797'};
+    if(d.includes('uno-x'))return{key:'Uno-x Mobility',cat:'7000'};
+    if(d.includes('nextgentel'))return{key:'Nextgentel AS',cat:'6907'};
+    if(d.includes('autosync'))return{key:'Autosync AS',cat:'7020'};
+    if(d.includes('fortum'))return{key:'Fortum Strøm AS',cat:'7000'};
+    if(d.includes('lyse'))return{key:'Lyse Tele AS',cat:'6900'};
+    if(d.includes('ra forsikring'))return{key:'Ra Forsikring AS',cat:'7040'};
+    if(d.includes('vibb'))return{key:'Vibb AS',cat:'6907'};
+    if(d.includes('eviny'))return{key:'Eviny Elektrifisering',cat:'7000'};
+    if(d.includes('dnb livsforsikring'))return{key:'DNB Livsforsikring AS',cat:'7040'};
+    if(d.includes('wash world'))return{key:'Wash World',cat:'7000'};
+    if(d.includes('msg cleaning'))return{key:'Msg Cleaning Systems AS',cat:'7790'};
+    if(d.includes('læringsverkstedet')||d.includes('leringsverkstedet'))return{key:'Læringsverkstedet Tyholmen',cat:'7140'};
+    if(d.includes('arendal kommune')||d.includes('kommune'))return{key:'Arendal Kommune',cat:'7400'};
+    if(d.includes('omkostninger'))return{key:'Omkostninger (Bank)',cat:'7770'};
+    // Fallback: first 30 chars of desc
+    return{key:(desc||'Ukjent').substring(0,30),cat:'7790'};
+  }
+
+  // Group and sum
+  const groups={};
+  let firstDate='';
+  for(const item of selected){
+    if(!firstDate||item.date<firstDate)firstDate=item.date;
+    const {key,cat}=groupKey(item.desc||item.description||'');
+    const type=parseInt(item.category)<4000?'income':'expense';
+    const gk=key+'__'+type;
+    if(!groups[gk]){
+      groups[gk]={
+        desc:key+' (Total)',
+        category:item.category||cat,
+        type,
+        amount:0,
+        date:item.date||firstDate
+      };
+    }
+    groups[gk].amount+=parseFloat(item.amount)||0;
+  }
+
+  const grouped=Object.values(groups);
+  const total=grouped.length;
+  showBS('Lagrer '+total+' grupper...','info');
+
   try{
-    // Use a completely fresh database reference
     const uid=u.uid;
     let saved=0;
-    
-    for(const item of selected){
-      const type=parseInt(item.category)<4000?'income':'expense';
+    for(const item of grouped){
       const newRef=db.ref('entries/'+uid).push();
       await newRef.set({
-        date:item.date||'',
-        category:item.category||'7790',
-        description:item.desc||item.description||'',
-        amount:parseFloat(item.amount)||0,
-        type
+        date:item.date,
+        category:item.category,
+        description:item.desc,
+        amount:Math.round(item.amount*100)/100,
+        type:item.type
       });
       saved++;
-      if(saved%10===0||saved===total){
-        showBS('Lagrer '+saved+'/'+total+'...','info');
-      }
     }
-    
-    showBS('✅ Alle '+total+' lagret!','success');
+    showBS('✅ '+total+' grupper lagret! ('+selected.length+' transaksjoner)','success');
     CL(E('bprev'),'hidden',true);
     bItems=[];
-    
-    setTimeout(()=>{
-      showPg('dash');
-    },800);
-    
+    setTimeout(()=>showPg('dash'),1000);
   }catch(err){
     showBS('❌ '+err.message,'error');
-    console.error('importBank error:', err);
+    console.error(err);
   }
   E('btn-bi').disabled=false;
 }
