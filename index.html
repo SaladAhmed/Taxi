@@ -888,10 +888,6 @@ function filterEntries(q){searchQ=q.toLowerCase();renderTableOnly(entries);}
 // ── DATA ──
 function loadData(){
   const u=auth.currentUser;if(!u)return;
-  // Detach old listeners first
-  db.ref('entries/'+u.uid).off();
-  db.ref('bills/'+u.uid).off();
-  // Reattach
   db.ref('entries/'+u.uid).on('value',snap=>{
     entries=[];snap.forEach(c=>entries.push({id:c.key,...c.val()}));
     entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -1317,8 +1313,6 @@ async function importBank(){
 
   try{
     const ref=db.ref('entries/'+u.uid);
-    // Detach listener
-    ref.off();
     
     let saved=0;
     for(const item of selected){
