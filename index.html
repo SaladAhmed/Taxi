@@ -1323,15 +1323,21 @@ async function importBank(){
     let saved=0;
     for(const item of selected){
       const type=parseInt(item.category)<4000?'income':'expense';
-      await ref.push({
-        date:item.date||'',
-        category:item.category||'7790',
-        description:item.desc||item.description||'',
-        amount:parseFloat(item.amount)||0,
-        type
-      });
-      saved++;
-      showBS('Lagrer '+saved+'/'+total+'...','info');
+      try{
+        await ref.push({
+          date:item.date||'',
+          category:item.category||'7790',
+          description:item.desc||item.description||'',
+          amount:parseFloat(item.amount)||0,
+          type
+        });
+        saved++;
+        showBS('Lagrer '+saved+'/'+total+'...','info');
+      }catch(pushErr){
+        console.error('Push error at item '+saved+':', pushErr.message, pushErr.code);
+        alert('Firebase feil: '+pushErr.message+'\nKode: '+pushErr.code);
+        break;
+      }
     }
     
     showBS('✅ Alle '+total+' lagret!','success');
