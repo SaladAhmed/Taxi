@@ -883,7 +883,7 @@ firebase.initializeApp({
 });
 const db=firebase.database(),auth=firebase.auth(),stor=firebase.storage();
 let stream=null,entries=[],bills=[],bItems=[],oItems=[],amtHid=false,modus="t",period="today",cf=null,ct=null,searchQ="";
-let gRawTotal=0;
+let gRawTotal=0,gMva12Exact=0,gMva25Exact=0;
 
 const E=id=>document.getElementById(id);
 const V=id=>E(id).value;
@@ -1053,12 +1053,20 @@ function renderDash(list){
   list.forEach(e=>{
     const a=parseFloat(e.amount)||0;
     if(e.type==='income')inc+=a;else exp+=a;
-    // MVA 12% — Agder Taxi income only (source='agder' or billNr/carId proof)
+    // MVA 12% — Agder Taxi ONLY
     if(e.type==='income'&&isAgderEntry(e)){
-      const cat=parseInt(e.category||'0');
-      if(cat>=3030&&cat<=3110)mva12+=a*0.12;
+      if(e.mva12Exact>0){
+        // Exact MVA from faktura PDF
+        mva12+=parseFloat(e.mva12Exact)||0;
+      } else {
+        // Estimate 12% if no exact value stored
+        const cat=parseInt(e.category||'0');
+        if(cat>=3030&&cat<=3110)mva12+=a*0.12;
+      }
     }
-    if(e.mva25)mva25+=parseFloat(e.mva25)||0;
+    // MVA 25% exact from faktura
+    if(e.mva25Exact>0)mva25+=parseFloat(e.mva25Exact)||0;
+    else if(e.mva25)mva25+=parseFloat(e.mva25)||0;
   });
   const net=inc-exp,netAfterMva=net-mva12-mva25;
   T('s-inc',fmt(inc));T('s-exp',fmt(exp));T('s-net',fmt(net));
@@ -1618,6 +1626,8 @@ function parseAgderItems(all){
   if(frim){avgiftsfritt=norNum(frim[1].replace('-',''));T('at-free',fmt(avgiftsfritt));}
   const totalMva=Math.round(mva12+mva25);
   gRawTotal=rawTotal;
+  gMva12Exact=mva12;
+  gMva25Exact=mva25;
   const displayNetto=rawIsNeg?rawTotal:-rawTotal;
   const nettoEl=E('atnetto');
   if(nettoEl){
@@ -1762,7 +1772,9 @@ async function importOCR(){
   const nettoCard=E('oi-netto');
   if(nettoCard){
     const it=oItems[0];
-    await ref.push({date:it?.date||'',category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,amount:gRawTotal||0,type:'income',carId:'',billNr:it?.invNr||'',source:'agder'});
+    const savedMva12=parseFloat(document.getElementById('at-m12')?.textContent?.replace(/[^0-9,]/g,'').replace(',','.')||0)||0;
+    const savedMva25=parseFloat(document.getElementById('s-mva25')?.dataset?.faktura||0)||0;
+    await ref.push({date:it?.date||'',category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,amount:gRawTotal||0,type:'income',carId:'',billNr:it?.invNr||'',source:'agder',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0});
     alert(`✅ Netto entry lagret: +${fmt(gRawTotal||0)}`);
   } else {
     const selected=[];
@@ -1820,6 +1832,8 @@ function parseAgderItemsForScan(all){
   if(frim){avgiftsfritt=norNum(frim[1].replace('-',''));T('scan-free',fmt(avgiftsfritt));}
   const totalMva=Math.round(mva12+mva25);
   gRawTotal=rawTotal;
+  gMva12Exact=mva12;
+  gMva25Exact=mva25;
   const displayNetto=rawIsNeg?rawTotal:-rawTotal;
   T('scan-netto-big',(displayNetto>=0?'+':'−')+fmt(Math.abs(displayNetto)));
   E('scan-netto-big').style.color=displayNetto>=0?'var(--green)':'var(--red)';
@@ -1932,7 +1946,7 @@ async function importScanOCR(){
   const nettoCard=E('soi-netto');
   if(nettoCard){
     const it=scanOItems[0];
-    await ref.push({date:it?.date||'',category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,amount:gRawTotal,type:'income',carId:'',billNr:it?.invNr||''});
+    await ref.push({date:it?.date||'',category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,amount:gRawTotal,type:'income',carId:'',billNr:it?.invNr||'',source:'agder',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0});
     alert(`✅ Netto entry lagret: +${fmt(gRawTotal)}`);
   } else {
     const selected=[];
