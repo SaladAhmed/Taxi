@@ -398,9 +398,10 @@ input[type=file]{display:none}
             <input type="date" id="dto" onchange="applyCustom()">
           </div>
         </div>
+        <!-- ── TOTAL SUMMARY ROW ── -->
         <div class="kpi-row">
-          <div class="kpi green"><div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Inntekt</div><div class="kpi-val af" id="s-inc">0,00 kr</div><div class="kpi-sub">Brutto inntekt</div></div>
-          <div class="kpi red"><div class="kpi-label"><i class="fas fa-arrow-trend-down"></i> Utgifter</div><div class="kpi-val af" id="s-exp">0,00 kr</div><div class="kpi-sub">Totale kostnader</div></div>
+          <div class="kpi green"><div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Total Inntekt</div><div class="kpi-val af" id="s-inc">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
+          <div class="kpi red"><div class="kpi-label"><i class="fas fa-arrow-trend-down"></i> Total Utgifter</div><div class="kpi-val af" id="s-exp">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
           <div class="kpi blue"><div class="kpi-label"><i class="fas fa-scale-balanced"></i> Netto</div><div class="kpi-val af" id="s-net">0,00 kr</div><div class="kpi-sub">Før skatt</div></div>
         </div>
         <div class="kpi-row">
@@ -408,23 +409,95 @@ input[type=file]{display:none}
           <div class="kpi amber"><div class="kpi-label"><i class="fas fa-percent"></i> MVA 25%</div><div class="kpi-val af" id="s-mva25">0,00 kr</div><div class="kpi-sub">Skyldig MVA høy sats</div></div>
           <div class="kpi purple"><div class="kpi-label"><i class="fas fa-hand-holding-dollar"></i> Netto etter MVA</div><div class="kpi-val af" id="s-netmva">0,00 kr</div><div class="kpi-sub">Til deg</div></div>
         </div>
+
+        <!-- ── SPLIT: AGDER TAXI vs BANK ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+
+          <!-- Agder Taxi mini-KPI -->
+          <div style="background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(217,119,6,.03));border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <div style="width:28px;height:28px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">🚕</div>
+              <span style="font-size:13px;font-weight:700;color:#92400e">Agder Taxi Fakturaer</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(217,119,6,.2)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div>
+                <div class="af" id="at-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--green)">0,00 kr</div>
+              </div>
+              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(217,119,6,.2)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Utgifter</div>
+                <div class="af" id="at-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--red)">0,00 kr</div>
+              </div>
+            </div>
+            <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(217,119,6,.2);text-align:center">
+              <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Netto Agder Taxi</div>
+              <div class="af" id="at-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px">0,00 kr</div>
+            </div>
+          </div>
+
+          <!-- Bank mini-KPI -->
+          <div style="background:linear-gradient(135deg,rgba(26,86,219,.08),rgba(26,86,219,.03));border:1.5px solid var(--accent);border-radius:var(--radius-lg);padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <div style="width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">🏦</div>
+              <span style="font-size:13px;font-weight:700;color:#1e3a8a">DNB Bank Transaksjoner</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div>
+                <div class="af" id="bk-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--green)">0,00 kr</div>
+              </div>
+              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Utgifter</div>
+                <div class="af" id="bk-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--red)">0,00 kr</div>
+              </div>
+            </div>
+            <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2);text-align:center">
+              <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Netto Bank</div>
+              <div class="af" id="bk-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px">0,00 kr</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── AGDER TAXI TABLE ── -->
         <div class="card">
-          <div class="card-header">
-            <div class="card-title"><i class="fas fa-list"></i> Transaksjoner</div>
+          <div class="card-header" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)">
+            <div class="card-title" style="color:#92400e"><i class="fas fa-file-invoice" style="color:var(--amber)"></i> 🚕 Agder Taxi Transaksjoner</div>
             <div class="card-actions">
-              <input class="filter-search" id="etxsearch" placeholder="🔍 Søk..." style="width:180px" oninput="filterEntries(this.value)">
+              <input class="filter-search" id="at-search" placeholder="🔍 Søk..." style="width:150px" oninput="filterAT(this.value)">
+              <span id="at-count" style="font-size:11px;color:var(--text3);font-weight:600"></span>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Type</th><th>Bil</th>
+                <th style="text-align:right">Beløp</th><th style="text-align:right">Handling</th>
+              </tr></thead>
+              <tbody id="at-tbody"></tbody>
+            </table>
+            <div id="at-empty" class="empty-state hidden"><i class="fas fa-file-invoice"></i><h3>Ingen Agder Taxi transaksjoner</h3><p>Importer Agder Taxi faktura</p></div>
+          </div>
+        </div>
+
+        <!-- ── BANK TABLE ── -->
+        <div class="card">
+          <div class="card-header" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+            <div class="card-title" style="color:#1e3a8a"><i class="fas fa-university" style="color:var(--accent)"></i> 🏦 Bank Transaksjoner (DNB)</div>
+            <div class="card-actions">
+              <input class="filter-search" id="bk-search" placeholder="🔍 Søk..." style="width:150px" oninput="filterBK(this.value)">
+              <span id="bk-count" style="font-size:11px;color:var(--text3);font-weight:600"></span>
               <button class="btn btn-outline btn-sm" onclick="showPg('add')"><i class="fas fa-plus"></i> Ny</button>
             </div>
           </div>
           <div class="tbl-wrap">
             <table>
               <thead><tr>
-                <th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Type</th><th>Bil #</th>
+                <th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Type</th><th>Bil</th>
                 <th style="text-align:right">Beløp</th><th style="text-align:right">Handling</th>
               </tr></thead>
-              <tbody id="etbody"></tbody>
+              <tbody id="bk-tbody"></tbody>
             </table>
-            <div id="etbl-empty" class="empty-state hidden"><i class="fas fa-inbox"></i><h3>Ingen transaksjoner</h3><p>Importer fra bank eller legg inn manuelt</p></div>
+            <div id="bk-empty" class="empty-state hidden"><i class="fas fa-university"></i><h3>Ingen banktransaksjoner</h3><p>Importer DNB PDF eller CSV</p></div>
           </div>
         </div>
       </div>
@@ -947,7 +1020,21 @@ function loadData(){
 }
 
 // ── DASHBOARD ──
+// ── Helper: is this an Agder Taxi entry? ──
+function isAgderEntry(e){
+  const d=(e.description||'').toLowerCase();
+  const b=(e.billNr||'')!=='';
+  // Agder Taxi categories used in parseAgderItems
+  const agderCats=['3030','7791','7792','7793','7794','6755','7040','7000','7795','7796'];
+  const isAgderCat=agderCats.includes(String(e.category||''));
+  return b||d.includes('agder taxi')||d.includes('faktura #')||d.includes('emv n')||d.includes('pasienttransport')||d.includes('spesialtur')||d.includes('generell kreditt')||d.includes('tt rogaland')||d.includes('sentralavgift')||d.includes('bilforsikring')||(e.carId&&e.carId.startsWith('AG'));
+}
+
 function renderDash(list){
+  const agder=list.filter(e=>isAgderEntry(e));
+  const bank=list.filter(e=>!isAgderEntry(e));
+
+  // Total KPIs
   let inc=0,exp=0,mva12=0,mva25=0;
   list.forEach(e=>{
     const a=parseFloat(e.amount)||0;
@@ -961,35 +1048,72 @@ function renderDash(list){
   T('s-mva12',fmt(Math.round(mva12)));T('s-mva25',fmt(Math.round(mva25)));T('s-netmva',fmt(Math.round(netAfterMva)));
   E('s-net').style.color=net>=0?'var(--green)':'var(--red)';
   E('s-netmva').style.color=netAfterMva>=0?'var(--purple)':'var(--red)';
+
+  // Agder Taxi KPIs
+  let atInc=0,atExp=0;
+  agder.forEach(e=>{const a=parseFloat(e.amount)||0;if(e.type==='income')atInc+=a;else atExp+=a;});
+  const atNet=atInc-atExp;
+  T('at-inc',fmt(atInc));T('at-exp',fmt(atExp));
+  if(E('at-net')){E('at-net').textContent=(atNet>=0?'+':'')+fmt(Math.abs(atNet));E('at-net').style.color=atNet>=0?'var(--green)':'var(--red)';}
+
+  // Bank KPIs
+  let bkInc=0,bkExp=0;
+  bank.forEach(e=>{const a=parseFloat(e.amount)||0;if(e.type==='income')bkInc+=a;else bkExp+=a;});
+  const bkNet=bkInc-bkExp;
+  T('bk-inc',fmt(bkInc));T('bk-exp',fmt(bkExp));
+  if(E('bk-net')){E('bk-net').textContent=(bkNet>=0?'+':'')+fmt(Math.abs(bkNet));E('bk-net').style.color=bkNet>=0?'var(--green)':'var(--red)';}
+
   if(amtHid)document.querySelectorAll('.af').forEach(el=>el.classList.add('ha'));
-  renderTableOnly(list);
+
+  renderATTable(agder);
+  renderBKTable(bank);
 }
 
-function renderTableOnly(list){
-  const tb=E('etbody');tb.innerHTML='';
-  const filtered=searchQ?list.filter(e=>(e.description||'').toLowerCase().includes(searchQ)||(e.category||'').includes(searchQ)):list;
-  CL(E('etbl-empty'),'hidden',filtered.length>0);
-  filtered.forEach(e=>{
-    const a=parseFloat(e.amount)||0,isI=e.type==='income',isZero=a===0;
-    const tr=document.createElement('tr');
-    if(isZero)tr.style.background='#fffbeb';
-    const amtCell=isZero
-      ?`<span style="color:#d97706;font-weight:600;font-size:12px">⚠️ 0,00 kr</span>`
-      :`<span class="td-amt ${isI?'inc':'exp'} af${amtHid?' ha':''}">${isI?'+':'−'}${fmt(a)}</span>`;
-    tr.innerHTML=`
-      <td class="td-date">${e.date||'—'}</td>
-      <td class="td-cat">${e.category||'—'}</td>
-      <td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td>
-      <td><span class="badge ${isI?'inc':'exp'}">${isI?'↑ Inntekt':'↓ Utgift'}</span>${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td>
-      <td>${e.carId?`<span class="badge info">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
-      <td>${amtCell}</td>
-      <td><div class="td-actions">
-        <button class="ico-btn" onclick="editE('${e.id}')" title="Rediger"><i class="fas fa-edit"></i></button>
-        <button class="ico-btn del" onclick="delE('${e.id}')" title="Slett"><i class="fas fa-trash"></i></button>
-      </div></td>`;
-    tb.appendChild(tr);
-  });
+let atSearchQ='',bkSearchQ='';
+function filterAT(q){atSearchQ=q.toLowerCase();renderATTable(entries.filter(e=>isAgderEntry(e)));}
+function filterBK(q){bkSearchQ=q.toLowerCase();renderBKTable(entries.filter(e=>!isAgderEntry(e)));}
+// Keep old filterEntries for compatibility
+function filterEntries(q){atSearchQ=q.toLowerCase();bkSearchQ=q.toLowerCase();renderDash(entries);}
+
+function makeRow(e){
+  const a=parseFloat(e.amount)||0,isI=e.type==='income',isZero=a===0;
+  const tr=document.createElement('tr');
+  if(isZero)tr.style.background='#fffbeb';
+  const amtCell=isZero
+    ?`<span style="color:#d97706;font-weight:600;font-size:12px">⚠️ 0,00 kr</span>`
+    :`<span class="td-amt ${isI?'inc':'exp'} af${amtHid?' ha':''}">${isI?'+':'−'}${fmt(a)}</span>`;
+  tr.innerHTML=`
+    <td class="td-date">${e.date||'—'}</td>
+    <td class="td-cat">${e.category||'—'}</td>
+    <td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td>
+    <td><span class="badge ${isI?'inc':'exp'}">${isI?'↑ Inntekt':'↓ Utgift'}</span>${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td>
+    <td>${e.carId?`<span class="badge amber" style="font-size:10px">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    <td>${amtCell}</td>
+    <td><div class="td-actions">
+      <button class="ico-btn" onclick="editE('${e.id}')" title="Rediger"><i class="fas fa-edit"></i></button>
+      <button class="ico-btn del" onclick="delE('${e.id}')" title="Slett"><i class="fas fa-trash"></i></button>
+    </div></td>`;
+  return tr;
 }
+
+function renderATTable(list){
+  const tb=E('at-tbody');if(!tb)return;tb.innerHTML='';
+  const filtered=atSearchQ?list.filter(e=>(e.description||'').toLowerCase().includes(atSearchQ)||(e.category||'').includes(atSearchQ)):list;
+  CL(E('at-empty'),'hidden',filtered.length>0);
+  T('at-count',filtered.length+' poster');
+  filtered.forEach(e=>tb.appendChild(makeRow(e)));
+}
+
+function renderBKTable(list){
+  const tb=E('bk-tbody');if(!tb)return;tb.innerHTML='';
+  const filtered=bkSearchQ?list.filter(e=>(e.description||'').toLowerCase().includes(bkSearchQ)||(e.category||'').includes(bkSearchQ)):list;
+  CL(E('bk-empty'),'hidden',filtered.length>0);
+  T('bk-count',filtered.length+' poster');
+  filtered.forEach(e=>tb.appendChild(makeRow(e)));
+}
+
+// Keep old renderTableOnly for compatibility (used nowhere now but keep it)
+function renderTableOnly(list){renderDash(list);}
 
 // ── REPORTS ──
 function renderRep(list){
