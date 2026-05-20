@@ -1023,11 +1023,18 @@ function loadData(){
 
 // ── HELPER: is Agder Taxi entry? ──
 function isAgderEntry(e){
+  // billNr or carId = definitive Agder Taxi proof
+  if((e.billNr||'')!=='')return true;
+  if(e.carId&&e.carId.startsWith('AG'))return true;
+  // Description keywords unique to Agder Taxi (not used in bank entries)
   const d=(e.description||'').toLowerCase();
-  const b=(e.billNr||'')!=='';
-  const agderCats=['3030','7791','7792','7793','7794','6755','7040','7000','7795','7796'];
-  const isAgderCat=agderCats.includes(String(e.category||''));
-  return b||d.includes('agder taxi')||d.includes('faktura #')||d.includes('emv n')||d.includes('pasienttransport')||d.includes('spesialtur')||d.includes('generell kreditt')||d.includes('tt rogaland')||d.includes('sentralavgift')||d.includes('bilforsikring')||(e.carId&&e.carId.startsWith('AG'));
+  if(d.includes('agder taxi'))return true;
+  if(d.includes('faktura #'))return true;
+  if(d.includes('netto utbetalt'))return true;
+  if(d.includes('tt rogaland'))return true;
+  if(d.includes('emv n '))return true;
+  // NOT using categories or generic keywords — bank entries share them
+  return false;
 }
 
 // ══════════════════════════════════════════════════════════════
