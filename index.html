@@ -876,7 +876,8 @@ firebase.initializeApp({
   appId:"1:608716442795:web:34cafc1a23316664717bee"
 });
 const db=firebase.database(),auth=firebase.auth(),stor=firebase.storage();
-let stream=null,entries=[],bills=[],bItems=[],oItems=[],amtHid=false,modus='t',period='today',cf=null,ct=null,searchQ='';
+let stream=null,entries=[],bills=[],bItems=[],oItems=[],amtHid=false,modus="t",period="today",cf=null,ct=null,searchQ="";
+let gRawTotal=0;
 
 const E=id=>document.getElementById(id);
 const V=id=>E(id).value;
@@ -1565,6 +1566,7 @@ function parseAgderItems(all){
   const totalMva=Math.round(mva12+mva25);
   // rawTotal = |Beløp inkl. mva| = netto utbetalt (already net of MVA)
   // rawIsNeg = true means Agder Taxi owes us money → INCOME
+  gRawTotal=rawTotal; // Make available to renderOItems/importOCR
   const displayNetto=rawIsNeg?rawTotal:-rawTotal;
   const nettoEl=E('atnetto');
   if(nettoEl){
@@ -1689,24 +1691,137 @@ function parseAgderItems(all){
 function renderOItems(invNr){
   if(!oItems.length)return;
   const con=E('oitems');con.innerHTML='';
-  oItems.forEach((it,i)=>{
-    const isI=it.type==='income',sign=isI?'+':'−';
-    const d=document.createElement('div');d.className='import-item sel';d.id='oi-'+i;
-    d.onclick=()=>{d.classList.toggle('sel');updateOBtn();};
-    d.innerHTML=`<div class="import-item-top"><span class="import-item-desc">${it.desc}</span><span class="import-item-amt" style="color:${isI?'var(--green)':'var(--red)'}">${sign}${fmt(it.amount)}</span></div><div class="import-item-meta">${it.category} · <span class="badge ${isI?'inc':'exp'}" style="font-size:10px">${isI?'Inntekt':'Utgift'}</span>${it.mvaP?' · MVA '+it.mvaP+'%':''}</div>`;
-    con.appendChild(d);
-  });
-  CL(E('ocrlist'),'hidden',false);updateOBtn();
+
+  // ── Calculate netto for this faktura ──
+  const incSum=oItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+  const expSum=oItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+  const nettoAmt=gRawTotal||incSum-expSum;
+  const nettoEntry={
+    desc:`Agder Taxi Faktura #${invNr} — Netto utbetalt`,
+    amount:nettoAmt,
+    type:'income',
+    date:oItems[0]?.date||'',
+    category:'3030',
+    invNr,billNr:invNr,carId:'',
+    isNetto:true
+  };
+
+  // ── MODE TOGGLE ──
+  let showDetailed=false;
+
+  function buildUI(){
+    con.innerHTML='';
+
+    // Toggle bar
+    const tog=document.createElement('div');
+    tog.style.cssText='display:flex;gap:8px;margin-bottom:10px;align-items:center';
+    tog.innerHTML=`
+      <button id="btn-netto-mode" onclick="setOMode(false)" style="flex:1;padding:10px;border-radius:8px;border:2px solid ${!showDetailed?'var(--green)':'var(--border)'};background:${!showDetailed?'var(--green-bg)':'#fff'};color:${!showDetailed?'var(--green)':'var(--text2)'};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s">
+        <i class="fas fa-coins"></i> Netto Total<br><span style="font-size:11px;font-weight:400">1 entry · ${fmt(nettoAmt)}</span>
+      </button>
+      <button id="btn-detail-mode" onclick="setOMode(true)" style="flex:1;padding:10px;border-radius:8px;border:2px solid ${showDetailed?'var(--accent)':'var(--border)'};background:${showDetailed?'rgba(26,86,219,.07)':'#fff'};color:${showDetailed?'var(--accent)':'var(--text2)'};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s">
+        <i class="fas fa-list"></i> Alle poster<br><span style="font-size:11px;font-weight:400">${oItems.length} entries</span>
+      </button>`;
+    con.appendChild(tog);
+
+    if(!showDetailed){
+      // NETTO mode: single green card
+      const d=document.createElement('div');
+      d.className='import-item sel';d.id='oi-netto';
+      d.style.cssText='border-color:var(--green);background:var(--green-bg);cursor:default';
+      d.innerHTML=`
+        <div class="import-item-top">
+          <span class="import-item-desc" style="font-size:14px">🚕 ${nettoEntry.desc}</span>
+          <span class="import-item-amt" style="color:var(--green);font-size:16px">+${fmt(nettoAmt)}</span>
+        </div>
+        <div class="import-item-meta" style="margin-top:4px">
+          ${nettoEntry.date} · 3030 · <span class="badge inc" style="font-size:10px">↑ Inntekt</span>
+          &nbsp;·&nbsp; <span style="color:var(--text3)">+${fmt(incSum)} inntekt − ${fmt(expSum)} utgift</span>
+        </div>`;
+      con.appendChild(d);
+    } else {
+      // DETAIL mode: all line items
+      const summary=document.createElement('div');
+      summary.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid var(--border)';
+      summary.innerHTML=`
+        <div style="text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div><div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--green)">+${fmt(incSum)}</div></div>
+        <div style="text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Utgift</div><div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">−${fmt(expSum)}</div></div>
+        <div style="text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Netto</div><div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">+${fmt(nettoAmt)}</div></div>`;
+      con.appendChild(summary);
+
+      // Select all / none
+      const selbar=document.createElement('div');
+      selbar.style.cssText='display:flex;gap:6px;margin-bottom:8px';
+      selbar.innerHTML=`<button class="btn btn-outline btn-sm" onclick="oAll()">Velg alle</button><button class="btn btn-outline btn-sm" onclick="oNone()">Fjern</button>`;
+      con.appendChild(selbar);
+
+      oItems.forEach((it,i)=>{
+        const isI=it.type==='income',sign=isI?'+':'−';
+        const d=document.createElement('div');d.className='import-item sel';d.id='oi-'+i;
+        d.onclick=()=>{d.classList.toggle('sel');updateOBtn();};
+        d.innerHTML=`<div class="import-item-top">
+          <span class="import-item-desc">${it.desc}</span>
+          <span class="import-item-amt" style="color:${isI?'var(--green)':'var(--red)'}">${sign}${fmt(it.amount)}</span>
+        </div>
+        <div class="import-item-meta">${it.category} · <span class="badge ${isI?'inc':'exp'}" style="font-size:10px">${isI?'↑ Inntekt':'↓ Utgift'}</span>${it.carId?' · '+it.carId:''}</div>`;
+        con.appendChild(d);
+      });
+    }
+    updateOBtn();
+  }
+
+  window.setOMode=function(detailed){
+    showDetailed=detailed;
+    buildUI();
+  };
+  window.oAll=function(){document.querySelectorAll('#oitems .import-item').forEach(el=>el.classList.add('sel'));updateOBtn();};
+  window.oNone=function(){document.querySelectorAll('#oitems .import-item').forEach(el=>el.classList.remove('sel'));updateOBtn();};
+
+  buildUI();
+  CL(E('ocrlist'),'hidden',false);
+  updateOBtn();
 }
-function updateOBtn(){const n=document.querySelectorAll('#oitems .import-item.sel').length;E('btn-oi').style.display=n>0?'flex':'none';}
+
+function updateOBtn(){
+  // In netto mode the netto card is always "selected"
+  const showingNetto=!!E('oi-netto');
+  const n=showingNetto?1:document.querySelectorAll('#oitems .import-item.sel').length;
+  E('btn-oi').style.display=n>0?'flex':'none';
+  E('btn-oi').textContent=showingNetto?`💾 Lagre netto entry (+${fmt(gRawTotal||0)})`:`💾 Lagre ${n} poster`;
+}
+
 async function importOCR(){
   const u=auth.currentUser;if(!u)return;
-  const selected=[];
-  document.querySelectorAll('#oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('oi-',''));if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);});
-  if(!selected.length)return;
   const ref=db.ref('entries/'+u.uid);
-  for(const it of selected){await ref.push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0});}
-  alert('✅ '+selected.length+' poster lagret!');
+
+  // Check if we're in netto mode (single netto card shown)
+  const nettoCard=E('oi-netto');
+  if(nettoCard){
+    // Save single netto entry
+    const it=oItems[0]; // get date/invNr from first item
+    await ref.push({
+      date:it?.date||'',
+      category:'3030',
+      description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,
+      amount:gRawTotal||0,
+      type:'income',
+      carId:'',
+      billNr:it?.invNr||''
+    });
+    alert(`✅ Netto entry lagret: +${fmt(gRawTotal||0)}`);
+  } else {
+    // Save selected detailed items
+    const selected=[];
+    document.querySelectorAll('#oitems .import-item.sel').forEach(el=>{
+      const i=parseInt(el.id.replace('oi-',''));
+      if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);
+    });
+    if(!selected.length)return;
+    for(const it of selected){
+      await ref.push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||''});
+    }
+    alert(`✅ ${selected.length} poster lagret!`);
+  }
   CL(E('ocrlist'),'hidden',true);CL(E('atcard'),'hidden',true);CL(E('atnetto'),'hidden',true);hideStat('ostat');
   showPg('dash');
 }
@@ -1755,8 +1870,8 @@ function parseAgderItemsForScan(all){
   if(m25m)mva25=norNum(m25m[1].replace('-',''));
   if(frim){avgiftsfritt=norNum(frim[1].replace('-',''));T('scan-free',fmt(avgiftsfritt));}
   const totalMva=Math.round(mva12+mva25);
+  gRawTotal=rawTotal;
   const displayNetto=rawIsNeg?rawTotal:-rawTotal;
-  CL(E('scan-netto'),'hidden',false);
   T('scan-netto-big',(displayNetto>=0?'+':'−')+fmt(Math.abs(displayNetto)));
   E('scan-netto-big').style.color=displayNetto>=0?'var(--green)':'var(--red)';
   T('scan-netto-sub',`Netto: ${fmt(rawTotal)} | MVA 12%: ${fmt(Math.round(mva12))} | MVA 25%: ${fmt(Math.round(mva25))} | Avgiftsfritt: ${fmt(avgiftsfritt)}`);
@@ -1813,24 +1928,71 @@ function parseAgderItemsForScan(all){
 function renderScanItems(){
   if(!scanOItems.length)return;
   const con=E('scan-oitems');con.innerHTML='';
-  scanOItems.forEach((it,i)=>{
-    const isI=it.type==='income',sign=isI?'+':'−';
-    const d=document.createElement('div');d.className='import-item sel';d.id='soi-'+i;
-    d.onclick=()=>{d.classList.toggle('sel');updateScanBtn();};
-    d.innerHTML=`<div class="import-item-top"><span class="import-item-desc">${it.desc}</span><span class="import-item-amt" style="color:${isI?'var(--green)':'var(--red)'}">${sign}${fmt(it.amount)}</span></div><div class="import-item-meta">${it.category} · <span class="badge ${isI?'inc':'exp'}" style="font-size:10px">${isI?'Inntekt':'Utgift'}</span>${it.mvaP?' · MVA '+it.mvaP+'%':''}</div>`;
-    con.appendChild(d);
-  });
+  const sInc=scanOItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+  const sExp=scanOItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+  const sInvNr=scanOItems[0]?.invNr||'';
+  const sDate=scanOItems[0]?.date||'';
+
+  let scanShowDetailed=false;
+  function buildScanUI(){
+    con.innerHTML='';
+    // Toggle
+    const tog=document.createElement('div');
+    tog.style.cssText='display:flex;gap:8px;margin-bottom:10px';
+    tog.innerHTML=`
+      <button onclick="setScanMode(false)" style="flex:1;padding:10px;border-radius:8px;border:2px solid ${!scanShowDetailed?'var(--green)':'var(--border)'};background:${!scanShowDetailed?'var(--green-bg)':'#fff'};color:${!scanShowDetailed?'var(--green)':'var(--text2)'};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
+        <i class="fas fa-coins"></i> Netto Total<br><span style="font-size:11px;font-weight:400">1 entry · ${fmt(gRawTotal)}</span>
+      </button>
+      <button onclick="setScanMode(true)" style="flex:1;padding:10px;border-radius:8px;border:2px solid ${scanShowDetailed?'var(--accent)':'var(--border)'};background:${scanShowDetailed?'rgba(26,86,219,.07)':'#fff'};color:${scanShowDetailed?'var(--accent)':'var(--text2)'};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
+        <i class="fas fa-list"></i> Alle poster<br><span style="font-size:11px;font-weight:400">${scanOItems.length} entries</span>
+      </button>`;
+    con.appendChild(tog);
+    if(!scanShowDetailed){
+      const d=document.createElement('div');
+      d.className='import-item sel';d.id='soi-netto';
+      d.style.cssText='border-color:var(--green);background:var(--green-bg);cursor:default';
+      d.innerHTML=`<div class="import-item-top">
+        <span class="import-item-desc" style="font-size:14px">🚕 Agder Taxi Faktura #${sInvNr} — Netto utbetalt</span>
+        <span class="import-item-amt" style="color:var(--green);font-size:16px">+${fmt(gRawTotal)}</span>
+      </div>
+      <div class="import-item-meta">${sDate} · 3030 · <span class="badge inc" style="font-size:10px">↑ Inntekt</span> &nbsp;·&nbsp; <span style="color:var(--text3)">+${fmt(sInc)} inntekt − ${fmt(sExp)} utgift</span></div>`;
+      con.appendChild(d);
+    } else {
+      scanOItems.forEach((it,i)=>{
+        const isI=it.type==='income',sign=isI?'+':'−';
+        const d=document.createElement('div');d.className='import-item sel';d.id='soi-'+i;
+        d.onclick=()=>{d.classList.toggle('sel');updateScanBtn();};
+        d.innerHTML=`<div class="import-item-top"><span class="import-item-desc">${it.desc}</span><span class="import-item-amt" style="color:${isI?'var(--green)':'var(--red)'}">${sign}${fmt(it.amount)}</span></div><div class="import-item-meta">${it.category} · <span class="badge ${isI?'inc':'exp'}" style="font-size:10px">${isI?'↑ Inntekt':'↓ Utgift'}</span>${it.carId?' · '+it.carId:''}</div>`;
+        con.appendChild(d);
+      });
+    }
+    updateScanBtn();
+  }
+  window.setScanMode=function(d){scanShowDetailed=d;buildScanUI();};
+  buildScanUI();
   CL(E('scan-ocrlist'),'hidden',false);updateScanBtn();
 }
-function updateScanBtn(){const n=document.querySelectorAll('#scan-oitems .import-item.sel').length;E('scan-btn-oi').style.display=n>0?'flex':'none';}
+function updateScanBtn(){
+  const nettoCard=!!E('soi-netto');
+  const n=nettoCard?1:document.querySelectorAll('#scan-oitems .import-item.sel').length;
+  const btn=E('scan-btn-oi');
+  if(btn){btn.style.display=n>0?'flex':'none';btn.textContent=nettoCard?`💾 Lagre netto entry (+${fmt(gRawTotal)})`:`💾 Lagre ${n} poster`;}
+}
 async function importScanOCR(){
   const u=auth.currentUser;if(!u)return;
-  const selected=[];
-  document.querySelectorAll('#scan-oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('soi-',''));if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);});
-  if(!selected.length)return;
   const ref=db.ref('entries/'+u.uid);
-  for(const it of selected){await ref.push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',mvaP:it.mvaP||0});}
-  alert('✅ '+selected.length+' poster lagret!');
+  const nettoCard=E('soi-netto');
+  if(nettoCard){
+    const it=scanOItems[0];
+    await ref.push({date:it?.date||'',category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,amount:gRawTotal,type:'income',carId:'',billNr:it?.invNr||''});
+    alert(`✅ Netto entry lagret: +${fmt(gRawTotal)}`);
+  } else {
+    const selected=[];
+    document.querySelectorAll('#scan-oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('soi-',''));if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);});
+    if(!selected.length)return;
+    for(const it of selected){await ref.push({date:it.date,category:it.category,description:it.desc,amount:it.amount,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||''});}
+    alert(`✅ ${selected.length} poster lagret!`);
+  }
   CL(E('scan-ocrlist'),'hidden',true);CL(E('scan-atcard'),'hidden',true);
   CL(E('scan-netto'),'hidden',true);E('scan-ostat').style.display='none';
   E('scan-img').style.display='none';showPg('dash');
