@@ -552,6 +552,9 @@ input[type=file]{display:none}
                   <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg PDF</div>
                 </label>
                 <input type="file" id="pdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)" style="display:none">
+              <div style="margin-top:10px;padding:10px 12px;background:#eff6ff;border-radius:8px;border:1px solid rgba(26,86,219,.2);font-size:12px;color:var(--text2)">
+                <i class="fas fa-lightbulb" style="color:var(--accent)"></i> <b>Tips:</b> Hvis PDF ikke fungerer → bruk <b>CSV-fanen</b>. Last ned fra DNB nettbank: <i>Kontoer → velg konto → Last ned</i>
+              </div>
               </div>
               <div id="bcsv" class="hidden">
                 <label for="csvi" class="upload-zone" style="cursor:pointer;display:block">
@@ -1633,96 +1636,187 @@ async function handlePDF(inp){
 
 function parseDNBv2(allItems){
   bItems=[];
-  if(!allItems.length){showBS('Tom PDF','error');return;}
+  if(!allItems.length){showBS('Tom PDF — ingen tekst funnet','error');return;}
   allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+
+  // ── Group items into lines (y-tolerance 8px) ──
   const lines=[];let curLine=null;
   for(const it of allItems){
-    if(!curLine||it.page!==curLine.page||Math.abs(it.y-curLine.y)>6){if(curLine)lines.push(curLine);curLine={page:it.page,y:it.y,items:[it],pgW:it.pgW};}
-    else curLine.items.push(it);
+    if(!curLine||it.page!==curLine.page||Math.abs(it.y-curLine.y)>8){
+      if(curLine)lines.push(curLine);
+      curLine={page:it.page,y:it.y,items:[it],pgW:it.pgW||595};
+    } else curLine.items.push(it);
   }
   if(curLine)lines.push(curLine);
+
+  const fullText=lines.map(l=>l.items.map(i=>i.text).join(' ')).join('\n');
+
+  // ── Detect column positions ──
   let utCol=-1,innCol=-1;
   for(const line of lines){
     const txt=line.items.map(i=>i.text).join(' ');
     if(/ut av konto/i.test(txt)||/inn p[aå] konto/i.test(txt)){
-      for(const it of line.items){if(/^ut/i.test(it.text))utCol=it.x;if(/^inn/i.test(it.text))innCol=it.x;}
-      break;
+      for(const it of line.items){
+        if(/^ut\s*av/i.test(it.text))utCol=it.x;
+        if(/^inn\s*p/i.test(it.text))innCol=it.x;
+      }
+      if(utCol>0)break;
     }
   }
-  if(utCol<0){const pgW=allItems[0]?.pgW||595;utCol=Math.round(pgW*0.55);innCol=Math.round(pgW*0.70);}
+  // Fallback column positions based on page width
+  if(utCol<0){
+    const pgW=allItems[0]?.pgW||595;
+    utCol=Math.round(pgW*0.52);
+    innCol=Math.round(pgW*0.68);
+  }
+
   const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})$/;
-  const norAmtRe=/^\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+  const norAmtRe=/^-?\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+  const skipRe=/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no|kontonummer|bedriftskonto|kontoutskrift|nettbank)/i;
+
   const txGroups=[];let curTx=null;
   for(const line of lines){
-    const fullTxt=line.items.map(i=>i.text).join(' ');
-    if(/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no)/i.test(fullTxt.trim()))continue;
+    const fullTxt=line.items.map(i=>i.text).join(' ').trim();
+    if(!fullTxt||skipRe.test(fullTxt))continue;
+
     const dates=line.items.filter(it=>dateRe.test(it.text));
-    const hasDateLeft=dates.some(it=>it.x<(utCol*0.4));
+    const hasDateLeft=dates.some(it=>it.x<(utCol*0.45));
+
     if(dates.length>=2&&hasDateLeft){
       if(curTx)txGroups.push(curTx);
-      const sortedDates=dates.sort((a,b)=>a.x-b.x);
+      const sortedDates=[...dates].sort((a,b)=>a.x-b.x);
       const bokDate=parseD(sortedDates[1]?.text)||parseD(sortedDates[0]?.text);
-      const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol);
-      curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems:line.items.filter(it=>it.x>=utCol),line};
-    }else if(curTx){
-      const amtHere=line.items.filter(it=>norAmtRe.test(it.text)&&it.x>=utCol);
-      const descHere=line.items.filter(it=>!norAmtRe.test(it.text)&&it.x<utCol&&!dateRe.test(it.text));
+      const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol-10);
+      const amtItems=line.items.filter(it=>it.x>=utCol-10);
+      curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems,line};
+    } else if(dates.length===1&&hasDateLeft&&!curTx){
+      // Single date format (some DNB versions)
+      if(curTx)txGroups.push(curTx);
+      const bokDate=parseD(dates[0].text);
+      const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol-10);
+      const amtItems=line.items.filter(it=>it.x>=utCol-10);
+      curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems,line};
+    } else if(curTx){
+      const amtHere=line.items.filter(it=>norAmtRe.test(it.text)&&it.x>=utCol-10);
+      const descHere=line.items.filter(it=>!norAmtRe.test(it.text)&&it.x<utCol-10&&!dateRe.test(it.text));
       if(descHere.length)curTx.descParts.push(descHere.map(i=>i.text).join(' '));
       if(amtHere.length)curTx.amtItems.push(...amtHere);
     }
   }
   if(curTx)txGroups.push(curTx);
+
   const seen=new Set();
   for(const tx of txGroups){
     if(!tx.date)continue;
-    const desc=[...new Set(tx.descParts)].filter(s=>s.length>1).join(' ').replace(/\s+/g,' ').trim();
+    const desc=[...new Set(tx.descParts)].filter(s=>s&&s.length>1).join(' ').replace(/\s+/g,' ').trim();
     if(!desc||desc.length<2)continue;
-    if(/^(saldo|dato|tekst|kontoutskrift|bedriftskonto)/i.test(desc))continue;
+    if(/^(saldo|dato|tekst|kontoutskrift|bedriftskonto|inngående|utgående)/i.test(desc))continue;
+
     let utAmt=0,innAmt=0;
     const norAmts=tx.amtItems.filter(it=>norAmtRe.test(it.text));
+
     if(norAmts.length===0){
-      const found=[...tx.line.items.map(i=>i.text).join(' ').matchAll(/\d{1,3}(?:[.\s]\d{3})*,\d{2}/g)];
-      if(found.length>0){const v=norNum(found[found.length-1][0]);if(v>0){if(dnbType(desc)==='income')innAmt=v;else utAmt=v;}}
-    }else if(norAmts.length===1){const v=norNum(norAmts[0].text);if(innCol>0&&norAmts[0].x>=innCol)innAmt=v;else utAmt=v;}
-    else{norAmts.sort((a,b)=>a.x-b.x);for(const a of norAmts){const v=norNum(a.text);if(innCol>0&&a.x>=innCol)innAmt=v;else utAmt=v;}}
+      // Try extracting amount from full line text
+      const lineText=tx.line.items.map(i=>i.text).join(' ');
+      const amtMatches=[...lineText.matchAll(/-?\d{1,3}(?:[.\s]\d{3})*,\d{2}/g)];
+      if(amtMatches.length){
+        const v=norNum(amtMatches[amtMatches.length-1][0].replace('-',''));
+        const isNeg=amtMatches[amtMatches.length-1][0].startsWith('-');
+        if(v>0){if(isNeg||dnbType(desc)==='income')innAmt=v;else utAmt=v;}
+      }
+    } else if(norAmts.length===1){
+      const v=norNum(norAmts[0].text.replace('-',''));
+      const isNeg=norAmts[0].text.startsWith('-');
+      if(innCol>0&&norAmts[0].x>=innCol)innAmt=v;
+      else if(isNeg)innAmt=v;
+      else utAmt=v;
+    } else {
+      norAmts.sort((a,b)=>a.x-b.x);
+      for(const a of norAmts){
+        const v=norNum(a.text.replace('-',''));
+        const isNeg=a.text.startsWith('-');
+        if(innCol>0&&a.x>=innCol)innAmt=v;
+        else if(isNeg)innAmt=v;
+        else utAmt=v;
+      }
+    }
+
     let finalAmt=0,finalType='expense';
     if(innAmt>0&&utAmt<=0){finalAmt=innAmt;finalType='income';}
     else if(utAmt>0&&innAmt<=0){finalAmt=utAmt;finalType='expense';}
     else if(innAmt>0&&utAmt>0){const t=dnbType(desc);finalAmt=t==='income'?innAmt:utAmt;finalType=t;}
     else continue;
+
     if(finalAmt<0.01||finalAmt>9999999)continue;
     if(desc.toLowerCase().includes('agder taxi'))finalType='income';
     const cat=autocat(desc,finalType);
     const key=tx.date+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,25);
-    if(!seen.has(key)){seen.add(key);bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});}
+    if(!seen.has(key)){{seen.add(key);bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});}}
   }
-  if(!bItems.length){parseDNBFallbackRegex(allItems);return;}
-  showBS('✅ '+bItems.length+' transaksjoner funnet!','success');renderBItems();
+
+  if(!bItems.length){
+    showBS(`⚠️ Metode 1 fant ingenting — prøver fallback...`,'info');
+    parseDNBFallbackRegex(allItems);
+    return;
+  }
+  showBS('✅ '+bItems.length+' transaksjoner funnet!','success');
+  renderBItems();
 }
 
 function parseDNBFallbackRegex(allItems){
   bItems=[];
   allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
   const lines=[];let cur=[],ly=-999,lp=-1;
-  for(const it of allItems){if(it.page!==lp||Math.abs(it.y-ly)>6){if(cur.length)lines.push(cur.map(i=>i.text).join(' '));cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}
+  for(const it of allItems){
+    if(it.page!==lp||Math.abs(it.y-ly)>8){if(cur.length)lines.push(cur.map(i=>i.text).join(' '));cur=[it];}
+    else cur.push(it);
+    ly=it.y;lp=it.page;
+  }
   if(cur.length)lines.push(cur.map(i=>i.text).join(' '));
-  const fullText=lines.join('\n'),seen=new Set();
-  const txRe=/(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s+([A-Za-z\u00C0-\u00FF][^\n]{2,80?}?)\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})(?:\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2}))?/gm;
+  const fullText=lines.join('\n');
+  const seen=new Set();
+
+  // Pattern 1: Two dates + description + amount(s) — standard DNB format
+  const txRe1=/(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s+([A-Za-z\u00C0-\u00FF\d][^\n]{2,70})\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})(?:\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2}))?/gm;
   let m;
-  while((m=txRe.exec(fullText))!==null){
+  while((m=txRe1.exec(fullText))!==null){
     const dv=parseD(m[2]);if(!dv)continue;
-    const desc=(m[3]||'').trim().replace(/\s+/g,' ');if(desc.length<2)continue;
-    if(/^(dato|tekst|saldo|ut av|inn p)/i.test(desc))continue;
+    const desc=(m[3]||'').trim().replace(/\s+/g,' ').replace(/\s+\d+,\d{2}$/,'').trim();
+    if(desc.length<2||/^(dato|tekst|saldo|ut av|inn p|side)/i.test(desc))continue;
     const utAmt=norNum(m[4]),innAmt=m[5]?norNum(m[5]):0;
     let finalAmt,finalType;
-    if(innAmt>0){finalAmt=innAmt;finalType='income';}else{finalAmt=utAmt;finalType=dnbType(desc);}
+    if(innAmt>0&&utAmt>0){const t=dnbType(desc);finalAmt=t==='income'?innAmt:utAmt;finalType=t;}
+    else if(innAmt>0){finalAmt=innAmt;finalType='income';}
+    else{finalAmt=utAmt;finalType=dnbType(desc);}
     if(desc.toLowerCase().includes('agder taxi'))finalType='income';
     if(finalAmt<0.01||finalAmt>9999999)continue;
     const key=dv+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,22);
     if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:finalAmt,type:finalType,category:autocat(desc,finalType)});}
   }
-  if(!bItems.length){showBS('Ingen transaksjoner funnet. Prøv CSV.','error');return;}
-  showBS('✅ '+bItems.length+' transaksjoner (fallback)','success');renderBItems();
+
+  // Pattern 2: Single date + description + signed amount (newer DNB format)
+  if(!bItems.length){
+    const txRe2=/(\d{2}\.\d{2}\.\d{4})\s+([A-Za-z\u00C0-\u00FF][^\n]{3,60})\s+(-?\d{1,3}(?:[.\s]\d{3})*,\d{2})/gm;
+    while((m=txRe2.exec(fullText))!==null){
+      const dv=parseD(m[1]);if(!dv)continue;
+      const desc=(m[2]||'').trim().replace(/\s+/g,' ');
+      if(desc.length<2||/^(dato|saldo|side)/i.test(desc))continue;
+      const raw=m[3];
+      const isNeg=raw.startsWith('-');
+      const amt=norNum(raw.replace('-',''));
+      if(amt<0.01||amt>9999999)continue;
+      const finalType=isNeg?'income':dnbType(desc);
+      const key=dv+'|'+amt.toFixed(2)+'|'+desc.substring(0,22);
+      if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type:finalType,category:autocat(desc,finalType)});}
+    }
+  }
+
+  if(!bItems.length){
+    showBS('⚠️ PDF ble lest men ingen transaksjoner funnet. Last ned CSV fra DNB nettbank og importer den.','error');
+    return;
+  }
+  showBS('✅ '+bItems.length+' transaksjoner funnet (fallback)','success');
+  renderBItems();
 }
 
 function handleCSV(inp){
