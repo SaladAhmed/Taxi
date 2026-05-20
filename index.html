@@ -402,14 +402,14 @@ input[type=file]{display:none}
         </div>
         <!-- ── TOTAL SUMMARY ROW ── -->
         <div class="kpi-row">
-          <div class="kpi green"><div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Total Inntekt</div><div class="kpi-val af" id="s-inc">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
+          <div class="kpi green"><div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Total Inntekt</div><div class="kpi-val af" id="s-inc">0,00 kr</div><div class="kpi-sub">Brutto inkl. MVA-grunnlag</div></div>
           <div class="kpi red"><div class="kpi-label"><i class="fas fa-arrow-trend-down"></i> Total Utgifter</div><div class="kpi-val af" id="s-exp">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
-          <div class="kpi blue"><div class="kpi-label"><i class="fas fa-scale-balanced"></i> Netto</div><div class="kpi-val af" id="s-net">0,00 kr</div><div class="kpi-sub">Før skatt</div></div>
+          <div class="kpi blue"><div class="kpi-label"><i class="fas fa-scale-balanced"></i> Driftsresultat</div><div class="kpi-val af" id="s-net">0,00 kr</div><div class="kpi-sub">Inntekt − Utgifter</div></div>
         </div>
         <div class="kpi-row">
           <div class="kpi amber"><div class="kpi-label"><i class="fas fa-percent"></i> MVA 12%</div><div class="kpi-val af" id="s-mva12">0,00 kr</div><div class="kpi-sub">Skyldig MVA lav sats</div></div>
           <div class="kpi amber"><div class="kpi-label"><i class="fas fa-percent"></i> MVA 25%</div><div class="kpi-val af" id="s-mva25">0,00 kr</div><div class="kpi-sub">Skyldig MVA høy sats</div></div>
-          <div class="kpi purple"><div class="kpi-label"><i class="fas fa-hand-holding-dollar"></i> Netto etter MVA</div><div class="kpi-val af" id="s-netmva">0,00 kr</div><div class="kpi-sub">Til deg</div></div>
+          <div class="kpi purple"><div class="kpi-label"><i class="fas fa-hand-holding-dollar"></i> Netto etter MVA</div><div class="kpi-val af" id="s-netmva">0,00 kr</div><div class="kpi-sub">Etter MVA betalt</div></div>
         </div>
 
         <!-- ── SPLIT: AGDER TAXI vs BANK ── -->
@@ -512,22 +512,20 @@ input[type=file]{display:none}
     <!-- ── RAPPORTER ── -->
     <div id="pg-reports" class="pg">
       <div class="topbar">
-        <div class="topbar-title">Rapporter</div>
+        <div class="topbar-title">Resultatregnskap</div>
         <div class="topbar-actions">
-          <button class="top-btn" onclick="dlCSV()"><i class="fas fa-file-csv"></i> Last ned CSV</button>
-          <button class="top-btn primary" onclick="dlPDF()"><i class="fas fa-file-pdf"></i> Generer PDF</button>
+          <button class="top-btn" onclick="dlCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+          <button class="top-btn primary" onclick="printResultat()"><i class="fas fa-print"></i> Skriv ut / PDF</button>
         </div>
       </div>
       <div class="page-content">
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i class="fas fa-table"></i> Regnskapsoversikt</div></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Faktura</th><th style="text-align:right">Beløp</th></tr></thead>
-              <tbody id="rtbody"></tbody>
-            </table>
-          </div>
+        <!-- Period filter -->
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          <select id="rep-year" class="form-control" style="width:100px" onchange="renderResultat()"></select>
+          <div style="display:flex;gap:4px;flex-wrap:wrap" id="rep-month-btns"></div>
+          <button class="btn btn-outline btn-sm" onclick="repSelectAll()">Alle måneder</button>
         </div>
+        <div id="resultat-container"></div>
       </div>
     </div>
 
@@ -968,6 +966,7 @@ function showPg(pg){
     if(E('scan-startbtn'))E('scan-startbtn').style.display='flex';
   }
   if(pg==='bills')renderBills();
+  if(pg==='reports')initRepFilter();
 }
 
 // ── MODUS ──
@@ -1013,7 +1012,7 @@ function loadData(){
     snap.forEach(c=>{const v=c.val();if(v&&typeof v==='object'&&v.date)entries.push({id:c.key,...v});});
     entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     if(modus==='i')applyPer();else renderDash(entries);
-    renderRep(entries);
+    if(E('pg-reports')?.classList.contains('active'))initRepFilter();
   });
   db.ref('bills/'+u.uid).on('value',snap=>{
     bills=[];snap.forEach(c=>bills.push({id:c.key,...c.val()}));
@@ -1048,25 +1047,27 @@ function renderDash(list){
   const agder=list.filter(e=>isAgderEntry(e));
   const bank=list.filter(e=>!isAgderEntry(e));
 
-  // Total KPIs — MVA only on Agder Taxi entries, never bank
+  // Total KPIs — Resultatregnskap style: BRUTTO inntekt, MVA gooniya
   let inc=0,exp=0,mva12=0,mva25=0;
   list.forEach(e=>{
     const a=parseFloat(e.amount)||0;
-    if(e.type==='income')inc+=a;else exp+=a;
-    // MVA 12% — Agder Taxi ONLY
-    if(e.type==='income'&&isAgderEntry(e)){
-      if(e.mva12Exact>0){
-        // Exact MVA from faktura PDF
-        mva12+=parseFloat(e.mva12Exact)||0;
-      } else {
-        // Estimate 12% if no exact value stored
+    if(e.type==='expense'){exp+=a;return;}
+    // INCOME: use BRUTTO (netto + mva12Exact) to match Resultatregnskap
+    if(isAgderEntry(e)){
+      const m12=parseFloat(e.mva12Exact)||0;
+      const m25=parseFloat(e.mva25Exact)||0;
+      inc+=(a+m12);   // BRUTTO = netto + mva12
+      mva12+=m12;     // exact MVA 12% from faktura
+      mva25+=m25;     // exact MVA 25% from faktura
+      // Fallback: no exact MVA stored yet → estimate
+      if(!m12){
         const cat=parseInt(e.category||'0');
-        if(cat>=3030&&cat<=3110)mva12+=a*0.12;
+        if(cat>=3030&&cat<=3110){const est=a*0.12;mva12+=est;inc+=est;}
       }
+    } else {
+      // Bank income: no MVA, add as-is
+      inc+=a;
     }
-    // MVA 25% exact from faktura
-    if(e.mva25Exact>0)mva25+=parseFloat(e.mva25Exact)||0;
-    else if(e.mva25)mva25+=parseFloat(e.mva25)||0;
   });
   const net=inc-exp,netAfterMva=net-mva12-mva25;
   T('s-inc',fmt(inc));T('s-exp',fmt(exp));T('s-net',fmt(net));
@@ -1157,14 +1158,285 @@ function renderBKTable(list){
 function renderTableOnly(list){renderDash(list);}
 
 // ── REPORTS ──
-function renderRep(list){
-  const tb=E('rtbody');tb.innerHTML='';
-  list.forEach(e=>{
-    const a=parseFloat(e.amount)||0,isI=e.type==='income';
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="td-date">${e.date||''}</td><td class="td-cat">${e.category||''}</td><td>${e.description||''}</td><td>${e.billNr||'—'}</td><td><span class="td-amt ${isI?'inc':'exp'}">${isI?'+':'−'}${fmt(a)}</span></td>`;
-    tb.appendChild(tr);
+function renderRep(list){} // kept for compat
+
+// ── KONTOPLAN ──
+const KONTO_NAMES={
+  '3030':'Kjøreinntekter, lav sats','3031':'Kjøreinntekter kontant, lav sats',
+  '3032':'Kjøreinntekter NAV, lav sats','3033':'Kjøreinntekter skole, lav sats',
+  '3039':'Bomtur, lav sats','3110':'Tips',
+  '5000':'Lønn til ansatte','5090':'Påløpt, ikke utbetalt lønn','5092':'Feriepenger',
+  '5400':'Arbeidsgiveravgift','5405':'Arb.avg. av påløpte feriepenger',
+  '5920':'Yrkesskadeforsikring',
+  '6010':'Avskrivning på transportmidler',
+  '6705':'Regnskapshonorar','6755':'Sentralavgift',
+  '6800':'Kontorrekvisita','6890':'Annen kontorkostnad',
+  '6900':'Telefon','6907':'Datakommunikasjon',
+  '7000':'Drivstoff','7020':'Vedlikehold transportmiddel',
+  '7040':'Forsikring transportmiddel',
+  '7140':'Reisekostnad, ikke opplysningspliktig',
+  '7400':'Kontingent, fradragsberettiget',
+  '7770':'Bank- og kortgebyrer','7790':'Annen kostnad',
+  '7791':'Spesialtur','7792':'Generell kreditt','7793':'Pasienttransport',
+  '7794':'Ikke møtt','7795':'Adm. gebyr trukket','7796':'Faktura Agder Taxi',
+  '7797':'Kontoutskrift','7798':'Annen kostnad fradragsberettiget',
+};
+const KONTO_GROUPS={
+  'DRIFTSINNTEKTER':{
+    'Salgsinntekter':['3030','3031','3032','3033','3039','3110'],
+  },
+  'DRIFTSKOSTNADER':{
+    'Lønnskostnader':['5000','5090','5092','5400','5405'],
+    'Andre personalkostnader':['5920'],
+    'Av- og nedskrivninger':['6010'],
+    'Eksterne honorarer':['6705','6755'],
+    'Kontorkostnader':['6800','6890','6900','6907'],
+    'Bilkostnader':['7000','7020','7040'],
+    'Reise og diett':['7140'],
+    'Kontingenter':['7400'],
+    'Andre kostnader':['7770','7790','7791','7792','7793','7794','7795','7796','7797','7798'],
+  }
+};
+
+let repSelectedMonths=new Set();
+
+function initRepFilter(){
+  const years=[...new Set(entries.map(e=>(e.date||'').substring(0,4)).filter(Boolean))].sort().reverse();
+  const sel=E('rep-year');
+  if(!sel)return;
+  sel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  renderResultat();
+}
+
+function repSelectAll(){
+  const year=E('rep-year')?.value;
+  const months=[...new Set(entries.filter(e=>(e.date||'').startsWith(year)).map(e=>(e.date||'').substring(5,7)).filter(Boolean))].sort();
+  repSelectedMonths=new Set(months);
+  document.querySelectorAll('.rep-mbtn').forEach(b=>{b.classList.add('active');b.style.background='var(--accent)';b.style.color='#fff';});
+  renderResultat();
+}
+
+function renderResultat(){
+  const year=E('rep-year')?.value;if(!year)return;
+  const con=E('resultat-container');if(!con)return;
+
+  // Build month buttons
+  const allMonths=[...new Set(entries.filter(e=>(e.date||'').startsWith(year)).map(e=>(e.date||'').substring(5,7)).filter(Boolean))].sort();
+  const MNAMES=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  const btnCon=E('rep-month-btns');
+  if(btnCon){
+    if(repSelectedMonths.size===0&&allMonths.length)allMonths.forEach(m=>repSelectedMonths.add(m));
+    btnCon.innerHTML=allMonths.map(m=>{
+      const active=repSelectedMonths.has(m);
+      return `<button class="rep-mbtn filter-chip${active?' active':''}" data-m="${m}" onclick="toggleRepMonth('${m}')">${MNAMES[parseInt(m)]}</button>`;
+    }).join('');
+  }
+
+  const selMonths=[...repSelectedMonths].sort();
+  if(!selMonths.length){con.innerHTML='<div class="empty-state"><i class="fas fa-chart-bar"></i><h3>Velg en periode</h3></div>';return;}
+
+  // Filter entries for selected year+months
+  const filtered=entries.filter(e=>{
+    const ym=e.date||'';
+    return ym.startsWith(year)&&repSelectedMonths.has(ym.substring(5,7));
   });
+
+  // ── Aggregate by konto ──
+  // Also aggregate by month for comparison
+  const byKonto={};
+  const byKontoByMonth={};
+
+  filtered.forEach(e=>{
+    const cat=String(e.category||'7798');
+    const a=parseFloat(e.amount)||0;
+    const m12=parseFloat(e.mva12Exact)||0;
+    const isInc=e.type==='income';
+    const isAgder=isAgderEntry(e);
+
+    // Brutto for income (netto + mva12Exact)
+    const brutto=isInc&&isAgder?(a+m12):a;
+    const val=isInc?brutto:a;
+
+    if(!byKonto[cat])byKonto[cat]={inc:0,exp:0};
+    if(isInc)byKonto[cat].inc+=val;
+    else byKonto[cat].exp+=val;
+
+    // Per month
+    const mo=(e.date||'').substring(5,7);
+    if(!byKontoByMonth[mo])byKontoByMonth[mo]={};
+    if(!byKontoByMonth[mo][cat])byKontoByMonth[mo][cat]={inc:0,exp:0};
+    if(isInc)byKontoByMonth[mo][cat].inc+=val;
+    else byKontoByMonth[mo][cat].exp+=val;
+  });
+
+  // ── MVA totals ──
+  let totalMva12=0,totalMva25=0;
+  filtered.forEach(e=>{
+    if(isAgderEntry(e)){
+      totalMva12+=parseFloat(e.mva12Exact)||0;
+      totalMva25+=parseFloat(e.mva25Exact)||0;
+    }
+  });
+
+  // ── Build HTML ──
+  const f2=n=>Math.abs(n)<0.005?'—':Math.abs(n).toLocaleString('nb-NO',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fc=n=>n<0?'var(--red)':n>0?'var(--text)':'var(--text3)';
+  const periodLabel=selMonths.length===allMonths.length?`Hele ${year}`:selMonths.map(m=>MNAMES[parseInt(m)]).join(', ')+` ${year}`;
+
+  let html=`<div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:600">Periode: ${periodLabel}</div>`;
+
+  let totalInn=0,totalKost=0;
+
+  for(const [sectionName,groups] of Object.entries(KONTO_GROUPS)){
+    const isInn=sectionName==='DRIFTSINNTEKTER';
+    html+=`<div class="card" style="margin-bottom:12px">
+      <div class="card-header" style="background:${isInn?'var(--green-bg)':'var(--red-bg)'}">
+        <div class="card-title" style="font-size:14px;color:${isInn?'var(--green)':'var(--red)'}">
+          <i class="fas fa-${isInn?'arrow-trend-up':'arrow-trend-down'}"></i> ${sectionName}
+        </div>
+      </div>
+      <div class="tbl-wrap"><table style="font-size:12px">
+        <thead><tr>
+          <th style="width:60px">Konto</th>
+          <th>Tekst</th>
+          <th style="text-align:right;width:140px">Denne periode</th>
+          <th style="text-align:right;width:60px">% oms.</th>
+        </tr></thead><tbody>`;
+
+    let sectionTotal=0;
+
+    for(const [groupName,kontos] of Object.entries(groups)){
+      let groupTotal=0;
+      let groupRows='';
+
+      kontos.forEach(k=>{
+        const d=byKonto[k];if(!d)return;
+        const v=isInn?d.inc:d.exp;
+        if(v===0)return;
+        groupTotal+=v;
+        groupRows+=`<tr>
+          <td class="td-cat">${k}</td>
+          <td style="color:var(--text2)">${KONTO_NAMES[k]||k}</td>
+          <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600;color:${isInn?'var(--green)':'var(--red)'}">${f2(v)}</td>
+          <td style="text-align:right;color:var(--text3);font-size:11px"></td>
+        </tr>`;
+      });
+
+      if(groupRows){
+        html+=groupRows;
+        html+=`<tr style="background:var(--card2);border-top:2px solid var(--border)">
+          <td></td>
+          <td style="font-weight:700;font-size:11px;color:var(--text2)">Sum ${groupName}</td>
+          <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:700;color:${isInn?'var(--green)':'var(--red)'}">${f2(groupTotal)}</td>
+          <td></td>
+        </tr>`;
+        sectionTotal+=groupTotal;
+      }
+    }
+
+    // Section total
+    html+=`<tr style="background:${isInn?'var(--green-bg)':'var(--red-bg)'};border-top:2px solid ${isInn?'var(--green)':'var(--red)'}">
+      <td></td>
+      <td style="font-weight:700;font-size:13px;color:${isInn?'var(--green)':'var(--red)'}">SUM ${sectionName}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:${isInn?'var(--green)':'var(--red)'}">${f2(sectionTotal)}</td>
+      <td></td>
+    </tr>`;
+    html+=`</tbody></table></div></div>`;
+
+    if(isInn)totalInn=sectionTotal;
+    else totalKost=sectionTotal;
+  }
+
+  // ── DRIFTSRESULTAT ──
+  const drifts=totalInn-totalKost;
+  html+=`<div class="card" style="margin-bottom:12px;border:2px solid var(--accent)">
+    <div class="card-header" style="background:rgba(26,86,219,.08)">
+      <div class="card-title" style="font-size:15px;color:var(--accent)"><i class="fas fa-scale-balanced"></i> DRIFTSRESULTAT</div>
+    </div>
+    <div style="padding:16px 18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+        <div style="background:var(--green-bg);border-radius:8px;padding:12px;border:1px solid rgba(5,150,105,.2)">
+          <div style="font-size:10px;color:var(--green);font-weight:700;text-transform:uppercase;margin-bottom:4px">Total Inntekt</div>
+          <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:18px;color:var(--green)">+${f2(totalInn)}</div>
+        </div>
+        <div style="background:var(--red-bg);border-radius:8px;padding:12px;border:1px solid rgba(220,38,38,.2)">
+          <div style="font-size:10px;color:var(--red);font-weight:700;text-transform:uppercase;margin-bottom:4px">Total Kostnader</div>
+          <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:18px;color:var(--red)">−${f2(totalKost)}</div>
+        </div>
+        <div style="background:${drifts>=0?'rgba(26,86,219,.08)':'var(--red-bg)'};border-radius:8px;padding:12px;border:2px solid ${drifts>=0?'var(--accent)':'var(--red)'}">
+          <div style="font-size:10px;color:${drifts>=0?'var(--accent)':'var(--red)'};font-weight:700;text-transform:uppercase;margin-bottom:4px">Driftsresultat</div>
+          <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:20px;color:${drifts>=0?'var(--accent)':'var(--red)'}">${drifts>=0?'+':''}${f2(drifts)}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── MVA OVERSIKT ──
+  const nettoEtterMva=drifts-totalMva12-totalMva25;
+  html+=`<div class="card" style="margin-bottom:12px;border:1.5px solid var(--amber)">
+    <div class="card-header" style="background:var(--amber-bg)">
+      <div class="card-title" style="color:var(--amber)"><i class="fas fa-percent"></i> MVA OVERSIKT</div>
+    </div>
+    <div class="tbl-wrap"><table style="font-size:12px"><tbody>
+      <tr>
+        <td style="font-weight:600;color:var(--text2)">MVA 12% (skyldig)</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">−${f2(totalMva12)}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;color:var(--text2)">MVA 25% (skyldig)</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">−${f2(totalMva25)}</td>
+      </tr>
+      <tr style="background:var(--purple-bg);border-top:2px solid var(--purple)">
+        <td style="font-weight:700;font-size:13px;color:var(--purple)">NETTO ETTER MVA</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--purple)">${nettoEtterMva>=0?'+':''}${f2(nettoEtterMva)}</td>
+      </tr>
+    </tbody></table></div>
+  </div>`;
+
+  con.innerHTML=html;
+}
+
+function toggleRepMonth(m){
+  if(repSelectedMonths.has(m))repSelectedMonths.delete(m);
+  else repSelectedMonths.add(m);
+  document.querySelectorAll('.rep-mbtn').forEach(b=>{
+    const active=repSelectedMonths.has(b.dataset.m);
+    b.classList.toggle('active',active);
+  });
+  renderResultat();
+}
+
+function printResultat(){
+  const year=E('rep-year')?.value||'';
+  const con=E('resultat-container');if(!con)return;
+  const win=window.open('','_blank');
+  if(!win){alert('Popup blokkert!');return;}
+  const MNAMES=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  const selMonths=[...repSelectedMonths].sort();
+  const periodLabel=selMonths.map(m=>MNAMES[parseInt(m)]).join(', ')+` ${year}`;
+  const page=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resultatregnskap ${periodLabel}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#fff;color:#0f172a;padding:24px 32px;font-size:12px}
+  h1{font-size:18px;font-weight:700;margin-bottom:4px}
+  .sub{color:#64748b;font-size:12px;margin-bottom:20px}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px}
+  thead th{background:#f8fafc;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0}
+  tbody td{padding:6px 10px;border-bottom:1px solid #f1f5f9}
+  .section-header{background:#f8fafc;font-weight:700;font-size:13px;padding:8px 10px;border-top:2px solid #e2e8f0;border-bottom:1px solid #e2e8f0}
+  .sum-row td{font-weight:700;background:#f1f5f9;border-top:1px solid #cbd5e1}
+  .total-row td{font-weight:800;font-size:13px;border-top:2px solid #0f172a;padding:8px 10px}
+  .green{color:#059669}.red{color:#dc2626}.blue{color:#1a56db}.purple{color:#7c3aed}
+  .mono{font-family:'DM Mono',monospace}
+  .result-box{display:flex;gap:16px;margin:16px 0;padding:16px;background:#eff6ff;border-radius:8px;border:2px solid #1a56db}
+  .rbox{flex:1;text-align:center;padding:12px;border-radius:6px}
+  @media print{body{padding:12px 16px}}</style>
+  </head><body>
+  <h1>Resultatregnskap — ${periodLabel}</h1>
+  <div class="sub">31 Salad Ahmed Mohamed · Utarbeidet: ${new Date().toLocaleDateString('nb-NO')}</div>
+  ${con.innerHTML.replace(/style="[^"]*color:var\([^)]+\)[^"]*"/g,'').replace(/class="card[^"]*"/g,'').replace(/class="card-header[^"]*"/g,'').replace(/class="card-title[^"]*"/g,'').replace(/<div class="card[^>]*>/g,'').replace(/<\/div>/g,'').replace(/<i class="fas[^>]*><\/i>/g,'')}
+  <button onclick="window.print()" style="margin-top:16px;background:#1a56db;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🖨️ Skriv ut / Lagre PDF</button>
+  </body></html>`;
+  win.document.write(page);win.document.close();
 }
 
 // ── BILLS ──
