@@ -1056,7 +1056,10 @@ function renderDash(list){
   let atInc=0,atExp=0;
   agder.forEach(e=>{const a=parseFloat(e.amount)||0;if(e.type==='income')atInc+=a;else atExp+=a;});
   const atNet=atInc-atExp;
-  T('at-inc',fmt(atInc));T('at-exp',fmt(atExp));
+  if(E('at-inc')){E('at-inc').textContent=(atInc>0?'+':'')+fmt(atInc);E('at-inc').style.color='var(--green)';}
+  if(E('at-exp')){E('at-exp').textContent=(atExp>0?'−':'')+fmt(atExp);E('at-exp').style.color='var(--red)';}
+  if(E('bk-inc') && bkInc===0){E('bk-inc').textContent='0,00 kr';}
+  if(E('bk-exp') && bkExp===0){E('bk-exp').textContent='0,00 kr';}
   if(E('at-net')){E('at-net').textContent=(atNet>=0?'+':'')+fmt(Math.abs(atNet));E('at-net').style.color=atNet>=0?'var(--green)':'var(--red)';}
 
   // ── Bank KPIs — Income + Utgifter + Netto (ingen MVA på bank) ──
@@ -1073,7 +1076,7 @@ function renderDash(list){
     E('bk-inc').style.color='var(--green)';
   }
   if(E('bk-exp')){
-    E('bk-exp').textContent=(bkExp>0?'−':'')+fmt(bkExp);
+    E('bk-exp').textContent=(bkExp>0?'−':'')+fmt(Math.abs(bkExp));
     E('bk-exp').style.color='var(--red)';
   }
   if(E('bk-net')){
@@ -1584,11 +1587,11 @@ function parseAgderItems(all){
   const im=ft.match(/(?:Faktura|bilag)[\/\s#]+(\d+)/i)||ft.match(/(\d{7})/);
   if(im){invNr=im[1];T('at-inv',invNr);}
   let rawTotal=0,rawIsNeg=false,mva12=0,mva25=0,avgiftsfritt=0;
-  const tmAll=[...ft.matchAll(/[Bb]el[o]p\s+inkl[\s.]+mva[.:\s]+([-]?\d[\d\s.,]+)/gi)];
+  const tmAll=[...ft.matchAll(/[Bb]el[oø]p\s+inkl[.\s]+mva[.:\s]+([-]?\d[\d\s.,]+)/gi)];
   if(tmAll.length>0){const raw=tmAll[tmAll.length-1][1].trim();rawIsNeg=raw.startsWith('-');rawTotal=norNum(raw.replace('-',''));T('at-tot',(rawIsNeg?'+ ':'')+fmt(rawTotal));}
   const g12m=ft.match(/[Mm]va\s+grunnlag\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
-  const m12m=ft.match(/[Mm]va\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
-  const m25m=ft.match(/[Mm]va\s+25\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const m12m=ft.match(/[Mm]va\s*12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const m25m=ft.match(/[Mm]va\s*25\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
   const frim=ft.match(/[Aa]vgiftsfritt[\s:]+([-]?\d[\d\s.,]+)/i);
   if(g12m)T('at-g12',fmt(norNum(g12m[1].replace('-',''))));
   if(m12m){mva12=norNum(m12m[1].replace('-',''));T('at-m12',fmt(mva12));}
@@ -1786,11 +1789,11 @@ function parseAgderItemsForScan(all){
   const im=ft.match(/(?:Faktura|bilag)[\/\s#]+(\d+)/i)||ft.match(/(\d{7})/);
   if(im){invNr=im[1];T('scan-inv',invNr);}
   let rawTotal=0,rawIsNeg=false,mva12=0,mva25=0,avgiftsfritt=0;
-  const tmAll=[...ft.matchAll(/[Bb]el[o]p\s+inkl[\s.]+mva[.:\s]+([-]?\d[\d\s.,]+)/gi)];
+  const tmAll=[...ft.matchAll(/[Bb]el[oø]p\s+inkl[.\s]+mva[.:\s]+([-]?\d[\d\s.,]+)/gi)];
   if(tmAll.length>0){const raw=tmAll[tmAll.length-1][1].trim();rawIsNeg=raw.startsWith('-');rawTotal=norNum(raw.replace('-',''));T('scan-tot',(rawIsNeg?'+ ':'')+fmt(rawTotal));}
   const g12m=ft.match(/[Mm]va\s+grunnlag\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
-  const m12m=ft.match(/[Mm]va\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
-  const m25m=ft.match(/[Mm]va\s+25\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const m12m=ft.match(/[Mm]va\s*12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
+  const m25m=ft.match(/[Mm]va\s*25\s*%[\s:]+([-]?\d[\d\s.,]+)/i);
   const frim=ft.match(/[Aa]vgiftsfritt[\s:]+([-]?\d[\d\s.,]+)/i);
   if(g12m)T('scan-g12',fmt(norNum(g12m[1].replace('-',''))));
   if(m12m){mva12=norNum(m12m[1].replace('-',''));T('scan-m12',fmt(mva12));}
