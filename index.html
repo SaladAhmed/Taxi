@@ -1858,33 +1858,127 @@ function parseDNBFallbackRegex(allItems){
 
 function handleCSV(inp){
   const f=inp.files[0];if(!f)return;showBS('Leser CSV...','info');
-  const r=new FileReader();r.onload=e=>{try{parseCSV(e.target.result);}catch(err){showBS('Feil: '+err.message,'error');}};
-  r.readAsText(f,'UTF-8');inp.value='';
+  const r=new FileReader();
+  r.onload=e=>{try{parseCSV(e.target.result);}catch(err){showBS('Feil: '+err.message,'error');}};
+  r.readAsText(f,'UTF-8');
+  inp.value='';
 }
+
 function parseCSV(text){
   bItems=[];
   const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
-  let hi=-1,sep=';';
-  for(let i=0;i<Math.min(10,lines.length);i++){const l=lines[i].toLowerCase();if(l.includes('dato')||l.includes('forklaringstekst')){hi=i;sep=l.includes(';')?';':',';break;}}
-  if(hi===-1){showBS('Ukjent CSV-format','error');return;}
-  const hdrs=splitC(lines[hi],sep).map(h=>h.replace(/['"]/g,'').trim().toLowerCase());
+  if(!lines.length){showBS('Tom CSV-fil','error');return;}
+
+  // Auto-detect separator
+  const sample=lines.slice(0,5).join('\n');
+  const sep=sample.includes(';')?';':sample.includes('\t')?'\t':',';
+
+  // Find header row
+  let hi=-1;
+  const hkeys=['dato','date','forklaringstekst','beskrivelse','tekst','transaction','booking'];
+  for(let i=0;i<Math.min(15,lines.length);i++){
+    const l=lines[i].toLowerCase();
+    if(hkeys.some(k=>l.includes(k))){hi=i;break;}
+  }
+
+  if(hi===-1){
+    parseCSVHeaderless(lines,sep);
+    return;
+  }
+
+  const hdrs=splitC(lines[hi],sep).map(h=>h.replace(/["']/g,'').trim().toLowerCase());
+  console.log('CSV headers:',hdrs);
+
   let dc=-1,tc=-1,ic=-1,uc=-1,ac=-1;
-  hdrs.forEach((h,i)=>{if(h.includes('dato'))dc=i;if(h.includes('tekst')||h.includes('forklaringstekst'))tc=i;if(h.includes('inn')||h.includes('credit'))ic=i;if(h.includes('ut fra')||h.includes('uttak')||h.includes('debit'))uc=i;if((h.includes('belop')||h.includes('amount'))&&ic===-1)ac=i;});
+  hdrs.forEach((h,i)=>{
+    if(h.includes('dato')||h.includes('date'))dc=i;
+    if(h.includes('forklaringstekst')||h.includes('tekst')||h.includes('beskrivelse')||h.includes('text')||h.includes('description'))tc=i;
+    if((h.includes('inn')&&(h.includes('på')||h.includes('pa')||h.length<6))||h.includes('credit')||h.includes('innskudd'))ic=i;
+    if((h.includes('ut ')||h.includes('ut\t')||h==='ut'||h.includes('ut fra')||h.includes('ut av'))||h.includes('debet')||h.includes('debit')||h.includes('uttak'))uc=i;
+    if(h.includes('beløp')||h.includes('belop')||h.includes('amount')||h.includes('sum'))ac=i;
+  });
+
+  // If only one amount col
+  if(ac>-1&&ic===-1&&uc===-1){ic=-1;uc=-1;}
+  else if(ac>-1&&(ic>-1||uc>-1)){ac=-1;}
+
+  console.log(`CSV: dato=${dc} tekst=${tc} inn=${ic} ut=${uc} beløp=${ac}`);
+
+  const seen=new Set();
   for(let i=hi+1;i<lines.length;i++){
     const l=lines[i].trim();if(!l)continue;
-    const cols=splitC(l,sep).map(c=>c.replace(/['"]/g,'').trim());if(cols.length<2)continue;
+    const cols=splitC(l,sep).map(c=>c.replace(/["']/g,'').trim());
+    if(cols.length<2)continue;
     const dv=parseD(dc>=0?cols[dc]:cols[0]);if(!dv)continue;
-    const desc=tc>=0?cols[tc]:(cols[1]||'Transaksjon');
+    const desc=(tc>=0?cols[tc]:(cols[1]||'Transaksjon')).trim();
+    if(!desc)continue;
     let amt=0,type='expense';
-    if(ic>=0||uc>=0){const iv=ic>=0?norNum(cols[ic]):0,uv=uc>=0?norNum(cols[uc]):0;if(iv>0){amt=iv;type='income';}else if(uv>0){amt=uv;type='expense';}}
-    else if(ac>=0){const v=norNum(cols[ac]);if(v>0){amt=v;type='income';}else if(v<0){amt=Math.abs(v);type='expense';}}
-    if(amt<=0)continue;
+    if(ic>=0||uc>=0){
+      const iv=ic>=0?norNum(cols[ic]||''):0;
+      const uv=uc>=0?norNum(cols[uc]||''):0;
+      if(iv>0.01){amt=iv;type='income';}
+      else if(uv>0.01){amt=uv;type='expense';}
+      else continue;
+    } else if(ac>=0){
+      const raw=(cols[ac]||'').trim();
+      const neg=raw.startsWith('-');
+      const v=norNum(raw.replace('-',''));
+      if(v<0.01)continue;
+      amt=v;type=neg?'expense':'income';
+    } else {
+      // Try to find any amount in remaining cols
+      let found=false;
+      for(let j=2;j<cols.length;j++){
+        const raw=cols[j];if(!raw)continue;
+        const neg=raw.trim().startsWith('-');
+        const v=norNum(raw.replace('-',''));
+        if(v>0.01&&v<9999999){amt=v;type=neg?'expense':'income';found=true;break;}
+      }
+      if(!found)continue;
+    }
     if(desc.toLowerCase().includes('agder taxi'))type='income';
-    bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});
+    if(amt<0.01||amt>9999999)continue;
+    const key=dv+'|'+amt.toFixed(2)+'|'+desc.substring(0,20);
+    if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
   }
-  if(!bItems.length){showBS('Ingen transaksjoner funnet','error');return;}
-  showBS(bItems.length+' transaksjoner!','success');renderBItems();
+
+  if(!bItems.length){
+    const preview=lines.slice(0,6).map(l=>`<div style="white-space:nowrap">${l.replace(/</g,'&lt;').substring(0,100)}</div>`).join('');
+    E('bstat').style.display='flex';
+    E('bstat').className='status-bar error';
+    E('bstat-txt').innerHTML=`Ingen transaksjoner funnet. CSV-innhold:<br><div style="font-family:monospace;font-size:10px;background:#f8fafc;padding:6px;border-radius:4px;margin-top:4px;max-height:120px;overflow:auto;color:#0f172a">${preview}</div>`;
+    return;
+  }
+  showBS('✅ '+bItems.length+' transaksjoner funnet!','success');
+  renderBItems();
 }
+
+function parseCSVHeaderless(lines,sep){
+  bItems=[];
+  const seen=new Set();
+  for(const line of lines){
+    const l=line.trim();if(!l)continue;
+    const cols=splitC(l,sep).map(c=>c.replace(/["']/g,'').trim());
+    if(cols.length<2)continue;
+    const dv=parseD(cols[0]);if(!dv)continue;
+    const desc=cols[1]||'Transaksjon';
+    let amt=0,type='expense';
+    for(let j=2;j<cols.length;j++){
+      const raw=cols[j];if(!raw)continue;
+      const neg=raw.startsWith('-');
+      const v=norNum(raw.replace('-',''));
+      if(v>0.01&&v<9999999){amt=v;type=neg?'expense':'income';break;}
+    }
+    if(amt<0.01)continue;
+    if(desc.toLowerCase().includes('agder taxi'))type='income';
+    const key=dv+'|'+amt.toFixed(2)+'|'+desc.substring(0,20);
+    if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}
+  }
+  if(!bItems.length){showBS('Ukjent CSV-format. Prøv å laste ned på nytt fra DNB nettbank.','error');return;}
+  showBS('✅ '+bItems.length+' transaksjoner funnet!','success');
+  renderBItems();
+}
+
 function splitC(line,sep){const r=[];let c='',q=false;for(const ch of line){if(ch==='"')q=!q;else if(ch===sep&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
 
 function renderBItems(){
