@@ -555,20 +555,7 @@ input[type=file]{display:none}
               <div style="margin-top:10px;padding:10px 12px;background:#eff6ff;border-radius:8px;border:1px solid rgba(26,86,219,.2);font-size:12px;color:var(--text2)">
                 <i class="fas fa-lightbulb" style="color:var(--accent)"></i> <b>Tips:</b> Hvis PDF ikke fungerer → bruk <b>CSV-fanen</b>. Last ned fra DNB nettbank: <i>Kontoer → velg konto → Last ned</i>
               </div>
-              <!-- Claude AI PDF reader -->
-              <div style="margin-top:10px;border:1.5px solid var(--purple);border-radius:10px;overflow:hidden">
-                <div style="background:var(--purple-bg);padding:9px 14px;display:flex;align-items:center;gap:8px">
-                  <i class="fas fa-robot" style="color:var(--purple)"></i>
-                  <span style="font-size:12px;font-weight:700;color:var(--purple)">AI PDF-leser (Claude) — hvis vanlig parsing feiler</span>
-                </div>
-                <div style="padding:10px 14px">
-                  <label for="pdfi-ai" style="display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;padding:8px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">
-                    <i class="fas fa-brain"></i> Les PDF med AI
-                  </label>
-                  <input type="file" id="pdfi-ai" accept=".pdf,application/pdf" onchange="handlePDFwithAI(this)" style="display:none">
-                  <div id="ai-pdf-stat" style="margin-top:8px;font-size:12px;color:var(--text3);display:none"></div>
-                </div>
-              </div>
+
               </div>
               <div id="bcsv" class="hidden">
                 <label for="csvi" class="upload-zone" style="cursor:pointer;display:block">
@@ -1643,8 +1630,22 @@ async function handlePDF(inp){
       const pg=await pdf.getPage(p);const con=await pg.getTextContent();const vp=pg.getViewport({scale:1});
       con.items.forEach(it=>{if(!it.str||!it.str.trim())return;allItems.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p,pgW:vp.width});});
     }
+    if(!allItems.length){
+      showBS('PDF er tom — ingen tekst funnet. Er PDF-en scannet/bilde? Prøv CSV.','error');
+      return;
+    }
+    // Show debug preview of what was extracted
+    const preview=allItems.slice(0,60).map(i=>i.text).join(' | ');
+    console.log('PDF TEKST PREVIEW:',preview);
+    console.log('ALLE ITEMS:',allItems.length,'stk');
+    // Show first few lines to user for debugging
+    const lineTexts=[...new Set(allItems.map(i=>i.text))].slice(0,20).join(' · ');
+    showBS(`Lest ${allItems.length} tekstelementer — analyserer...`,'info');
     parseDNBv2(allItems);
-  }catch(err){showBS('Feil: '+err.message,'error');}
+  }catch(err){
+    showBS('Feil ved lesing av PDF: '+err.message,'error');
+    console.error('PDF error:',err);
+  }
   inp.value='';
 }
 
@@ -1825,8 +1826,30 @@ function parseDNBFallbackRegex(allItems){
     }
   }
 
+  // Pattern 3: any line with a date and an amount
   if(!bItems.length){
-    showBS('⚠️ PDF ble lest men ingen transaksjoner funnet. Last ned CSV fra DNB nettbank og importer den.','error');
+    for(const line of lines){
+      const dateM=line.match(/(\d{2}\.\d{2}\.\d{4})/);
+      const amtM=line.match(/(-?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g);
+      if(!dateM||!amtM)continue;
+      const dv=parseD(dateM[1]);if(!dv)continue;
+      const desc=line.replace(/(\d{2}\.\d{2}\.\d{4})/g,'').replace(/(-?\d{1,3}(?:[.\s]\d{3})*,\d{2})/g,'').replace(/\s+/g,' ').trim();
+      if(desc.length<2)continue;
+      const rawAmt=amtM[amtM.length-1];
+      const isNeg=rawAmt.startsWith('-');
+      const amt=norNum(rawAmt.replace('-',''));
+      if(amt<1||amt>9999999)continue;
+      const finalType=isNeg?'income':dnbType(desc);
+      const key=dv+'|'+amt.toFixed(2)+'|'+desc.substring(0,22);
+      if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type:finalType,category:autocat(desc,finalType)});}
+    }
+  }
+
+  if(!bItems.length){
+    showBS('⚠️ Kunne ikke lese transaksjoner fra PDF. Åpne PDF → velg all tekst → kopier → bruk manuell registrering. Eller last ned CSV fra DNB nettbank.','error');
+    // Show raw text preview for manual inspection
+    const rawPreview=lines.slice(0,30).join('\n');
+    E('bstat-txt').innerHTML='PDF tekst (debug):<br><pre style="font-size:10px;max-height:120px;overflow:auto;background:#f8fafc;padding:6px;border-radius:4px;border:1px solid var(--border)">'+rawPreview.replace(/</g,'&lt;')+'</pre>';
     return;
   }
   showBS('✅ '+bItems.length+' transaksjoner funnet (fallback)','success');
