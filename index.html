@@ -383,7 +383,8 @@ input[type=file]{display:none}
           </div>
           <button class="toggle-eye" onclick="toggleAmt()"><i class="fas fa-eye" id="ei"></i><span id="el">Skjul</span></button>
           <button class="top-btn" onclick="loadData()" title="Last inn på nytt"><i class="fas fa-rotate-right"></i></button>
-          <button class="top-btn danger btn-sm" onclick="deleteAllEntries()"><i class="fas fa-trash-alt"></i> Slett alle</button>
+          <button class="top-btn danger btn-sm" onclick="deleteBankEntries()" title="Slett kun DNB banktransaksjoner"><i class="fas fa-university"></i> Slett Bank</button>
+          <button class="top-btn danger btn-sm" onclick="deleteAgderEntries()" title="Slett kun Agder Taxi fakturaer"><i class="fas fa-file-invoice"></i> Slett Agder</button>
         </div>
       </div>
       <div class="page-content">
@@ -1196,6 +1197,34 @@ function saveModal(){
   db.ref('entries/'+u.uid+'/'+id).set({date:V('m-edate'),category:V('m-ecat'),description:V('m-edesc'),amount:amt,type})
     .then(()=>closeModal()).catch(err=>alert('Feil: '+err.message));
 }
+async function deleteBankEntries(){
+  const u=auth.currentUser;if(!u)return;
+  const bankList=entries.filter(e=>!isAgderEntry(e));
+  const n=bankList.length;
+  if(!n)return alert('Ingen banktransaksjoner å slette!');
+  if(!confirm(`⚠️ Slett alle ${n} DNB banktransaksjoner?\n\nDette kan ikke angres!`))return;
+  try{
+    for(const e of bankList){
+      await db.ref('entries/'+u.uid+'/'+e.id).remove();
+    }
+    alert(`✅ ${n} banktransaksjoner slettet!`);
+  }catch(err){alert('Feil: '+err.message);}
+}
+
+async function deleteAgderEntries(){
+  const u=auth.currentUser;if(!u)return;
+  const agderList=entries.filter(e=>isAgderEntry(e));
+  const n=agderList.length;
+  if(!n)return alert('Ingen Agder Taxi transaksjoner å slette!');
+  if(!confirm(`⚠️ Slett alle ${n} Agder Taxi transaksjoner?\n\nDette kan ikke angres!`))return;
+  try{
+    for(const e of agderList){
+      await db.ref('entries/'+u.uid+'/'+e.id).remove();
+    }
+    alert(`✅ ${n} Agder Taxi transaksjoner slettet!`);
+  }catch(err){alert('Feil: '+err.message);}
+}
+
 function deleteAllEntries(){
   const u=auth.currentUser;if(!u)return;
   const n=entries.length;if(!n)return alert('Ingen transaksjoner å slette!');
