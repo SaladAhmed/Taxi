@@ -555,6 +555,20 @@ input[type=file]{display:none}
               <div style="margin-top:10px;padding:10px 12px;background:#eff6ff;border-radius:8px;border:1px solid rgba(26,86,219,.2);font-size:12px;color:var(--text2)">
                 <i class="fas fa-lightbulb" style="color:var(--accent)"></i> <b>Tips:</b> Hvis PDF ikke fungerer → bruk <b>CSV-fanen</b>. Last ned fra DNB nettbank: <i>Kontoer → velg konto → Last ned</i>
               </div>
+              <!-- Claude AI PDF reader -->
+              <div style="margin-top:10px;border:1.5px solid var(--purple);border-radius:10px;overflow:hidden">
+                <div style="background:var(--purple-bg);padding:9px 14px;display:flex;align-items:center;gap:8px">
+                  <i class="fas fa-robot" style="color:var(--purple)"></i>
+                  <span style="font-size:12px;font-weight:700;color:var(--purple)">AI PDF-leser (Claude) — hvis vanlig parsing feiler</span>
+                </div>
+                <div style="padding:10px 14px">
+                  <label for="pdfi-ai" style="display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;padding:8px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">
+                    <i class="fas fa-brain"></i> Les PDF med AI
+                  </label>
+                  <input type="file" id="pdfi-ai" accept=".pdf,application/pdf" onchange="handlePDFwithAI(this)" style="display:none">
+                  <div id="ai-pdf-stat" style="margin-top:8px;font-size:12px;color:var(--text3);display:none"></div>
+                </div>
+              </div>
               </div>
               <div id="bcsv" class="hidden">
                 <label for="csvi" class="upload-zone" style="cursor:pointer;display:block">
@@ -2381,6 +2395,106 @@ function parseOCRTxt(text){
 }
 
 // ── DOWNLOADS ──
+// ── CLAUDE AI PDF READER ──
+async function handlePDFwithAI(inp){
+  const f=inp.files[0];if(!f)return;
+  const stat=E('ai-pdf-stat');
+  stat.style.display='block';
+  stat.style.color='var(--accent)';
+  stat.textContent='⏳ Leser PDF med AI...';
+  showBS('AI leser PDF...','info');
+
+  try{
+    // Convert PDF to base64
+    const buf=await f.arrayBuffer();
+    const bytes=new Uint8Array(buf);
+    let binary='';
+    for(let i=0;i<bytes.byteLength;i++)binary+=String.fromCharCode(bytes[i]);
+    const base64=btoa(binary);
+
+    stat.textContent='⏳ Sender til Claude AI...';
+
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        messages:[{
+          role:'user',
+          content:[
+            {
+              type:'document',
+              source:{type:'base64',media_type:'application/pdf',data:base64}
+            },
+            {
+              type:'text',
+              text:`Dette er en DNB bank kontoutskrift. Finn ALLE transaksjoner og returner KUN en JSON array, ingen annen tekst.
+
+Format for hver transaksjon:
+{"date":"YYYY-MM-DD","desc":"beskrivelse","amount":12345.67,"type":"income eller expense"}
+
+Regler:
+- type="income" hvis penger kom INN på konto (positiv kolonne / inn på konto)
+- type="expense" hvis penger gikk UT (negativ / ut av konto)
+- amount er alltid positivt tall
+- date i YYYY-MM-DD format (bruk bokføringsdato)
+- Ikke ta med saldolinjer, bare faktiske transaksjoner
+
+Returner BARE JSON array, ingen forklaring.`
+            }
+          ]
+        }]
+      })
+    });
+
+    if(!response.ok){
+      const err=await response.json();
+      throw new Error(err.error?.message||'API feil '+response.status);
+    }
+
+    const data=await response.json();
+    const text=data.content.map(c=>c.text||'').join('');
+
+    // Parse JSON
+    let txList=[];
+    try{
+      const clean=text.replace(/```json|```/g,'').trim();
+      txList=JSON.parse(clean);
+    }catch(e){
+      // Try to extract JSON array from text
+      const m=text.match(/\[[\s\S]+\]/);
+      if(m)txList=JSON.parse(m[0]);
+      else throw new Error('Kunne ikke parse AI svar');
+    }
+
+    if(!Array.isArray(txList)||!txList.length)throw new Error('Ingen transaksjoner i svar');
+
+    // Convert to bItems format
+    bItems=txList.map(tx=>({
+      date:tx.date,
+      desc:tx.desc||tx.description||'Transaksjon',
+      amount:parseFloat(tx.amount)||0,
+      type:tx.type||'expense',
+      category:autocat(tx.desc||'',tx.type||'expense')
+    })).filter(b=>b.amount>0&&b.date);
+
+    if(!bItems.length)throw new Error('Ingen gyldige transaksjoner');
+
+    stat.style.color='var(--green)';
+    stat.textContent=`✅ AI fant ${bItems.length} transaksjoner!`;
+    showBS(`✅ AI fant ${bItems.length} transaksjoner!`,'success');
+    renderBItems();
+
+  }catch(err){
+    stat.style.color='var(--red)';
+    stat.textContent='❌ '+err.message;
+    showBS('AI feil: '+err.message,'error');
+    console.error(err);
+  }
+  inp.value='';
+}
+
 function dlCSV(){
   const rows=[['Dato','Konto','Beskrivelse','Faktura','Type','Beløp']];
   entries.forEach(e=>rows.push([e.date||'',e.category||'',(e.description||'').replace(/,/g,' '),e.billNr||'',e.type==='income'?'Inntekt':'Utgift',parseFloat(e.amount||0).toFixed(2)]));
