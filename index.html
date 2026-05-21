@@ -4,87 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Transport PRO - Logg inn</title>
+    <title>Transport PRO - Administrasjon</title>
     <style>
-        /* Naqshadda fudud ee bogga Login-ka (Transport PRO) */
+        /* Naqshaddii asalka ahayd ee nidaamkaaga (Dark theme oo cagaar leh) */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0b2265;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
             margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .login-container {
-            background: #ffffff;
-            padding: 40px;
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: #1e293b;
+            padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 360px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid #334155;
+        }
+        header {
             text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 20px;
         }
-        .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
+        h1 {
+            color: #10b981;
+            margin: 0;
+            font-size: 28px;
         }
-        h2 {
-            margin: 0 0 5px 0;
-            color: #333;
-        }
-        p.subtitle {
-            color: #777;
+        .subtitle {
+            color: #94a3b8;
+            margin: 5px 0 0 0;
             font-size: 14px;
-            margin: 0 0 30px 0;
         }
-        .input-group {
-            text-align: left;
-            margin-bottom: 20px;
+        /* Qaybta PDF Upload-ka iyo Maamulka */
+        .upload-section {
+            background: #0f172a;
+            border: 2px dashed #475569;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            margin-bottom: 25px;
         }
-        .input-group label {
-            display: block;
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 5px;
-            font-weight: 600;
+        .upload-section:hover {
+            border-color: #10b981;
         }
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
+        .upload-section p {
+            margin: 0;
+            color: #94a3b8;
             font-size: 16px;
         }
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background-color: #1a56db;
-            color: white;
+        .file-input {
+            display: none;
+        }
+        .btn {
+            background-color: #10b981;
+            color: #0f172a;
+            padding: 12px 24px;
             border: none;
             border-radius: 6px;
-            font-size: 16px;
             font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
             transition: background 0.2s;
         }
-        .btn-login:hover {
-            background-color: #1141a8;
+        .btn:hover {
+            background-color: #059669;
         }
-        .footer-links {
-            margin-top: 20px;
+        /* Qaybta Natiijada iyo Xogta PDF-ka ka soo baxda */
+        .result-section {
+            margin-top: 25px;
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .result-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .result-title {
+            color: #10b981;
+            font-weight: bold;
+            margin: 0;
+        }
+        pre {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            color: #38bdf8;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
         }
-        .footer-links a {
-            color: #1a56db;
-            text-decoration: none;
-        }
-        .error-message {
-            color: #dc2626;
-            font-size: 14px;
+        .error-msg {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ef4444;
             margin-bottom: 15px;
             display: none;
         }
@@ -92,36 +121,35 @@
 </head>
 <body>
 
-<div class="login-container">
-    <div class="logo">🚖</div>
-    <h2>Transport PRO</h2>
-    <p class="subtitle">Mohamed Salad Transport · Logg inn</p>
-    
-    <div id="errorMessage" class="error-message"></div>
+<div class="container">
+    <header>
+        <h1>🚖 Transport PRO</h1>
+        <p class="subtitle">Mohamed Salad Transport — PDF-Leser & Administrasjon</p>
+    </header>
 
-    <form id="loginForm">
-        <div class="input-group">
-            <label for="email">E-post</label>
-            <input type="email" id="email" placeholder="din@epost.no" required>
-        </div>
-        <div class="input-group">
-            <label for="password">Passord</label>
-            <input type="password" id="password" placeholder="********" required>
-        </div>
-        <button type="submit" class="btn-login">➡️ Logg inn</button>
-    </form>
+    <div id="errorNotification" class="error-msg"></div>
 
-    <div class="footer-links">
-        <a href="#">Glemt passord?</a>
-        <a href="#">Ny? Registrer</a>
+    <div class="upload-section" onclick="document.getElementById('pdfFile').click()">
+        <p>📂 Klikk her for å laste opp PDF-dokument (Kontoutskrift / Agder Taxi)</p>
+        <input type="file" id="pdfFile" class="file-input" accept=".pdf" onchange="handleFileSelect(event)">
+    </div>
+
+    <div class="result-section">
+        <div class="result-header">
+            <p class="result-title">📊 Ekstraherte data fra PDF</p>
+            <button class="btn" onclick="saveToFirebase()">💾 Lagre til Firebase</button>
+        </div>
+        <pre id="pdfContent">Ingen dokument er lastet opp ennå. Laste opp en PDF for å se innholdet her...</pre>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
 <script>
-    // 2. Qaabaynta rasmiga ah ee mashruucaaga Firebase (Kaliya hal mar ayaa la sheegay)
+    // 1. QAABEYNTA FIREBASE (Kaliya hal mar ayaa la sheegay si uusan qalad u dhacin)
     const firebaseConfig = {
         apiKey: "AIzaSyCYNLmTIEV2_WWNhibowhUCXzAMiMh0FYE",
         authDomain: "mohamed-salad-transport.firebaseapp.com",
@@ -135,43 +163,76 @@
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
+    const database = firebase.database();
 
-    // 3. Shadaayada Login-ka iyo la tacaalida dhacdooyinka (Form Submission)
-    const loginForm = document.getElementById('loginForm');
-    const errorMessageDiv = document.getElementById('errorMessage');
+    // U sheeg PDF.js meesha uu u soo kalsoonaan lahaa worker-ka
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Diid in boggu iska refresh gareeyo gudbinta ka dib
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
-        // Qari khaladaadkii hore haddii ay jireen
-        errorMessageDiv.style.display = 'none';
-        errorMessageDiv.innerText = '';
+    let extractedText = ""; // Meesha lagu keydinayo xogta rasmiga ah ee PDF-ka
 
-        // Habka login-ka Firebase
-        firebase.auth().signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                // Markuu si sax ah u galo (U sii gudbi dashboard-ka)
-                console.log("Guul! Waa la galay:", userCredential.user);
-                window.location.href = "dashboard.html"; // Halkan ku qor bogga xiga ee dashboard-kaaga
-            })
-            .catch((error) => {
-                // Haddii uu qalad dhaco, dadka u muuji qaladka
-                console.error("Qalad ayaa dhacay:", error.message);
-                errorMessageDiv.style.display = 'block';
+    // 2. KOODHKA AKHRINTA PDF-KA (Kii rasmiga ahaa ee nidaamkaaga)
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file || file.type !== "application/pdf") {
+            showError("Vennligst velg en gyldig PDF-fil.");
+            return;
+        }
+
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+            const typedarray = new Uint8Array(this.result);
+
+            pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                let maxPages = pdf.numPages;
+                let countPromises = [];
                 
-                // Turjumaad fudud ee khaladaadka caanka ah
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMessageDiv.innerText = "E-post-ka ama passord-ka ayaa khaldan.";
-                } else if (error.code === 'auth/invalid-api-key') {
-                    errorMessageDiv.innerText = "Cilad farsamo: API Key-ga Firebase ma shaqaynayo. Hubi Authorized Domains.";
-                } else {
-                    errorMessageDiv.innerText = error.message;
+                for (let i = 1; i <= maxPages; i++) {
+                    countPromises.push(
+                        pdf.getPage(i).then(function(page) {
+                            return page.getTextContent().then(function(textContent) {
+                                return textContent.items.map(item => item.str).join(" ");
+                            });
+                        })
+                    );
                 }
+
+                Promise.all(countPromises).then(function(texts) {
+                    extractedText = texts.join("\n\n--- PAGE BREAK ---\n\n");
+                    document.getElementById("pdfContent").textContent = extractedText;
+                    document.getElementById("errorNotification").style.display = 'none';
+                });
+            }).catch(function(err) {
+                showError("Kunne ikke lese PDF-filen: " + err.message);
             });
-    });
+        };
+        fileReader.readAsArrayBuffer(file);
+    }
+
+    // 3. BADHAMKA XOGTA LOOGU DIROY FIREBASE
+    function saveToFirebase() {
+        if (!extractedText || extractedText.startsWith("Ingen dokument")) {
+            showError("Det er ingen data å lagre. Vennligst last opp en PDF først.");
+            return;
+        }
+
+        // U dir xogta Firebase Database magac ahaan "transports_data" oo wata waqtiga la kaydiyay
+        const dataRef = database.ref('transports_data/' + Date.now());
+        dataRef.set({
+            content: extractedText,
+            timestamp: new Date().toISOString()
+        }).then(() => {
+            alert("✅ Dataene har blitt lagret i Firebase!");
+        }).catch((error) => {
+            showError("Firebase-feil: " + error.message);
+        });
+    }
+
+    // Fariimaha khaladaadka lagu muujiyo
+    function showError(message) {
+        const errDiv = document.getElementById("errorNotification");
+        errDiv.style.display = "block";
+        errDiv.innerText = message;
+    }
 </script>
 
 </body>
