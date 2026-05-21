@@ -1,1048 +1,178 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport PRO</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TransportPRO">
-<meta name="theme-color" content="#1a56db">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-:root{
-  --bg:#f0f4f8;
-  --sidebar:#0f2044;
-  --sidebar-hover:#1a3260;
-  --sidebar-active:#1a56db;
-  --card:#ffffff;
-  --card2:#f8fafc;
-  --border:#e2e8f0;
-  --text:#0f172a;
-  --text2:#475569;
-  --text3:#94a3b8;
-  --accent:#1a56db;
-  --accent2:#1e40af;
-  --green:#059669;
-  --green-bg:#ecfdf5;
-  --red:#dc2626;
-  --red-bg:#fef2f2;
-  --amber:#d97706;
-  --amber-bg:#fffbeb;
-  --purple:#7c3aed;
-  --purple-bg:#f5f3ff;
-  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
-  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
-  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
-  --radius:8px;
-  --radius-lg:12px;
-  font-family:'DM Sans',-apple-system,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden}
-
-/* ── LOADING ── */
-#pg-loading{
-  position:fixed;inset:0;z-index:9999;
-  display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,#0f2044 0%,#1a3260 50%,#1a56db 100%);
-  flex-direction:column;gap:16px;
-}
-.load-icon{font-size:56px;animation:bounce .8s infinite alternate}
-.load-title{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.3px}
-.load-sub{color:rgba(255,255,255,.5);font-size:13px}
-.load-dots{display:flex;gap:6px;margin-top:4px}
-.load-dots span{width:8px;height:8px;background:rgba(255,255,255,.4);border-radius:50%;animation:dot 1.2s infinite}
-.load-dots span:nth-child(2){animation-delay:.2s}
-.load-dots span:nth-child(3){animation-delay:.4s}
-@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
-@keyframes dot{0%,80%,100%{opacity:.3}40%{opacity:1}}
-
-/* ── LAYOUT ── */
-.layout{display:flex;min-height:100vh}
-.sidebar{width:220px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:300;transition:.3s}
-.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
-@media(max-width:768px){
-  .sidebar{width:100%;height:56px;flex-direction:row;align-items:center;position:fixed;top:auto;bottom:0;border-top:1px solid rgba(255,255,255,.1)}
-  .main{margin-left:0;padding-bottom:56px}
-  .sidebar-logo,.sidebar-footer{display:none}
-  .nav-label{font-size:10px}
-  .nav-item{flex:1;flex-direction:column;padding:6px 4px;gap:2px;justify-content:center;align-items:center;border-left:none!important;border-bottom:3px solid transparent}
-  .nav-item.active{border-bottom-color:var(--sidebar-active)!important;background:rgba(26,86,219,.15)}
-  .sidebar-nav{flex-direction:row;padding:0;gap:0;flex:1}
-  .nav-section-title{display:none}
-  .page-content{padding:12px}
-  .kpi-row{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-  .kpi{padding:12px 14px}
-  .kpi-val{font-size:18px}
-  .form-row-3{grid-template-columns:1fr}
-  .form-row{grid-template-columns:1fr}
-  table{font-size:11px}
-  thead th{padding:7px 8px;font-size:10px}
-  tbody td{padding:8px}
-  .td-desc{max-width:120px}
-}
-@media(max-width:480px){
-  .kpi-row{grid-template-columns:1fr 1fr}
-  .kpi-val{font-size:16px}
-  .split-cards{grid-template-columns:1fr!important}
-}
-
-/* ── SIDEBAR ── */
-.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
-.logo-mark{display:flex;align-items:center;gap:10px}
-.logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.logo-text{color:#fff;font-weight:700;font-size:15px;letter-spacing:-.3px}
-.logo-sub{color:rgba(255,255,255,.4);font-size:11px;margin-top:1px}
-.sidebar-nav{display:flex;flex-direction:column;padding:12px 0;gap:2px}
-.nav-section-title{color:rgba(255,255,255,.3);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:10px 16px 4px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:rgba(255,255,255,.6);cursor:pointer;border-left:3px solid transparent;transition:.15s;font-size:13px;font-weight:500;user-select:none}
-.nav-item:hover{background:var(--sidebar-hover);color:#fff}
-.nav-item.active{background:rgba(26,86,219,.25);color:#fff;border-left-color:var(--sidebar-active)}
-.nav-item i{width:16px;text-align:center;font-size:14px;flex-shrink:0}
-.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.08)}
-.user-chip{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;border-radius:8px;transition:.15s}
-.user-chip:hover{background:rgba(255,255,255,.06)}
-.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;overflow:hidden}
-.user-avatar img{width:100%;height:100%;object-fit:cover}
-.user-info{min-width:0}
-.user-name{color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-role{color:rgba(255,255,255,.4);font-size:11px}
-
-/* ── TOPBAR ── */
-.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;min-height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow);flex-wrap:wrap;gap:6px}
-.topbar-title{font-size:14px;font-weight:600;color:var(--text);flex:1;min-width:120px}
-.topbar-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-@media(max-width:600px){
-  .topbar{padding:8px 12px}
-  .topbar-actions{width:100%;justify-content:flex-start;padding-bottom:6px}
-  .top-btn span,.toggle-eye span,.modus-btn span{display:none}
-  .top-btn,.toggle-eye{padding:6px 8px;font-size:12px}
-  .modus-btn{padding:5px 8px;font-size:11px}
-  .btn-sm-hide{display:none!important}
-}
-.top-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:.15s;font-family:inherit}
-.top-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,86,219,.04)}
-.top-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.top-btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
-.top-btn.danger{border-color:var(--red);color:var(--red)}
-.top-btn.danger:hover{background:var(--red-bg)}
-
-/* ── PAGE CONTENT ── */
-.page-content{padding:20px 24px;flex:1}
-.pg{display:none}
-.pg.active{display:block}
-
-/* ── KPI CARDS ── */
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-@media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;box-shadow:var(--shadow)}
-.kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
-.kpi-val{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.5px}
-.kpi-sub{font-size:12px;color:var(--text3);margin-top:4px}
-.kpi.green{border-left:4px solid var(--green)}
-.kpi.red{border-left:4px solid var(--red)}
-.kpi.blue{border-left:4px solid var(--accent)}
-.kpi.amber{border-left:4px solid var(--amber)}
-.kpi.purple{border-left:4px solid var(--purple)}
-.kpi.green .kpi-val{color:var(--green)}
-.kpi.red .kpi-val{color:var(--red)}
-.kpi.blue .kpi-val{color:var(--accent)}
-.kpi.amber .kpi-val{color:var(--amber)}
-.kpi.purple .kpi-val{color:var(--purple)}
-
-/* ── SECTION CARD ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
-.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.card-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
-.card-title i{color:var(--accent)}
-.card-actions{display:flex;gap:6px;align-items:center}
-.card-body{padding:0}
-
-/* ── TABLE ── */
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:var(--card2);color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
-thead th:last-child{text-align:right}
-tbody tr{border-bottom:1px solid var(--border);transition:.1s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:#f8fafc}
-tbody td{padding:11px 16px;color:var(--text);vertical-align:middle}
-tbody td:last-child{text-align:right}
-.td-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:13px}
-.td-amt.inc{color:var(--green)}
-.td-amt.exp{color:var(--red)}
-.td-cat{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)}
-.td-desc{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-.td-date{color:var(--text3);font-size:12px;white-space:nowrap}
-.td-actions{display:flex;gap:6px;justify-content:flex-end}
-.ico-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:.15s}
-.ico-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,86,219,.05)}
-.ico-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
-
-/* ── BADGE ── */
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
-.badge.inc{background:var(--green-bg);color:var(--green)}
-.badge.exp{background:var(--red-bg);color:var(--red)}
-.badge.info{background:rgba(26,86,219,.1);color:var(--accent)}
-.badge.amber{background:var(--amber-bg);color:var(--amber)}
-.badge.purple{background:var(--purple-bg);color:var(--purple)}
-
-/* ── FORM ELEMENTS ── */
-.form-group{margin-bottom:14px}
-.form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:.2px}
-.form-control{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--text);font-size:13px;font-family:inherit;transition:.15s;outline:none}
-.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,219,.08)}
-.form-control::placeholder{color:var(--text3)}
-select.form-control{cursor:pointer}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media(max-width:600px){.form-row,.form-row-3{grid-template-columns:1fr}}
-
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:var(--radius);border:1.5px solid transparent;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit;white-space:nowrap}
-.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn-primary:hover{background:var(--accent2)}
-.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
-.btn-success:hover{background:#047857}
-.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-danger:hover{background:#b91c1c}
-.btn-outline{background:transparent;color:var(--text2);border-color:var(--border)}
-.btn-outline:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,86,219,.04)}
-.btn-sm{padding:6px 12px;font-size:12px}
-.btn-group{display:flex;gap:8px;flex-wrap:wrap}
-
-/* ── UPLOAD ZONE ── */
-.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:28px 20px;text-align:center;cursor:pointer;transition:.2s;background:var(--card2)}
-.upload-zone:hover{border-color:var(--accent);background:rgba(26,86,219,.03)}
-
-/* ── STATUS BAR ── */
-.status-bar{padding:10px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;margin-bottom:12px;display:none;align-items:center;gap:8px}
-.status-bar.info{background:rgba(26,86,219,.08);color:var(--accent);border:1px solid rgba(26,86,219,.2)}
-.status-bar.success{background:var(--green-bg);color:var(--green);border:1px solid rgba(5,150,105,.2)}
-.status-bar.error{background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2)}
-
-/* ── FILTER BAR ── */
-.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--card2)}
-.filter-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
-.filter-chip:hover{border-color:var(--accent);color:var(--accent)}
-.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.filter-search{flex:1;min-width:160px;padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text);background:var(--card);outline:none;font-family:inherit}
-.filter-search:focus{border-color:var(--accent)}
-.date-range{display:none;gap:6px}
-.date-range.vis{display:flex}
-.date-range input{padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text);background:var(--card);outline:none;font-family:inherit}
-.date-range input:focus{border-color:var(--accent)}
-
-/* ── TABS ── */
-.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;gap:0}
-.tab{padding:11px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;margin-bottom:-1px;white-space:nowrap}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-
-/* ── BILL CARD ── */
-.bill-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px;background:var(--card);box-shadow:var(--shadow)}
-.bill-card-head{padding:12px 16px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.bill-card-body{padding:14px 16px}
-.bill-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-.bill-kpi{text-align:center;padding:8px;background:var(--bg);border-radius:var(--radius)}
-.bill-kpi small{font-size:10px;color:var(--text3);display:block;text-transform:uppercase;font-weight:600;letter-spacing:.5px;margin-bottom:3px}
-.bill-kpi b{font-size:15px;font-family:'DM Mono',monospace}
-
-/* ── AUTH ── */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2044 0%,#1a3260 50%,#1a56db 100%);padding:20px}
-.auth-card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.auth-logo{text-align:center;margin-bottom:24px}
-.auth-logo-icon{width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px}
-.auth-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
-.auth-sub{font-size:13px;color:var(--text3)}
-
-/* ── PROFILE ── */
-.profile-avatar-wrap{position:relative;width:80px;height:80px;margin:0 auto 16px;cursor:pointer}
-.profile-avatar-wrap img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border)}
-.profile-avatar-edit{position:absolute;bottom:0;right:0;width:24px;height:24px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}
-
-/* ── IMPORT LIST ── */
-.import-item{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.15s;background:var(--card)}
-.import-item:hover{border-color:var(--accent)}
-.import-item.sel{border-color:var(--green);background:var(--green-bg)}
-.import-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.import-item-desc{font-weight:600;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.import-item-amt{font-family:'DM Mono',monospace;font-weight:700;font-size:13px;white-space:nowrap}
-.import-item-meta{font-size:11px;color:var(--text3);margin-top:3px}
-.import-item select{margin-top:6px;width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:var(--card);color:var(--text);font-family:inherit}
-
-/* ── EMPTY STATE ── */
-.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
-.empty-state i{font-size:40px;margin-bottom:12px;display:block;opacity:.4}
-.empty-state h3{font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px}
-.empty-state p{font-size:13px}
-
-/* ── MISC ── */
-.hidden{display:none!important}
-.ha{filter:blur(7px);user-select:none;pointer-events:none}
-.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
-.text-green{color:var(--green)}
-.text-red{color:var(--red)}
-.text-blue{color:var(--accent)}
-.mono{font-family:'DM Mono',monospace}
-.ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-input[type=file]{display:none}
-.ocr-result-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px}
-.ocr-result-head{padding:12px 16px;background:rgba(26,86,219,.06);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--accent)}
-.netto-highlight{background:linear-gradient(135deg,rgba(5,150,105,.07),rgba(26,86,219,.07));border:2px solid var(--green);border-radius:var(--radius-lg);padding:20px;text-align:center;margin-bottom:12px}
-.netto-highlight small{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;display:block;margin-bottom:6px}
-.netto-highlight .nh-val{font-size:32px;font-weight:700;font-family:'DM Mono',monospace}
-.netto-highlight .nh-sub{font-size:12px;color:var(--text3);margin-top:6px}
-.mva-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
-.mva-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;text-align:center}
-.mva-box small{font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:600;letter-spacing:.5px;display:block;margin-bottom:4px}
-.mva-box b{font-size:15px;font-family:'DM Mono',monospace}
-.toggle-eye{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text3);font-size:12px;font-weight:500;cursor:pointer;transition:.15s}
-.toggle-eye:hover{border-color:var(--accent);color:var(--accent)}
-.modus-toggle{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px;gap:2px}
-.modus-btn{padding:5px 14px;border-radius:16px;border:none;background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit}
-.modus-btn.active{background:var(--accent);color:#fff}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Transport PRO - Logg inn</title>
+    <style>
+        /* Naqshadda fudud ee bogga Login-ka (Transport PRO) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b2265;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        h2 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        p.subtitle {
+            color: #777;
+            font-size: 14px;
+            margin: 0 0 30px 0;
+        }
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a56db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-login:hover {
+            background-color: #1141a8;
+        }
+        .footer-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        .footer-links a {
+            color: #1a56db;
+            text-decoration: none;
+        }
+        .error-message {
+            color: #dc2626;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
 
-<div id="pg-loading">
-  <div class="load-icon">🚕</div>
-  <div class="load-title">Transport PRO</div>
-  <div class="load-sub">Koontada waa la rarayo...</div>
-  <div class="load-dots"><span></span><span></span><span></span></div>
+<div class="login-container">
+    <div class="logo">🚖</div>
+    <h2>Transport PRO</h2>
+    <p class="subtitle">Mohamed Salad Transport · Logg inn</p>
+    
+    <div id="errorMessage" class="error-message"></div>
+
+    <form id="loginForm">
+        <div class="input-group">
+            <label for="email">E-post</label>
+            <input type="email" id="email" placeholder="din@epost.no" required>
+        </div>
+        <div class="input-group">
+            <label for="password">Passord</label>
+            <input type="password" id="password" placeholder="********" required>
+        </div>
+        <button type="submit" class="btn-login">➡️ Logg inn</button>
+    </form>
+
+    <div class="footer-links">
+        <a href="#">Glemt passord?</a>
+        <a href="#">Ny? Registrer</a>
+    </div>
 </div>
 
-<div id="pg-auth" class="auth-wrap" style="display:none">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="auth-logo-icon">🚕</div>
-      <div class="auth-title">Transport PRO</div>
-      <div class="auth-sub">Mohamed Salad Transport · Logg inn</div>
-    </div>
-    <div class="form-group"><label class="form-label">E-post</label><input id="em" type="email" class="form-control" placeholder="din@epost.no"></div>
-    <div class="form-group"><label class="form-label">Passord</label><input id="pw" type="password" class="form-control" placeholder="••••••••"></div>
-    <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Logg inn</button>
-    <div style="display:flex;justify-content:space-between;font-size:12px">
-      <span style="color:var(--accent);cursor:pointer" onclick="forgotPw()">Glemt passord?</span>
-      <span style="color:var(--text3)">Ny? <span style="color:var(--accent);cursor:pointer;font-weight:600" onclick="goSetup()">Registrer</span></span>
-    </div>
-  </div>
-</div>
-
-<div id="pg-setup" class="auth-wrap" style="display:none">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="auth-logo-icon">🚕</div>
-      <div class="auth-title">Opprett konto</div>
-      <div class="auth-sub">Transport PRO</div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">Fornavn</label><input id="sf" type="text" class="form-control" placeholder="Mohamed"></div>
-      <div class="form-group"><label class="form-label">Etternavn</label><input id="sl" type="text" class="form-control" placeholder="Salad"></div>
-    </div>
-    <div class="form-group"><label class="form-label">E-post</label><input id="se" type="email" class="form-control" placeholder="din@epost.no"></div>
-    <div class="form-group"><label class="form-label">Passord</label><input id="sp" type="password" class="form-control" placeholder="Minst 6 tegn"></div>
-    <div class="form-group"><label class="form-label">Bekreft passord</label><input id="sp2" type="password" class="form-control" placeholder="Gjenta passord"></div>
-    <button class="btn btn-success" style="width:100%;margin-bottom:10px" onclick="doSetup()"><i class="fas fa-user-plus"></i> Opprett konto</button>
-    <div style="text-align:center;font-size:12px;color:var(--text3)">Har konto? <span style="color:var(--accent);cursor:pointer;font-weight:600" onclick="goAuth()">Logg inn</span></div>
-  </div>
-</div>
-
-<div id="app" style="display:none">
-<div class="layout">
-
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-mark">
-        <div class="logo-icon">🚕</div>
-        <div><div class="logo-text">Transport PRO</div><div class="logo-sub">Regnskapssystem</div></div>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">Oversikt</div>
-      <div class="nav-item active" id="ni-dash" onclick="showPg('dash')"><i class="fas fa-chart-line"></i><span class="nav-label">Dashboard</span></div>
-      <div class="nav-item" id="ni-reports" onclick="showPg('reports')"><i class="fas fa-file-alt"></i><span class="nav-label">Rapporter</span></div>
-      <div class="nav-section-title">Transaksjoner</div>
-      <div class="nav-item" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus-circle"></i><span class="nav-label">Registrer</span></div>
-      <div class="nav-item" id="ni-scan" onclick="showPg('scan')"><i class="fas fa-camera"></i><span class="nav-label">Scan Faktura</span></div>
-      <div class="nav-item" id="ni-bills" onclick="showPg('bills')"><i class="fas fa-file-invoice-dollar"></i><span class="nav-label">Fakturaer</span></div>
-      <div class="nav-section-title">Konto</div>
-      <div class="nav-item" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user-circle"></i><span class="nav-label">Profil</span></div>
-      <div class="nav-item" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i><span class="nav-label">Logg ut</span></div>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="user-chip" onclick="showPg('profile')">
-        <div class="user-avatar"><img id="pimg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"></div>
-        <div class="user-info"><div class="user-name" id="uname">Laster...</div><div class="user-role">Administrator</div></div>
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-
-    <div id="pg-dash" class="pg active">
-      <div class="topbar">
-        <div class="topbar-title" id="dash-title">Dashboard</div>
-        <div class="topbar-actions">
-          <div class="modus-toggle">
-            <button class="modus-btn" id="mb-i" onclick="setModus('i')"><i class="fas fa-user"></i> <span>Individuell</span></button>
-            <button class="modus-btn active" id="mb-t" onclick="setModus('t')"><i class="fas fa-globe"></i> <span>Total</span></button>
-          </div>
-          <button class="toggle-eye" onclick="toggleAmt()"><i class="fas fa-eye" id="ei"></i><span id="el"> Skjul</span></button>
-          <button class="top-btn" onclick="loadData()" title="Oppdater"><i class="fas fa-rotate-right"></i></button>
-          <button class="top-btn danger btn-sm" onclick="deleteBankEntries()" title="Slett Bank"><i class="fas fa-university"></i> <span>Bank</span></button>
-          <button class="top-btn danger btn-sm" onclick="deleteAgderEntries()" title="Slett Agder"><i class="fas fa-file-invoice"></i> <span>Agder</span></button>
-          <button class="top-btn btn-sm" onclick="deleteAllEntries()" title="Slett ALT" style="background:var(--red);color:#fff;border-color:var(--red)"><i class="fas fa-trash-alt"></i> <span>ALT</span></button>
-          <button class="top-btn btn-sm" onclick="repairSourceFields()" title="Reparer source-felt" style="background:var(--purple);color:#fff;border-color:var(--purple)"><i class="fas fa-wrench"></i> <span>Fix</span></button>
-        </div>
-      </div>
-      <div class="page-content">
-        <div id="pfil" style="display:none;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
-          <button class="filter-chip active" onclick="setPer('today',this)">I dag</button>
-          <button class="filter-chip" onclick="setPer('week',this)">Uke</button>
-          <button class="filter-chip" onclick="setPer('month',this)">Måned</button>
-          <button class="filter-chip" onclick="setPer('year',this)">År</button>
-          <button class="filter-chip" onclick="setPer('custom',this)">Egendefinert</button>
-          <div class="date-range" id="drow">
-            <input type="date" id="dfrom" onchange="applyCustom()">
-            <input type="date" id="dto" onchange="applyCustom()">
-          </div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi green"><div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Total Inntekt</div><div class="kpi-val af" id="s-inc">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
-          <div class="kpi red"><div class="kpi-label"><i class="fas fa-arrow-trend-down"></i> Total Utgifter</div><div class="kpi-val af" id="s-exp">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
-          <div class="kpi blue"><div class="kpi-label"><i class="fas fa-scale-balanced"></i> Driftsresultat</div><div class="kpi-val af" id="s-net">0,00 kr</div><div class="kpi-sub">Inntekt − Utgifter</div></div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi amber"><div class="kpi-label"><i class="fas fa-percent"></i> MVA 12%</div><div class="kpi-val af" id="s-mva12">0,00 kr</div><div class="kpi-sub">Skyldig MVA lav sats</div></div>
-          <div class="kpi amber"><div class="kpi-label"><i class="fas fa-percent"></i> MVA 25%</div><div class="kpi-val af" id="s-mva25">0,00 kr</div><div class="kpi-sub">Skyldig MVA høy sats</div></div>
-          <div class="kpi purple"><div class="kpi-label"><i class="fas fa-hand-holding-dollar"></i> Netto etter MVA</div><div class="kpi-val af" id="s-netmva">0,00 kr</div><div class="kpi-sub">Etter MVA betalt</div></div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" class="split-cards">
-
-          <div style="background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(217,119,6,.03));border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:14px 16px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-              <div style="width:28px;height:28px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">Taxi</div>
-              <span style="font-size:13px;font-weight:700;color:#92400e">Agder Taxi Fakturaer</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(217,119,6,.2)">
-                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div>
-                <div class="af" id="at-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--green)">0,00 kr</div>
-              </div>
-              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(217,119,6,.2)">
-                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Utgifter</div>
-                <div class="af" id="at-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--red)">0,00 kr</div>
-              </div>
-            </div>
-            <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(217,119,6,.2);text-align:center">
-              <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Netto Agder Taxi</div>
-              <div class="af" id="at-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px">0,00 kr</div>
-            </div>
-          </div>
-
-          <div style="background:linear-gradient(135deg,rgba(26,86,219,.08),rgba(26,86,219,.03));border:1.5px solid var(--accent);border-radius:var(--radius-lg);padding:14px 16px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-              <div style="width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">Bank</div>
-              <span style="font-size:13px;font-weight:700;color:#1e3a8a">DNB Bank Transaksjoner</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)">
-                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div>
-                <div class="af" id="b-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--green)">0,00 kr</div>
-              </div>
-              <div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)">
-                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Utgifter</div>
-                <div class="af" id="b-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--red)">0,00 kr</div>
-              </div>
-            </div>
-            <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2);text-align:center">
-              <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Netto Bankkonto</div>
-              <div class="af" id="b-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px">0,00 kr</div>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title"><i class="fas fa-list"></i> Siste transaksjoner</div>
-          </div>
-          <div class="filter-bar">
-            <input type="text" class="filter-search" id="tx-search" placeholder="Søk i transaksjoner..." oninput="filterTx()">
-          </div>
-          <div class="tbl-wrap">
-            <table>
-              <thead>
-                <tr><th>Dato</th><th>Beskrivelse</th><th>Kilde</th><th>Beløp</th></tr>
-              </thead>
-              <tbody id="tx-tbody">
-                <tr><td colspan="4" class="empty-state">Laster transaksjoner...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="pg-add" class="pg">
-      <div class="topbar"><div class="topbar-title">Registrer transaksjon</div></div>
-      <div class="page-content" style="max-width:600px;margin:0 auto">
-        <div class="card" style="padding:20px">
-          <div class="form-group">
-            <label class="form-label">Type</label>
-            <select id="a-type" class="form-control">
-              <option value="inc">Inntekt</option>
-              <option value="exp">Utgift</option>
-            </select>
-          </div>
-          <div class="form-group"><label class="form-label">Beskrivelse</label><input id="a-desc" type="text" class="form-control" placeholder="f.eks. Kjøring Agder Taxi"></div>
-          <div class="form-group"><label class="form-label">Beløp (kr)</label><input id="a-amt" type="number" step="0.01" class="form-control" placeholder="0.00"></div>
-          <div class="form-group"><label class="form-label">Dato</label><input id="a-date" type="date" class="form-control"></div>
-          <div class="form-group">
-            <label class="form-label">Kilde</label>
-            <select id="a-source" class="form-control">
-              <option value="Agder">Agder Taxi</option>
-              <option value="Bank">DNB Bank</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" onclick="saveTx()" style="width:100%"><i class="fas fa-save"></i> Lagre transaksjon</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="pg-scan" class="pg">
-      <div class="topbar"><div class="topbar-title">Scan Dokument (Faktura / Bank)</div></div>
-      <div class="page-content" style="max-width:700px;margin:0 auto">
-        <div class="card" style="padding:20px">
-          <div class="status-bar info" id="sbar"></div>
-          <div class="upload-zone" onclick="document.getElementById('f-file').click()">
-            <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:var(--accent);margin-bottom:10px;display:block"></i>
-            <strong>Velg fil eller slipp her</strong>
-            <div style="font-size:12px;color:var(--text3);margin-top:4px">Støtter PDF, PNG, JPG (Faktura #1067761 eller Kontoutskrift)</div>
-            <input type="file" id="f-file" onchange="procFile(event)">
-          </div>
-        </div>
-        <div id="scan-res" class="hidden"></div>
-      </div>
-    </div>
-
-    <div id="pg-bills" class="pg">
-      <div class="topbar"><div class="topbar-title">Lagrede Fakturaer</div></div>
-      <div class="page-content">
-        <div id="bills-list">
-          <div class="empty-state"><i class="fas fa-folder-open"></i><h3>Ingen fakturaer</h3><p>Du har ikke scannet noen dokumenter enda.</p></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="pg-reports" class="pg">
-      <div class="topbar"><div class="topbar-title">Rapporter & Eksport</div></div>
-      <div class="page-content" style="max-width:600px;margin:0 auto">
-        <div class="card" style="padding:20px;text-align:center">
-          <i class="fas fa-file-excel" style="font-size:48px;color:var(--green);margin-bottom:12px;display:block"></i>
-          <h3>Eksporter Regnskap</h3>
-          <p style="color:var(--text3);margin-bottom:16px;font-size:13px">Last ned alle registrerte transaksjoner i CSV-format som kan åpnes i Excel.</p>
-          <button class="btn btn-success" onclick="exportCSV()"><i class="fas fa-download"></i> Last ned CSV</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="pg-profile" class="pg">
-      <div class="topbar"><div class="topbar-title">Min Profil</div></div>
-      <div class="page-content" style="max-width:500px;margin:0 auto">
-        <div class="card" style="padding:24px;text-align:center">
-          <div class="profile-avatar-wrap">
-            <img id="pimg2" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-          </div>
-          <h2 id="prof-name" style="font-size:18px;margin-bottom:4px">Laster...</h2>
-          <p id="prof-email" style="color:var(--text3);font-size:13px;margin-bottom:20px">Laster...</p>
-          <div class="divider"></div>
-          <div style="text-align:left">
-            <div class="form-group"><label class="form-label">Firma</label><input type="text" class="form-control" value="Mohamed Salad Transport" disabled></div>
-            <div class="form-group"><label class="form-label">Rolle</label><input type="text" class="form-control" value="Eier / Administrator" disabled></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
-</div>
-</div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-// ── FIREBASE CONFIGURATION ──
-const firebaseConfig = {
-  apiKey: "AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",
-  authDomain: "mohamed-salad-transport.firebaseapp.com",
-  databaseURL: "https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mohamed-salad-transport",
-  storageBucket: "mohamed-salad-transport.firebasestorage.app",
-  messagingSenderId: "608716442795",
-  appId: "1:608716442795:web:ea17e2c3f26d3103717bee",
-  measurementId: "G-VJTX0THFK5"
-};
-
-// Initialize Firebase compat
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-
-let uid = null;
-let allTx = [];
-let hideAmt = false;
-let curMod = 't';
-
-// Auth State Listener
-auth.onAuthStateChanged(user => {
-  document.getElementById('pg-loading').style.display = 'none';
-  if(user){
-    uid = user.uid;
-    document.getElementById('pg-auth').style.display = 'none';
-    document.getElementById('pg-setup').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    
-    db.ref('users/' + uid).once('value', s => {
-      let d = s.val() || {};
-      let n = d.fname ? (d.fname + ' ' + (d.lname||'')) : 'Mohamed Salad';
-      document.getElementById('uname').innerText = n;
-      document.getElementById('prof-name').innerText = n;
-      document.getElementById('prof-email').innerText = user.email;
-    });
-    
-    loadData();
-  } else {
-    uid = null;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('pg-setup').style.display = 'none';
-    document.getElementById('pg-auth').style.display = 'block';
-  }
-});
-
-// Navigation logic
-function showPg(p){
-  document.querySelectorAll('.pg').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  
-  let targetPg = document.getElementById('pg-' + p);
-  let targetNi = document.getElementById('ni-' + p);
-  if(targetPg) targetPg.classList.add('active');
-  if(targetNi) targetNi.classList.add('active');
-}
-
-// Global amount mask toggle
-function toggleAmt(){
-  hideAmt = !hideAmt;
-  document.querySelectorAll('.af').forEach(el => {
-    if(hideAmt) el.classList.add('ha');
-    else el.classList.remove('ha');
-  });
-  let lbl = document.getElementById('el');
-  let ico = document.getElementById('ei');
-  if(lbl && ico){
-    lbl.innerText = hideAmt ? ' Vis' : ' Skjul';
-    ico.className = hideAmt ? 'fas fa-eye-slash' : 'fas fa-eye';
-  }
-}
-
-function setModus(m){
-  curMod = m;
-  document.getElementById('mb-i').classList.toggle('active', m === 'i');
-  document.getElementById('mb-t').classList.toggle('active', m === 't');
-  calcKpi();
-}
-
-// Actions & Logic helpers
-function doLogin(){
-  let e = document.getElementById('em').value;
-  let p = document.getElementById('pw').value;
-  if(!e || !p) return alert('Fyll inn e-post og passord');
-  auth.signInWithEmailAndPassword(e, p).catch(err => alert('Feil: ' + err.message));
-}
-
-function doSetup(){
-  let f = document.getElementById('sf').value;
-  let l = document.getElementById('sl').value;
-  let e = document.getElementById('se').value;
-  let p = document.getElementById('sp').value;
-  let p2 = document.getElementById('sp2').value;
-  if(!f || !e || !p) return alert('Fyll inn alle obligatoriske felt');
-  if(p !== p2) return alert('Passordene er ikke like');
-  
-  auth.createUserWithEmailAndPassword(e, p).then(res => {
-    db.ref('users/' + res.user.uid).set({ fname: f, lname: l, email: e });
-  }).catch(err => alert('Feil: ' + err.message));
-}
-
-function forgotPw(){
-  let e = document.getElementById('em').value;
-  if(!e) return alert('Skriv inn e-posten din i feltet først');
-  auth.sendPasswordResetEmail(e).then(() => alert('Nullstillingslink sendt til ' + e)).catch(err => alert(err.message));
-}
-
-function goSetup(){
-  document.getElementById('pg-auth').style.display = 'none';
-  document.getElementById('pg-setup').style.display = 'block';
-}
-
-function goAuth(){
-  document.getElementById('pg-setup').style.display = 'none';
-  document.getElementById('pg-auth').style.display = 'block';
-}
-
-function doLogout(){
-  if(confirm('Vil du logge ut?')) auth.signOut();
-}
-
-// Data Handling
-function loadData(){
-  if(!uid) return;
-  db.ref('transactions/' + uid).on('value', s => {
-    allTx = [];
-    s.forEach(ch => {
-      let item = ch.val();
-      item.id = ch.key;
-      allTx.push(item);
-    });
-    allTx.sort((a,b) => new Date(b.date) - new Date(a.date));
-    calcKpi();
-    renderTx(allTx);
-    loadBillsList();
-  });
-}
-
-function calcKpi(){
-  let inc = 0, exp = 0;
-  let atInc = 0, atExp = 0;
-  let bInc = 0, bExp = 0;
-
-  allTx.forEach(t => {
-    let amt = parseFloat(t.amount) || 0;
-    let src = t.source || 'Agder'; 
-    
-    if(t.type === 'inc'){
-      inc += amt;
-      if(src === 'Bank') bInc += amt;
-      else atInc += amt;
-    } else {
-      exp += amt;
-      if(src === 'Bank') bExp += amt;
-      else atExp += amt;
-    }
-  });
-
-  let net = inc - exp;
-  let mva12 = atInc * 0.12; 
-  let mva25 = atExp * 0.25; 
-  let netmva = net - mva12 - mva25;
-
-  // Format helper
-  const f = v => v.toLocaleString('no-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
-
-  document.getElementById('s-inc').innerText = f(inc);
-  document.getElementById('s-exp').innerText = f(exp);
-  document.getElementById('s-net').innerText = f(net);
-  document.getElementById('s-mva12').innerText = f(mva12);
-  document.getElementById('s-mva25').innerText = f(mva25);
-  document.getElementById('s-netmva').innerText = f(netmva);
-
-  document.getElementById('at-inc').innerText = f(atInc);
-  document.getElementById('at-exp').innerText = f(atExp);
-  document.getElementById('at-net').innerText = f(atInc - atExp);
-
-  document.getElementById('b-inc').innerText = f(bInc);
-  document.getElementById('b-exp').innerText = f(bExp);
-  document.getElementById('b-net').innerText = f(bInc - bExp);
-}
-
-function renderTx(list){
-  let tbody = document.getElementById('tx-tbody');
-  if(!tbody) return;
-  if(list.length === 0){
-    tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class="fas fa-receipt"></i>Ingen transaksjoner lagret enda.</td></tr>`;
-    return;
-  }
-  
-  tbody.innerHTML = list.map(t => {
-    let amt = parseFloat(t.amount) || 0;
-    let cls = t.type === 'inc' ? 'inc' : 'exp';
-    let sign = t.type === 'inc' ? '+' : '−';
-    let srcCls = t.source === 'Bank' ? 'badge info' : 'badge amber';
-    let srcName = t.source === 'Bank' ? '🏦 DNB' : '🚕 Agder';
-    
-    return `<tr>
-      <td class="td-date">${t.date || ''}</td>
-      <td class="td-desc">${t.desc || ''}</td>
-      <td><span class="${srcCls}">${srcName}</span></td>
-      <td class="td-amt ${cls} af ${hideAmt?'ha':''}">${sign}${amt.toLocaleString('no-NO')} kr</td>
-    </tr>`;
-  }).join('');
-}
-
-function saveTx(){
-  let type = document.getElementById('a-type').value;
-  let desc = document.getElementById('a-desc').value;
-  let amount = document.getElementById('a-amt').value;
-  let date = document.getElementById('a-date').value;
-  let source = document.getElementById('a-source').value;
-
-  if(!desc || !amount || !date) return alert('Vennligst fyll ut alle felter.');
-
-  let newTx = { type, desc, amount: parseFloat(amount), date, source };
-  db.ref('transactions/' + uid).push(newTx).then(() => {
-    alert('Transaksjon lagret!');
-    document.getElementById('a-desc').value = '';
-    document.getElementById('a-amt').value = '';
-    showPg('dash');
-  });
-}
-
-// Bulk deletion triggers
-function deleteBankEntries(){
-  if(confirm('Er du sikker på at du vil slette alle BANK-transaksjoner?')){
-    allTx.forEach(t => {
-      if(t.source === 'Bank') db.ref('transactions/' + uid + '/' + t.id).remove();
-    });
-  }
-}
-
-function deleteAgderEntries(){
-  if(confirm('Er du sikker på at du vil slette alle AGDER TAXI-transaksjoner?')){
-    allTx.forEach(t => {
-      if(t.source !== 'Bank') db.ref('transactions/' + uid + '/' + t.id).remove();
-    });
-  }
-}
-
-function deleteAllEntries(){
-  if(confirm('⚠️ ADVARSEL! Vil du slette ABSOLUTT ALT regnskap? Dette kan ikke angres.')){
-    db.ref('transactions/' + uid).remove();
-    db.ref('bills/' + uid).remove();
-  }
-}
-
-function repairSourceFields(){
-  db.ref('transactions/' + uid).once('value', s => {
-    s.forEach(ch => {
-      let t = ch.val();
-      if(!t.source){
-        let sVal = (t.desc && t.desc.toLowerCase().includes('bank')) ? 'Bank' : 'Agder';
-        db.ref('transactions/' + uid + '/' + ch.key).update({ source: sVal });
-      }
-    });
-    alert('Kilde-felt reparert!');
-  });
-}
-
-function exportCSV(){
-  if(allTx.length === 0) return alert('Ingen data å eksportere');
-  let csv = 'Dato,Beskrivelse,Kilde,Type,Belop\r\n';
-  allTx.forEach(t => {
-    csv += `"${t.date}","${t.desc}","${t.source||'Agder'}","${t.type}","${t.amount}"\r\n`;
-  });
-  let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  let link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.setAttribute("download", "regnskap_transport_pro.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-// OCR Processing Logic
-function showMsg(txt, cls='info'){
-  let b = document.getElementById('sbar');
-  if(!b) return;
-  b.className = 'status-bar ' + cls;
-  b.style.display = 'flex';
-  b.innerHTML = txt;
-}
-
-function procFile(ev){
-  let file = ev.target.files[0];
-  if(!file) return;
-  
-  showMsg('<i class="fas fa-spinner fa-spin"></i> Behandler filen, vennligst vent...', 'info');
-  
-  if(file.type === 'application/pdf'){
-    let reader = new FileReader();
-    reader.onload = function() {
-      let typedarray = new Uint8Array(this.result);
-      pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-        let pagesPromises = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          pagesPromises.push(pdf.getPage(i).then(page => {
-            return page.getTextContent().then(textContent => {
-              return textContent.items.map(item => item.str).join(' ');
-            });
-          }));
-        }
-        Promise.all(pagesPromises).then(pagesText => {
-          parseOcrText(pagesText.join('\n'), file.name);
-        });
-      });
+    // 2. Qaabaynta rasmiga ah ee mashruucaaga Firebase (Kaliya hal mar ayaa la sheegay)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCYNLmTIEV2_WWNhibowhUCXzAMiMh0FYE",
+        authDomain: "mohamed-salad-transport.firebaseapp.com",
+        projectId: "mohamed-salad-transport",
+        storageBucket: "mohamed-salad-transport.appspot.com",
+        messagingSenderId: "608716442795",
+        appId: "1:608716442795:web:ea17e2c3f26d3103717bee"
     };
-    reader.readAsArrayBuffer(file);
-  } else {
-    Tesseract.recognize(file, 'nor+eng').then(({ data: { text } }) => {
-      parseOcrText(text, file.name);
-    }).catch(err => showMsg('OCR Feil: ' + err.message, 'error'));
-  }
-}
 
-function parseOcrText(txt, fileName){
-  let container = document.getElementById('scan-res');
-  container.className = 'ocr-result-card';
-  container.innerHTML = `<div class="ocr-result-head"><i class="fas fa-file-invoice"></i> Behandler: ${fileName}</div>`;
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
 
-  let clean = txt.replace(/\s+/g, ' ');
-  let items = [];
+    // 3. Shadaayada Login-ka iyo la tacaalida dhacdooyinka (Form Submission)
+    const loginForm = document.getElementById('loginForm');
+    const errorMessageDiv = document.getElementById('errorMessage');
 
-  // 1. Check if it is Agder Taxi Invoice #1067761
-  if(txt.includes('07000') || txt.includes('Agder Taxi') || txt.includes('1067761')){
-    showMsg('<i class="fas fa-check-circle"></i> Agder Taxi Faktura gjenkjent!', 'success');
-    
-    items.push({ desc: 'Agder Taxi Inntekt AG-270', amt: 101004.00, type: 'inc', source: 'Agder', date: '2026-03-01' });
-    items.push({ desc: 'Agder Taxi Inntekt AG-368', amt: 88232.00, type: 'inc', source: 'Agder', date: '2026-03-01' });
-    items.push({ desc: 'Agder Taxi Sentralavgift AG-270', amt: 4760.00, type: 'exp', source: 'Agder', date: '2026-03-01' });
-    items.push({ desc: 'Agder Taxi Sentralavgift AG-368', amt: 1960.00, type: 'exp', source: 'Agder', date: '2026-03-01' });
-    items.push({ desc: 'Agder Taxi Adm gebyr trukket EBH', amt: 9504.04, type: 'exp', source: 'Agder', date: '2026-03-01' });
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault(); // Diid in boggu iska refresh gareeyo gudbinta ka dib
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        // Qari khaladaadkii hore haddii ay jireen
+        errorMessageDiv.style.display = 'none';
+        errorMessageDiv.innerText = '';
 
-    let netAmt = 173011.96;
-    container.innerHTML += `
-      <div class="netto-highlight">
-        <small>Beregnet Netto Utbetaling</small>
-        <div class="nh-val">${netAmt.toLocaleString('no-NO', {minimumFractionDigits:2})} kr</div>
-        <div class="nh-sub">Faktura #1067761 · Mars 2026</div>
-      </div>
-      <div class="mva-row" style="padding:0 12px">
-        <div class="mva-box"><small>MVA 12% (Inntekt)</small><b>22 708,32 kr</b></div>
-        <div class="mva-box"><small>MVA 25% (Gebyr)</small><b>2 376,01 kr</b></div>
-        <div class="mva-box"><small>Totalt Poster</small><b>5 linjer</b></div>
-      </div>
-    `;
-  } 
-  // 2. Check if it is DNB Statement
-  else if(txt.includes('Kontoutskrift') || txt.includes('1506.85.69467') || txt.includes('DNB')){
-    showMsg('<i class="fas fa-check-circle"></i> DNB Kontoutskrift gjenkjent!', 'success');
-
-    items.push({ desc: 'Agder Taxi Utbetaling 1', amt: 147888.00, type: 'inc', source: 'Bank', date: '2026-01-15' });
-    items.push({ desc: 'Agder Taxi Utbetaling 2', amt: 126741.00, type: 'inc', source: 'Bank', date: '2026-01-20' });
-    items.push({ desc: 'Altaieb Hassan overføring', amt: 2243.30, type: 'inc', source: 'Bank', date: '2026-01-02' });
-    items.push({ desc: 'Santander Consumer Bank Giro 3572198', amt: 11000.00, type: 'exp', source: 'Bank', date: '2026-01-26' });
-    items.push({ desc: 'Santander Consumer Bank Giro 3572207', amt: 13600.00, type: 'exp', source: 'Bank', date: '2026-01-26' });
-    items.push({ desc: 'DNB Livsforsikring AS', amt: 3149.74, type: 'exp', source: 'Bank', date: '2026-01-28' });
-    items.push({ desc: 'Tesla Inc. lading 1', amt: 28.45, type: 'exp', source: 'Bank', date: '2026-01-02' });
-    items.push({ desc: 'Tesla Inc. lading 2', amt: 35.05, type: 'exp', source: 'Bank', date: '2026-01-27' });
-
-    container.innerHTML += `
-      <div class="netto-highlight" style="border-color:var(--accent)">
-        <small>Gjenkjente transaksjoner</small>
-        <div class="nh-val" style="color:var(--accent)">8 linjer</div>
-        <div class="nh-sub">DNB Bankkonto · Januar 2026</div>
-      </div>
-    `;
-  } else {
-    showMsg('Ukjent dokumentformat. Prøver generell tolkning.', 'amber');
-    items.push({ desc: 'Scannet transaksjon: ' + fileName, amt: 0.00, type: 'inc', source: 'Agder', date: new Date().toISOString().split('T')[0] });
-  }
-
-  let listHtml = items.map((it, idx) => {
-    let sign = it.type==='inc'?'+':'-';
-    let col = it.type==='inc'?'var(--green)':'var(--red)';
-    return `
-      <div class="import-item sel" id="ii-${idx}" onclick="toggleImportItem(${idx})">
-        <div class="import-item-top">
-          <div class="import-item-desc">${it.desc}</div>
-          <div class="import-item-amt" style="color:${col}">${sign}${it.amt.toLocaleString('no-NO')} kr</div>
-        </div>
-        <div class="import-item-meta">${it.date} · Kilde: ${it.source}</div>
-      </div>
-    `;
-  }).join('');
-
-  container.innerHTML += `
-    <div style="padding:14px 16px">
-      <div style="font-weight:600;margin-bottom:8px;font-size:12px;color:var(--text2)">Velg linjer som skal lagres:</div>
-      ${listHtml}
-      <button class="btn btn-success" style="width:100%;margin-top:12px" onclick="saveImported(${JSON.stringify(items).replace(/"/g, '&quot;')})">
-        <i class="fas fa-cloud-arrow-up"></i> Importer valgte linjer til regnskap
-      </button>
-    </div>
-  `;
-}
-
-let excludedIndices = [];
-function toggleImportItem(idx){
-  let el = document.getElementById('ii-' + idx);
-  if(!el) return;
-  if(excludedIndices.includes(idx)){
-    excludedIndices = excludedIndices.filter(i => i !== idx);
-    el.classList.add('sel');
-  } else {
-    excludedIndices.push(idx);
-    el.classList.remove('sel');
-  }
-}
-
-function saveImported(items){
-  let toSave = items.filter((_, idx) => !excludedIndices.includes(idx));
-  if(toSave.length === 0) return alert('Ingen linjer er valgt');
-  
-  let promises = toSave.map(it => db.ref('transactions/' + uid).push(it));
-  
-  // Also save log entry to bills node
-  db.ref('bills/' + uid).push({
-    title: 'Dokument Importert (' + toSave.length + ' linjer)',
-    date: new Date().toISOString().split('T')[0],
-    count: toSave.length
-  });
-
-  Promise.all(promises).then(() => {
-    alert('Vellykket import av ' + toSave.length + ' transaksjoner!');
-    document.getElementById('scan-res').className = 'hidden';
-    document.getElementById('sbar').style.display = 'none';
-    showPg('dash');
-  });
-}
-
-function loadBillsList(){
-  db.ref('bills/' + uid).once('value', s => {
-    let wrap = document.getElementById('bills-list');
-    if(!wrap) return;
-    let html = '';
-    s.forEach(ch => {
-      let b = ch.val();
-      html += `
-        <div class="bill-card">
-          <div class="bill-card-head">
-            <strong>${b.title}</strong>
-            <span class="badge info">${b.date}</span>
-          </div>
-          <div class="bill-card-body">
-            <div style="font-size:13px;color:var(--text2)">Status: Automatisk bokført og integrert i databasen.</div>
-            <div class="bill-kpi-row">
-              <div class="bill-kpi"><small>Linjer</small><b>${b.count}</b></div>
-              <div class="bill-kpi"><small>Status</small><b style="color:var(--green)">OK</b></div>
-              <div class="bill-kpi"><small>Kilde</small><b>Cloud</b></div>
-            </div>
-          </div>
-        </div>
-      `;
+        // Habka login-ka Firebase
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Markuu si sax ah u galo (U sii gudbi dashboard-ka)
+                console.log("Guul! Waa la galay:", userCredential.user);
+                window.location.href = "dashboard.html"; // Halkan ku qor bogga xiga ee dashboard-kaaga
+            })
+            .catch((error) => {
+                // Haddii uu qalad dhaco, dadka u muuji qaladka
+                console.error("Qalad ayaa dhacay:", error.message);
+                errorMessageDiv.style.display = 'block';
+                
+                // Turjumaad fudud ee khaladaadka caanka ah
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessageDiv.innerText = "E-post-ka ama passord-ka ayaa khaldan.";
+                } else if (error.code === 'auth/invalid-api-key') {
+                    errorMessageDiv.innerText = "Cilad farsamo: API Key-ga Firebase ma shaqaynayo. Hubi Authorized Domains.";
+                } else {
+                    errorMessageDiv.innerText = error.message;
+                }
+            });
     });
-    if(html) wrap.innerHTML = html;
-  });
-}
 </script>
+
 </body>
 </html>
