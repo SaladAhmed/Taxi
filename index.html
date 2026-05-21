@@ -102,9 +102,17 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .user-role{color:rgba(255,255,255,.4);font-size:11px}
 
 /* ── TOPBAR ── */
-.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow)}
-.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
-.topbar-actions{display:flex;align-items:center;gap:8px}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;min-height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow);flex-wrap:wrap;gap:6px}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);flex:1;min-width:120px}
+.topbar-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+@media(max-width:600px){
+  .topbar{padding:8px 12px}
+  .topbar-actions{width:100%;justify-content:flex-start;padding-bottom:6px}
+  .top-btn span,.toggle-eye span,.modus-btn span{display:none}
+  .top-btn,.toggle-eye{padding:6px 8px;font-size:12px}
+  .modus-btn{padding:5px 8px;font-size:11px}
+  .btn-sm-hide{display:none!important}
+}
 .top-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:.15s;font-family:inherit}
 .top-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,86,219,.04)}
 .top-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -375,17 +383,17 @@ input[type=file]{display:none}
     <!-- ── DASHBOARD ── -->
     <div id="pg-dash" class="pg active">
       <div class="topbar">
-        <div class="topbar-title" id="dash-title">Dashboard · Total oversikt</div>
+        <div class="topbar-title" id="dash-title">Dashboard</div>
         <div class="topbar-actions">
           <div class="modus-toggle">
-            <button class="modus-btn" id="mb-i" onclick="setModus('i')"><i class="fas fa-user"></i> Individuell</button>
-            <button class="modus-btn active" id="mb-t" onclick="setModus('t')"><i class="fas fa-globe"></i> Total</button>
+            <button class="modus-btn" id="mb-i" onclick="setModus('i')"><i class="fas fa-user"></i> <span>Individuell</span></button>
+            <button class="modus-btn active" id="mb-t" onclick="setModus('t')"><i class="fas fa-globe"></i> <span>Total</span></button>
           </div>
-          <button class="toggle-eye" onclick="toggleAmt()"><i class="fas fa-eye" id="ei"></i><span id="el">Skjul</span></button>
-          <button class="top-btn" onclick="loadData()" title="Last inn på nytt"><i class="fas fa-rotate-right"></i></button>
-          <button class="top-btn danger btn-sm" onclick="deleteBankEntries()" title="Slett kun DNB banktransaksjoner"><i class="fas fa-university"></i> Slett Bank</button>
-          <button class="top-btn danger btn-sm" onclick="deleteAgderEntries()" title="Slett kun Agder Taxi fakturaer"><i class="fas fa-file-invoice"></i> Slett Agder</button>
-          <button class="top-btn danger btn-sm" onclick="deleteAllEntries()" title="Slett ALLE transaksjoner" style="background:var(--red);color:#fff;border-color:var(--red)"><i class="fas fa-trash-alt"></i> Slett ALT</button>
+          <button class="toggle-eye" onclick="toggleAmt()"><i class="fas fa-eye" id="ei"></i><span id="el"> Skjul</span></button>
+          <button class="top-btn" onclick="loadData()" title="Oppdater"><i class="fas fa-rotate-right"></i></button>
+          <button class="top-btn danger btn-sm" onclick="deleteBankEntries()" title="Slett Bank"><i class="fas fa-university"></i> <span>Bank</span></button>
+          <button class="top-btn danger btn-sm" onclick="deleteAgderEntries()" title="Slett Agder"><i class="fas fa-file-invoice"></i> <span>Agder</span></button>
+          <button class="top-btn btn-sm" onclick="deleteAllEntries()" title="Slett ALT" style="background:var(--red);color:#fff;border-color:var(--red)"><i class="fas fa-trash-alt"></i> <span>ALT</span></button>
         </div>
       </div>
       <div class="page-content">
@@ -402,7 +410,7 @@ input[type=file]{display:none}
         </div>
         <!-- ── TOTAL SUMMARY ROW ── -->
         <div class="kpi-row">
-          <div class="kpi green"><div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Total Inntekt</div><div class="kpi-val af" id="s-inc">0,00 kr</div><div class="kpi-sub">Brutto inkl. MVA-grunnlag</div></div>
+          <div class="kpi green"><div class="kpi-label"><i class="fas fa-arrow-trend-up"></i> Total Inntekt</div><div class="kpi-val af" id="s-inc">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
           <div class="kpi red"><div class="kpi-label"><i class="fas fa-arrow-trend-down"></i> Total Utgifter</div><div class="kpi-val af" id="s-exp">0,00 kr</div><div class="kpi-sub">Agder Taxi + Bank</div></div>
           <div class="kpi blue"><div class="kpi-label"><i class="fas fa-scale-balanced"></i> Driftsresultat</div><div class="kpi-val af" id="s-net">0,00 kr</div><div class="kpi-sub">Inntekt − Utgifter</div></div>
         </div>
@@ -1051,26 +1059,22 @@ function renderDash(list){
   const agder=list.filter(e=>isAgderEntry(e));
   const bank=list.filter(e=>!isAgderEntry(e));
 
-  // Total KPIs — Resultatregnskap style: BRUTTO inntekt, MVA gooniya
+  // Total KPIs — amount is stored as-is (income line items or expense)
+  // MVA is stored separately in mva12Exact/mva25Exact on Agder netto entries
   let inc=0,exp=0,mva12=0,mva25=0;
   list.forEach(e=>{
     const a=parseFloat(e.amount)||0;
     if(e.type==='expense'){exp+=a;return;}
-    // INCOME: use BRUTTO (netto + mva12Exact) to match Resultatregnskap
+    // INCOME: amount is already the correct value
+    // For netto entries (single entry per faktura): amount = netto_utbetalt
+    // For detailed entries (alle poster): amount = individual line item
+    inc+=a;
+    // MVA: only from Agder netto entries that have mva12Exact stored
     if(isAgderEntry(e)){
       const m12=parseFloat(e.mva12Exact)||0;
       const m25=parseFloat(e.mva25Exact)||0;
-      inc+=(a+m12);   // BRUTTO = netto + mva12
-      mva12+=m12;     // exact MVA 12% from faktura
-      mva25+=m25;     // exact MVA 25% from faktura
-      // Fallback: no exact MVA stored yet → estimate
-      if(!m12){
-        const cat=parseInt(e.category||'0');
-        if(cat>=3030&&cat<=3110){const est=a*0.12;mva12+=est;inc+=est;}
-      }
-    } else {
-      // Bank income: no MVA, add as-is
-      inc+=a;
+      if(m12>0)mva12+=m12;
+      if(m25>0)mva25+=m25;
     }
   });
   const net=inc-exp,netAfterMva=net-mva12-mva25;
@@ -1257,9 +1261,8 @@ function renderResultat(){
     const isInc=e.type==='income';
     const isAgder=isAgderEntry(e);
 
-    // Brutto for income (netto + mva12Exact)
-    const brutto=isInc&&isAgder?(a+m12):a;
-    const val=isInc?brutto:a;
+    // amount is stored as-is — income line items or netto
+    const val=a;
 
     if(!byKonto[cat])byKonto[cat]={inc:0,exp:0};
     if(isInc)byKonto[cat].inc+=val;
@@ -2197,7 +2200,7 @@ function renderOItems(invNr){
   const expSum=oItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
   const nettoAmt=gRawTotal||incSum-expSum;
   const nettoEntry={desc:`Agder Taxi Faktura #${invNr} — Netto utbetalt`,amount:nettoAmt,type:'income',date:oItems[0]?.date||'',category:'3030',invNr,billNr:invNr,carId:'',isNetto:true};
-  let showDetailed=false;
+  let showDetailed=false;  // Default: Netto Total — saves income+expense separately
   function buildUI(){
     con.innerHTML='';
     const tog=document.createElement('div');
@@ -2216,13 +2219,23 @@ function renderOItems(invNr){
       d.style.cssText='border-color:var(--green);background:var(--green-bg);cursor:default';
       d.innerHTML=`
         <div class="import-item-top">
-          <span class="import-item-desc" style="font-size:14px">🚕 ${nettoEntry.desc}</span>
-          <span class="import-item-amt" style="color:var(--green);font-size:16px">+${fmt(nettoAmt)}</span>
+          <span class="import-item-desc" style="font-size:13px;font-weight:700">🚕 Agder Taxi Faktura #${invNr}</span>
         </div>
-        <div class="import-item-meta" style="margin-top:4px">
-          ${nettoEntry.date} · 3030 · <span class="badge inc" style="font-size:10px">↑ Inntekt</span>
-          &nbsp;·&nbsp; <span style="color:var(--text3)">+${fmt(incSum)} inntekt − ${fmt(expSum)} utgift</span>
-        </div>`;
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+          <div style="background:var(--green-bg);border-radius:6px;padding:6px 8px;text-align:center;border:1px solid rgba(5,150,105,.2)">
+            <div style="font-size:9px;color:var(--green);font-weight:700;text-transform:uppercase">Inntekt</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--green);font-size:13px">+${fmt(incSum)}</div>
+          </div>
+          <div style="background:var(--red-bg);border-radius:6px;padding:6px 8px;text-align:center;border:1px solid rgba(220,38,38,.2)">
+            <div style="font-size:9px;color:var(--red);font-weight:700;text-transform:uppercase">Utgifter</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red);font-size:13px">−${fmt(expSum)}</div>
+          </div>
+          <div style="background:rgba(26,86,219,.07);border-radius:6px;padding:6px 8px;text-align:center;border:1px solid rgba(26,86,219,.2)">
+            <div style="font-size:9px;color:var(--accent);font-weight:700;text-transform:uppercase">Netto</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent);font-size:13px">${fmt(incSum-expSum)}</div>
+          </div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--text3);text-align:center">${nettoEntry.date} · Lagrer som 2 separate entries (inntekt + utgift)</div>`;
       con.appendChild(d);
     } else {
       const summary=document.createElement('div');
@@ -2269,10 +2282,13 @@ async function importOCR(){
   const nettoCard=E('oi-netto');
   if(nettoCard){
     const it=oItems[0];
-    const savedMva12=parseFloat(document.getElementById('at-m12')?.textContent?.replace(/[^0-9,]/g,'').replace(',','.')||0)||0;
-    const savedMva25=parseFloat(document.getElementById('s-mva25')?.dataset?.faktura||0)||0;
-    await ref.push({date:it?.date||'',category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,amount:gRawTotal||0,type:'income',carId:'',billNr:it?.invNr||'',source:'agder',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0});
-    alert(`✅ Netto entry lagret: +${fmt(gRawTotal||0)}`);
+    // Save income total and expense total as separate entries
+    const incTotal=oItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+    const expTotal=oItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+    const baseFields={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:'',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0};
+    if(incTotal>0) await ref.push({...baseFields,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:incTotal,type:'income'});
+    if(expTotal>0) await ref.push({...baseFields,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:expTotal,type:'expense'});
+    alert(`✅ Lagret! Inntekt: +${fmt(incTotal)} | Utgifter: −${fmt(expTotal)} | Netto: ${fmt(incTotal-expTotal)}`);
   } else {
     const selected=[];
     document.querySelectorAll('#oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('oi-',''));if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);});
@@ -2443,8 +2459,12 @@ async function importScanOCR(){
   const nettoCard=E('soi-netto');
   if(nettoCard){
     const it=scanOItems[0];
-    await ref.push({date:it?.date||'',category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Netto utbetalt`,amount:gRawTotal,type:'income',carId:'',billNr:it?.invNr||'',source:'agder',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0});
-    alert(`✅ Netto entry lagret: +${fmt(gRawTotal)}`);
+    const incTotal=scanOItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+    const expTotal=scanOItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+    const baseF={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:'',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0};
+    if(incTotal>0) await ref.push({...baseF,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:incTotal,type:'income'});
+    if(expTotal>0) await ref.push({...baseF,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:expTotal,type:'expense'});
+    alert(`✅ Lagret! Inntekt: +${fmt(incTotal)} | Utgifter: −${fmt(expTotal)}`);
   } else {
     const selected=[];
     document.querySelectorAll('#scan-oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('soi-',''));if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);});
