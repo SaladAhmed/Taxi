@@ -70,7 +70,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .sidebar{width:220px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:300;transition:.3s}
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
 @media(max-width:768px){
-  .sidebar{width:100%;height:56px;flex-direction:row;align-items:center;position:fixed;top:auto;bottom:0;height:56px;border-top:1px solid rgba(255,255,255,.1)}
+  .sidebar{width:100%;height:56px;flex-direction:row;align-items:center;position:fixed;top:auto;bottom:0;border-top:1px solid rgba(255,255,255,.1)}
   .main{margin-left:0;padding-bottom:56px}
   .sidebar-logo,.sidebar-footer{display:none}
   .nav-label{font-size:10px}
@@ -78,6 +78,21 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
   .nav-item.active{border-bottom-color:var(--sidebar-active)!important;background:rgba(26,86,219,.15)}
   .sidebar-nav{flex-direction:row;padding:0;gap:0;flex:1}
   .nav-section-title{display:none}
+  .page-content{padding:12px}
+  .kpi-row{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .kpi{padding:12px 14px}
+  .kpi-val{font-size:18px}
+  .form-row-3{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  table{font-size:11px}
+  thead th{padding:7px 8px;font-size:10px}
+  tbody td{padding:8px}
+  .td-desc{max-width:120px}
+}
+@media(max-width:480px){
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .kpi-val{font-size:16px}
+  .split-cards{grid-template-columns:1fr!important}
 }
 
 /* ── SIDEBAR ── */
@@ -421,7 +436,7 @@ input[type=file]{display:none}
         </div>
 
         <!-- ── SPLIT: AGDER TAXI vs BANK ── -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" class="split-cards">
 
           <!-- Agder Taxi mini-KPI -->
           <div style="background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(217,119,6,.03));border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:14px 16px">
@@ -1035,20 +1050,30 @@ function loadData(){
 
 // ── HELPER: is Agder Taxi entry? ──
 function isAgderEntry(e){
-  // 1. Explicit source tag (set when saving)
+  // 1. Explicit source tag — most reliable
   if(e.source==='agder')return true;
   if(e.source==='bank')return false;
-  // 2. billNr or carId = definitive Agder Taxi
+  // 2. billNr = definitive Agder Taxi proof
   if((e.billNr||'')!=='')return true;
+  // 3. carId starting with AG
   if(e.carId&&e.carId.startsWith('AG'))return true;
-  // 3. Description keywords UNIQUE to Agder Taxi invoices
+  // 4. Description keywords unique to Agder Taxi
   const d=(e.description||'').toLowerCase();
   if(d.includes('netto utbetalt'))return true;
+  if(d.includes('inntekt total')&&d.includes('agder'))return true;
+  if(d.includes('utgifter total')&&d.includes('agder'))return true;
   if(d.includes('tt rogaland'))return true;
-  if(d.includes('emv n '))return true;
+  if(d.includes('emv n'))return true;
   if(d.includes('faktura #'))return true;
-  // 4. "agder taxi" in description BUT NOT "(total)" suffix (bank grouped entries)
-  if(d.includes('agder taxi')&&!d.includes('(total)'))return true;
+  // 5. Bank-grouped entries end with "(total)" — always bank (check BEFORE agder taxi)
+  if(d.includes('(total)'))return false;
+  if(d.includes('agder taxi'))return true;
+  // 6. Known bank keywords never appear in Agder entries
+  const bankKW=['santander','skatteetaten','skatteinnkrevin','fortum','nextgentel',
+    'autosync','gjensidige','tryg','vibb','kontoregulering','omkostninger',
+    'uno-x','tesla','wash world','telenor','telia','leringsverkstedet','tyholmen',
+    'arendal kommune','msg cleaning','lyse','dnb livsforsikring','ra forsikring'];
+  if(bankKW.some(k=>d.includes(k)))return false;
   return false;
 }
 
