@@ -409,6 +409,7 @@ input[type=file]{display:none}
           <button class="top-btn danger btn-sm" onclick="deleteBankEntries()" title="Slett Bank"><i class="fas fa-university"></i> <span>Bank</span></button>
           <button class="top-btn danger btn-sm" onclick="deleteAgderEntries()" title="Slett Agder"><i class="fas fa-file-invoice"></i> <span>Agder</span></button>
           <button class="top-btn btn-sm" onclick="deleteAllEntries()" title="Slett ALT" style="background:var(--red);color:#fff;border-color:var(--red)"><i class="fas fa-trash-alt"></i> <span>ALT</span></button>
+          <button class="top-btn btn-sm" onclick="repairSourceFields()" title="Reparer source-felt" style="background:var(--purple);color:#fff;border-color:var(--purple)"><i class="fas fa-wrench"></i> <span>Fix</span></button>
         </div>
       </div>
       <div class="page-content">
@@ -1032,29 +1033,12 @@ function toggleAmt(){
 }
 
 // ── DATA ──
-function fixMissingSource(){
-  // Tag entries that have no source field so isAgderEntry() works correctly
-  const u=auth.currentUser;if(!u)return;
-  const toFix=entries.filter(e=>!e.source);
-  if(!toFix.length)return;
-  toFix.forEach(e=>{
-    const isAg=isAgderEntry(e);
-    const src=isAg?'agder':'bank';
-    if(e.source!==src){
-      e.source=src; // update in memory immediately
-      db.ref('entries/'+u.uid+'/'+e.id+'/source').set(src);
-    }
-  });
-}
-
 function loadData(){
   const u=auth.currentUser;if(!u)return;
   db.ref('entries/'+u.uid).on('value',snap=>{
     entries=[];
     snap.forEach(c=>{const v=c.val();if(v&&typeof v==='object'&&v.date)entries.push({id:c.key,...v});});
     entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    // Auto-fix entries missing source field
-    fixMissingSource();
     if(modus==='i')applyPer();else renderDash(entries);
     if(E('pg-reports')?.classList.contains('active'))initRepFilter();
   });
@@ -1584,6 +1568,66 @@ async function deleteAllEntries(){
     await db.ref('bills/'+u.uid).remove();
     alert('✅ Alt slettet! Entries og fakturaer fjernet.');
   }catch(err){alert('Feil: '+err.message);}
+}
+
+// ── REPAIR: fix source field on existing entries ──
+async function repairSourceFields(){
+  const u=auth.currentUser;if(!u)return;
+  let agderCount=0,bankCount=0,skipped=0;
+  
+  // Preview first
+  const preview=entries.map(e=>{
+    if(e.source)return null; // already tagged
+    const isAg=isAgderEntryStrict(e);
+    return {id:e.id,desc:(e.description||'').substring(0,40),src:isAg?'agder':'bank'};
+  }).filter(Boolean);
+  
+  if(!preview.length)return alert('Alle entries har allerede source-tag!');
+  
+  const agList=preview.filter(x=>x.src==='agder');
+  const bkList=preview.filter(x=>x.src==='bank');
+  
+  const msg=`Repair source fields:
+
+🚕 Agder: ${agList.length} entries
+🏦 Bank: ${bkList.length} entries
+
+Eksempler Agder:
+${agList.slice(0,3).map(x=>x.desc).join('\n')}
+
+Eksempler Bank:
+${bkList.slice(0,3).map(x=>x.desc).join('\n')}
+
+Fortsette?`;
+  
+  if(!confirm(msg))return;
+  
+  for(const item of preview){
+    await db.ref('entries/'+u.uid+'/'+item.id+'/source').set(item.src);
+    if(item.src==='agder')agderCount++;else bankCount++;
+  }
+  alert(`✅ Reparert!\n🚕 Agder: ${agderCount}\n🏦 Bank: ${bankCount}`);
+}
+
+// Strict version — only tags entries without source field
+function isAgderEntryStrict(e){
+  if((e.billNr||'')!=='')return true;
+  if(e.carId&&e.carId.startsWith('AG'))return true;
+  const d=(e.description||'').toLowerCase();
+  if(d.includes('netto utbetalt'))return true;
+  if(d.includes('inntekt total')&&d.includes('agder'))return true;
+  if(d.includes('utgifter total')&&d.includes('agder'))return true;
+  if(d.includes('tt rogaland'))return true;
+  if(d.includes('emv n'))return true;
+  if(d.includes('faktura #'))return true;
+  if(d.includes('(total)'))return false;
+  if(d.includes('agder taxi'))return true;
+  const bankKW=['santander','skatteetaten','fortum','nextgentel','autosync',
+    'gjensidige','tryg','vibb','kontoregulering','uno-x','tesla',
+    'telenor','telia','leringsverkstedet','arendal kommune','msg cleaning',
+    'lyse','dnb livsforsikring','ra forsikring','wash world'];
+  if(bankKW.some(k=>d.includes(k)))return false;
+  return false;
 }
 
 // ── MODAL EVENTS ──
