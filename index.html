@@ -292,6 +292,7 @@ input[type=file]{display:none}
       <div class="nav-item" id="ni-add" onclick="showPg('add')"><i class="fas fa-plus-circle"></i><span class="nav-label">Registrer</span></div>
       <div class="nav-item" id="ni-scan" onclick="showPg('scan')"><i class="fas fa-camera"></i><span class="nav-label">Scan Faktura</span></div>
       <div class="nav-item" id="ni-bills" onclick="showPg('bills')"><i class="fas fa-file-invoice-dollar"></i><span class="nav-label">Fakturaer</span></div>
+      <div class="nav-item" id="ni-avstem" onclick="showPg('avstem')"><i class="fas fa-balance-scale"></i><span class="nav-label">Avstemming</span></div>
       <div class="nav-section-title">Konto</div>
       <div class="nav-item" id="ni-profile" onclick="showPg('profile')"><i class="fas fa-user-circle"></i><span class="nav-label">Profil</span></div>
       <div class="nav-item" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i><span class="nav-label">Logg ut</span></div>
@@ -637,6 +638,119 @@ input[type=file]{display:none}
         </div>
       </div>
     </div>
+    <!-- ── AVSTEMMING ── -->
+    <div id="pg-avstem" class="pg">
+      <div class="topbar">
+        <div class="topbar-title">⚖️ Avstemming — Bank vs Regnskap</div>
+        <div class="topbar-actions">
+          <button class="top-btn" onclick="saveAvst()"><i class="fas fa-save"></i> <span>Lagre</span></button>
+          <button class="top-btn primary" onclick="runAvst()"><i class="fas fa-sync"></i> <span>Beregn</span></button>
+        </div>
+      </div>
+      <div class="page-content">
+
+        <!-- Period selector -->
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          <select id="av-year" class="form-control" style="width:100px" onchange="renderAvstFilter()"></select>
+          <div style="display:flex;gap:4px;flex-wrap:wrap" id="av-month-btns"></div>
+          <button class="btn btn-outline btn-sm" onclick="avSelectAll()">Alle måneder</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+          <!-- LEFT: Bank (fra app) -->
+          <div class="card">
+            <div class="card-header" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+              <div class="card-title" style="color:#1e3a8a"><i class="fas fa-university" style="color:var(--accent)"></i> 🏦 Bank (fra app)</div>
+            </div>
+            <div style="padding:14px 16px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+                <div style="background:var(--green-bg);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(5,150,105,.2)">
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div>
+                  <div id="av-bank-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--green)">0,00 kr</div>
+                </div>
+                <div style="background:var(--red-bg);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(220,38,38,.2)">
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Utgifter</div>
+                  <div id="av-bank-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--red)">0,00 kr</div>
+                </div>
+              </div>
+              <div style="background:rgba(26,86,219,.07);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(26,86,219,.15)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Driftsresultat Bank</div>
+                <div id="av-bank-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:18px;color:var(--accent)">0,00 kr</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Regnskap (manuell input) -->
+          <div class="card">
+            <div class="card-header" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5)">
+              <div class="card-title" style="color:#065f46"><i class="fas fa-file-alt" style="color:var(--green)"></i> 📄 Regnskap (frå regnskapsfører)</div>
+            </div>
+            <div style="padding:14px 16px">
+              <div class="form-group">
+                <label class="form-label">💰 Driftsinntekter (kr)</label>
+                <input type="number" id="av-reg-inc" class="form-control" placeholder="595 491,60" step="0.01" oninput="runAvst()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">📉 Driftskostnader (kr)</label>
+                <input type="number" id="av-reg-exp" class="form-control" placeholder="496 507,77" step="0.01" oninput="runAvst()">
+              </div>
+              <div style="background:rgba(5,150,105,.07);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(5,150,105,.15)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Driftsresultat Regnskap</div>
+                <div id="av-reg-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:18px;color:var(--green)">0,00 kr</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FARQI -->
+        <div class="card" id="av-result-card" style="border:2px solid var(--accent)">
+          <div class="card-header" style="background:rgba(26,86,219,.08)">
+            <div class="card-title" style="font-size:15px;color:var(--accent)"><i class="fas fa-scale-balanced"></i> Avstemmingsresultat</div>
+          </div>
+          <div style="padding:16px">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+              <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Inntekt farqi</div>
+                <div id="av-diff-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px">—</div>
+              </div>
+              <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Utgifter farqi</div>
+                <div id="av-diff-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px">—</div>
+              </div>
+              <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center;border:2px solid var(--border)">
+                <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Resultat farqi</div>
+                <div id="av-diff-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:20px">—</div>
+              </div>
+            </div>
+
+            <!-- Talo / Diagnosis -->
+            <div id="av-talo" style="background:var(--amber-bg);border:1px solid rgba(217,119,6,.3);border-radius:8px;padding:14px;font-size:13px;color:#92400e;display:none">
+              <div style="font-weight:700;margin-bottom:6px"><i class="fas fa-lightbulb"></i> Talo:</div>
+              <div id="av-talo-txt"></div>
+            </div>
+
+            <!-- Detail table -->
+            <div id="av-detail" style="margin-top:14px;display:none">
+              <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">📋 Entries-ka bankiga aan regnskap-ka ku jirin:</div>
+              <div class="tbl-wrap">
+                <table style="font-size:12px;width:100%;border-collapse:collapse">
+                  <thead><tr style="background:var(--card2)">
+                    <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text3)">Magac</th>
+                    <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text3)">Nooc</th>
+                    <th style="padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text3)">Lacag</th>
+                    <th style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text3)">Talo</th>
+                  </tr></thead>
+                  <tbody id="av-detail-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <div id="pg-profile" class="pg">
       <div class="topbar"><div class="topbar-title">Min profil</div></div>
       <div class="page-content" style="max-width:480px">
@@ -775,6 +889,7 @@ function showPg(pg){
   if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;if(E('scan-vid'))E('scan-vid').style.display='none';if(E('scan-capbtn'))E('scan-capbtn').style.display='none';if(E('scan-stopbtn'))E('scan-stopbtn').style.display='none';if(E('scan-startbtn'))E('scan-startbtn').style.display='flex';}
   if(pg==='bills')renderBills();
   if(pg==='reports')initRepFilter();
+  if(pg==='avstem'){renderAvstFilter();}
 }
 function setModus(m){
   modus=m;CL(E('mb-i'),'active',m==='i');CL(E('mb-t'),'active',m==='t');
@@ -1078,6 +1193,151 @@ async function startScan(){try{stream=await navigator.mediaDevices.getUserMedia(
 function capture(){const v=E('svid'),c=E('scv');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);const src=c.toDataURL('image/jpeg');E('simg').src=src;E('simg').style.display='block';v.style.display='none';E('capbtn').style.display='none';E('scanbtn').style.display='flex';if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}runOCR(src);}
 async function runOCR(src){showOS('OCR kjører...','info');try{const r=await Tesseract.recognize(src,'nor+eng',{logger:m=>{if(m.status==='recognizing text')showOS('OCR: '+Math.round(m.progress*100)+'%','info');}});parseOCRTxt(r.data.text);}catch(err){showOS('OCR feil: '+err.message,'error');}}
 function parseOCRTxt(text){showOS('OCR ferdig','success');const dm=text.match(/\b(\d{2})[.\-\/](\d{2})[.\-\/](\d{2,4})\b/);let dv='';if(dm){const y=dm[3].length===2?'20'+dm[3]:dm[3];dv=y+'-'+dm[2]+'-'+dm[1];if(E('edate'))E('edate').value=dv;}const tm=text.match(/(?:total|belop|sum)[^\d]*(\d[\d\s,.]+)/i);let tAmt=0;if(tm)tAmt=parseFloat(tm[1].replace(/\s/g,'').replace(',','.'));oItems=[];if(tAmt>0)oItems.push({desc:'Faktura total',amount:tAmt,type:'income',date:dv,category:'3030'});renderOItems('');}
+
+// ══════════════════════════════════════════════════════════════
+// ── AVSTEMMING — Bank vs Regnskap ──
+// ══════════════════════════════════════════════════════════════
+let avSelectedMonths=new Set();
+
+function renderAvstFilter(){
+  const years=[...new Set(entries.map(e=>(e.date||'').substring(0,4)).filter(Boolean))].sort().reverse();
+  const sel=E('av-year');if(!sel)return;
+  if(!sel.options.length||![...sel.options].map(o=>o.value).includes(sel.value)){
+    sel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  }
+  const year=sel.value;
+  const allMonths=[...new Set(entries.filter(e=>(e.date||'').startsWith(year)).map(e=>(e.date||'').substring(5,7)).filter(Boolean))].sort();
+  const MNAMES=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  const btnCon=E('av-month-btns');if(!btnCon)return;
+  if(avSelectedMonths.size===0&&allMonths.length)allMonths.forEach(m=>avSelectedMonths.add(m));
+  btnCon.innerHTML=allMonths.map(m=>{
+    const active=avSelectedMonths.has(m);
+    return `<button class="filter-chip${active?' active':''}" data-m="${m}" onclick="toggleAvMonth('${m}')">${MNAMES[parseInt(m)]}</button>`;
+  }).join('');
+  runAvst();
+}
+
+function avSelectAll(){
+  const year=E('av-year')?.value;
+  const months=[...new Set(entries.filter(e=>(e.date||'').startsWith(year)).map(e=>(e.date||'').substring(5,7)).filter(Boolean))].sort();
+  avSelectedMonths=new Set(months);
+  document.querySelectorAll('#av-month-btns .filter-chip').forEach(b=>{b.classList.add('active');});
+  runAvst();
+}
+
+function toggleAvMonth(m){
+  if(avSelectedMonths.has(m))avSelectedMonths.delete(m);else avSelectedMonths.add(m);
+  document.querySelectorAll('#av-month-btns .filter-chip').forEach(b=>{b.classList.toggle('active',avSelectedMonths.has(b.dataset.m));});
+  runAvst();
+}
+
+function saveAvst(){
+  const u=auth.currentUser;if(!u)return;
+  const year=E('av-year')?.value||'';
+  const months=[...avSelectedMonths].sort().join(',');
+  const regInc=parseFloat(E('av-reg-inc')?.value)||0;
+  const regExp=parseFloat(E('av-reg-exp')?.value)||0;
+  db.ref('avstemming/'+u.uid+'/'+year+'_'+months.replace(/,/g,'-')).set({
+    year,months,regInc,regExp,savedAt:new Date().toISOString()
+  }).then(()=>alert('✅ Regnskap-tallene er lagret!'));
+}
+
+// Entries-ka aan regnskap-ka ku jirin (kuwa personal ah)
+const PERSONAL_KW=['salad ahmed','kontoregulering','zekaria','norsk elbilforening'];
+const REGNSKAP_CATS=['5000','5090','5092','5400','5405','5920','6010','6705','6755','6800','6890','6900','6907','7000','7020','7040','7140','7400','7770','7790','7791','7792','7793','7794','7795','7796','7797','7798'];
+
+function avTaalo(diffExp){
+  const abs=Math.abs(diffExp);
+  if(abs<500) return{color:'var(--green)',icon:'✅',txt:'Waa isku mid — farqi waa yar yahay. Regnskap iyo bank way is raacayaan!'};
+  if(abs<5000) return{color:'var(--amber)',icon:'⚠️',txt:`Farqi yar (~${fmt(abs)}) — laga yaabaa kharash yar oo bankiga ku jiro oo aan regnskap-ka ku jirin, sida insurance, biil, ama deyn.`};
+  if(abs<30000) return{color:'var(--amber)',icon:'⚠️',txt:`Farqi dhexdhexaad ah (~${fmt(abs)}) — eeg entries-ka hoose ee aan regnskap-ka ku jirin. Waxaa suurtagal ah Santander, DNB Livsforsikring, ama kharash kale.`};
+  return{color:'var(--red)',icon:'🚨',txt:`Farqi weyn (~${fmt(abs)}) — entries-ka bankiga waxaa ku jira lacago gaar ah (sida Salad Ahmed, Kontoregulering) oo aan kharash ganacsiga ahayn. Ka tirtir ama u beddel nooc kale.`};
+}
+
+function runAvst(){
+  const year=E('av-year')?.value;if(!year)return;
+  const bank=entries.filter(e=>!isAgderEntry(e)&&(e.date||'').startsWith(year)&&avSelectedMonths.has((e.date||'').substring(5,7)));
+
+  let bankInc=0,bankExp=0;
+  bank.forEach(e=>{const a=parseFloat(e.amount)||0;if(e.type==='income')bankInc+=a;else bankExp+=a;});
+  const bankNet=bankInc-bankExp;
+
+  if(E('av-bank-inc')){E('av-bank-inc').textContent='+'+fmt(bankInc);E('av-bank-inc').style.color='var(--green)';}
+  if(E('av-bank-exp')){E('av-bank-exp').textContent='−'+fmt(bankExp);E('av-bank-exp').style.color='var(--red)';}
+  if(E('av-bank-net')){
+    E('av-bank-net').textContent=(bankNet>=0?'+':'−')+fmt(Math.abs(bankNet));
+    E('av-bank-net').style.color=bankNet>=0?'var(--accent)':'var(--red)';
+  }
+
+  const regInc=parseFloat(E('av-reg-inc')?.value)||0;
+  const regExp=parseFloat(E('av-reg-exp')?.value)||0;
+  const regNet=regInc-regExp;
+  if(E('av-reg-net')){
+    E('av-reg-net').textContent=(regNet>=0?'+':'−')+fmt(Math.abs(regNet));
+    E('av-reg-net').style.color=regNet>=0?'var(--green)':'var(--red)';
+  }
+
+  if(!regInc&&!regExp) return;
+
+  // Farqi
+  const diffInc=bankInc-regInc;
+  const diffExp=bankExp-regExp;
+  const diffNet=bankNet-regNet;
+
+  const fmtDiff=(v)=>{
+    const s=v>=0?'+':'−';
+    const col=Math.abs(v)<500?'var(--green)':Math.abs(v)<10000?'var(--amber)':'var(--red)';
+    return{txt:s+fmt(Math.abs(v)),col};
+  };
+
+  const di=fmtDiff(diffInc),de=fmtDiff(diffExp),dn=fmtDiff(diffNet);
+  if(E('av-diff-inc')){E('av-diff-inc').textContent=di.txt;E('av-diff-inc').style.color=di.col;}
+  if(E('av-diff-exp')){E('av-diff-exp').textContent=de.txt;E('av-diff-exp').style.color=de.col;}
+  if(E('av-diff-net')){E('av-diff-net').textContent=dn.txt;E('av-diff-net').style.color=dn.col;}
+
+  // Talo
+  const t=avTaalo(diffExp);
+  const taloEl=E('av-talo');
+  if(taloEl){
+    taloEl.style.display='block';
+    taloEl.style.background=Math.abs(diffExp)<500?'var(--green-bg)':Math.abs(diffExp)<30000?'var(--amber-bg)':'var(--red-bg)';
+    taloEl.style.border=`1px solid ${t.color}`;
+    taloEl.style.color=Math.abs(diffExp)<500?'#065f46':Math.abs(diffExp)<30000?'#92400e':'#991b1b';
+    if(E('av-talo-txt'))E('av-talo-txt').textContent=t.icon+' '+t.txt;
+  }
+
+  // Detail table: entries-ka bankiga ee suurtagal ah inaysan regnskap-ka ku jirin
+  const suspicious=bank.filter(e=>{
+    const d=(e.description||'').toLowerCase();
+    return PERSONAL_KW.some(k=>d.includes(k))||d.includes('kontoregulering');
+  });
+
+  const detailEl=E('av-detail');
+  const tbody=E('av-detail-tbody');
+  if(tbody&&suspicious.length>0){
+    detailEl.style.display='block';
+    tbody.innerHTML='';
+    // Group by description
+    const grp={};
+    suspicious.forEach(e=>{
+      const k=(e.description||'').trim();
+      if(!grp[k]){grp[k]={desc:k,type:e.type,amount:0};}
+      grp[k].amount+=parseFloat(e.amount)||0;
+    });
+    Object.values(grp).sort((a,b)=>b.amount-a.amount).forEach(g=>{
+      const tr=document.createElement('tr');
+      tr.style.borderBottom='1px solid var(--border)';
+      const isPersonal=PERSONAL_KW.some(k=>g.desc.toLowerCase().includes(k));
+      const nooc=isPersonal?'<span style="background:var(--red-bg);color:var(--red);font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600">Gaar ah</span>':'<span style="background:var(--amber-bg);color:var(--amber);font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600">Eeg</span>';
+      const talo=isPersonal?'Ka tirtir — ma ahan kharash':'Hubi xisaabiyahaaga';
+      tr.innerHTML=`<td style="padding:7px 10px;font-weight:500">${g.desc}</td><td style="padding:7px 10px">${nooc}</td><td style="padding:7px 10px;text-align:right;font-family:'DM Mono',monospace;color:var(--red)">−${fmt(g.amount)}</td><td style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text2)">${talo}</td>`;
+      tbody.appendChild(tr);
+    });
+  } else if(detailEl){
+    detailEl.style.display='none';
+  }
+}
+
 function dlCSV(){const rows=[['Dato','Konto','Beskrivelse','Faktura','Type','Beløp']];entries.forEach(e=>rows.push([e.date||'',e.category||'',(e.description||'').replace(/,/g,' '),e.billNr||'',e.type==='income'?'Inntekt':'Utgift',parseFloat(e.amount||0).toFixed(2)]));const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='regnskap-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);}
 </script>
 </body>
