@@ -1051,30 +1051,38 @@ function loadData(){
 
 // ── HELPER: is Agder Taxi entry? ──
 function isAgderEntry(e){
-  // 1. Explicit source tag — most reliable
+  // ── PRIMARY: source field (set when saving — 100% reliable) ──
   if(e.source==='agder')return true;
   if(e.source==='bank')return false;
-  // 2. billNr = definitive Agder Taxi proof
+
+  // ── SECONDARY: structural proof (billNr / carId) ──
   if((e.billNr||'')!=='')return true;
-  // 3. carId starting with AG
   if(e.carId&&e.carId.startsWith('AG'))return true;
-  // 4. Description keywords unique to Agder Taxi
+
+  // ── FALLBACK for old entries without source ──
   const d=(e.description||'').toLowerCase();
+
+  // Agder-specific content keywords
   if(d.includes('netto utbetalt'))return true;
+  if(d.includes('faktura #'))return true;
   if(d.includes('inntekt total')&&d.includes('agder'))return true;
   if(d.includes('utgifter total')&&d.includes('agder'))return true;
   if(d.includes('tt rogaland'))return true;
-  if(d.includes('emv n'))return true;
-  if(d.includes('faktura #'))return true;
-  // 5. Bank-grouped entries end with "(total)" — always bank (check BEFORE agder taxi)
+  if(d.includes('emv n ag-'))return true;
+
+  // "(total)" suffix = bank grouped entry (importBank adds this)
   if(d.includes('(total)'))return false;
-  if(d.includes('agder taxi'))return true;
-  // 6. Known bank keywords never appear in Agder entries
+
+  // Bank-specific keywords — never in Agder invoices
   const bankKW=['santander','skatteetaten','skatteinnkrevin','fortum','nextgentel',
     'autosync','gjensidige','tryg','vibb','kontoregulering','omkostninger',
     'uno-x','tesla','wash world','telenor','telia','leringsverkstedet','tyholmen',
-    'arendal kommune','msg cleaning','lyse','dnb livsforsikring','ra forsikring'];
+    'arendal kommune','msg cleaning','lyse','dnb livsforsikring','ra forsikring',
+    'kamal','haytham','altaieb','salad ahmed','eviny'];
   if(bankKW.some(k=>d.includes(k)))return false;
+
+  // "agder taxi" alone (no billNr/source) = ambiguous; treat as bank
+  // because bank PDF contains "Agder Taxi AS" as income lines
   return false;
 }
 
