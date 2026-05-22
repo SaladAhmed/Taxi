@@ -843,15 +843,49 @@ function renderDash(list){
 let atSearchQ='',bkSearchQ='';
 function filterAT(q){atSearchQ=q.toLowerCase();renderATTable(entries.filter(e=>isAgderEntry(e)));}
 function filterBK(q){bkSearchQ=q.toLowerCase();renderBKTable(entries.filter(e=>!isAgderEntry(e)));}
+
+function groupEntries(list){
+  if(modus!=='t') return list;
+  const groups={};
+  list.forEach(e=>{
+    const desc=(e.description||'—').trim();
+    const cat=e.category||'';
+    const type=e.type||'expense';
+    const key=desc+'||'+cat+'||'+type;
+    if(!groups[key]){groups[key]={id:e.id,date:e.date,category:cat,description:desc,type,amount:0,carId:e.carId||'',billNr:e.billNr||'',_count:0,_ids:[],_grouped:true};}
+    groups[key].amount+=parseFloat(e.amount)||0;
+    groups[key]._count++;
+    groups[key]._ids.push(e.id);
+    if(e.date>groups[key].date)groups[key].date=e.date;
+  });
+  return Object.values(groups).sort((a,b)=>(b.amount||0)-(a.amount||0));
+}
+
 function makeRow(e){
   const a=parseFloat(e.amount)||0,isI=e.type==='income',isZero=a===0;
   const tr=document.createElement('tr');if(isZero)tr.style.background='#fffbeb';
+  const isGrouped=e._grouped&&e._count>1;
   const amtCell=isZero?`<span style="color:#d97706;font-weight:600;font-size:12px">⚠️ 0,00 kr</span>`:`<span class="td-amt ${isI?'inc':'exp'} af${amtHid?' ha':''}">${isI?'+':'−'}${fmt(a)}</span>`;
-  tr.innerHTML=`<td class="td-date">${e.date||'—'}</td><td class="td-cat">${e.category||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td><td><span class="badge ${isI?'inc':'exp'}">${isI?'↑ Inntekt':'↓ Utgift'}</span>${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td><td>${e.carId?`<span class="badge amber" style="font-size:10px">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td><td>${amtCell}</td><td><div class="td-actions"><button class="ico-btn" onclick="editE('${e.id}')" title="Rediger"><i class="fas fa-edit"></i></button><button class="ico-btn del" onclick="delE('${e.id}')" title="Slett"><i class="fas fa-trash"></i></button></div></td>`;
+  const dateTxt=isGrouped?`<span style="color:var(--accent);font-size:11px;font-weight:600">${e._count} poster</span>`:e.date||'—';
+  tr.innerHTML=`<td class="td-date">${dateTxt}</td><td class="td-cat">${e.category||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr&&!isGrouped?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td><td><span class="badge ${isI?'inc':'exp'}">${isI?'↑ Inntekt':'↓ Utgift'}</span>${isGrouped?'<span class="badge info" style="margin-left:4px">Σ Total</span>':''}${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td><td>${e.carId&&!isGrouped?`<span class="badge amber" style="font-size:10px">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td><td>${amtCell}</td><td><div class="td-actions">${!isGrouped?`<button class="ico-btn" onclick="editE('${e.id}')" title="Rediger"><i class="fas fa-edit"></i></button><button class="ico-btn del" onclick="delE('${e.id}')" title="Slett"><i class="fas fa-trash"></i></button>`:''}</div></td>`;
   return tr;
 }
-function renderATTable(list){const tb=E('at-tbody');if(!tb)return;tb.innerHTML='';const filtered=atSearchQ?list.filter(e=>(e.description||'').toLowerCase().includes(atSearchQ)||(e.category||'').includes(atSearchQ)):list;CL(E('at-empty'),'hidden',filtered.length>0);T('at-count',filtered.length+' poster');filtered.forEach(e=>tb.appendChild(makeRow(e)));}
-function renderBKTable(list){const tb=E('bk-tbody');if(!tb)return;tb.innerHTML='';const filtered=bkSearchQ?list.filter(e=>(e.description||'').toLowerCase().includes(bkSearchQ)||(e.category||'').includes(bkSearchQ)):list;CL(E('bk-empty'),'hidden',filtered.length>0);T('bk-count-label',filtered.length+' poster');filtered.forEach(e=>tb.appendChild(makeRow(e)));}
+function renderATTable(list){
+  const tb=E('at-tbody');if(!tb)return;tb.innerHTML='';
+  const grouped=groupEntries(list);
+  const filtered=atSearchQ?grouped.filter(e=>(e.description||'').toLowerCase().includes(atSearchQ)||(e.category||'').includes(atSearchQ)):grouped;
+  CL(E('at-empty'),'hidden',filtered.length>0);
+  T('at-count',filtered.length+(modus==='t'?' grupper':' poster'));
+  filtered.forEach(e=>tb.appendChild(makeRow(e)));
+}
+function renderBKTable(list){
+  const tb=E('bk-tbody');if(!tb)return;tb.innerHTML='';
+  const grouped=groupEntries(list);
+  const filtered=bkSearchQ?grouped.filter(e=>(e.description||'').toLowerCase().includes(bkSearchQ)||(e.category||'').includes(bkSearchQ)):grouped;
+  CL(E('bk-empty'),'hidden',filtered.length>0);
+  T('bk-count-label',filtered.length+(modus==='t'?' grupper':' poster'));
+  filtered.forEach(e=>tb.appendChild(makeRow(e)));
+}
 const KONTO_NAMES={'3030':'Kjøreinntekter, lav sats','3031':'Kjøreinntekter kontant, lav sats','3032':'Kjøreinntekter NAV, lav sats','3033':'Kjøreinntekter skole, lav sats','3039':'Bomtur, lav sats','3110':'Tips','5000':'Lønn til ansatte','5090':'Påløpt, ikke utbetalt lønn','5092':'Feriepenger','5400':'Arbeidsgiveravgift','5405':'Arb.avg. av påløpte feriepenger','5920':'Yrkesskadeforsikring','6010':'Avskrivning på transportmidler','6705':'Regnskapshonorar','6755':'Sentralavgift','6800':'Kontorrekvisita','6890':'Annen kontorkostnad','6900':'Telefon','6907':'Datakommunikasjon','7000':'Drivstoff','7020':'Vedlikehold transportmiddel','7040':'Forsikring transportmiddel','7140':'Reisekostnad, ikke opplysningspliktig','7400':'Kontingent, fradragsberettiget','7770':'Bank- og kortgebyrer','7790':'Annen kostnad','7791':'Spesialtur','7792':'Generell kreditt','7793':'Pasienttransport','7794':'Ikke møtt','7795':'Adm. gebyr trukket','7796':'Faktura Agder Taxi','7797':'Kontoutskrift','7798':'Annen kostnad fradragsberettiget'};
 const KONTO_GROUPS={'DRIFTSINNTEKTER':{'Salgsinntekter':['3030','3031','3032','3033','3039','3110']},'DRIFTSKOSTNADER':{'Lønnskostnader':['5000','5090','5092','5400','5405'],'Andre personalkostnader':['5920'],'Av- og nedskrivninger':['6010'],'Eksterne honorarer':['6705','6755'],'Kontorkostnader':['6800','6890','6900','6907'],'Bilkostnader':['7000','7020','7040'],'Reise og diett':['7140'],'Kontingenter':['7400'],'Andre kostnader':['7770','7790','7791','7792','7793','7794','7795','7796','7797','7798']}};
 let repSelectedMonths=new Set();
