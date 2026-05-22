@@ -999,10 +999,9 @@ async function importBank(){
     if(!firstDate||item.date<firstDate)firstDate=item.date;
     const{key,cat}=groupKey(item.desc||item.description||'');
     const type=parseInt(item.category)<4000?'income':'expense';
-    // ── ISBEDELKA: bil kasta = group gaar ah (YYYY-MM + magac + type) ──
-    const month=item.date.substring(0,7); // "2026-01" ama "2026-02"
-    const gk=key+'__'+type+'__'+month;
-    if(!groups[gk]){groups[gk]={desc:key+' ('+month+')',category:item.category||cat,type,amount:0,date:item.date||firstDate};}
+    // ── Magac + type = hal group (dhammaan bilaha isku dar) ──
+    const gk=key+'__'+type;
+    if(!groups[gk]){groups[gk]={desc:key+' (Total)',category:item.category||cat,type,amount:0,date:item.date||firstDate};}
     groups[gk].amount+=parseFloat(item.amount)||0;
   }
   const grouped=Object.values(groups);
