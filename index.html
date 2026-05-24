@@ -384,8 +384,8 @@ input[type=file]{display:none}
       <div class="auth-title">Transport PRO</div>
       <div class="auth-sub">Mohamed Salad Transport · Logg inn</div>
     </div>
-    <div class="form-group"><label class="form-label">E-post</label><input id="em" type="email" class="form-control" placeholder="din@epost.no"></div>
-    <div class="form-group"><label class="form-label">Passord</label><input id="pw" type="password" class="form-control" placeholder="••••••••"></div>
+    <div class="form-group"><label class="form-label">E-post</label><input id="em" type="email" class="form-control" placeholder="din@epost.no" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label class="form-label">Passord</label><input id="pw" type="password" class="form-control" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Logg inn</button>
     <div style="display:flex;justify-content:space-between;font-size:12px">
       <span style="color:var(--accent);cursor:pointer" onclick="forgotPw()">Glemt passord?</span>
