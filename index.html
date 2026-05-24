@@ -70,90 +70,34 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-h
 .sidebar{width:220px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:300;transition:.3s}
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
 @media(max-width:768px){
-  /* ── Sidebar → bottom nav bar ── */
-  .sidebar{
-    width:100%;height:60px;flex-direction:row;align-items:center;
-    position:fixed;top:auto;bottom:0;left:0;right:0;
-    border-top:1px solid rgba(255,255,255,.15);
-    box-shadow:0 -2px 10px rgba(0,0,0,.3);
-    z-index:400;
-  }
-  .main{margin-left:0;padding-bottom:60px}
-  .sidebar-logo,.sidebar-footer{display:none!important}
-  .nav-section-title{display:none!important}
-  .sidebar-nav{
-    flex-direction:row;padding:0;gap:0;flex:1;
-    overflow-x:auto;-webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-  }
-  .sidebar-nav::-webkit-scrollbar{display:none}
-  .nav-item{
-    flex:1;flex-direction:column;padding:6px 2px;gap:2px;
-    justify-content:center;align-items:center;
-    border-left:none!important;border-bottom:3px solid transparent;
-    min-width:52px;font-size:0;
-  }
-  .nav-item i{font-size:18px;width:auto}
-  .nav-label{font-size:9px;color:rgba(255,255,255,.6);font-weight:500;display:block}
-  .nav-item.active{
-    border-bottom-color:var(--sidebar-active)!important;
-    background:rgba(26,86,219,.2);
-  }
-  .nav-item.active .nav-label{color:#fff}
-  .nav-item.active i{color:#fff}
-
-  /* ── Page content ── */
+  /* Desktop sidebar waa la qarinaayaa */
+  .sidebar{display:none!important}
+  /* Mobile bottom nav bar */
+  #mobile-nav{display:flex!important}
+  .main{margin-left:0;padding-bottom:64px}
   .page-content{padding:10px}
-
-  /* ── KPI cards: 2 kolonner ── */
-  .kpi-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;margin-bottom:10px;
-  }
+  .kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
   .kpi{padding:10px 12px}
-  .kpi-val{font-size:17px}
-  .kpi-label{font-size:10px;margin-bottom:6px}
+  .kpi-val{font-size:16px}
+  .kpi-label{font-size:10px;margin-bottom:5px}
   .kpi-sub{font-size:10px}
-
-  /* ── Agder/Bank split: stack vertically ── */
   .split-cards{grid-template-columns:1fr!important}
-
-  /* ── Forms ── */
   .form-row-3,.form-row{grid-template-columns:1fr}
-
-  /* ── Tables ── */
   table{font-size:11px}
   thead th{padding:6px 8px;font-size:9px}
   tbody td{padding:7px 8px}
   .td-desc{max-width:100px}
-
-  /* ── Topbar ── */
   .topbar{padding:6px 10px;flex-wrap:wrap;gap:4px;min-height:auto}
   .topbar-title{font-size:13px;flex:1}
-  .topbar-actions{
-    width:100%;
-    display:flex;flex-wrap:nowrap;
-    overflow-x:auto;-webkit-overflow-scrolling:touch;
-    scrollbar-width:none;gap:4px;
-    padding-bottom:4px;
-  }
+  .topbar-actions{width:100%;display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;padding-bottom:4px}
   .topbar-actions::-webkit-scrollbar{display:none}
-  .top-btn,.toggle-eye{
-    padding:6px 8px;font-size:11px;
-    white-space:nowrap;flex-shrink:0;
-  }
+  .top-btn,.toggle-eye{padding:6px 8px;font-size:11px;white-space:nowrap;flex-shrink:0}
   .top-btn span,.toggle-eye span,.modus-btn span{display:none}
   .modus-btn{padding:5px 8px;font-size:11px}
   .modus-toggle{flex-shrink:0}
 }
-
-@media(max-width:380px){
-  .kpi-row{grid-template-columns:1fr 1fr}
-  .kpi-val{font-size:15px}
-  .nav-label{display:none}
-  .nav-item{min-width:44px}
-  .nav-item i{font-size:20px}
+@media(min-width:769px){
+  #mobile-nav{display:none!important}
 }
 
 /* ── SIDEBAR ── */
@@ -338,6 +282,33 @@ select.form-control{cursor:pointer}
 .empty-state i{font-size:40px;margin-bottom:12px;display:block;opacity:.4}
 .empty-state h3{font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px}
 .empty-state p{font-size:13px}
+
+/* ── MOBILE NAV BAR ── */
+#mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:#0f2044;
+  border-top:1px solid rgba(255,255,255,.15);
+  box-shadow:0 -2px 12px rgba(0,0,0,.4);
+  height:60px;
+  flex-direction:row;
+  align-items:stretch;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.mob-tab{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;
+  color:rgba(255,255,255,.5);
+  border-top:3px solid transparent;
+  transition:.15s;font-size:0;
+  padding:6px 2px;
+  -webkit-tap-highlight-color:transparent;
+}
+.mob-tab i{font-size:19px;line-height:1}
+.mob-tab span{font-size:9px;font-weight:600;color:inherit;letter-spacing:.3px}
+.mob-tab.active{color:#fff;border-top-color:#1a56db;background:rgba(26,86,219,.2)}
+.mob-tab:active{background:rgba(255,255,255,.1)}
 
 /* ── MISC ── */
 .hidden{display:none!important}
@@ -1004,6 +975,12 @@ setTimeout(()=>{
 
 function goSetup(){E('pg-auth').style.display='none';E('pg-setup').style.display='flex';}
 function goAuth(){E('pg-setup').style.display='none';E('pg-auth').style.display='flex';}
+function setMobTab(pg){
+  document.querySelectorAll('.mob-tab').forEach(t=>t.classList.remove('active'));
+  const t=document.getElementById('mt-'+pg);
+  if(t)t.classList.add('active');
+}
+
 function doLogin(){
   const e=V('em').trim().toLowerCase(),p=V('pw');
   if(!e||!p)return alert('Fyll inn e-post og passord!');
@@ -1035,6 +1012,7 @@ async function uploadPic(inp){
 
 // ── NAVIGATION ──
 function showPg(pg){
+  setMobTab(pg);
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   E('pg-'+pg)?.classList.add('active');
@@ -2806,5 +2784,29 @@ function dlPDF(){
   win.document.write(page);win.document.close();
 }
 </script>
+<!-- ══ MOBILE BOTTOM NAV ══ -->
+<div id="mobile-nav">
+  <div class="mob-tab active" id="mt-dash" onclick="showPg('dash');setMobTab('dash')">
+    <i class="fas fa-chart-line"></i><span>Dashboard</span>
+  </div>
+  <div class="mob-tab" id="mt-reports" onclick="showPg('reports');setMobTab('reports')">
+    <i class="fas fa-file-alt"></i><span>Rapporter</span>
+  </div>
+  <div class="mob-tab" id="mt-add" onclick="showPg('add');setMobTab('add')">
+    <i class="fas fa-plus-circle"></i><span>Registrer</span>
+  </div>
+  <div class="mob-tab" id="mt-scan" onclick="showPg('scan');setMobTab('scan')">
+    <i class="fas fa-camera"></i><span>Scan</span>
+  </div>
+  <div class="mob-tab" id="mt-bills" onclick="showPg('bills');setMobTab('bills')">
+    <i class="fas fa-file-invoice-dollar"></i><span>Fakturaer</span>
+  </div>
+  <div class="mob-tab" id="mt-profile" onclick="showPg('profile');setMobTab('profile')">
+    <i class="fas fa-user-circle"></i><span>Profil</span>
+  </div>
+  <div class="mob-tab" onclick="doLogout()">
+    <i class="fas fa-sign-out-alt"></i><span>Logg ut</span>
+  </div>
+</div>
 </body>
 </html>
