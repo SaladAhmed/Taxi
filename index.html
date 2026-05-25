@@ -1078,17 +1078,25 @@ function renderOItems(invNr){
 }
 function updateOBtn(){const showingNetto=!!E('oi-netto');const n=showingNetto?1:document.querySelectorAll('#oitems .import-item.sel').length;E('btn-oi').style.display=n>0?'flex':'none';E('btn-oi').textContent=showingNetto?`💾 Lagre (Inntekt + Utgift separat)`:`💾 Lagre ${n} poster`;}
 
-// ══ FIX 8: importOCR — alltid lagre income/expense korrekt ══
+// ══ FIX 8: importOCR — Netto mode isticmaal gRawTotal (PDF netto) oo markasta sax ah ══
 async function importOCR(){
   const u=auth.currentUser;if(!u)return;const ref=db.ref('entries/'+u.uid);const nettoCard=E('oi-netto');
   if(nettoCard){
     const it=oItems[0];
+    // ══ HOVUD FIX: Isticmaal PDF rawTotal directly — sax 100%
+    // gRawTotal = "Beløp inkl. mva" = lacagta dhabta ah ee fakturada
+    // incSum - expSum waxay la mid tahay gRawTotal laakiin parsing khalad ayuu sameyn karaa
+    // Sidaas darteed: Inntekt = incSum, Utgifter = incSum - gRawTotal (sax xisaab)
     const incTotal=oItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
     const expTotal=oItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+    // Xisaab sax: Netto = incTotal - expTotal waa inuu la mid yahay gRawTotal
+    // Hadduu kala duwan yahay, saxee expTotal si netto uu u noqdo gRawTotal
+    const correctExpTotal=Math.round((incTotal-gRawTotal)*100)/100;
+    const useExpTotal=correctExpTotal>0?correctExpTotal:expTotal;
     const baseFields={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:'',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0};
     if(incTotal>0)await ref.push({...baseFields,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:Math.round(incTotal*100)/100,type:'income'});
-    if(expTotal>0)await ref.push({...baseFields,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:Math.round(expTotal*100)/100,type:'expense'});
-    alert(`✅ Lagret!\nInntekt: +${fmt(incTotal)}\nUtgifter: −${fmt(expTotal)}\nNetto: ${fmt(incTotal-expTotal)}`);
+    if(useExpTotal>0)await ref.push({...baseFields,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:useExpTotal,type:'expense'});
+    alert(`✅ Lagret!\nInntekt: +${fmt(incTotal)}\nUtgifter: −${fmt(useExpTotal)}\nNetto: ${fmt(incTotal-useExpTotal)}\n\n📄 PDF netto: ${fmt(gRawTotal)}`);
   }else{
     const selected=[];document.querySelectorAll('#oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('oi-',''));if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);});if(!selected.length)return;
     for(const it of selected){await ref.push({date:it.date,category:it.category,description:it.desc,amount:Math.round(it.amount*100)/100,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',source:'agder'});}
@@ -1207,10 +1215,13 @@ async function importScanOCR(){
     const it=scanOItems[0];
     const incTotal=scanOItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
     const expTotal=scanOItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+    // Saxee expTotal si netto uu u noqdo gRawTotal (PDF netto = 100% sax)
+    const correctExpTotal=Math.round((incTotal-gRawTotal)*100)/100;
+    const useExpTotal=correctExpTotal>0?correctExpTotal:expTotal;
     const baseF={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:'',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0};
     if(incTotal>0)await ref.push({...baseF,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:Math.round(incTotal*100)/100,type:'income'});
-    if(expTotal>0)await ref.push({...baseF,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:Math.round(expTotal*100)/100,type:'expense'});
-    alert(`✅ Lagret!`);
+    if(useExpTotal>0)await ref.push({...baseF,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:useExpTotal,type:'expense'});
+    alert(`✅ Lagret!\nInntekt: +${fmt(incTotal)}\nUtgifter: −${fmt(useExpTotal)}\nNetto: ${fmt(incTotal-useExpTotal)}`);
   }else{
     const selected=[];document.querySelectorAll('#scan-oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('soi-',''));if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);});if(!selected.length)return;
     for(const it of selected){await ref.push({date:it.date,category:it.category,description:it.desc,amount:Math.round(it.amount*100)/100,type:it.type,carId:it.carId||'',billNr:it.billNr||it.invNr||'',source:'agder'});}
