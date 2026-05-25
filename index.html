@@ -1093,9 +1093,10 @@ async function importOCR(){
     // Hadduu kala duwan yahay, saxee expTotal si netto uu u noqdo gRawTotal
     const correctExpTotal=Math.round((incTotal-gRawTotal)*100)/100;
     const useExpTotal=correctExpTotal>0?correctExpTotal:expTotal;
-    const baseFields={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:'',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0};
-    if(incTotal>0)await ref.push({...baseFields,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:Math.round(incTotal*100)/100,type:'income'});
-    if(useExpTotal>0)await ref.push({...baseFields,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:useExpTotal,type:'expense'});
+    const baseFields={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:''};
+    // ══ FIX MVA: kaydi MVA income entry-ga kaliya — haddii labadaba lagu daro = laba jeer ══
+    if(incTotal>0)await ref.push({...baseFields,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:Math.round(incTotal*100)/100,type:'income',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0});
+    if(useExpTotal>0)await ref.push({...baseFields,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:useExpTotal,type:'expense',mva12Exact:0,mva25Exact:0});
     alert(`✅ Lagret!\nInntekt: +${fmt(incTotal)}\nUtgifter: −${fmt(useExpTotal)}\nNetto: ${fmt(incTotal-useExpTotal)}\n\n📄 PDF netto: ${fmt(gRawTotal)}`);
   }else{
     const selected=[];document.querySelectorAll('#oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('oi-',''));if(!isNaN(i)&&oItems[i])selected.push(oItems[i]);});if(!selected.length)return;
@@ -1218,9 +1219,10 @@ async function importScanOCR(){
     // Saxee expTotal si netto uu u noqdo gRawTotal (PDF netto = 100% sax)
     const correctExpTotal=Math.round((incTotal-gRawTotal)*100)/100;
     const useExpTotal=correctExpTotal>0?correctExpTotal:expTotal;
-    const baseF={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:'',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0};
-    if(incTotal>0)await ref.push({...baseF,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:Math.round(incTotal*100)/100,type:'income'});
-    if(useExpTotal>0)await ref.push({...baseF,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:useExpTotal,type:'expense'});
+    const baseF={date:it?.date||'',billNr:it?.invNr||'',source:'agder',carId:''};
+    // ══ FIX MVA: kaydi MVA income entry kaliya ══
+    if(incTotal>0)await ref.push({...baseF,category:'3030',description:`Agder Taxi Faktura #${it?.invNr||''} — Inntekt total`,amount:Math.round(incTotal*100)/100,type:'income',mva12Exact:gMva12Exact||0,mva25Exact:gMva25Exact||0});
+    if(useExpTotal>0)await ref.push({...baseF,category:'7796',description:`Agder Taxi Faktura #${it?.invNr||''} — Utgifter total`,amount:useExpTotal,type:'expense',mva12Exact:0,mva25Exact:0});
     alert(`✅ Lagret!\nInntekt: +${fmt(incTotal)}\nUtgifter: −${fmt(useExpTotal)}\nNetto: ${fmt(incTotal-useExpTotal)}`);
   }else{
     const selected=[];document.querySelectorAll('#scan-oitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('soi-',''));if(!isNaN(i)&&scanOItems[i])selected.push(scanOItems[i]);});if(!selected.length)return;
