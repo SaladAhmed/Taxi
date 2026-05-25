@@ -921,7 +921,7 @@ async function importBank(){
     // Visa — alle Tesla varianter saman
     const visaM=raw.match(/[Vv]isa\s+(.+)/i);
     if(visaM){let name=visaM[1].trim();if(/^tesla/i.test(name))name='Tesla Inc.';return{key:'Visa '+name,cat:'7000',type:'expense'};}
-    if(d.includes('kontoregulering')){const nrM=raw.match(/nr\.\d+/i);return{key:'Kontoregulering'+(nrM?' '+nrM[0]:''),cat:'7797',type:'expense'};}
+    if(d.includes('kontoregulering')){const nrM=raw.match(/nr\.(\d+)/i);const nr=nrM?nrM[1]:'';return{key:'Kontoregulering'+(nr?' nr.'+nr:''),cat:'7797',type:'expense'};}
     if(d.includes('skatt/arbeidsavgift')||d.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400',type:'expense'};
     if(d.includes('omkostninger'))return{key:'Omkostninger (Bank)',cat:'7770',type:'expense'};
     if(d.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030',type:'income'};
