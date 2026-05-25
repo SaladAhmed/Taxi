@@ -737,7 +737,7 @@ function parseDNBv2(allItems){
   for(const line of lines){const txt=line.items.map(i=>i.text).join(' ');if(/ut av konto/i.test(txt)||/inn p[aå] konto/i.test(txt)){for(const it of line.items){if(/^ut\s*av/i.test(it.text))utCol=it.x;if(/^inn\s*p/i.test(it.text))innCol=it.x;}if(utCol>0)break;}}
   if(utCol<0){const pgW=allItems[0]?.pgW||595;utCol=Math.round(pgW*0.52);innCol=Math.round(pgW*0.68);}
   const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})$/;const norAmtRe=/^-?\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
-  const skipRe=/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no|kontonummer|bedriftskonto|kontoutskrift|nettbank)/i;
+  const skipRe=/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no|kontonummer|bedriftskonto|kontoutskrift|nettbank|no-|no9)/i;
   const txGroups=[];let curTx=null;
   for(const line of lines){
     const fullTxt=line.items.map(i=>i.text).join(' ').trim();if(!fullTxt||skipRe.test(fullTxt))continue;
@@ -830,7 +830,7 @@ async function importBank(){
     // ══ FIX 1: Tesla merge — all Tesla variants → one group ══
     const visaM=raw.match(/[Vv]isa\s+(.+)/i);
     if(visaM){let name=visaM[1].trim();if(/^tesla/i.test(name))name='Tesla Inc.';return{key:'Visa '+name,cat:'7000'};}
-    if(d.includes('kontoregulering'))return{key:'Kontoregulering',cat:'7797'};
+    if(d.includes('kontoregulering')){const nrM=raw.match(/nr\.\d+/i);return{key:'Kontoregulering'+(nrM?' '+nrM[0]:''),cat:'7797'};}
     if(d.includes('skatt/arbeidsavgift')||d.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400'};
     if(d.includes('omkostninger'))return{key:'Omkostninger (Bank)',cat:'7770'};
     if(d.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030'};
