@@ -670,11 +670,13 @@ function filterAT(q){atSearchQ=q.toLowerCase();renderATTable(entries.filter(e=>i
 function filterBK(q){bkSearchQ=q.toLowerCase();renderBKTable(entries.filter(e=>!isAgderEntry(e)));}
 
 function makeRow(e){
-  const a=parseFloat(e.amount)||0,isI=e.type==='income',isZero=a===0;
+  const a=parseFloat(e.amount)||0,isI=e.type==='income',isT=e.type==='transfer',isZero=a===0;
   const tr=document.createElement('tr');
   if(isZero)tr.style.background='#fffbeb';
-  const amtCell=isZero?`<span style="color:#d97706;font-weight:600;font-size:12px">⚠️ 0,00 kr</span>`:`<span class="td-amt ${isI?'inc':'exp'} af${amtHid?' ha':''}">${isI?'+':'−'}${fmt(a)}</span>`;
-  tr.innerHTML=`<td class="td-date">${e.date||'—'}</td><td class="td-cat">${e.category||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td><td><span class="badge ${isI?'inc':'exp'}">${isI?'↑ Inntekt':'↓ Utgift'}</span>${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td><td>${e.carId?`<span class="badge amber" style="font-size:10px">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td><td>${amtCell}</td><td><div class="td-actions"><button class="ico-btn" onclick="editE('${e.id}')"><i class="fas fa-edit"></i></button><button class="ico-btn del" onclick="delE('${e.id}')"><i class="fas fa-trash"></i></button></div></td>`;
+  if(isT)tr.style.background='rgba(148,163,184,.08)';
+  const amtCell=isZero?`<span style="color:#d97706;font-weight:600;font-size:12px">⚠️ 0,00 kr</span>`:`<span class="td-amt ${isI?'inc':isT?'':'exp'} af${amtHid?' ha':''}" style="${isT?'color:var(--text3)':''}">${isI?'+':isT?'↔':'-'}${fmt(a)}</span>`;
+  const typeBadge=isT?'<span class="badge info" style="font-size:10px">↔ Transfer</span>':isI?'<span class="badge inc">↑ Inntekt</span>':'<span class="badge exp">↓ Utgift</span>';
+  tr.innerHTML=`<td class="td-date">${e.date||'—'}</td><td class="td-cat">${e.category||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td><td>${typeBadge}${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td><td>${e.carId?`<span class="badge amber" style="font-size:10px">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td><td>${amtCell}</td><td><div class="td-actions"><button class="ico-btn" onclick="editE('${e.id}')"><i class="fas fa-edit"></i></button><button class="ico-btn del" onclick="delE('${e.id}')"><i class="fas fa-trash"></i></button></div></td>`;
   return tr;
 }
 
