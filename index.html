@@ -175,7 +175,6 @@ input[type=file]{display:none}
 .warning-banner .wb-title{font-weight:700;color:#92400e;font-size:13px;margin-bottom:4px}
 .warning-banner .wb-body{font-size:12px;color:#b45309}
 .info-banner{background:rgba(26,86,219,.06);border:1.5px solid var(--accent);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;font-size:12px;color:var(--accent2)}
-/* ══ INTERN OVERFØRING BOX ══ */
 .intern-box{background:linear-gradient(135deg,rgba(8,145,178,.09),rgba(8,145,178,.02));border:2px solid var(--teal);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px}
 .intern-box-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .intern-box-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
@@ -189,6 +188,9 @@ input[type=file]{display:none}
 .intern-total-row{background:rgba(8,145,178,.12);border-radius:8px;padding:9px 12px;border:1.5px solid var(--teal);display:flex;justify-content:space-between;align-items:center}
 .intern-total-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--teal)}
 .intern-total-amt{font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--teal)}
+/* ══ KONTO 1520 INFO BOX ══ */
+.konto1520-banner{background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(124,58,237,.02));border:2px solid var(--purple);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:12px;font-size:12px;color:var(--purple)}
+.konto1520-banner b{display:block;font-size:13px;margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -250,7 +252,6 @@ input[type=file]{display:none}
           <div class="kpi amber"><div class="kpi-label"><i class="fas fa-percent"></i> MVA 25%</div><div class="kpi-val af" id="s-mva25">0,00 kr</div><div class="kpi-sub">Skyldig MVA høy sats</div></div>
           <div class="kpi purple"><div class="kpi-label"><i class="fas fa-hand-holding-dollar"></i> Netto etter MVA</div><div class="kpi-val af" id="s-netmva">0,00 kr</div><div class="kpi-sub">Etter MVA betalt</div></div>
         </div>
-        <!-- ══ INTERN OVERFØRING BOX ══ -->
         <div class="intern-box" id="intern-box" style="display:none">
           <div class="intern-box-head">
             <div class="intern-box-icon">🔄</div>
@@ -265,7 +266,6 @@ input[type=file]{display:none}
             <div class="intern-total-amt af" id="intern-total-amt">0,00 kr</div>
           </div>
         </div>
-        <!-- SPLIT CARDS -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" class="split-cards">
           <div style="background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(217,119,6,.03));border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:14px 16px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">🚕</div><span style="font-size:13px;font-weight:700;color:#92400e">Agder Taxi Fakturaer</span></div>
@@ -294,15 +294,55 @@ input[type=file]{display:none}
       <div class="topbar"><div class="topbar-title">Registrer transaksjoner</div></div>
       <div class="page-content">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+          <!-- ══ DNB BANKIMPORT — NÅ MED KONTO 1520 TAB ══ -->
           <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-university"></i> DNB Bankimport</div></div>
             <div style="padding:16px">
-              <div class="tabs" style="margin:-16px -16px 16px"><div class="tab active" id="bt-pdf" onclick="switchTab('pdf')">📄 PDF</div><div class="tab" id="bt-csv" onclick="switchTab('csv')">📊 CSV</div></div>
+              <div class="tabs" style="margin:-16px -16px 16px">
+                <div class="tab active" id="bt-pdf" onclick="switchTab('pdf')">📄 Bedriftskonto PDF</div>
+                <div class="tab" id="bt-csv" onclick="switchTab('csv')">📊 CSV</div>
+                <div class="tab" id="bt-1520" onclick="switchTab('1520')" style="color:var(--purple);font-weight:700">🏦 Konto 1520</div>
+              </div>
               <div id="bstat" class="status-bar info"><i class="fas fa-info-circle"></i><span id="bstat-txt"></span></div>
-              <div id="bpdf"><label for="pdfi" class="upload-zone" style="cursor:pointer;display:block"><i class="fas fa-file-pdf" style="color:#dc2626;font-size:36px;margin-bottom:10px;display:block"></i><div style="font-size:15px;color:#0f172a;margin-bottom:4px;font-weight:600">DNB PDF Kontoutskrift</div><p style="color:#64748b">Klikk her for å laste opp PDF-fil</p><div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg PDF</div></label><input type="file" id="pdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)" style="display:none"></div>
+
+              <!-- PDF TAB -->
+              <div id="bpdf"><label for="pdfi" class="upload-zone" style="cursor:pointer;display:block"><i class="fas fa-file-pdf" style="color:#dc2626;font-size:36px;margin-bottom:10px;display:block"></i><div style="font-size:15px;color:#0f172a;margin-bottom:4px;font-weight:600">DNB PDF Kontoutskrift</div><p style="color:#64748b">Bedriftskonto 1506.85.69467</p><div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg PDF</div></label><input type="file" id="pdfi" accept=".pdf,application/pdf" onchange="handlePDF(this)" style="display:none"></div>
+
+              <!-- CSV TAB -->
               <div id="bcsv" class="hidden"><label for="csvi" class="upload-zone" style="cursor:pointer;display:block"><i class="fas fa-file-csv" style="color:#1a56db;font-size:36px;margin-bottom:10px;display:block"></i><div style="font-size:15px;color:#0f172a;margin-bottom:4px;font-weight:600">DNB CSV-fil</div><p style="color:#64748b">Last ned CSV fra nettbanken og last opp her</p><div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:#1a56db;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg CSV</div></label><input type="file" id="csvi" accept=".csv,text/csv" onchange="handleCSV(this)" style="display:none"></div>
-              <div id="bprev" class="hidden" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span id="bcount" style="font-size:12px;color:var(--text3);font-weight:600"></span><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="bAll()">Velg alle</button><button class="btn btn-outline btn-sm" onclick="bNone()">Fjern valg</button></div></div><div id="bitems" style="max-height:320px;overflow-y:auto"></div><button class="btn btn-primary" id="btn-bi" style="display:none;width:100%;margin-top:10px" onclick="importBank()"><i class="fas fa-save"></i> Lagre valgte</button></div>
+
+              <!-- ══ KONTO 1520 TAB — NY ══ -->
+              <div id="b1520" class="hidden">
+                <div class="konto1520-banner">
+                  <b>🏦 Konto 1520.22.40647 — Utgifter</b>
+                  Lacagta ka baxda kontadan waa Utgifter dhabta ah.<br>
+                  Lacagta soo gasha (transfer ka bedriftskonto) waa la iska daayaa.<br>
+                  <span style="opacity:.7;font-size:11px">DNB nettbank → Konto 1520.22.40647 → Last ned PDF</span>
+                </div>
+                <label for="pdfi1520" class="upload-zone" style="cursor:pointer;display:block;border-color:var(--purple)">
+                  <i class="fas fa-file-pdf" style="color:var(--purple);font-size:36px;margin-bottom:10px;display:block"></i>
+                  <div style="font-size:15px;color:#0f172a;margin-bottom:4px;font-weight:600">Konto 1520.22.40647 PDF</div>
+                  <p style="color:#64748b">Kontoutskrift frå eigen konto</p>
+                  <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600"><i class="fas fa-upload"></i> Velg PDF</div>
+                </label>
+                <input type="file" id="pdfi1520" accept=".pdf,application/pdf" onchange="handle1520PDF(this)" style="display:none">
+              </div>
+
+              <div id="bprev" class="hidden" style="margin-top:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <span id="bcount" style="font-size:12px;color:var(--text3);font-weight:600"></span>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-outline btn-sm" onclick="bAll()">Velg alle</button>
+                    <button class="btn btn-outline btn-sm" onclick="bNone()">Fjern valg</button>
+                  </div>
+                </div>
+                <div id="bitems" style="max-height:320px;overflow-y:auto"></div>
+                <button class="btn btn-primary" id="btn-bi" style="display:none;width:100%;margin-top:10px" onclick="importBank()"><i class="fas fa-save"></i> Lagre valgte</button>
+              </div>
             </div>
           </div>
+
+          <!-- AGDER TAXI -->
           <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-file-invoice"></i> Agder Taxi Faktura</div></div>
             <div style="padding:16px">
               <div class="info-banner" style="display:flex;margin-bottom:12px"><i class="fas fa-info-circle" style="margin-right:8px;margin-top:1px;flex-shrink:0"></i><div><b>Slik fungerer Agder Taxi import:</b><br>Negative beløp i faktura = penger utbetalt til deg (Inntekt).<br>Positive beløp = kostnader trukket (Utgift).</div></div>
@@ -320,6 +360,8 @@ input[type=file]{display:none}
             </div>
           </div>
         </div>
+
+        <!-- MANUELL -->
         <div class="card" style="margin-top:0"><div class="card-header"><div class="card-title"><i class="fas fa-keyboard"></i> Manuell registrering</div></div>
           <div style="padding:16px">
             <input type="hidden" id="eid">
@@ -384,6 +426,7 @@ input[type=file]{display:none}
   <div class="mob-tab" id="mt-bills" onclick="showPg('bills')"><i class="fas fa-file-invoice-dollar"></i><span>Fakturaer</span></div>
   <div class="mob-tab" id="mt-profile" onclick="showPg('profile')"><i class="fas fa-user-circle"></i><span>Profil</span></div>
 </div>
+
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 firebase.initializeApp({apiKey:"AIzaSyCYNLmTJEV2_WWNhIbpwbUCXzAMiMb0EYE",authDomain:"mohamed-salad-transport.firebaseapp.com",databaseURL:"https://mohamed-salad-transport-default-rtdb.europe-west1.firebasedatabase.app",projectId:"mohamed-salad-transport",storageBucket:"mohamed-salad-transport.firebasestorage.app",appId:"1:608716442795:web:34cafc1a23316664717bee"});
@@ -421,7 +464,6 @@ function toggleAmt(){amtHid=!amtHid;E('ei').className='fas fa-eye'+(amtHid?'-sla
 
 function loadData(){const u=auth.currentUser;if(!u)return;db.ref('entries/'+u.uid).on('value',snap=>{entries=[];snap.forEach(c=>{const v=c.val();if(v&&typeof v==='object'&&v.date)entries.push({id:c.key,...v});});entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));if(modus==='i')applyPer();else renderDash(entries);if(E('pg-reports')?.classList.contains('active'))initRepFilter();});db.ref('bills/'+u.uid).on('value',snap=>{bills=[];snap.forEach(c=>bills.push({id:c.key,...c.val()}));bills.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));renderBills();});}
 
-// ══ PATCH: INTERN OVERFØRING DETECTION ══
 function isInternOverforing(e){
   if(e.type==='transfer')return true;
   if(e.category==='9999')return true;
@@ -431,11 +473,10 @@ function isInternOverforing(e){
   return false;
 }
 
-function isAgderEntry(e){if(e.source==='agder')return true;if(e.source==='bank')return false;if((e.billNr||'')!=='')return true;if(e.carId&&e.carId.startsWith('AG'))return true;const d=(e.description||'').toLowerCase();if(d.includes('netto utbetalt'))return true;if(d.includes('faktura #'))return true;if(d.includes('inntekt total')&&d.includes('agder'))return true;if(d.includes('utgifter total')&&d.includes('agder'))return true;if(d.includes('tt rogaland'))return true;if(d.includes('emv n ag-'))return true;const bankKW=['santander','skatteetaten','skatteinnkrevin','fortum','nextgentel','autosync','gjensidige','tryg','vibb','kontoregulering','omkostninger','uno-x','tesla','wash world','telenor','telia','leringsverkstedet','tyholmen','arendal kommune','msg cleaning','lyse','dnb livsforsikring','ra forsikring','kamal','haytham','altaieb','salad ahmed','eviny'];if(bankKW.some(k=>d.includes(k)))return false;return false;}
+function isAgderEntry(e){if(e.source==='agder')return true;if(e.source==='bank'||e.source==='konto1520')return false;if((e.billNr||'')!=='')return true;if(e.carId&&e.carId.startsWith('AG'))return true;const d=(e.description||'').toLowerCase();if(d.includes('netto utbetalt'))return true;if(d.includes('faktura #'))return true;if(d.includes('inntekt total')&&d.includes('agder'))return true;if(d.includes('utgifter total')&&d.includes('agder'))return true;if(d.includes('tt rogaland'))return true;if(d.includes('emv n ag-'))return true;const bankKW=['santander','skatteetaten','skatteinnkrevin','fortum','nextgentel','autosync','gjensidige','tryg','vibb','kontoregulering','omkostninger','uno-x','tesla','wash world','telenor','telia','leringsverkstedet','tyholmen','arendal kommune','msg cleaning','lyse','dnb livsforsikring','ra forsikring','kamal','haytham','altaieb','salad ahmed','eviny'];if(bankKW.some(k=>d.includes(k)))return false;return false;}
 
 function checkDoubleCount(list){const bankAgderIncome=list.filter(e=>!isAgderEntry(e)&&!isInternOverforing(e)&&e.type==='income'&&(e.description||'').toLowerCase().includes('agder taxi'));const agderFakturaEntries=list.filter(e=>isAgderEntry(e));const warn=E('double-count-warning');if(bankAgderIncome.length>0&&agderFakturaEntries.length>0){CL(warn,'hidden',false);const bkTotal=bankAgderIncome.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);const agTotal=agderFakturaEntries.filter(e=>e.type==='income').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);E('double-count-msg').textContent=`Du har importert både Bank PDF (Agder Taxi inntekt: ${fmt(bkTotal)}) og Agder Taxi faktura (${fmt(agTotal)}). Dette teller inntekten to ganger! Slett ett.`;}else{CL(warn,'hidden',true);}}
 
-// ══ PATCH: renderDash — Interne overføringer ekskludert frå KPI ══
 function renderDash(list){
   checkDoubleCount(list);
   const internList=list.filter(e=>isInternOverforing(e));
@@ -458,12 +499,10 @@ function renderDash(list){
   if(E('bn-inc')){E('bn-inc').textContent=(bkInc>0?'+':'')+fmt(bkInc);E('bn-inc').style.color='var(--green)';}
   if(E('bn-exp')){E('bn-exp').textContent=(bkExp>0?'−':'')+fmt(bkExp);E('bn-exp').style.color='var(--red)';}
   if(E('bn-net')){E('bn-net').textContent=(bkNet>=0?'+':'−')+fmt(Math.abs(bkNet));E('bn-net').style.color=bkNet>=0?'var(--green)':'var(--red)';}
-  // ══ INTERN OVERFØRING BOX — kompakt (wadarta + detaljer on-demand) ══
   const box=E('intern-box'),itemsCon=E('intern-items');
   if(box&&itemsCon){
     if(internList.length>0){
       box.style.display='block';
-      // Grupper: konto + år → kompakt 1 linje per år
       const byDestYear={};
       const MNMS=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
       internList.forEach(e=>{
@@ -492,14 +531,12 @@ function renderDash(list){
   if(amtHid)document.querySelectorAll('.af').forEach(el=>el.classList.add('ha'));
   renderATTable(agder);
   renderBKTable([...bank,...internList]);
-  renderTransList(typeof entries!=='undefined'?entries:[]);
 }
 
 let atSearchQ='',bkSearchQ='';
 function filterAT(q){atSearchQ=q.toLowerCase();renderATTable(entries.filter(e=>isAgderEntry(e)&&!isInternOverforing(e)));}
 function filterBK(q){bkSearchQ=q.toLowerCase();renderBKTable(entries.filter(e=>!isAgderEntry(e)));}
 
-// ══ PATCH: makeRow — teal for intern overføring ══
 function makeRow(e){
   const a=parseFloat(e.amount)||0,isI=e.type==='income',isT=isInternOverforing(e),isZero=a===0;
   const tr=document.createElement('tr');
@@ -509,21 +546,6 @@ function makeRow(e){
   const typeBadge=isT?'<span class="badge teal" style="font-size:10px">↔ Intern overf.</span>':isI?'<span class="badge inc">↑ Inntekt</span>':'<span class="badge exp">↓ Utgift</span>';
   tr.innerHTML=`<td class="td-date">${e.date||'—'}</td><td class="td-cat">${e.category||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td><td>${typeBadge}${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td><td>${e.carId?`<span class="badge amber" style="font-size:10px">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td><td>${amtCell}</td><td><div class="td-actions"><button class="ico-btn" onclick="editE('${e.id}')"><i class="fas fa-edit"></i></button><button class="ico-btn del" onclick="delE('${e.id}')"><i class="fas fa-trash"></i></button></div></td>`;
   return tr;
-}
-
-function renderTransList(entries){
-  const tb=E('trans-list');if(!tb)return;
-  tb.innerHTML='';
-  const last20=[...entries].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,20);
-  const empty=E('trans-empty');
-  if(!last20.length){if(empty)CL(empty,'hidden',false);return;}
-  if(empty)CL(empty,'hidden',true);
-  last20.forEach(e=>{
-    const isI=e.type==='income',isT=isInternOverforing(e),a=parseFloat(e.amount)||0;
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="td-date">${e.date||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div></td><td class="td-cat">${e.category||'—'}</td><td style="text-align:right"><span class="td-amt af${amtHid?' ha':''}" style="color:${isT?'var(--teal)':isI?'var(--green)':'var(--red)'}">${isT?'↔':isI?'+':'−'}${fmt(a)}</span></td>`;
-    tb.appendChild(tr);
-  });
 }
 
 function renderATTable(list){const tb=E('at-tbody');if(!tb)return;tb.innerHTML='';const filtered=atSearchQ?list.filter(e=>(e.description||'').toLowerCase().includes(atSearchQ)||(e.category||'').includes(atSearchQ)):list;CL(E('at-empty'),'hidden',filtered.length>0);T('at-count',filtered.length+' poster');filtered.forEach(e=>tb.appendChild(makeRow(e)));}
@@ -589,26 +611,192 @@ function norNum(r){if(!r||r.trim()===''||r.trim()==='-')return 0;let s=r.trim().
 function parseD(r){if(!r)return null;r=r.trim();let m=r.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];m=r.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);if(m)return'20'+m[3]+'-'+m[2]+'-'+m[1];m=r.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return r;return null;}
 function catOpts(){return'<optgroup label="INNTEKT"><option value="3030">3030 · Kjøreinntekter</option><option value="3031">3031 · Kontant</option><option value="3032">3032 · NAV</option><option value="3033">3033 · Skole</option><option value="3039">3039 · Bomtur</option><option value="3110">3110 · Tips</option></optgroup><optgroup label="UTGIFTER"><option value="5000">5000 · Lønn</option><option value="5400">5400 · Arbeidsgiveravgift</option><option value="5920">5920 · Yrkesskadeforsikring</option><option value="6010">6010 · Avskrivning</option><option value="6705">6705 · Regnskapshonorar</option><option value="6755">6755 · Sentralavgift</option><option value="6800">6800 · Kontorrekvisita</option><option value="6900">6900 · Telefon</option><option value="6907">6907 · Datakommunikasjon</option><option value="7000">7000 · Drivstoff</option><option value="7020">7020 · Vedlikehold</option><option value="7040">7040 · Forsikring</option><option value="7140">7140 · Reisekostnad</option><option value="7400">7400 · Kontingent</option><option value="7770">7770 · Bank/kortgebyr</option><option value="7790">7790 · Annen kostnad</option><option value="7791">7791 · Spesialtur</option><option value="7792">7792 · Generell kreditt</option><option value="7793">7793 · Pasienttransport</option><option value="7794">7794 · Ikke møtt</option><option value="7795">7795 · Adm. gebyr</option><option value="7796">7796 · Faktura Agder Taxi</option><option value="7797">7797 · Kontoutskrift</option><option value="7798">7798 · Annen fradragsberettiget</option></optgroup><optgroup label="INTERN OVERFØRING"><option value="9999">9999 · Intern overføring (Eigen konto)</option></optgroup>';}
 
-// ══ PATCH: dnbType — kontoregulering = transfer ══
-function dnbType(desc){const d=(desc||'').toLowerCase();if(d.includes('agder taxi'))return'income';if(d.includes('skatt')||d.includes('skatteinnkrevin'))return'expense';if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb')||d.includes('salad ahmed'))return'expense';if(d.includes('santander')||d.includes('uno-x')||d.includes('nextgentel')||d.includes('autosync'))return'expense';if(d.includes('fortum')||d.includes('eviny'))return'expense';if(d.includes('lyse')||d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg'))return'expense';if(d.includes('vibb')||d.includes('tyholmen')||d.includes('leringsverkstedet'))return'expense';if(d.includes('msg cleaning')||d.includes('livsforsikring'))return'expense';if(d.includes('kommune'))return'expense';if(/^visa/i.test(desc)||d.includes('mastercard'))return'expense';if(d.includes('tesla')||d.includes('wash world'))return'expense';if(d.includes('telenor')||d.includes('telia'))return'expense';
-if(d.includes('kontoregulering'))return'transfer';
-if(d.includes('omkostninger'))return'expense';return'expense';}
+function dnbType(desc){const d=(desc||'').toLowerCase();if(d.includes('agder taxi'))return'income';if(d.includes('skatt')||d.includes('skatteinnkrevin'))return'expense';if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb')||d.includes('salad ahmed'))return'expense';if(d.includes('santander')||d.includes('uno-x')||d.includes('nextgentel')||d.includes('autosync'))return'expense';if(d.includes('fortum')||d.includes('eviny'))return'expense';if(d.includes('lyse')||d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg'))return'expense';if(d.includes('vibb')||d.includes('tyholmen')||d.includes('leringsverkstedet'))return'expense';if(d.includes('msg cleaning')||d.includes('livsforsikring'))return'expense';if(d.includes('kommune'))return'expense';if(/^visa/i.test(desc)||d.includes('mastercard'))return'expense';if(d.includes('tesla')||d.includes('wash world'))return'expense';if(d.includes('telenor')||d.includes('telia'))return'expense';if(d.includes('kontoregulering'))return'transfer';if(d.includes('omkostninger'))return'expense';return'expense';}
 
-// ══ PATCH: autocat — kontoregulering = 9999 ══
-function autocat(desc,type){const d=(desc||'').toLowerCase();
-if(type==='transfer'||d.includes('kontoregulering'))return'9999';
-if(type==='income'){if(d.includes('agder taxi'))return'3030';return'3030';}if(d.includes('tesla')||d.includes('wash world')||d.includes('uno-x')||d.includes('fortum')||d.includes('eviny'))return'7000';if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('livsforsikring'))return'7040';if(d.includes('autosync')||d.includes('vedlikehold'))return'7020';if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele'))return'6900';if(d.includes('vibb')||d.includes('nextgentel'))return'6907';if(d.includes('gebyr')||d.includes('kortgebyr')||d.includes('omkostning'))return'7770';if(d.includes('skatt')||d.includes('arbeidsgiver'))return'5400';if(d.includes('kommune'))return'7400';if(d.includes('santander'))return'7790';if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb')||d.includes('salad ahmed'))return'7790';if(d.includes('tyholmen')||d.includes('leringsverkstedet'))return'7140';return'7790';}
+function autocat(desc,type){const d=(desc||'').toLowerCase();if(type==='transfer'||d.includes('kontoregulering'))return'9999';if(type==='income'){if(d.includes('agder taxi'))return'3030';return'3030';}if(d.includes('tesla')||d.includes('wash world')||d.includes('uno-x')||d.includes('fortum')||d.includes('eviny'))return'7000';if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg')||d.includes('livsforsikring'))return'7040';if(d.includes('autosync')||d.includes('vedlikehold'))return'7020';if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele'))return'6900';if(d.includes('vibb')||d.includes('nextgentel'))return'6907';if(d.includes('gebyr')||d.includes('kortgebyr')||d.includes('omkostning'))return'7770';if(d.includes('skatt')||d.includes('arbeidsgiver'))return'5400';if(d.includes('kommune'))return'7400';if(d.includes('santander'))return'7790';if(d.includes('kamal')||d.includes('haytham')||d.includes('altaieb')||d.includes('salad ahmed'))return'7790';if(d.includes('tyholmen')||d.includes('leringsverkstedet'))return'7140';return'7790';}
 
-function switchTab(t){E('bt-pdf').classList.toggle('active',t==='pdf');E('bt-csv').classList.toggle('active',t==='csv');CL(E('bpdf'),'hidden',t!=='pdf');CL(E('bcsv'),'hidden',t!=='csv');CL(E('bprev'),'hidden',true);hideStat('bstat');bItems=[];}
+// ══ TAB SWITCHER — støtter no 1520 ══
+function switchTab(t){
+  E('bt-pdf').classList.toggle('active',t==='pdf');
+  E('bt-csv').classList.toggle('active',t==='csv');
+  E('bt-1520').classList.toggle('active',t==='1520');
+  CL(E('bpdf'),'hidden',t!=='pdf');
+  CL(E('bcsv'),'hidden',t!=='csv');
+  CL(E('b1520'),'hidden',t!=='1520');
+  CL(E('bprev'),'hidden',true);
+  hideStat('bstat');
+  bItems=[];
+}
 function showBS(m,type='info'){const s=E('bstat');s.style.display='flex';s.className='status-bar '+type;E('bstat-txt').textContent=m;}
 function hideStat(id){const s=E(id);if(s)s.style.display='none';}
-</script><script>
-// ══ DNB PDF IMPORT ══
+</script>
+<script>
+// ══ DNB BEDRIFTSKONTO PDF IMPORT ══
 async function handlePDF(inp){const f=inp.files[0];if(!f)return;showBS('Leser PDF...','info');bItems=[];try{const buf=await f.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;showBS(pdf.numPages+' sider — analyserer...','info');const allItems=[];for(let p=1;p<=pdf.numPages;p++){const pg=await pdf.getPage(p);const con=await pg.getTextContent();const vp=pg.getViewport({scale:1});con.items.forEach(it=>{if(!it.str||!it.str.trim())return;allItems.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p,pgW:vp.width});});}if(!allItems.length){showBS('PDF er tom — prøv CSV.','error');return;}parseDNBv2(allItems);}catch(err){showBS('Feil ved lesing av PDF: '+err.message,'error');}inp.value='';}
 
 function parseDNBv2(allItems){bItems=[];if(!allItems.length){showBS('Tom PDF','error');return;}allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);const lines=[];let curLine=null;for(const it of allItems){if(!curLine||it.page!==curLine.page||Math.abs(it.y-curLine.y)>8){if(curLine)lines.push(curLine);curLine={page:it.page,y:it.y,items:[it],pgW:it.pgW||595};}else curLine.items.push(it);}if(curLine)lines.push(curLine);let utCol=-1,innCol=-1;for(const line of lines){const txt=line.items.map(i=>i.text).join(' ');if(/ut av konto/i.test(txt)||/inn p[aå] konto/i.test(txt)){for(const it of line.items){if(/^ut\s*av/i.test(it.text))utCol=it.x;if(/^inn\s*p/i.test(it.text))innCol=it.x;}if(utCol>0)break;}}if(utCol<0){const pgW=allItems[0]?.pgW||595;utCol=Math.round(pgW*0.52);innCol=Math.round(pgW*0.68);}const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})$/;const norAmtRe=/^-?\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;const skipRe=/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no|kontonummer|bedriftskonto|kontoutskrift|nettbank|no-|no9)/i;const txGroups=[];let curTx=null;for(const line of lines){const fullTxt=line.items.map(i=>i.text).join(' ').trim();if(!fullTxt||skipRe.test(fullTxt))continue;const dates=line.items.filter(it=>dateRe.test(it.text));const hasDateLeft=dates.some(it=>it.x<(utCol*0.45));if(dates.length>=2&&hasDateLeft){if(curTx)txGroups.push(curTx);const sortedDates=[...dates].sort((a,b)=>a.x-b.x);const bokDate=parseD(sortedDates[1]?.text)||parseD(sortedDates[0]?.text);const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol-10);const amtItems=line.items.filter(it=>it.x>=utCol-10);curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems,line};}else if(dates.length===1&&hasDateLeft&&!curTx){if(curTx)txGroups.push(curTx);const bokDate=parseD(dates[0].text);const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol-10);const amtItems=line.items.filter(it=>it.x>=utCol-10);curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems,line};}else if(curTx){const amtHere=line.items.filter(it=>norAmtRe.test(it.text)&&it.x>=utCol-10);const descHere=line.items.filter(it=>!norAmtRe.test(it.text)&&it.x<utCol-10&&!dateRe.test(it.text));if(descHere.length)curTx.descParts.push(descHere.map(i=>i.text).join(' '));if(amtHere.length)curTx.amtItems.push(...amtHere);}}if(curTx)txGroups.push(curTx);const seen=new Set();for(const tx of txGroups){if(!tx.date)continue;const desc=[...new Set(tx.descParts)].filter(s=>s&&s.length>1).join(' ').replace(/\s+/g,' ').trim();if(!desc||desc.length<2)continue;if(/^(saldo|dato|tekst|kontoutskrift|bedriftskonto|inngående|utgående)/i.test(desc))continue;let utAmt=0,innAmt=0;const norAmts=tx.amtItems.filter(it=>norAmtRe.test(it.text));if(norAmts.length===0){const lineText=tx.line.items.map(i=>i.text).join(' ');const amtMatches=[...lineText.matchAll(/-?\d{1,3}(?:[.\s]\d{3})*,\d{2}/g)];if(amtMatches.length){const v=norNum(amtMatches[amtMatches.length-1][0].replace('-',''));const isNeg=amtMatches[amtMatches.length-1][0].startsWith('-');if(v>0){if(isNeg||dnbType(desc)==='income')innAmt=v;else utAmt=v;}}}else if(norAmts.length===1){const v=norNum(norAmts[0].text.replace('-',''));const isNeg=norAmts[0].text.startsWith('-');if(innCol>0&&norAmts[0].x>=innCol)innAmt=v;else if(isNeg)innAmt=v;else utAmt=v;}else{norAmts.sort((a,b)=>a.x-b.x);for(const a of norAmts){const v=norNum(a.text.replace('-',''));const isNeg=a.text.startsWith('-');if(innCol>0&&a.x>=innCol)innAmt=v;else if(isNeg)innAmt=v;else utAmt=v;}}let finalAmt=0,finalType='expense';const dtype=dnbType(desc);if(dtype==='transfer'){finalAmt=utAmt>0?utAmt:(innAmt>0?innAmt:0);finalType='transfer';}else if(innAmt>0&&utAmt<=0){finalAmt=innAmt;finalType='income';}else if(utAmt>0&&innAmt<=0){finalAmt=utAmt;finalType='expense';}else if(innAmt>0&&utAmt>0){finalAmt=dtype==='income'?innAmt:utAmt;finalType=dtype;}else continue;if(finalAmt<0.01||finalAmt>9999999)continue;if(desc.toLowerCase().includes('agder taxi'))finalType='income';const cat=autocat(desc,finalType);const key=tx.date+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,25);if(!seen.has(key)){seen.add(key);bItems.push({date:tx.date,desc,amount:finalAmt,type:finalType,category:cat});}}if(!bItems.length){showBS('Metode 1 fant ingenting — prøver fallback...','info');parseDNBFallbackRegex(allItems);return;}showBS('✅ '+bItems.length+' transaksjoner funnet!','success');renderBItems();}
 
 function parseDNBFallbackRegex(allItems){bItems=[];allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);const lines=[];let cur=[],ly=-999,lp=-1;for(const it of allItems){if(it.page!==lp||Math.abs(it.y-ly)>8){if(cur.length)lines.push(cur.map(i=>i.text).join(' '));cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}if(cur.length)lines.push(cur.map(i=>i.text).join(' '));const fullText=lines.join('\n');const seen=new Set();const txRe1=/(\d{2}\.\d{2}\.\d{2,4})\s+(\d{2}\.\d{2}\.\d{2,4})\s+([A-Za-z\u00C0-\u00FF\d][^\n]{2,70})\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2})(?:\s+(\d{1,3}(?:[.\s]\d{3})*,\d{2}))?/gm;let m;while((m=txRe1.exec(fullText))!==null){const dv=parseD(m[2]);if(!dv)continue;const desc=(m[3]||'').trim().replace(/\s+/g,' ').replace(/\s+\d+,\d{2}$/,'').trim();if(desc.length<2||/^(dato|tekst|saldo|ut av|inn p|side)/i.test(desc))continue;const utAmt=norNum(m[4]),innAmt=m[5]?norNum(m[5]):0;let finalAmt,finalType;const dtype=dnbType(desc);if(dtype==='transfer'){finalAmt=utAmt>0?utAmt:innAmt;finalType='transfer';}else if(innAmt>0&&utAmt>0){finalAmt=dtype==='income'?innAmt:utAmt;finalType=dtype;}else if(innAmt>0){finalAmt=innAmt;finalType='income';}else{finalAmt=utAmt;finalType=dnbType(desc);}if(desc.toLowerCase().includes('agder taxi'))finalType='income';if(finalAmt<0.01||finalAmt>9999999)continue;const key=dv+'|'+finalAmt.toFixed(2)+'|'+desc.substring(0,22);if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:finalAmt,type:finalType,category:autocat(desc,finalType)});}}if(!bItems.length){showBS('⚠️ Kunne ikke lese PDF. Bruk CSV fra DNB nettbank.','error');return;}showBS('✅ '+bItems.length+' transaksjoner funnet (fallback)','success');renderBItems();}
+
+// ══ KONTO 1520 PDF IMPORT — CUSUB ══
+// Lacagta "ut av konto" = Utgifter dhabta ah
+// Lacagta "inn på konto" = transfer ka bedriftskonto → iska daaye
+async function handle1520PDF(inp){
+  const f=inp.files[0];if(!f)return;
+  showBS('Leser Konto 1520 PDF...','info');
+  bItems=[];
+  try{
+    const buf=await f.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    showBS(pdf.numPages+' sider — analyserer...','info');
+    const allItems=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const pg=await pdf.getPage(p);
+      const con=await pg.getTextContent();
+      const vp=pg.getViewport({scale:1});
+      con.items.forEach(it=>{if(!it.str||!it.str.trim())return;allItems.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p,pgW:vp.width});});
+    }
+    if(!allItems.length){showBS('PDF er tom.','error');return;}
+    parse1520Items(allItems);
+  }catch(err){showBS('Feil: '+err.message,'error');}
+  inp.value='';
+}
+
+function parse1520Items(allItems){
+  bItems=[];
+  allItems.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);
+  const lines=[];let curLine=null;
+  for(const it of allItems){
+    if(!curLine||it.page!==curLine.page||Math.abs(it.y-curLine.y)>8){
+      if(curLine)lines.push(curLine);
+      curLine={page:it.page,y:it.y,items:[it],pgW:it.pgW||595};
+    }else curLine.items.push(it);
+  }
+  if(curLine)lines.push(curLine);
+
+  // Finn kolonne-posisjonane
+  let utCol=-1,innCol=-1;
+  for(const line of lines){
+    const txt=line.items.map(i=>i.text).join(' ');
+    if(/ut av konto/i.test(txt)||/inn p[aå] konto/i.test(txt)){
+      for(const it of line.items){
+        if(/^ut\s*av/i.test(it.text))utCol=it.x;
+        if(/^inn\s*p/i.test(it.text))innCol=it.x;
+      }
+      if(utCol>0)break;
+    }
+  }
+  if(utCol<0){const pgW=allItems[0]?.pgW||595;utCol=Math.round(pgW*0.52);innCol=Math.round(pgW*0.68);}
+
+  const dateRe=/^(\d{2})\.(\d{2})\.(\d{2,4})$/;
+  const norAmtRe=/^-?\d{1,3}(?:[.\s]\d{3})*,\d{2}$/;
+  const skipRe=/^(dato|tekst|saldo|side|ut av|inn p[aå]|rentedato|arkivref|renter|innskudd|kreditt|provisjon|rapportering|internasjonalt|iban|bic|utskriftsnummer|foretaks|dronning|returadresse|pb\.|oslo|telefon|dnb\.no|kontonummer|bedriftskonto|kontoutskrift|nettbank|no-|no9)/i;
+
+  const txGroups=[];let curTx=null;
+  for(const line of lines){
+    const fullTxt=line.items.map(i=>i.text).join(' ').trim();
+    if(!fullTxt||skipRe.test(fullTxt))continue;
+    const dates=line.items.filter(it=>dateRe.test(it.text));
+    const hasDateLeft=dates.some(it=>it.x<(utCol*0.45));
+    if(dates.length>=2&&hasDateLeft){
+      if(curTx)txGroups.push(curTx);
+      const sortedDates=[...dates].sort((a,b)=>a.x-b.x);
+      const bokDate=parseD(sortedDates[1]?.text)||parseD(sortedDates[0]?.text);
+      const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol-10);
+      const amtItems=line.items.filter(it=>it.x>=utCol-10);
+      curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems,line};
+    }else if(dates.length===1&&hasDateLeft){
+      if(curTx)txGroups.push(curTx);
+      const bokDate=parseD(dates[0].text);
+      const descItems=line.items.filter(it=>!dateRe.test(it.text)&&it.x<utCol-10);
+      const amtItems=line.items.filter(it=>it.x>=utCol-10);
+      curTx={date:bokDate,descParts:[descItems.map(i=>i.text).join(' ').trim()],amtItems,line};
+    }else if(curTx){
+      const amtHere=line.items.filter(it=>norAmtRe.test(it.text)&&it.x>=utCol-10);
+      const descHere=line.items.filter(it=>!norAmtRe.test(it.text)&&it.x<utCol-10&&!dateRe.test(it.text));
+      if(descHere.length)curTx.descParts.push(descHere.map(i=>i.text).join(' '));
+      if(amtHere.length)curTx.amtItems.push(...amtHere);
+    }
+  }
+  if(curTx)txGroups.push(curTx);
+
+  const seen=new Set();
+  for(const tx of txGroups){
+    if(!tx.date)continue;
+    const desc=[...new Set(tx.descParts)].filter(s=>s&&s.length>1).join(' ').replace(/\s+/g,' ').trim();
+    if(!desc||desc.length<2)continue;
+    if(/^(saldo|dato|tekst|kontoutskrift|bedriftskonto|inngående|utgående)/i.test(desc))continue;
+
+    const norAmts=tx.amtItems.filter(it=>norAmtRe.test(it.text));
+    let utAmt=0,innAmt=0;
+    if(norAmts.length===1){
+      const v=norNum(norAmts[0].text.replace('-',''));
+      const isNeg=norAmts[0].text.startsWith('-');
+      if(innCol>0&&norAmts[0].x>=innCol)innAmt=v;
+      else if(isNeg)innAmt=v;
+      else utAmt=v;
+    }else if(norAmts.length>1){
+      norAmts.sort((a,b)=>a.x-b.x);
+      for(const a of norAmts){
+        const v=norNum(a.text.replace('-',''));
+        const isNeg=a.text.startsWith('-');
+        if(innCol>0&&a.x>=innCol)innAmt=v;
+        else if(isNeg)innAmt=v;
+        else utAmt=v;
+      }
+    }
+
+    // ══ KJERNELOGIKKEN: berre "ut av konto" = Utgifter ══
+    // "inn på konto" er transfer frå bedriftskonto → iska daaye
+    if(utAmt<0.01)continue; // barre "ut" entries ayaan rabaa
+
+    // Auto-kategoriser
+    const cat=autocat1520(desc);
+
+    const key=tx.date+'|'+utAmt.toFixed(2)+'|'+desc.substring(0,25);
+    if(!seen.has(key)){
+      seen.add(key);
+      bItems.push({
+        date:tx.date,
+        desc:'[1520] '+desc,
+        amount:utAmt,
+        type:'expense',
+        category:cat,
+        source:'konto1520'
+      });
+    }
+  }
+
+  if(!bItems.length){
+    showBS('⚠️ Wax lama helin. Hubiyadda PDF-ka saxda yahay (Konto 1520.22.40647).','error');
+    return;
+  }
+  showBS('✅ '+bItems.length+' utgifter ka konto 1520 la helay!','success');
+  renderBItems();
+}
+
+// Kategorisering gaar ah oo konto 1520 u ah
+function autocat1520(desc){
+  const d=(desc||'').toLowerCase();
+  if(d.includes('tesla')||d.includes('uno-x')||d.includes('fortum')||d.includes('eviny')||d.includes('wash world'))return'7000';
+  if(d.includes('forsikring')||d.includes('gjensidige')||d.includes('tryg'))return'7040';
+  if(d.includes('autosync')||d.includes('dekk')||d.includes('auto'))return'7020';
+  if(d.includes('telenor')||d.includes('telia')||d.includes('lyse tele')||d.includes('nextgentel'))return'6900';
+  if(d.includes('vibb'))return'6907';
+  if(d.includes('gebyr')||d.includes('kortgebyr')||d.includes('omkostning'))return'7770';
+  if(d.includes('skatt'))return'5400';
+  if(d.includes('kommune'))return'7400';
+  if(d.includes('santander'))return'7790';
+  if(d.includes('læringsverkstedet')||d.includes('leringsverkstedet')||d.includes('tyholmen'))return'7140';
+  if(d.includes('msg cleaning'))return'7790';
+  if(d.includes('regnskapstjenester')||d.includes('regnskap'))return'6705';
+  if(d.includes('strøm')||d.includes('strom'))return'7000';
+  if(d.includes('arendal auto')||d.includes('fevik dekk'))return'7020';
+  if(d.includes('amili'))return'7790';
+  if(d.includes('norsk elbil'))return'7400';
+  if(d.includes('visa')||d.includes('mastercard'))return'7790';
+  return'7790';
+}
 
 function handleCSV(inp){const f=inp.files[0];if(!f)return;showBS('Leser CSV...','info');const r=new FileReader();r.onload=e=>{try{parseCSV(e.target.result);}catch(err){showBS('Feil: '+err.message,'error');}};r.readAsText(f,'UTF-8');inp.value='';}
 function parseCSV(text){bItems=[];const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');if(!lines.length){showBS('Tom CSV-fil','error');return;}const sample=lines.slice(0,5).join('\n');const sep=sample.includes(';')?';':sample.includes('\t')?'\t':',';let hi=-1;const hkeys=['dato','date','forklaringstekst','beskrivelse','tekst','transaction','booking'];for(let i=0;i<Math.min(15,lines.length);i++){const l=lines[i].toLowerCase();if(hkeys.some(k=>l.includes(k))){hi=i;break;}}if(hi===-1){parseCSVHeaderless(lines,sep);return;}const hdrs=splitC(lines[hi],sep).map(h=>h.replace(/["']/g,'').trim().toLowerCase());let dc=-1,tc=-1,ic=-1,uc=-1,ac=-1;hdrs.forEach((h,i)=>{if(h.includes('dato')||h.includes('date'))dc=i;if(h.includes('forklaringstekst')||h.includes('tekst')||h.includes('beskrivelse')||h.includes('text')||h.includes('description'))tc=i;if((h.includes('inn')&&(h.includes('på')||h.includes('pa')||h.length<6))||h.includes('credit')||h.includes('innskudd'))ic=i;if((h.includes('ut ')||h==='ut'||h.includes('ut fra')||h.includes('ut av'))||h.includes('debet')||h.includes('debit')||h.includes('uttak'))uc=i;if(h.includes('beløp')||h.includes('belop')||h.includes('amount')||h.includes('sum'))ac=i;});if(ac>-1&&(ic>-1||uc>-1))ac=-1;const seen=new Set();for(let i=hi+1;i<lines.length;i++){const l=lines[i].trim();if(!l)continue;const cols=splitC(l,sep).map(c=>c.replace(/["']/g,'').trim());if(cols.length<2)continue;const dv=parseD(dc>=0?cols[dc]:cols[0]);if(!dv)continue;const desc=(tc>=0?cols[tc]:(cols[1]||'Transaksjon')).trim();if(!desc)continue;let amt=0,type='expense';if(ic>=0||uc>=0){const iv=ic>=0?norNum(cols[ic]||''):0;const uv=uc>=0?norNum(cols[uc]||''):0;if(iv>0.01){amt=iv;type='income';}else if(uv>0.01){amt=uv;type=dnbType(desc)==='transfer'?'transfer':'expense';}else continue;}else if(ac>=0){const raw=(cols[ac]||'').trim();const neg=raw.startsWith('-');const v=norNum(raw.replace('-',''));if(v<0.01)continue;amt=v;type=neg?'expense':'income';}else{let found=false;for(let j=2;j<cols.length;j++){const raw=cols[j];if(!raw)continue;const neg=raw.trim().startsWith('-');const v=norNum(raw.replace('-',''));if(v>0.01&&v<9999999){amt=v;type=neg?'expense':'income';found=true;break;}}if(!found)continue;}if(desc.toLowerCase().includes('agder taxi'))type='income';if(dnbType(desc)==='transfer')type='transfer';if(amt<0.01||amt>9999999)continue;const key=dv+'|'+amt.toFixed(2)+'|'+desc.substring(0,20);if(!seen.has(key)){seen.add(key);bItems.push({date:dv,desc,amount:amt,type,category:autocat(desc,type)});}}if(!bItems.length){showBS('Ingen transaksjoner funnet i CSV.','error');return;}showBS('✅ '+bItems.length+' transaksjoner funnet!','success');renderBItems();}
@@ -625,33 +813,69 @@ async function importBank(){
   const u=auth.currentUser;if(!u){alert('Ma gelin nidaamka!');return;}
   const selected=[];document.querySelectorAll('#bitems .import-item.sel').forEach(el=>{const i=parseInt(el.id.replace('bi-',''));if(!isNaN(i)&&bItems[i])selected.push(bItems[i]);});
   if(!selected.length){if(bItems.length===0){showBS('PDF dib geli!','error');return;}bItems.forEach(item=>selected.push(item));}
-  showBS('Grupperer '+selected.length+' transaksjoner...','info');E('btn-bi').disabled=true;
 
-  // ══ PATCH: groupKey — kontoregulering → type:'transfer', cat:'9999' ══
-  function groupKey(desc,origType){
-    const d=(desc||'').toLowerCase(),raw=desc||'';
-    const ovM=raw.match(/[Oo]verf[øo]ring\s+innland\s+nr\.\d+\s+(.+)/i);
-    if(ovM){const name=ovM[1].trim(),nl=name.toLowerCase();if(nl.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030',type:'income'};if(nl.includes('kamal'))return{key:'Kamal',cat:'7790',type:'expense'};if(nl.includes('haytham'))return{key:'Haytham',cat:'7790',type:'expense'};if(nl.includes('salad ahmed'))return{key:'Salad Ahmed Mohamed',cat:'7790',type:'expense'};if(nl.includes('altaieb'))return{key:'Altaieb Hassan',cat:'7790',type:'expense'};return{key:name,cat:'7790',type:'expense'};}
-    const giroM=raw.match(/[Gg]iro\s+nr\.\d+\s+(.+)/i);
-    if(giroM){const name=giroM[1].trim(),nl=name.toLowerCase();if(nl.includes('santander'))return{key:'Santander Consumer Bank AS',cat:'7790',type:'expense'};if(nl.includes('skatteetaten')||nl.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400',type:'expense'};if(nl.includes('uno-x'))return{key:'Uno-x Mobility Norge AS',cat:'7000',type:'expense'};if(nl.includes('nextgentel'))return{key:'Nextgentel AS',cat:'6907',type:'expense'};if(nl.includes('autosync'))return{key:'Autosync AS',cat:'7020',type:'expense'};if(nl.includes('fortum'))return{key:'Fortum Strøm AS',cat:'7000',type:'expense'};if(nl.includes('lyse'))return{key:'Lyse Tele AS',cat:'6900',type:'expense'};if(nl.includes('ra forsikring'))return{key:'Ra Forsikring AS',cat:'7040',type:'expense'};if(nl.includes('vibb'))return{key:'Vibb AS',cat:'6907',type:'expense'};if(nl.includes('dnb livsforsikring'))return{key:'DNB Livsforsikring AS',cat:'7040',type:'expense'};if(nl.includes('msg cleaning'))return{key:'Msg Cleaning Systems AS',cat:'7790',type:'expense'};if(nl.includes('læringsverkstedet')||nl.includes('leringsverkstedet'))return{key:'Læringsverkstedet Tyholmen',cat:'7140',type:'expense'};if(nl.includes('arendal kommune')||nl.includes('kommune'))return{key:'Arendal Kommune',cat:'7400',type:'expense'};return{key:name,cat:'7790',type:'expense'};}
-    const visaM=raw.match(/[Vv]isa\s+(.+)/i);if(visaM){let name=visaM[1].trim();if(/^tesla/i.test(name))name='Tesla Inc.';return{key:'Visa '+name,cat:'7000',type:'expense'};}
-    // ══ KONTOREGULERING = INTERN OVERFØRING ══
-    if(d.includes('kontoregulering')){const nrM=raw.match(/nr\.(\d+)/i);const nr=nrM?nrM[1]:'';const tilM=raw.match(/[Tt]il\s+([\d.]+)/i);const kontoNr=tilM?tilM[1]:'';const label='Kontoregulering'+(nr?' nr.'+nr:'')+(kontoNr?' \u2192 '+kontoNr:'');return{key:label,cat:'9999',type:'transfer'};}
-    if(d.includes('skatt/arbeidsavgift')||d.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400',type:'expense'};
-    if(d.includes('omkostninger'))return{key:'Omkostninger (Bank)',cat:'7770',type:'expense'};
-    if(d.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030',type:'income'};
-    const clean=raw.replace(/\s+\d{6,}.*$/,'').replace(/\s+/g,' ').trim();
-    return{key:clean.substring(0,40)||'Ukjent',cat:'7790',type:origType||'expense'};
-  }
+  // Hubi: konto 1520 items waxay leeyihiin source:'konto1520'
+  // kuwaas waa la kaydinaa si toos ah (maaha la-group)
+  const konto1520Items=selected.filter(x=>x.source==='konto1520');
+  const normalItems=selected.filter(x=>x.source!=='konto1520');
 
-  const groups={};let firstDate='';
-  for(const item of selected){if(!firstDate||item.date<firstDate)firstDate=item.date;const{key,cat,type:forcedType}=groupKey(item.desc||item.description||'',item.type);const type=forcedType||item.type||'expense';const gk=key+'__'+type;if(!groups[gk]){groups[gk]={desc:key+(type==='transfer'?' (Intern overføring)':' (Total)'),category:item.category||cat,type,amount:0,date:item.date||firstDate};}groups[gk].amount+=parseFloat(item.amount)||0;}
-  const grouped=Object.values(groups);showBS('Lagrer '+grouped.length+' grupper...','info');
-  try{const uid=u.uid;for(const item of grouped){const newRef=db.ref('entries/'+uid).push();await newRef.set({date:item.date,category:item.category,description:item.desc,amount:Math.round(item.amount*100)/100,type:item.type,source:'bank'});}showBS('✅ '+grouped.length+' grupper lagret! ('+selected.length+' transaksjoner)','success');CL(E('bprev'),'hidden',true);bItems=[];setTimeout(()=>showPg('dash'),1000);}catch(err){showBS('❌ '+err.message,'error');}
+  showBS('Kaydiyaya...','info');
+  E('btn-bi').disabled=true;
+
+  try{
+    const uid=u.uid;
+
+    // ══ Konto 1520: kaydi si toos ah (mid mid) ══
+    if(konto1520Items.length>0){
+      for(const item of konto1520Items){
+        const newRef=db.ref('entries/'+uid).push();
+        await newRef.set({
+          date:item.date,
+          category:item.category,
+          description:item.desc,
+          amount:Math.round(item.amount*100)/100,
+          type:'expense',
+          source:'konto1520'
+        });
+      }
+      showBS('✅ '+konto1520Items.length+' utgifter frå konto 1520 lagret!','success');
+      CL(E('bprev'),'hidden',true);
+      bItems=[];
+      setTimeout(()=>showPg('dash'),1000);
+      E('btn-bi').disabled=false;
+      return;
+    }
+
+    // ══ Normal bank items: group ══
+    function groupKey(desc,origType){
+      const d=(desc||'').toLowerCase(),raw=desc||'';
+      const ovM=raw.match(/[Oo]verf[øo]ring\s+innland\s+nr\.\d+\s+(.+)/i);
+      if(ovM){const name=ovM[1].trim(),nl=name.toLowerCase();if(nl.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030',type:'income'};if(nl.includes('kamal'))return{key:'Kamal',cat:'7790',type:'expense'};if(nl.includes('haytham'))return{key:'Haytham',cat:'7790',type:'expense'};if(nl.includes('salad ahmed'))return{key:'Salad Ahmed Mohamed',cat:'7790',type:'expense'};if(nl.includes('altaieb'))return{key:'Altaieb Hassan',cat:'7790',type:'expense'};return{key:name,cat:'7790',type:'expense'};}
+      const giroM=raw.match(/[Gg]iro\s+nr\.\d+\s+(.+)/i);
+      if(giroM){const name=giroM[1].trim(),nl=name.toLowerCase();if(nl.includes('santander'))return{key:'Santander Consumer Bank AS',cat:'7790',type:'expense'};if(nl.includes('skatteetaten')||nl.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400',type:'expense'};if(nl.includes('uno-x'))return{key:'Uno-x Mobility Norge AS',cat:'7000',type:'expense'};if(nl.includes('nextgentel'))return{key:'Nextgentel AS',cat:'6907',type:'expense'};if(nl.includes('autosync'))return{key:'Autosync AS',cat:'7020',type:'expense'};if(nl.includes('fortum'))return{key:'Fortum Strøm AS',cat:'7000',type:'expense'};if(nl.includes('lyse'))return{key:'Lyse Tele AS',cat:'6900',type:'expense'};if(nl.includes('ra forsikring'))return{key:'Ra Forsikring AS',cat:'7040',type:'expense'};if(nl.includes('vibb'))return{key:'Vibb AS',cat:'6907',type:'expense'};if(nl.includes('dnb livsforsikring'))return{key:'DNB Livsforsikring AS',cat:'7040',type:'expense'};if(nl.includes('msg cleaning'))return{key:'Msg Cleaning Systems AS',cat:'7790',type:'expense'};if(nl.includes('læringsverkstedet')||nl.includes('leringsverkstedet'))return{key:'Læringsverkstedet Tyholmen',cat:'7140',type:'expense'};if(nl.includes('arendal kommune')||nl.includes('kommune'))return{key:'Arendal Kommune',cat:'7400',type:'expense'};return{key:name,cat:'7790',type:'expense'};}
+      const visaM=raw.match(/[Vv]isa\s+(.+)/i);if(visaM){let name=visaM[1].trim();if(/^tesla/i.test(name))name='Tesla Inc.';return{key:'Visa '+name,cat:'7000',type:'expense'};}
+      if(d.includes('kontoregulering')){const nrM=raw.match(/nr\.(\d+)/i);const nr=nrM?nrM[1]:'';const tilM=raw.match(/[Tt]il\s+([\d.]+)/i);const kontoNr=tilM?tilM[1]:'';const label='Kontoregulering'+(nr?' nr.'+nr:'')+(kontoNr?' \u2192 '+kontoNr:'');return{key:label,cat:'9999',type:'transfer'};}
+      if(d.includes('skatt/arbeidsavgift')||d.includes('skatteinnkrevin'))return{key:'Skatteetaten',cat:'5400',type:'expense'};
+      if(d.includes('omkostninger'))return{key:'Omkostninger (Bank)',cat:'7770',type:'expense'};
+      if(d.includes('agder taxi'))return{key:'Agder Taxi AS',cat:'3030',type:'income'};
+      const clean=raw.replace(/\s+\d{6,}.*$/,'').replace(/\s+/g,' ').trim();
+      return{key:clean.substring(0,40)||'Ukjent',cat:'7790',type:origType||'expense'};
+    }
+
+    const groups={};let firstDate='';
+    for(const item of normalItems){if(!firstDate||item.date<firstDate)firstDate=item.date;const{key,cat,type:forcedType}=groupKey(item.desc||item.description||'',item.type);const type=forcedType||item.type||'expense';const gk=key+'__'+type;if(!groups[gk]){groups[gk]={desc:key+(type==='transfer'?' (Intern overføring)':' (Total)'),category:item.category||cat,type,amount:0,date:item.date||firstDate};}groups[gk].amount+=parseFloat(item.amount)||0;}
+    const grouped=Object.values(groups);
+    showBS('Lagrer '+grouped.length+' grupper...','info');
+    for(const item of grouped){const newRef=db.ref('entries/'+uid).push();await newRef.set({date:item.date,category:item.category,description:item.desc,amount:Math.round(item.amount*100)/100,type:item.type,source:'bank'});}
+    showBS('✅ '+grouped.length+' grupper lagret!','success');
+    CL(E('bprev'),'hidden',true);
+    bItems=[];
+    setTimeout(()=>showPg('dash'),1000);
+  }catch(err){showBS('❌ '+err.message,'error');}
   E('btn-bi').disabled=false;
 }
 
-// ══ AGDER TAXI IMPORT (unchanged from original) ══
+// ══ AGDER TAXI IMPORT ══
 async function handleFile(inp){const f=inp.files[0];if(!f)return;if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){showOS('Leser Agder Taxi PDF...','info');parseAgderPDF(f);return;}const r=new FileReader();r.onload=e=>{E('simg').src=e.target.result;E('simg').style.display='block';runOCR(e.target.result);};r.readAsDataURL(f);inp.value='';}
 async function parseAgderPDF(f){try{const buf=await f.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;let all=[];for(let p=1;p<=pdf.numPages;p++){const pg=await pdf.getPage(p);const con=await pg.getTextContent();const vp=pg.getViewport({scale:1});con.items.forEach(it=>{if(it.str.trim())all.push({text:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p});});}parseAgderItems(all);}catch(err){showOS('Feil: '+err.message,'error');}}
 function parseAgderItems(all){oItems=[];all.sort((a,b)=>a.page!==b.page?a.page-b.page:a.y!==b.y?a.y-b.y:a.x-b.x);const lines=[];let cur=[],ly=-999,lp=-1;for(const it of all){if(it.page!==lp||Math.abs(it.y-ly)>7){if(cur.length)lines.push(cur);cur=[it];}else cur.push(it);ly=it.y;lp=it.page;}if(cur.length)lines.push(cur);const ft=lines.map(l=>l.map(i=>i.text).join(' ')).join('\n');let dv='',payDate='',invNr='';const dm=ft.match(/Fakturadato[\s:]+(\d{2})\.(\d{2})\.(\d{4})/i)||ft.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(dm&&dm[3]){dv=dm[3]+'-'+dm[2]+'-'+dm[1];T('at-date',dv);if(E('edate'))E('edate').value=dv;}const pdm=ft.match(/[Uu]tbetales\s+(\d{2})\.(\d{2})\.(\d{2,4})/i);if(pdm){payDate=pdm[3].length===2?'20'+pdm[3]+'-'+pdm[2]+'-'+pdm[1]:pdm[3]+'-'+pdm[2]+'-'+pdm[1];T('at-pay',payDate);}const im=ft.match(/(?:Faktura|bilag)[\/\s#]+(\d+)/i)||ft.match(/(\d{7})/);if(im){invNr=im[1];T('at-inv',invNr);}let rawTotal=0,rawIsNeg=false,mva12=0,mva25=0,avgiftsfritt=0;const tmAll=[...ft.matchAll(/[Bb]el[oø]p\s+inkl[.\s]+mva[.:\s]+([-]?\d[\d\s.,]+)/gi)];if(tmAll.length>0){const raw=tmAll[tmAll.length-1][1].trim();rawIsNeg=raw.startsWith('-');rawTotal=norNum(raw.replace('-',''));T('at-tot',(rawIsNeg?'+ ':'')+fmt(rawTotal));}const g12m=ft.match(/[Mm]va\s+grunnlag\s+12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);const m12m=ft.match(/[Mm]va\s*12\s*%[\s:]+([-]?\d[\d\s.,]+)/i);const m25m=ft.match(/[Mm]va\s*25\s*%[\s:]+([-]?\d[\d\s.,]+)/i);const frim=ft.match(/[Aa]vgiftsfritt[\s:]+([-]?\d[\d\s.,]+)/i);if(g12m)T('at-g12',fmt(norNum(g12m[1].replace('-',''))));if(m12m){mva12=norNum(m12m[1].replace('-',''));T('at-m12',fmt(mva12));}if(m25m)mva25=norNum(m25m[1].replace('-',''));if(frim){avgiftsfritt=norNum(frim[1].replace('-',''));T('at-free',fmt(avgiftsfritt));}gRawTotal=rawTotal;gMva12Exact=mva12;gMva25Exact=mva25;const displayNetto=rawIsNeg?rawTotal:-rawTotal;const nettoEl=E('atnetto');if(nettoEl){CL(nettoEl,'hidden',false);T('at-netto-big',(displayNetto>=0?'+':'−')+fmt(Math.abs(displayNetto)));E('at-netto-big').style.color=displayNetto>=0?'var(--green)':'var(--red)';T('at-netto-sub',`Beløp inkl MVA: ${fmt(rawTotal)} | MVA 12%: ${fmt(Math.round(mva12))} | MVA 25%: ${fmt(Math.round(mva25))} | Avgiftsfritt: ${fmt(avgiftsfritt)}`);}CL(E('atcard'),'hidden',false);const KNOWN=[{re:/^EMV\s*N(?:\s+AmEx)?/i,cat:'3030'},{re:/^TT\s+Rogaland/i,cat:'3030'},{re:/^VIPPS/i,cat:'3030'},{re:/^APP-?BETALING/i,cat:'3030'},{re:/^Spesialtur/i,cat:'7791'},{re:/^Generell\s+kreditt/i,cat:'7792'},{re:/^Pasienttransport/i,cat:'7793'},{re:/^Ikke\s+m/i,cat:'7794'},{re:/^Egena/i,cat:'7792'},{re:/^VIPPS\s+Egenandel/i,cat:'7794'},{re:/^Sentralavgift/i,cat:'6755',forceType:'expense'},{re:/^Bilforsikring/i,cat:'7040',forceType:'expense'},{re:/^El\s+bil\s+lading/i,cat:'7000',forceType:'expense'},{re:/^Adm[\s.]+gebyr/i,cat:'7795',forceType:'expense'}];function parseNorAmt(s){if(!s)return null;s=s.trim();const neg=s.startsWith('-');const v=norNum(s.replace('-',''));return v>0?{value:v,negative:neg}:null;}oItems=[];const lineTexts=lines.map(l=>({text:l.map(i=>i.text).join(' '),items:l}));for(const ki of KNOWN){for(const{text:lt}of lineTexts){const trimmed=lt.trim();if(!ki.re.test(trimmed))continue;if(/^sum/i.test(trimmed))continue;const carM=lt.match(/(AG-\d+)/);const carId=carM?carM[1]:'';const amtMatches=[...lt.matchAll(/(-?\d{1,3}(?:[\s]\d{3})*,\d{2})/g)];if(!amtMatches.length)continue;const rawAmt=amtMatches[amtMatches.length-1][1].trim();const parsed=parseNorAmt(rawAmt);if(!parsed||parsed.value<0.5)continue;const finalType=ki.forceType||(parsed.negative?'income':'expense');const descMatch=trimmed.match(/^([A-Za-zÆØÅæøå\s\-]+?)(?:\s+AG-\d+|\s+-?\d|\s+#{3})/);const descBase=descMatch?descMatch[1].trim():trimmed.split(/\s{2,}/)[0].trim();const desc=`${descBase}${carId?' ('+carId+')':''}`;if(oItems.find(x=>x.desc===desc&&x.amount===parsed.value&&x.type===finalType))continue;oItems.push({desc,amount:parsed.value,type:finalType,date:dv,category:ki.cat,invNr,billNr:invNr,carId});}}oItems.sort((a,b)=>{if(a.type!==b.type)return a.type==='income'?-1:1;return b.amount-a.amount;});if(!oItems.length){oItems.push({desc:'Agder Taxi Faktura #'+invNr+' (Netto utbetalt)',amount:rawTotal,type:rawIsNeg?'income':'expense',date:dv,category:'3030',invNr,billNr:invNr,carId:''});}const incSum=oItems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);const expSum=oItems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);showOS(`✅ Faktura #${invNr} — ${oItems.length} poster | Inntekt: +${fmt(incSum)} | Utgift: −${fmt(expSum)}`,'success');if(auth.currentUser&&invNr){const billData={invNr,date:dv,payDate,rawTotal,totalMva:Math.round(mva12+mva25),mva12:Math.round(mva12),mva25:Math.round(mva25),avgiftsfritt,nettoAfterMva:displayNetto,entryCount:oItems.length,savedAt:new Date().toISOString()};db.ref('bills/'+auth.currentUser.uid+'/'+invNr).set(billData);}renderOItems(invNr);}
