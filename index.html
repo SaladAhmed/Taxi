@@ -229,6 +229,7 @@ input[type=file]{display:none}
           <button class="top-btn danger btn-sm" onclick="deleteBankEntries()"><i class="fas fa-university"></i> <span>Bank</span></button>
           <button class="top-btn danger btn-sm" onclick="deleteAgderEntries()"><i class="fas fa-file-invoice"></i> <span>Agder</span></button>
           <button class="top-btn btn-sm" onclick="deleteAllEntries()" style="background:var(--red);color:#fff;border-color:var(--red)"><i class="fas fa-trash-alt"></i> <span>ALT</span></button>
+          <button class="top-btn btn-sm" onclick="openDeleteMonth()" style="background:#7c3aed;color:#fff;border-color:#7c3aed"><i class="fas fa-calendar-xmark"></i> <span>Bil</span></button>
           <button class="top-btn btn-sm" onclick="repairSourceFields()" style="background:var(--purple);color:#fff;border-color:var(--purple)"><i class="fas fa-wrench"></i> <span>Fix</span></button>
         </div>
       </div>
@@ -417,6 +418,51 @@ input[type=file]{display:none}
     <div id="pg-profile" class="pg"><div class="topbar"><div class="topbar-title">Min profil</div></div><div class="page-content" style="max-width:480px"><div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-user"></i> Kontoinformasjon</div></div><div style="padding:24px;text-align:center"><div class="profile-avatar-wrap" onclick="document.getElementById('pup').click()"><img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"><div class="profile-avatar-edit"><i class="fas fa-camera"></i></div></div><input type="file" id="pup" onchange="uploadPic(this)"><div id="pview"><h2 id="pname" style="font-size:18px;font-weight:700;margin-bottom:3px">Laster...</h2><div id="pemail" style="color:var(--text3);font-size:13px;margin-bottom:16px"></div><button class="btn btn-outline" onclick="togglePE(true)"><i class="fas fa-edit"></i> Rediger navn</button></div><div id="pedit" class="hidden" style="text-align:left;margin-top:14px"><div class="form-group"><label class="form-label">Fullt navn</label><input type="text" id="pename" class="form-control"></div><div class="btn-group"><button class="btn btn-success" onclick="savePName()"><i class="fas fa-save"></i> Lagre</button><button class="btn btn-outline" onclick="togglePE(false)">Avbryt</button></div></div></div></div><div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-shield-alt"></i> Sikkerhet</div></div><div style="padding:16px"><button class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="chPass()"><i class="fas fa-key"></i> Endre passord</button><button class="btn btn-danger" style="width:100%" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logg ut</button></div></div></div></div>
   </main>
 </div>
+</div>
+
+<!-- DELETE MONTH MODAL -->
+<div id="delmonth-modal" style="display:none;position:fixed;inset:0;z-index:1002;background:rgba(15,32,68,.65);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:440px;box-shadow:0 24px 48px rgba(0,0,0,.25);overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid #fecaca;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#fef2f2,#fee2e2)">
+      <div style="font-size:14px;font-weight:700;color:#7f1d1d;display:flex;align-items:center;gap:8px"><i class="fas fa-calendar-xmark" style="color:#dc2626"></i> Tir Bil Gaar Ah</div>
+      <button onclick="closeDeleteMonth()" style="background:none;border:1px solid #fca5a5;border-radius:6px;font-size:16px;color:#7f1d1d;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center">x</button>
+    </div>
+    <div style="padding:18px">
+      <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#92400e;line-height:1.6">
+        ⚠️ Entries-ka <b>bil gaar ah</b> ayaad tirin kartaa — maaha dhammaan. Dooro source-ka iyo bishii khaldan.
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:6px">📅 Sannad</label>
+        <select id="dm-year" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;color:#0f172a;background:#fff" onchange="updateDMMonths()"></select>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:6px">📆 Bil</label>
+        <div id="dm-months" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:6px">🏦 Source (Maxaa tirtirta?)</label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500">
+            <input type="radio" name="dm-src" value="bank" checked style="accent-color:#1a56db"> 🏦 DNB Bank (bedriftskonto)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500">
+            <input type="radio" name="dm-src" value="konto1520" style="accent-color:#7c3aed"> 🏦 Konto 1520.22.40647
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500">
+            <input type="radio" name="dm-src" value="agder" style="accent-color:#d97706"> 🚕 Agder Taxi Fakturaer
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500">
+            <input type="radio" name="dm-src" value="all" style="accent-color:#dc2626"> 🗑️ Alt frå denne måneden
+          </label>
+        </div>
+      </div>
+      <div id="dm-preview" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:#475569;min-height:40px"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="confirmDeleteMonth()" style="flex:1;padding:11px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fas fa-trash"></i> Tir Entries-kan</button>
+        <button onclick="closeDeleteMonth()" style="padding:11px 16px;background:transparent;color:#475569;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Jooji</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- INTERN UTGIFT MODAL -->
@@ -1031,6 +1077,130 @@ function capture(){const v=E('svid'),c=E('scv');c.width=v.videoWidth;c.height=v.
 async function runOCR(src){showOS('OCR kjører...','info');try{const r=await Tesseract.recognize(src,'nor+eng',{logger:m=>{if(m.status==='recognizing text')showOS('OCR: '+Math.round(m.progress*100)+'%','info');}});parseOCRTxt(r.data.text);}catch(err){showOS('OCR feil: '+err.message,'error');}}
 function parseOCRTxt(text){showOS('OCR ferdig','success');const dm=text.match(/(\d{2})[.\-\/](\d{2})[.\-\/](\d{2,4})/);let dv='';if(dm){const y=dm[3].length===2?'20'+dm[3]:dm[3];dv=y+'-'+dm[2]+'-'+dm[1];if(E('edate'))E('edate').value=dv;}const tm=text.match(/(?:total|belop|sum)[^\d]*(\d[\d\s,.]+)/i);let tAmt=0;if(tm)tAmt=parseFloat(tm[1].replace(/\s/g,'').replace(',','.'));oItems=[];if(tAmt>0)oItems.push({desc:'Faktura total',amount:tAmt,type:'expense',date:dv,category:'7790'});renderOItems('');}
 function dlCSV(){const rows=[['Dato','Konto','Beskrivelse','Faktura','Type','Beløp']];entries.forEach(e=>rows.push([e.date||'',e.category||'',(e.description||'').replace(/,/g,' '),e.billNr||'',e.type==='income'?'Inntekt':e.type==='transfer'?'Intern overføring':'Utgift',parseFloat(e.amount||0).toFixed(2)]));const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='regnskap-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);}
+
+// ══ DELETE BY MONTH ══
+let dmSelectedMonths=new Set();
+
+function openDeleteMonth(){
+  const modal=document.getElementById('delmonth-modal');
+  if(!modal)return;
+  // Fill years
+  const years=[...new Set(entries.map(e=>(e.date||'').substring(0,4)).filter(Boolean))].sort().reverse();
+  const yrSel=document.getElementById('dm-year');
+  yrSel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  dmSelectedMonths=new Set();
+  updateDMMonths();
+  modal.style.display='flex';
+}
+
+function closeDeleteMonth(){
+  document.getElementById('delmonth-modal').style.display='none';
+}
+
+function updateDMMonths(){
+  const year=document.getElementById('dm-year')?.value;
+  const MNMS=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  const months=[...new Set(entries.filter(e=>(e.date||'').startsWith(year)).map(e=>(e.date||'').substring(5,7)).filter(Boolean))].sort();
+  dmSelectedMonths=new Set();
+  const con=document.getElementById('dm-months');
+  if(!con)return;
+  con.innerHTML=months.map(m=>`
+    <button onclick="toggleDMMonth('${m}',this)" style="padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:12px;font-weight:600;cursor:pointer;transition:.15s" data-m="${m}">${MNMS[parseInt(m)]}</button>
+  `).join('');
+  updateDMPreview();
+}
+
+function toggleDMMonth(m,btn){
+  if(dmSelectedMonths.has(m)){
+    dmSelectedMonths.delete(m);
+    btn.style.background='#fff';
+    btn.style.color='#475569';
+    btn.style.borderColor='#e2e8f0';
+  }else{
+    dmSelectedMonths.add(m);
+    btn.style.background='#dc2626';
+    btn.style.color='#fff';
+    btn.style.borderColor='#dc2626';
+  }
+  updateDMPreview();
+}
+
+function getDMSource(){
+  const r=document.querySelector('input[name="dm-src"]:checked');
+  return r?r.value:'bank';
+}
+
+function updateDMPreview(){
+  const year=document.getElementById('dm-year')?.value;
+  const src=getDMSource();
+  const prev=document.getElementById('dm-preview');
+  if(!prev)return;
+  if(!dmSelectedMonths.size){prev.innerHTML='<span style="color:#94a3b8">← Dooro bil(s) aad tirtiraysid</span>';return;}
+  
+  const toDelete=entries.filter(e=>{
+    const yr=(e.date||'').substring(0,4);
+    const mo=(e.date||'').substring(5,7);
+    if(yr!==year||!dmSelectedMonths.has(mo))return false;
+    if(src==='all')return true;
+    if(src==='bank')return e.source==='bank'||(!e.source&&!isAgderEntry(e)&&!isInternOverforing(e));
+    if(src==='konto1520')return e.source==='konto1520';
+    if(src==='agder')return e.source==='agder'||isAgderEntry(e);
+    return false;
+  });
+
+  const MNMS=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  const months=[...dmSelectedMonths].sort().map(m=>MNMS[parseInt(m)]).join(', ');
+  const srcLabel=src==='bank'?'DNB Bank':src==='konto1520'?'Konto 1520':src==='agder'?'Agder Taxi':'Dhammaan';
+  
+  if(!toDelete.length){
+    prev.innerHTML=`<span style="color:#059669">✅ Wax la heli waayo — ${srcLabel} entries ma jiraan ${months} ${year}</span>`;
+    return;
+  }
+  const tot=toDelete.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  prev.innerHTML=`<div style="color:#dc2626;font-weight:700;margin-bottom:4px">⚠️ ${toDelete.length} entries ayaa tirtirma — ${months} ${year}</div><div style="color:#475569">Source: ${srcLabel} · Total beløp: ${tot.toLocaleString('nb-NO',{minimumFractionDigits:2})} kr</div>`;
+}
+
+// Re-run preview when source changes
+document.addEventListener('change',function(e){
+  if(e.target?.name==='dm-src')updateDMPreview();
+});
+
+async function confirmDeleteMonth(){
+  const year=document.getElementById('dm-year')?.value;
+  const src=getDMSource();
+  if(!dmSelectedMonths.size)return alert('Dooro bil marka hore!');
+  
+  const toDelete=entries.filter(e=>{
+    const yr=(e.date||'').substring(0,4);
+    const mo=(e.date||'').substring(5,7);
+    if(yr!==year||!dmSelectedMonths.has(mo))return false;
+    if(src==='all')return true;
+    if(src==='bank')return e.source==='bank'||(!e.source&&!isAgderEntry(e)&&!isInternOverforing(e));
+    if(src==='konto1520')return e.source==='konto1520';
+    if(src==='agder')return e.source==='agder'||isAgderEntry(e);
+    return false;
+  });
+
+  if(!toDelete.length)return alert('Wax la heli waayo!');
+  
+  const MNMS=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  const months=[...dmSelectedMonths].sort().map(m=>MNMS[parseInt(m)]).join(', ');
+  const srcLabel=src==='bank'?'DNB Bank':src==='konto1520'?'Konto 1520':src==='agder'?'Agder Taxi':'Dhammaan';
+  
+  if(!confirm(`⚠️ ${toDelete.length} entries ayaa tirtirma!\n\nBil: ${months} ${year}\nSource: ${srcLabel}\n\nSida la tirtiri kartaa? Ma hubtaa?`))return;
+  
+  const u=auth.currentUser;if(!u)return;
+  try{
+    for(const e of toDelete){
+      await db.ref('entries/'+u.uid+'/'+e.id).remove();
+    }
+    alert(`✅ ${toDelete.length} entries waa la tirtiray!\n${months} ${year} — ${srcLabel}`);
+    closeDeleteMonth();
+  }catch(err){alert('Khalad: '+err.message);}
+}
+
+document.getElementById('delmonth-modal').addEventListener('click',function(ev){if(ev.target===this)closeDeleteMonth();});
+
 </script>
 </body>
 </html>
