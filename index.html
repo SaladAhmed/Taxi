@@ -266,6 +266,22 @@ input[type=file]{display:none}
             <div class="intern-total-amt af" id="intern-total-amt">0,00 kr</div>
           </div>
         </div>
+        <!-- SALAD AHMED LØNN BOX -->
+        <div id="salad-box" style="display:none;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(124,58,237,.02));border:2px solid var(--purple);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="width:36px;height:36px;background:var(--purple);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#4c1d95">Salad Ahmed Mohamed — Lønn/Uttak</div>
+              <div style="font-size:11px;color:var(--purple);margin-top:2px">Lacagta aad qudhaa kuu baxday sanadkan</div>
+            </div>
+          </div>
+          <div id="salad-items" style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px"></div>
+          <div style="background:rgba(124,58,237,.15);border-radius:8px;padding:9px 12px;border:1.5px solid var(--purple);display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--purple)">💰 TOTAL UTBETALT TIL DEG</div>
+            <div class="af" id="salad-total" style="font-family:'DM Mono',monospace;font-weight:700;font-size:18px;color:var(--purple)">0,00 kr</div>
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" class="split-cards">
           <div style="background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(217,119,6,.03));border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:14px 16px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">🚕</div><span style="font-size:13px;font-weight:700;color:#92400e">Agder Taxi Fakturaer</span></div>
@@ -562,6 +578,40 @@ function renderDash(list){
       });
     }else box.style.display='none';
   }
+  // ══ SALAD AHMED LØNN BOX ══
+  const saladBox=E('salad-box'),saladItems=E('salad-items'),saladTotal=E('salad-total');
+  if(saladBox&&saladItems&&saladTotal){
+    const saladKW=['salad ahmed','salad ahmed mohamed'];
+    const saladEntries=realList.filter(e=>{
+      const d=(e.description||'').toLowerCase();
+      return saladKW.some(k=>d.includes(k))&&e.type==='expense';
+    });
+    if(saladEntries.length>0){
+      saladBox.style.display='block';
+      const MNMS=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+      const byMonth={};
+      saladEntries.forEach(e=>{
+        const mo=parseInt((e.date||'').substring(5,7))||0;
+        const yr=(e.date||'').substring(0,4);
+        const mk=yr+'-'+(mo<10?'0'+mo:mo);
+        if(!byMonth[mk])byMonth[mk]={mo,yr,total:0,count:0};
+        byMonth[mk].total+=parseFloat(e.amount)||0;
+        byMonth[mk].count++;
+      });
+      const tot=saladEntries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      saladItems.innerHTML='';
+      Object.keys(byMonth).sort().forEach(mk=>{
+        const g=byMonth[mk];
+        const row=document.createElement('div');
+        row.style.cssText='background:#fff;border-radius:7px;padding:8px 12px;border:1px solid rgba(124,58,237,.25);display:flex;justify-content:space-between;align-items:center';
+        row.innerHTML=`<div style="font-size:12px;color:var(--text2);font-weight:600">${MNMS[g.mo]} ${g.yr} <span style="font-weight:400;color:var(--text3)">· ${g.count} utbetaling${g.count>1?'er':''}</span></div><div class="af" style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--purple)">−${fmt(g.total)}</div>`;
+        saladItems.appendChild(row);
+      });
+      saladTotal.textContent=fmt(tot);
+      if(amtHid)saladTotal.classList.add('ha');
+    }else saladBox.style.display='none';
+  }
+
   if(amtHid)document.querySelectorAll('.af').forEach(el=>el.classList.add('ha'));
   renderATTable(agder);
   renderBKTable([...bank,...internList]);
