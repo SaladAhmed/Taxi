@@ -271,7 +271,7 @@ input[type=file]{display:none}
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
             <div style="width:36px;height:36px;background:var(--purple);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
             <div>
-              <div style="font-size:13px;font-weight:700;color:#4c1d95">Salad Ahmed Mohamed — Lønn/Uttak</div>
+              <div style="font-size:13px;font-weight:700;color:#4c1d95" id="salad-box-title">Lønn/Uttak — Min konto</div>
               <div style="font-size:11px;color:var(--purple);margin-top:2px">Lacagta aad qudhaa kuu baxday sanadkan</div>
             </div>
           </div>
@@ -581,10 +581,18 @@ function renderDash(list){
   // ══ SALAD AHMED LØNN BOX ══
   const saladBox=E('salad-box'),saladItems=E('salad-items'),saladTotal=E('salad-total');
   if(saladBox&&saladItems&&saladTotal){
-    const saladKW=['salad ahmed','salad ahmed mohamed'];
+    // Isticmaal magaca user-ka logged in (dynamic)
+    const curUser=auth.currentUser;
+    const curName=(curUser?.displayName||'').toLowerCase().trim();
+    const nameParts=curName.split(' ').filter(p=>p.length>2);
     const saladEntries=realList.filter(e=>{
       const d=(e.description||'').toLowerCase();
-      return saladKW.some(k=>d.includes(k))&&e.type==='expense';
+      // Match haddii magaca user-ka uu ku jiro description-ka
+      if(!curName)return false;
+      if(d.includes(curName))return true;
+      // Match haddii 2 ka mid ah magaca parts-yada ku jiraan
+      const matchCount=nameParts.filter(p=>d.includes(p)).length;
+      return matchCount>=2&&e.type==='expense';
     });
     if(saladEntries.length>0){
       saladBox.style.display='block';
