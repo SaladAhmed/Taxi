@@ -458,16 +458,35 @@ function renderDash(list){
   if(E('bn-inc')){E('bn-inc').textContent=(bkInc>0?'+':'')+fmt(bkInc);E('bn-inc').style.color='var(--green)';}
   if(E('bn-exp')){E('bn-exp').textContent=(bkExp>0?'−':'')+fmt(bkExp);E('bn-exp').style.color='var(--red)';}
   if(E('bn-net')){E('bn-net').textContent=(bkNet>=0?'+':'−')+fmt(Math.abs(bkNet));E('bn-net').style.color=bkNet>=0?'var(--green)':'var(--red)';}
-  // ══ INTERN OVERFØRING BOX ══
+  // ══ INTERN OVERFØRING BOX — kompakt (wadarta + detaljer on-demand) ══
   const box=E('intern-box'),itemsCon=E('intern-items');
   if(box&&itemsCon){
     if(internList.length>0){
-      box.style.display='block';itemsCon.innerHTML='';let tot=0;
-      internList.forEach(e=>{const a=parseFloat(e.amount)||0;tot+=a;
-        const row=document.createElement('div');row.className='intern-item';
-        row.innerHTML=`<div class="intern-item-left"><span>${e.description||'Intern overføring'}</span><span class="intern-item-date">${e.date||''}</span></div><div class="intern-item-amt">↔ ${fmt(a)}</div>`;
-        itemsCon.appendChild(row);});
+      box.style.display='block';
+      // Grupper: konto + år → kompakt 1 linje per år
+      const byDestYear={};
+      const MNMS=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+      internList.forEach(e=>{
+        const a=parseFloat(e.amount)||0;
+        const tilM=(e.description||'').match(/[→\u2192]\s*([\d.]+)/);
+        const dest=tilM?tilM[1]:'Eigen konto';
+        const yr=(e.date||'2026').substring(0,4);
+        const mo=parseInt((e.date||'').substring(5,7))||0;
+        const gk=dest+'|'+yr;
+        if(!byDestYear[gk])byDestYear[gk]={dest,yr,total:0,count:0,months:new Set()};
+        byDestYear[gk].total+=a;byDestYear[gk].count++;
+        if(mo)byDestYear[gk].months.add(mo);
+      });
+      const tot=internList.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
       const totEl=E('intern-total-amt');if(totEl){totEl.textContent=fmt(tot);if(amtHid)totEl.classList.add('ha');}
+      itemsCon.innerHTML='';
+      Object.values(byDestYear).sort((a,b)=>b.yr.localeCompare(a.yr)).forEach(g=>{
+        const moList=[...g.months].sort();
+        const moTxt=moList.length>1?MNMS[moList[0]]+' – '+MNMS[moList[moList.length-1]]:MNMS[moList[0]]||'';
+        const row=document.createElement('div');row.className='intern-item';
+        row.innerHTML=`<div class="intern-item-left"><span style="font-weight:600">🏦 → Konto ${g.dest}</span><span class="intern-item-date">${g.yr} · ${g.count} overføring${g.count>1?'er':''} · ${moTxt}</span></div><div class="intern-item-amt">${fmt(g.total)}</div>`;
+        itemsCon.appendChild(row);
+      });
     }else box.style.display='none';
   }
   if(amtHid)document.querySelectorAll('.af').forEach(el=>el.classList.add('ha'));
