@@ -274,8 +274,8 @@ input[type=file]{display:none}
           </div>
           <div style="background:linear-gradient(135deg,rgba(26,86,219,.08),rgba(26,86,219,.03));border:1.5px solid var(--accent);border-radius:var(--radius-lg);padding:14px 16px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">🏦</div><span style="font-size:13px;font-weight:700;color:#1e3a8a">DNB Bank Transaksjoner</span></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div><div class="af" id="bk-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--green)">0,00 kr</div></div><div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Udgifter</div><div class="af" id="bk-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--red)">0,00 kr</div></div></div>
-            <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2);text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Netto Bank</div><div class="af" id="bk-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px">0,00 kr</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Inntekt</div><div class="af" id="bn-inc" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--green)">0,00 kr</div></div><div style="background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2)"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Udgifter</div><div class="af" id="bn-exp" style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--red)">0,00 kr</div></div></div>
+            <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid rgba(26,86,219,.2);text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:3px">Netto Bank</div><div class="af" id="bn-net" style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px">0,00 kr</div></div>
           </div>
         </div>
         <div class="card"><div class="card-header" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)"><div class="card-title" style="color:#92400e"><i class="fas fa-file-invoice" style="color:var(--amber)"></i> 🚕 Agder Taxi Transaksjoner</div><div class="card-actions"><input class="filter-search" id="at-search" placeholder="🔍 Søk..." style="width:150px" oninput="filterAT(this.value)"><span id="at-count" style="font-size:11px;color:var(--text3);font-weight:600"></span></div></div><div class="tbl-wrap"><table><thead><tr><th>Dato</th><th>Konto</th><th>Beskrivelse</th><th>Type</th><th>Bil</th><th style="text-align:right">Beløp</th><th style="text-align:right">Handling</th></tr></thead><tbody id="at-tbody"></tbody></table><div id="at-empty" class="empty-state hidden"><i class="fas fa-file-invoice"></i><h3>Ingen Agder Taxi transaksjoner</h3><p>Importer Agder Taxi faktura under "Registrer"</p></div></div></div>
@@ -455,9 +455,9 @@ function renderDash(list){
   if(E('at-exp')){E('at-exp').textContent=(atExp>0?'−':'')+fmt(atExp);E('at-exp').style.color='var(--red)';}
   if(E('at-net')){E('at-net').textContent=(atNet>=0?'+':'−')+fmt(Math.abs(atNet));E('at-net').style.color=atNet>=0?'var(--green)':'var(--red)';}
   let bkInc=0,bkExp=0;bank.forEach(e=>{const a=parseFloat(e.amount)||0;if(e.type==='income')bkInc+=a;else bkExp+=a;});const bkNet=bkInc-bkExp;
-  if(E('bk-inc')){E('bk-inc').textContent=(bkInc>0?'+':'')+fmt(bkInc);E('bk-inc').style.color='var(--green)';}
-  if(E('bk-exp')){E('bk-exp').textContent=(bkExp>0?'−':'')+fmt(bkExp);E('bk-exp').style.color='var(--red)';}
-  if(E('bk-net')){E('bk-net').textContent=(bkNet>=0?'+':'−')+fmt(Math.abs(bkNet));E('bk-net').style.color=bkNet>=0?'var(--green)':'var(--red)';}
+  if(E('bn-inc')){E('bn-inc').textContent=(bkInc>0?'+':'')+fmt(bkInc);E('bn-inc').style.color='var(--green)';}
+  if(E('bn-exp')){E('bn-exp').textContent=(bkExp>0?'−':'')+fmt(bkExp);E('bn-exp').style.color='var(--red)';}
+  if(E('bn-net')){E('bn-net').textContent=(bkNet>=0?'+':'−')+fmt(Math.abs(bkNet));E('bn-net').style.color=bkNet>=0?'var(--green)':'var(--red)';}
   // ══ INTERN OVERFØRING BOX ══
   const box=E('intern-box'),itemsCon=E('intern-items');
   if(box&&itemsCon){
@@ -473,6 +473,7 @@ function renderDash(list){
   if(amtHid)document.querySelectorAll('.af').forEach(el=>el.classList.add('ha'));
   renderATTable(agder);
   renderBKTable([...bank,...internList]);
+  renderTransList(typeof entries!=='undefined'?entries:[]);
 }
 
 let atSearchQ='',bkSearchQ='';
@@ -490,6 +491,22 @@ function makeRow(e){
   tr.innerHTML=`<td class="td-date">${e.date||'—'}</td><td class="td-cat">${e.category||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div>${e.billNr?`<span class="badge purple" style="margin-top:3px;display:inline-flex">📄 #${e.billNr}</span>`:''}</td><td>${typeBadge}${isZero?'<span class="badge amber" style="margin-left:4px">Beløp mangler</span>':''}</td><td>${e.carId?`<span class="badge amber" style="font-size:10px">${e.carId}</span>`:'<span style="color:var(--text3)">—</span>'}</td><td>${amtCell}</td><td><div class="td-actions"><button class="ico-btn" onclick="editE('${e.id}')"><i class="fas fa-edit"></i></button><button class="ico-btn del" onclick="delE('${e.id}')"><i class="fas fa-trash"></i></button></div></td>`;
   return tr;
 }
+
+function renderTransList(entries){
+  const tb=E('trans-list');if(!tb)return;
+  tb.innerHTML='';
+  const last20=[...entries].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,20);
+  const empty=E('trans-empty');
+  if(!last20.length){if(empty)CL(empty,'hidden',false);return;}
+  if(empty)CL(empty,'hidden',true);
+  last20.forEach(e=>{
+    const isI=e.type==='income',isT=isInternOverforing(e),a=parseFloat(e.amount)||0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="td-date">${e.date||'—'}</td><td><div class="td-desc" title="${e.description||''}">${e.description||'—'}</div></td><td class="td-cat">${e.category||'—'}</td><td style="text-align:right"><span class="td-amt af${amtHid?' ha':''}" style="color:${isT?'var(--teal)':isI?'var(--green)':'var(--red)'}">${isT?'↔':isI?'+':'−'}${fmt(a)}</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+
 function renderATTable(list){const tb=E('at-tbody');if(!tb)return;tb.innerHTML='';const filtered=atSearchQ?list.filter(e=>(e.description||'').toLowerCase().includes(atSearchQ)||(e.category||'').includes(atSearchQ)):list;CL(E('at-empty'),'hidden',filtered.length>0);T('at-count',filtered.length+' poster');filtered.forEach(e=>tb.appendChild(makeRow(e)));}
 function renderBKTable(list){const tb=E('bk-tbody');if(!tb)return;tb.innerHTML='';const filtered=bkSearchQ?list.filter(e=>(e.description||'').toLowerCase().includes(bkSearchQ)||(e.category||'').includes(bkSearchQ)):list;CL(E('bk-empty'),'hidden',filtered.length>0);T('bk-count-label',filtered.length+' poster');filtered.forEach(e=>tb.appendChild(makeRow(e)));}
 
